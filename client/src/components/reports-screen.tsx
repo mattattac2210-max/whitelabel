@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus, Pause } from 'lucide-react';
 
 const SESSION_LABELS: Record<string, string> = {
   batch1: 'Week 1 — 24\u201327 Feb',
@@ -391,6 +391,20 @@ export function ReportsScreen() {
                   <div>
                     <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Create Another Report</div>
                     <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Re-sort trips and save a new revision</div>
+                  </div>
+                </button>
+                <button
+                  className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
+                  style={{ background: 'rgba(255,255,255,.04)', borderBottom: '1px solid var(--wc-border)' }}
+                  onClick={() => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
+                  data-testid="action-come-back-later"
+                >
+                  <Pause className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t2)' }} />
+                  <div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>Come Back Later</div>
+                    <div className="text-[10px] mt-[1px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>Your current session stays active. No other cards can be sorted until you finalise your report.</div>
                   </div>
                 </button>
                 <button
