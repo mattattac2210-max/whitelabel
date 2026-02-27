@@ -41,9 +41,9 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const buildUrl = (polyPart?: string) => {
       if (polyPart) {
         const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
-        return `https://maps.googleapis.com/maps/api/staticmap?size=640x500&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
+        return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&visible=${fromEnc}%7C${toEnc}&key=${MAPS_KEY}`;
       }
-      return `https://maps.googleapis.com/maps/api/staticmap?size=640x500&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`;
+      return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&visible=${fromEnc}%7C${toEnc}&key=${MAPS_KEY}`;
     };
 
     const cached = polylineCache.get(cacheKey);
