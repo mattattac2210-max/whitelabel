@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, RATE } from './trip-data';
+import { type Trip, initialTrips, batch2Trips, RATE } from './trip-data';
 
 export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports';
 
@@ -78,6 +78,7 @@ type Action =
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
   | { type: 'SET_MANUAL_ODO'; reading: number }
   | { type: 'RESET_DEMO' }
+  | { type: 'LOAD_BATCH2' }
   | { type: 'DELETE_ALL_TRIPS' }
   | { type: 'PROMOTE_REPORT'; reportIndex: number };
 
@@ -306,6 +307,13 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...initialState,
         trips: initialTrips.map(t => ({ ...t })),
+        savedReports: state.savedReports,
+        sessionStartTime: Date.now(),
+      };
+    case 'LOAD_BATCH2':
+      return {
+        ...initialState,
+        trips: batch2Trips.map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
       };

@@ -256,7 +256,15 @@ export function SortScreen() {
                 onClick={() => dispatch({ type: 'RESET_DEMO' })}
                 data-testid="button-reload-demo"
               >
-                Load Sample Trips
+                Load Batch 1 — Week 1
+              </button>
+              <button
+                className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
+                style={{ background: 'transparent', border: '1.5px solid var(--wc-y)', color: 'var(--wc-y)' }}
+                onClick={() => dispatch({ type: 'LOAD_BATCH2' })}
+                data-testid="button-load-batch2"
+              >
+                Load Batch 2 — Week 2
               </button>
               {state.savedReports.length > 0 && (
                 <button
