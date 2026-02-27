@@ -17,7 +17,7 @@ function loadGoogleMaps(): Promise<void> {
   window._gmapsPromise = new Promise<void>((resolve, reject) => {
     if (!API_KEY) { reject(new Error('No API key')); return; }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places,geometry`;
     script.async = true;
     script.onload = () => { window._gmapsLoaded = true; resolve(); };
     script.onerror = () => reject(new Error('Failed to load Google Maps'));

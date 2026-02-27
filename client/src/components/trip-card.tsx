@@ -14,7 +14,7 @@ function loadGMaps(): Promise<void> {
   window._gmapsPromise = new Promise<void>((resolve, reject) => {
     if (!MAPS_KEY) { reject(new Error('No key')); return; }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places,geometry`;
     script.async = true;
     script.onload = () => { window._gmapsLoaded = true; resolve(); };
     script.onerror = () => reject(new Error('Failed'));
@@ -131,7 +131,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
 function InteractiveMap({ from, to }: { from: string; to: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const animRef = useRef<number>(0);
 
   useEffect(() => {
     if (!mapRef.current || !MAPS_KEY) return;
@@ -163,15 +163,8 @@ function InteractiveMap({ from, to }: { from: string; to: string }) {
           { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#eef2e8' }] },
         ],
       });
-      mapInstanceRef.current = map;
 
       const ds = new g.DirectionsService();
-      const dr = new g.DirectionsRenderer({
-        map,
-        suppressMarkers: true,
-        polylineOptions: { strokeColor: '#F5C400', strokeWeight: 5, strokeOpacity: 0.85 },
-      });
-
       ds.route({
         origin: from,
         destination: to,
@@ -179,9 +172,86 @@ function InteractiveMap({ from, to }: { from: string; to: string }) {
         region: 'au',
       }).then((result: any) => {
         if (cancelled) return;
-        dr.setDirections(result);
         const bounds = result.routes?.[0]?.bounds;
         if (bounds) map.fitBounds(bounds, 40);
+
+        const path = result.routes?.[0]?.overview_path;
+        if (!path || path.length < 2) return;
+
+        new g.Polyline({
+          path,
+          map,
+          strokeColor: '#F5C400',
+          strokeWeight: 7,
+          strokeOpacity: 0.9,
+          zIndex: 1,
+        });
+
+        new g.Polyline({
+          path,
+          map,
+          strokeColor: '#FFF0A0',
+          strokeWeight: 2,
+          strokeOpacity: 0.4,
+          zIndex: 2,
+        });
+
+        const pulseMarker = new g.Marker({
+          position: path[0],
+          map,
+          icon: {
+            path: g.SymbolPath.CIRCLE,
+            scale: 6,
+            fillColor: '#ffffff',
+            fillOpacity: 0.9,
+            strokeColor: '#F5C400',
+            strokeWeight: 3,
+          },
+          zIndex: 10,
+        });
+
+        let totalDist = 0;
+        const segments: number[] = [0];
+        for (let i = 1; i < path.length; i++) {
+          totalDist += g.geometry.spherical.computeDistanceBetween(path[i - 1], path[i]);
+          segments.push(totalDist);
+        }
+
+        const duration = 4000;
+        let startTime = 0;
+        const animate = (ts: number) => {
+          if (cancelled) return;
+          if (!startTime) startTime = ts;
+          const elapsed = (ts - startTime) % duration;
+          const progress = elapsed / duration;
+          const targetDist = progress * totalDist;
+
+          let idx = 0;
+          for (let i = 1; i < segments.length; i++) {
+            if (segments[i] >= targetDist) { idx = i - 1; break; }
+            if (i === segments.length - 1) idx = i - 1;
+          }
+
+          const segLen = segments[idx + 1] - segments[idx];
+          const frac = segLen > 0 ? (targetDist - segments[idx]) / segLen : 0;
+          const lat = path[idx].lat() + (path[idx + 1].lat() - path[idx].lat()) * frac;
+          const lng = path[idx].lng() + (path[idx + 1].lng() - path[idx].lng()) * frac;
+          pulseMarker.setPosition({ lat, lng });
+
+          const pulseScale = 4 + Math.sin(progress * Math.PI * 8) * 2;
+          const pulseOpacity = 0.6 + Math.sin(progress * Math.PI * 8) * 0.3;
+          pulseMarker.setIcon({
+            path: g.SymbolPath.CIRCLE,
+            scale: pulseScale,
+            fillColor: '#ffffff',
+            fillOpacity: pulseOpacity,
+            strokeColor: '#F5C400',
+            strokeWeight: 2,
+          });
+
+          animRef.current = requestAnimationFrame(animate);
+        };
+        animRef.current = requestAnimationFrame(animate);
 
         const leg = result.routes?.[0]?.legs?.[0];
         if (leg) {
@@ -190,32 +260,37 @@ function InteractiveMap({ from, to }: { from: string; to: string }) {
             map,
             icon: {
               path: g.SymbolPath.CIRCLE,
-              scale: 8,
+              scale: 9,
               fillColor: '#22C55E',
               fillOpacity: 1,
               strokeColor: '#fff',
-              strokeWeight: 2,
+              strokeWeight: 2.5,
             },
             label: { text: 'A', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+            zIndex: 5,
           });
           new g.Marker({
             position: leg.end_location,
             map,
             icon: {
               path: g.SymbolPath.CIRCLE,
-              scale: 8,
+              scale: 9,
               fillColor: '#F5C400',
               fillOpacity: 1,
               strokeColor: '#fff',
-              strokeWeight: 2,
+              strokeWeight: 2.5,
             },
             label: { text: 'B', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+            zIndex: 5,
           });
         }
       });
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
   }, [from, to]);
 
   return <div ref={mapRef} className="w-full h-full" />;
