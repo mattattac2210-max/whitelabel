@@ -130,9 +130,40 @@ export function SortScreen() {
 
   const logbookPct = Math.min(100, Math.round((state.dedTotal / 5000) * 100));
 
+  const sortDone = isComplete;
+
   return (
     <div className="flex flex-col h-full" data-testid="sort-screen">
-      <div className="flex justify-between items-center px-4 pt-[6px] pb-[3px] flex-shrink-0 gap-2">
+      <div className="flex px-[14px] pt-[6px] pb-[3px] flex-shrink-0 gap-0">
+        <div className="flex items-center gap-[10px]">
+          {([
+            { id: 'step1', label: 'Sort', active: true, done: sortDone },
+            { id: 'step2', label: 'Classify', active: false, done: false },
+            { id: 'step3', label: 'Review', active: false, done: false },
+            { id: 'step4', label: 'Odometer', active: false, done: false },
+          ] as { id: string; label: string; active: boolean; done: boolean }[]).map((step, i, arr) => (
+            <div key={step.id} className="flex flex-col items-center flex-1 relative">
+              {i < arr.length - 1 && (
+                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
+              )}
+              <div
+                className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
+                style={{
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
+                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
+                }}
+              >
+                {step.done ? '\u2713' : i + 1}
+              </div>
+              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
+                {step.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-between items-center px-4 pt-[3px] pb-[3px] flex-shrink-0 gap-2">
         <button
           className="flex items-center gap-[6px] rounded-[10px] px-[11px] py-[6px] transition-all"
           style={{
