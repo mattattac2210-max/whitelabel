@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
+import { RATE } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus } from 'lucide-react';
 
@@ -208,87 +209,111 @@ export function ReportsScreen() {
                             </div>
                           )}
 
-                          {r.odoRangeStart != null && r.odoRangeEnd != null && (
-                            <div className="mt-[12px] rounded-[10px] p-[10px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
-                              <div>
-                                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Odometer Range</div>
-                                <div className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>
-                                  {r.odoRangeStart.toLocaleString('en-AU')} &rarr; {r.odoRangeEnd.toLocaleString('en-AU')} km
+                          {(() => {
+                            const allTrips = r.trips || [];
+                            const totalKm = allTrips.reduce((s, t) => s + t.km, 0);
+                            const bizKmTotal = bizTrips.reduce((s, t) => s + t.km, 0);
+                            const bizPct = totalKm > 0 ? ((bizKmTotal / totalKm) * 100).toFixed(2) : '0.00';
+                            return (
+                              <>
+                                <div className="mt-[10px] rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
+                                  <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)', width: '50%' }}>Logbook start date</td>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)', width: '50%' }}>Logbook end date</td>
+                                      </tr>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[3px_8px_6px] font-bold text-white">{allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '—'}</td>
+                                        <td className="p-[3px_8px_6px] font-bold text-white">{allTrips.length > 0 ? allTrips[0].date : '—'}</td>
+                                      </tr>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Odometer start date</td>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Odometer end date</td>
+                                      </tr>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[3px_8px_6px] font-bold text-white">{r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') : '—'}</td>
+                                        <td className="p-[3px_8px_6px] font-bold text-white">{r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') : '—'}</td>
+                                      </tr>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Total kilometres</td>
+                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Percentage business km</td>
+                                      </tr>
+                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                        <td className="p-[3px_8px_6px] font-bold text-white">{totalKm.toFixed(1)}</td>
+                                        <td className="p-[3px_8px_6px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</td>
+                                      </tr>
+                                      <tr>
+                                        <td colSpan={2} className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>
+                                          ATO cents per kilometre rate 2024–2025: <strong className="text-white">${RATE.toFixed(2)}</strong>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
                                 </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Total Distance</div>
-                                <div className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-t2)' }}>
-                                  {(r.odoRangeEnd - r.odoRangeStart).toLocaleString('en-AU')} km
-                                </div>
-                              </div>
-                            </div>
-                          )}
 
-                          {r.areasToCheck && r.areasToCheck.length > 0 && (
-                            <div className="mt-[12px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
-                              <div className="flex items-center gap-[6px] mb-[6px]">
-                                <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
-                                <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Areas to Check</span>
-                              </div>
-                              {r.areasToCheck.map((a, ai) => (
-                                <div key={ai} className="flex items-start gap-[6px] mb-[3px]">
-                                  <span className="text-[10px] mt-[2px]" style={{ color: r.areasToCheck[0].startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
-                                    {r.areasToCheck[0].startsWith('All clear') ? '\u2713' : '\u2022'}
-                                  </span>
-                                  <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{a}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {bizTrips.length > 0 && (
-                            <div className="mt-[12px]">
-                              <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-y)' }}>Business Trips</div>
-                              {bizTrips.map((t, ti) => (
-                                <div key={ti} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: ti < bizTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-                                  <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] text-white truncate">{t.from} &rarr; {t.to}</div>
-                                    <div className="flex gap-[6px] items-center">
-                                      <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
-                                      {t.purposeLabel && <span className="font-data text-[8px] px-[4px] py-[1px] rounded-[4px]" style={{ background: 'rgba(245,196,0,.1)', color: 'var(--wc-y)' }}>{t.purposeLabel}</span>}
+                                {r.areasToCheck && r.areasToCheck.length > 0 && (
+                                  <div className="mt-[10px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                                    <div className="flex items-center gap-[6px] mb-[6px]">
+                                      <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+                                      <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Areas to Check</span>
                                     </div>
-                                    {t.odoStart != null && t.odoEnd != null && (
-                                      <div className="font-data text-[8px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>
-                                        ODO {t.odoStart.toLocaleString('en-AU')} &rarr; {t.odoEnd.toLocaleString('en-AU')} km
+                                    {r.areasToCheck.map((a, ai) => (
+                                      <div key={ai} className="flex items-start gap-[6px] mb-[3px]">
+                                        <span className="text-[10px] mt-[2px]" style={{ color: r.areasToCheck[0].startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                                          {r.areasToCheck[0].startsWith('All clear') ? '\u2713' : '\u2022'}
+                                        </span>
+                                        <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{a}</span>
                                       </div>
-                                    )}
+                                    ))}
                                   </div>
-                                  <div className="flex gap-[3px] flex-shrink-0">
-                                    {t.verified && <Check className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />}
-                                    {t.photo && <Camera className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />}
-                                    {!t.verified && <span className="w-[12px] h-[12px] rounded-full" style={{ background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.3)' }} />}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                )}
 
-                          {perTrips.length > 0 && (
-                            <div className="mt-[10px]">
-                              <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-t3)' }}>Personal Trips</div>
-                              {perTrips.map((t, ti) => (
-                                <div key={ti} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: ti < perTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-                                  <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{t.from} &rarr; {t.to}</div>
-                                    <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
-                                    {t.odoStart != null && t.odoEnd != null && (
-                                      <div className="font-data text-[8px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>
-                                        ODO {t.odoStart.toLocaleString('en-AU')} &rarr; {t.odoEnd.toLocaleString('en-AU')} km
-                                      </div>
-                                    )}
+                                <div className="mt-[10px]">
+                                  <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-y)' }}>Journey List</div>
+                                  <div className="rounded-[8px] overflow-x-auto" style={{ border: '1px solid var(--wc-border)' }}>
+                                    <table className="w-full font-data text-[8px]" style={{ borderCollapse: 'collapse', minWidth: '520px' }}>
+                                      <thead>
+                                        <tr style={{ background: 'rgba(245,196,0,.08)' }}>
+                                          <th className="p-[5px_6px] text-left font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Date</th>
+                                          <th className="p-[5px_6px] text-left font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>ODO Start</th>
+                                          <th className="p-[5px_6px] text-left font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>ODO End</th>
+                                          <th className="p-[5px_6px] text-left font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Biz/Per</th>
+                                          <th className="p-[5px_6px] text-right font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Dist (km)</th>
+                                          <th className="p-[5px_6px] text-right font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Biz km</th>
+                                          <th className="p-[5px_6px] text-right font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Reimburse</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {allTrips.map((t, ti) => {
+                                          const isBiz = t.type === 'business';
+                                          const bizKm = isBiz ? t.km : 0;
+                                          const reimburse = isBiz ? (t.km * RATE) : 0;
+                                          return (
+                                            <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', background: isBiz ? 'rgba(245,196,0,.03)' : 'transparent' }}>
+                                              <td className="p-[4px_6px]" style={{ color: 'var(--wc-t2)' }}>{t.date}</td>
+                                              <td className="p-[4px_6px] text-white">{t.odoStart?.toLocaleString('en-AU')}</td>
+                                              <td className="p-[4px_6px] text-white">{t.odoEnd?.toLocaleString('en-AU')}</td>
+                                              <td className="p-[4px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{isBiz ? 'Business' : 'Personal'}</td>
+                                              <td className="p-[4px_6px] text-right text-white">{t.km.toFixed(1)}</td>
+                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{bizKm > 0 ? bizKm.toFixed(1) : ''}</td>
+                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{reimburse > 0 ? `$${reimburse.toFixed(2)}` : '$0.00'}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                        <tr style={{ borderTop: '1px solid var(--wc-border)', background: 'rgba(245,196,0,.06)' }}>
+                                          <td colSpan={4} className="p-[5px_6px] font-bold" style={{ color: 'var(--wc-y)' }}>Totals</td>
+                                          <td className="p-[5px_6px] text-right font-bold text-white">{totalKm.toFixed(1)}</td>
+                                          <td className="p-[5px_6px] text-right font-bold" style={{ color: 'var(--wc-y)' }}>{bizKmTotal.toFixed(1)}</td>
+                                          <td className="p-[5px_6px] text-right font-bold" style={{ color: 'var(--wc-gr)' }}>${(bizKmTotal * RATE).toFixed(2)}</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              </>
+                            );
+                          })()}
 
                           {r.auditLog && r.auditLog.length > 0 && (
                             <div className="mt-[12px]">
