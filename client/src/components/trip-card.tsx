@@ -150,16 +150,14 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </div>
         </>
       )}
-      <div className="w-full h-[160px] relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018', borderBottom: '1px solid var(--wc-border)' }}>
-        <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-full relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018' }}>
+        <div className="h-[180px] flex items-center justify-center">
           <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
             <MapPin className="w-[20px] h-[20px] opacity-30" />
             <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
           </div>
         </div>
-      </div>
-      <div className="p-[10px_13px_10px] flex flex-col gap-[5px] pl-[13px] pr-[13px] mt-[10px] mb-[10px]">
-        <div className="flex items-center gap-[5px]">
+        <div className="flex items-center gap-[5px] px-[13px] py-[7px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
           <span className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
           <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
           <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
@@ -173,6 +171,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
             Edit &rsaquo;
           </button>
         </div>
+      </div>
+      <div className="p-[8px_13px_10px] flex flex-col gap-[5px]">
 
         <div className="flex gap-[7px]">
           <div className="flex-1 flex flex-col gap-[5px] min-w-0">
