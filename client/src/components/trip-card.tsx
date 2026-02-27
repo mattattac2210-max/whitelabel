@@ -319,7 +319,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
   const oEnd = getTripOdoEnd(state.trips, tripIndex, baseOdo);
 
-  const swipeRatio = Math.min(Math.abs(dragX) / 120, 1);
+  const swipeRatio = Math.min(Math.abs(dragX) / 60, 1);
   const isBizSwipe = dragX > 0;
   const isPerSwipe = dragX < 0;
 
@@ -356,8 +356,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const handlePointerUp = useCallback(() => {
     if (!isDragging || isFlying) return;
     setIsDragging(false);
-    if (dragX > 80) flyOut('right');
-    else if (dragX < -80) flyOut('left');
+    if (dragX > 40) flyOut('right');
+    else if (dragX < -40) flyOut('left');
     else setDragX(0);
   }, [isDragging, isFlying, dragX, flyOut]);
 
