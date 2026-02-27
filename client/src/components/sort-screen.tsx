@@ -314,44 +314,15 @@ export function SortScreen() {
                 &larr; Reset demo
               </button>
 
-              {!confirmDelete ? (
-                <button
-                  className="w-full rounded-[11px] py-[9px] mt-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
-                  style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
-                  onClick={() => setConfirmDelete(true)}
-                  data-testid="button-delete-trips"
-                >
-                  <Trash2 className="w-[13px] h-[13px]" />
-                  Delete All Sort Cards
-                </button>
-              ) : (
-                <div className="w-full mt-[6px] rounded-[11px] p-[10px_12px]" style={{ background: 'rgba(239,68,68,.06)', border: '1.5px solid rgba(239,68,68,.3)' }}>
-                  <div className="flex items-start gap-[6px] mb-[8px]">
-                    <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
-                    <span className="text-[11px] leading-[1.4]" style={{ color: 'rgba(239,68,68,.85)' }}>
-                      <strong>This cannot be undone.</strong> Check your reports are accurate for this session before deleting your sort cards.
-                    </span>
-                  </div>
-                  <div className="flex gap-[6px]">
-                    <button
-                      className="flex-1 rounded-[8px] py-[7px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                      style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', color: '#EF4444' }}
-                      onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}
-                      data-testid="button-confirm-delete"
-                    >
-                      Yes, Delete All
-                    </button>
-                    <button
-                      className="flex-1 rounded-[8px] py-[7px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                      style={{ background: 'transparent', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-                      onClick={() => setConfirmDelete(false)}
-                      data-testid="button-cancel-delete"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button
+                className="w-full rounded-[11px] py-[9px] mt-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+                style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
+                onClick={() => setConfirmDelete(true)}
+                data-testid="button-delete-trips"
+              >
+                <Trash2 className="w-[13px] h-[13px]" />
+                Delete All Sort Cards
+              </button>
             </div>
           </div>
         )}
@@ -402,6 +373,52 @@ export function SortScreen() {
 
         <BottomNav activeOverride="sort" />
       </div>
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+            data-testid="modal-delete-confirm"
+          >
+            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center">Delete All Sort Cards?</div>
+            </div>
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
+                <strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.
+              </span>
+            </div>
+            <div className="flex flex-col gap-[8px]">
+              <button
+                className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
+                onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}
+                data-testid="button-confirm-delete"
+              >
+                Yes, Delete All Cards
+              </button>
+              <button
+                className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                onClick={() => setConfirmDelete(false)}
+                data-testid="button-cancel-delete"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
