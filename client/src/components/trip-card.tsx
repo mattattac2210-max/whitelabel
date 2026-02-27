@@ -40,11 +40,6 @@ function TripMap({ trip }: { trip: Trip }) {
           <text x="15" y="19.5" textAnchor="middle" fill="black" fontSize="10" fontFamily="Arial" fontWeight="900">B</text>
         </g>
       </svg>
-      <div className="absolute bottom-[10px] right-[10px] rounded-[10px] p-[5px_11px] z-10 text-right" style={{ background: 'rgba(8,8,8,.9)', backdropFilter: 'blur(8px)', border: '1px solid var(--wc-y)' }}>
-        <div className="font-data text-[7px] tracking-[.1em] uppercase" style={{ color: 'var(--wc-t3)' }}>Distance</div>
-        <div className="font-heading font-black text-[19px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km} km</div>
-        <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>{trip.time}</div>
-      </div>
       <div className="absolute bottom-0 left-0 right-0 h-[44px] pointer-events-none z-[5]" style={{ background: 'linear-gradient(180deg,transparent,var(--wc-card))' }} />
     </div>
   );
@@ -222,6 +217,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-[12px] text-white truncate">{trip.from}</div>
             <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+          </div>
+          <div className="flex-shrink-0 text-right rounded-[8px] p-[4px_9px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <div className="font-heading font-black text-[16px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km} km</div>
+            <div className="font-data text-[9px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
           </div>
         </div>
         <div className="flex items-center gap-[7px] py-[3px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
