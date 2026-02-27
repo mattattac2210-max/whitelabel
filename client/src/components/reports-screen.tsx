@@ -51,9 +51,9 @@ function InfoBlock({ title, color, children }: { title: string; color: string; c
 
 function TableRow({ label, val, highlight }: { label: string; val: string; highlight?: boolean }) {
   return (
-    <div className="flex justify-between items-center py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-      <span className="text-[13px] text-white">{label}</span>
-      <span className="text-[13px] text-white" style={{ color: highlight ? 'var(--wc-y)' : 'white', fontWeight: highlight ? 700 : 400 }}>{val}</span>
+    <div className="flex flex-col py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+      <span className="text-[11px] text-white/60 mb-[2px]">{label}</span>
+      <span className="text-[14px] font-data text-white" style={{ color: highlight ? 'var(--wc-y)' : 'white', fontWeight: highlight ? 700 : 400 }}>{val}</span>
     </div>
   );
 }
