@@ -325,10 +325,19 @@ export function SummaryModal() {
     setOdoSaved(false);
   };
   const [odoSaved, setOdoSaved] = useState(false);
+  const [rollDone, setRollDone] = useState(false);
   const lastReading = state.lastOdoReading;
   useEffect(() => {
     if (lastReading) setOdoDigits(toDigits(lastReading));
   }, [lastReading]);
+
+  useEffect(() => {
+    if (state.summaryModalOpen) {
+      setRollDone(false);
+      const t = setTimeout(() => setRollDone(true), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [state.summaryModalOpen]);
 
   if (!state.summaryModalOpen) return null;
 
@@ -393,41 +402,74 @@ export function SummaryModal() {
 
           <div className="rounded-[8px] p-[6px_4px] mb-[8px]" style={{ background: '#0a0a0a', border: '1.5px solid rgba(255,255,255,.08)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,.6)' }}>
             <div className="flex justify-center gap-[2px]" data-testid="input-manual-odo">
-              {odoDigits.map((digit, i) => (
-                <div key={i} className="flex flex-col items-center" style={{ width: '38px' }}>
-                  <button
-                    className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-t-[5px] transition-all active:scale-95"
-                    style={{ background: 'rgba(255,255,255,.04)' }}
-                    onClick={() => spinDigit(i, 1)}
-                    data-testid={`button-odo-up-${i}`}
-                  >
-                    <ChevronUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
-                  </button>
-                  <div
-                    className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none"
-                    style={{
-                      background: i < NUM_DIGITS - 1
-                        ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
-                        : 'linear-gradient(180deg, #2a1800 0%, #3a2000 40%, #3a2000 60%, #2a1800 100%)',
-                      color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
-                      borderTop: '1px solid rgba(255,255,255,.06)',
-                      borderBottom: '1px solid rgba(255,255,255,.06)',
-                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,.4)',
-                      textShadow: '0 0 8px rgba(255,255,255,.15)',
-                    }}
-                  >
-                    {digit}
+              {odoDigits.map((digit, i) => {
+                const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
+                const delay = i * 0.15;
+                const duration = 0.8 + i * 0.15;
+                return (
+                  <div key={i} className="flex flex-col items-center" style={{ width: '38px' }}>
+                    <button
+                      className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-t-[5px] transition-all active:scale-95"
+                      style={{ background: 'rgba(255,255,255,.04)' }}
+                      onClick={() => spinDigit(i, 1)}
+                      data-testid={`button-odo-up-${i}`}
+                    >
+                      <ChevronUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                    </button>
+                    <div
+                      className="w-full h-[38px] overflow-hidden relative"
+                      style={{
+                        background: i < NUM_DIGITS - 1
+                          ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
+                          : 'linear-gradient(180deg, #2a1800 0%, #3a2000 40%, #3a2000 60%, #2a1800 100%)',
+                        borderTop: '1px solid rgba(255,255,255,.06)',
+                        borderBottom: '1px solid rgba(255,255,255,.06)',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,.4)',
+                      }}
+                    >
+                      {!rollDone ? (
+                        <div
+                          className="flex flex-col items-center"
+                          style={{
+                            animation: `odoRoll${digit} ${duration}s cubic-bezier(.2,.8,.3,1) ${delay}s both`,
+                          }}
+                        >
+                          {rollNumbers.concat(rollNumbers).concat(rollNumbers.slice(0, digit + 1)).map((n, j) => (
+                            <div
+                              key={j}
+                              className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none flex-shrink-0"
+                              style={{
+                                color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
+                                textShadow: '0 0 8px rgba(255,255,255,.15)',
+                              }}
+                            >
+                              {n}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none"
+                          style={{
+                            color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
+                            textShadow: '0 0 8px rgba(255,255,255,.15)',
+                          }}
+                        >
+                          {digit}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-b-[5px] transition-all active:scale-95"
+                      style={{ background: 'rgba(255,255,255,.04)' }}
+                      onClick={() => spinDigit(i, -1)}
+                      data-testid={`button-odo-down-${i}`}
+                    >
+                      <ChevronDown className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                    </button>
                   </div>
-                  <button
-                    className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-b-[5px] transition-all active:scale-95"
-                    style={{ background: 'rgba(255,255,255,.04)' }}
-                    onClick={() => spinDigit(i, -1)}
-                    data-testid={`button-odo-down-${i}`}
-                  >
-                    <ChevronDown className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex flex-col items-center justify-center" style={{ width: '20px' }}>
                 <div className="h-[22px]" />
                 <div className="h-[38px] flex items-end pb-[5px]">
