@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
@@ -90,6 +90,27 @@ export function SortScreen() {
   const [flashAmt, setFlashAmt] = useState<string | null>(null);
   const [dedPop, setDedPop] = useState(false);
 
+  const [tutorialPhase, setTutorialPhase] = useState<'idle' | 'left' | 'right' | 'done'>('idle');
+  const tutorialRan = useRef(false);
+  const tutorialTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (tutorialRan.current || state.currentIndex > 0) return;
+    tutorialRan.current = true;
+    const t1 = setTimeout(() => setTutorialPhase('left'), 600);
+    const t2 = setTimeout(() => setTutorialPhase('right'), 1400);
+    const t3 = setTimeout(() => setTutorialPhase('done'), 2200);
+    tutorialTimers.current = [t1, t2, t3];
+    return () => { t1 && clearTimeout(t1); t2 && clearTimeout(t2); t3 && clearTimeout(t3); };
+  }, [state.currentIndex]);
+
+  useEffect(() => {
+    if (state.currentIndex > 0 && tutorialPhase !== 'done') {
+      tutorialTimers.current.forEach(clearTimeout);
+      setTutorialPhase('done');
+    }
+  }, [state.currentIndex, tutorialPhase]);
+
   const currentTrip = state.trips[state.currentIndex];
   const isComplete = state.currentIndex >= state.trips.length;
   const remaining = state.trips.length - state.currentIndex;
@@ -175,6 +196,7 @@ export function SortScreen() {
                 position={offset}
                 onClassify={handleClassify}
                 onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
+                tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
               />
             ))}
           </>

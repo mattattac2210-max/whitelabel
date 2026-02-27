@@ -11,9 +11,10 @@ interface TripCardProps {
   position: number;
   onClassify: (type: 'business' | 'personal') => void;
   onEdit: () => void;
+  tutorialPhase?: 'idle' | 'left' | 'right' | 'done';
 }
 
-export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit }: TripCardProps) {
+export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, tutorialPhase = 'done' }: TripCardProps) {
   const { state } = useApp();
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragX, setDragX] = useState(0);
@@ -77,6 +78,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
       if (position === 1) return 'scale(.955) translateY(10px)';
       if (position === 2) return 'scale(.91) translateY(19px)';
     }
+    if (isTop && tutorialPhase === 'left') return 'translateX(-45px) rotate(-3deg)';
+    if (isTop && tutorialPhase === 'right') return 'translateX(45px) rotate(3deg)';
     return 'scale(1) translateY(0)';
   };
 
@@ -97,7 +100,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
         boxShadow: '0 0 18px rgba(245,196,0,.25), 0 0 40px rgba(245,196,0,.1), 0 16px 50px rgba(0,0,0,.7)',
         transform: getTransform(),
         opacity: getOpacity(),
-        transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
+        transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : (tutorialPhase === 'left' || tutorialPhase === 'right') ? 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
         zIndex: isTop ? 10 : position === 1 ? 1 : 0,
         pointerEvents: isTop ? 'auto' : 'none',
         transformOrigin: 'center 62%',
@@ -114,7 +117,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
             className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-start justify-end p-3"
             style={{
               background: 'linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22))',
-              opacity: isBizSwipe ? swipeRatio * 0.8 : 0,
+              opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 0.6 : 0,
             }}
           >
             <div
@@ -123,7 +126,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
                 color: 'var(--wc-y)',
                 border: '3px solid var(--wc-y)',
                 transform: 'rotate(10deg)',
-                opacity: isBizSwipe ? swipeRatio : 0,
+                opacity: isBizSwipe ? swipeRatio : tutorialPhase === 'right' ? 0.85 : 0,
               }}
             >
               SORT: BUSINESS
@@ -133,7 +136,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
             className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-start p-3"
             style={{
               background: 'linear-gradient(225deg,rgba(239,68,68,0),rgba(239,68,68,.22))',
-              opacity: isPerSwipe ? swipeRatio * 0.8 : 0,
+              opacity: isPerSwipe ? swipeRatio * 0.8 : tutorialPhase === 'left' ? 0.6 : 0,
             }}
           >
             <div
@@ -142,7 +145,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
                 color: 'var(--wc-re)',
                 border: '3px solid var(--wc-re)',
                 transform: 'rotate(-10deg)',
-                opacity: isPerSwipe ? swipeRatio : 0,
+                opacity: isPerSwipe ? swipeRatio : tutorialPhase === 'left' ? 0.85 : 0,
               }}
             >
               SORT: PERSONAL
