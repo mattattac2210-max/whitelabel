@@ -351,14 +351,16 @@ export function SummaryModal() {
   const score = stats.auditScore;
   const scoreCol = score > 85 ? 'var(--wc-gr)' : score > 70 ? 'var(--wc-am)' : 'var(--wc-re)';
 
-  const LOGBOOK_START = new Date('2026-01-09');
-  const now = new Date();
+  const tripDates = state.trips.map(t => new Date(t.year, t.month, t.day).getTime());
+  const earliestTrip = tripDates.length > 0 ? Math.min(...tripDates) : Date.now();
+  const latestTrip = tripDates.length > 0 ? Math.max(...tripDates) : Date.now();
   const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  const weeksElapsed = Math.min(12, Math.max(0, (now.getTime() - LOGBOOK_START.getTime()) / msPerWeek));
-  const weeksDone = Math.floor(weeksElapsed);
+  const logbookStart = new Date(earliestTrip);
+  const weeksElapsed = Math.min(12, Math.max(0, (latestTrip - earliestTrip) / msPerWeek));
+  const weeksDone = Math.max(1, Math.floor(weeksElapsed));
   const pct = Math.round((weeksElapsed / 12) * 100);
   const weeksLeft = 12 - weeksDone;
-  const dueDate = new Date(LOGBOOK_START.getTime() + 12 * msPerWeek);
+  const dueDate = new Date(earliestTrip + 12 * msPerWeek);
   const dueFmt = dueDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
