@@ -102,7 +102,14 @@ export function ReportsScreen() {
                 </button>
 
                 {isOpen && (
-                  <div className="px-[14px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
+                  <div className="px-[14px] pb-[14px] max-h-[55vh] overflow-y-auto scrollbar-thin" style={{ borderTop: '1px solid var(--wc-border)' }}>
+
+                    <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                      <Archive className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                      <span className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                        Read-only snapshot. To modify, go back and create a new report.
+                      </span>
+                    </div>
 
                     {r.areasToCheck && r.areasToCheck.length > 0 && (
                       <div className="mt-[12px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
