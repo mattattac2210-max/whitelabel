@@ -401,6 +401,26 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
     });
   }
 
+  function weekCoverageFraction(wStart: Date, wEnd: Date): number {
+    const coveredDays = new Set<number>();
+    for (const r of activeReports) {
+      const dates = (r.trips || []).map((t: any) => parseAUDate(t.date)).filter(Boolean) as Date[];
+      if (!dates.length) continue;
+      const minD = new Date(Math.min(...dates.map(d => d.getTime())));
+      const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
+      const overlapStart = minD > wStart ? minD : wStart;
+      const overlapEnd = maxD < wEnd ? maxD : wEnd;
+      if (overlapStart <= overlapEnd) {
+        const d = new Date(overlapStart);
+        while (d <= overlapEnd) {
+          coveredDays.add(d.getDate() * 100 + d.getMonth());
+          d.setDate(d.getDate() + 1);
+        }
+      }
+    }
+    return coveredDays.size / 7;
+  }
+
   const monthLabels: string[] = [];
   let lastMonth = -1;
   weeks.forEach((w, i) => {
@@ -429,17 +449,27 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
 
       <div className="flex gap-[2px] mb-[3px]">
         {weeks.map((w, i) => {
-          const covered = weekHasCoverage(w.start, w.end);
+          const fraction = weekCoverageFraction(w.start, w.end);
+          const covered = fraction > 0;
           const isCurrent = today >= w.start && today <= w.end;
+          const fillPct = Math.min(fraction * 100, 100);
           return (
-            <div key={i} className="flex-1 rounded-[3px]"
+            <div key={i} className="flex-1 rounded-[3px] overflow-hidden relative"
               style={{
                 height: '20px',
-                background: covered ? 'var(--wc-y)' : isCurrent ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.05)',
-                border: isCurrent && !covered ? '1px solid rgba(245,196,0,.35)' : 'none',
-                boxShadow: covered ? '0 0 8px rgba(245,196,0,.2)' : 'none',
-              }}
-            />
+                background: isCurrent && !covered ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.05)',
+                border: isCurrent ? '1px solid rgba(245,196,0,.35)' : 'none',
+              }}>
+              {covered && (
+                <div className="absolute left-0 top-0 bottom-0 rounded-[3px]"
+                  style={{
+                    width: `${fillPct}%`,
+                    background: 'var(--wc-y)',
+                    boxShadow: '0 0 8px rgba(245,196,0,.2)',
+                  }}
+                />
+              )}
+            </div>
           );
         })}
       </div>
@@ -452,12 +482,13 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
 
       <div className="flex gap-[12px]">
         {[
-          { bg: 'var(--wc-y)', label: 'Covered' },
-          { bg: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.35)', label: 'This week' },
-          { bg: 'rgba(255,255,255,.05)', label: 'No data' },
+          { label: 'Full week', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'var(--wc-y)' }} /> },
+          { label: 'Partial', custom: <div className="w-[8px] h-[8px] rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.05)' }}><div className="absolute left-0 top-0 bottom-0" style={{ width: '50%', background: 'var(--wc-y)' }} /></div> },
+          { label: 'This week', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.35)' }} /> },
+          { label: 'No data', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'rgba(255,255,255,.05)' }} /> },
         ].map((l, i) => (
           <div key={i} className="flex items-center gap-[4px]">
-            <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: l.bg, border: (l as any).border }} />
+            {l.custom}
             <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>{l.label}</span>
           </div>
         ))}
