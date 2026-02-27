@@ -53,6 +53,7 @@ interface AppState {
   editTripIndex: number;
   atoModalOpen: boolean;
   summaryModalOpen: boolean;
+  conflictResolved: boolean;
 }
 
 type Action =
@@ -104,6 +105,7 @@ const initialState: AppState = {
   editTripIndex: 0,
   atoModalOpen: false,
   summaryModalOpen: false,
+  conflictResolved: false,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -280,6 +282,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         savedReports: [report, ...updatedPrevious],
         summaryModalOpen: false,
+        conflictResolved: false,
         currentScreen: 'reports',
       };
     }
@@ -319,6 +322,7 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         savedReports: updated,
+        conflictResolved: true,
         auditLog: [{ time: nowStr(), desc: `Report Rev ${state.savedReports[idx].revision} promoted to active`, hasPhoto: false }, ...state.auditLog],
       };
     }
