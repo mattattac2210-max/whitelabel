@@ -640,18 +640,37 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                     </div>
                   </div>
                 </div>
-                <div className="flex-shrink-0 self-center w-[68px] rounded-[12px] overflow-hidden flex flex-col" style={{ border: '1px solid var(--wc-border)' }} data-testid="detail-mini-calendar">
-                  <div className="py-[4px] text-center font-heading font-bold text-[9px] uppercase tracking-[.1em]" style={{ background: 'var(--wc-y)', color: '#000' }}>
-                    {trip.date.split(',')[0]}
-                  </div>
-                  <div className="flex flex-col items-center py-[6px]" style={{ background: 'rgba(255,255,255,.04)' }}>
-                    <div className="font-heading font-black text-[28px] leading-none text-white">{trip.day}</div>
-                    <div className="font-heading font-semibold text-[10px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>
-                      {trip.date.split(' ').pop()}
+                {(() => {
+                  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  const daysInMonth = new Date(trip.year, trip.month + 1, 0).getDate();
+                  const firstDow = new Date(trip.year, trip.month, 1).getDay();
+                  const cells: (number | null)[] = Array(firstDow).fill(null);
+                  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+                  while (cells.length % 7 !== 0) cells.push(null);
+                  return (
+                    <div className="flex-shrink-0 self-center w-[100px] rounded-[10px] overflow-hidden flex flex-col" style={{ border: '1px solid var(--wc-border)' }} data-testid="detail-mini-calendar">
+                      <div className="py-[3px] text-center font-heading font-bold text-[8px] uppercase tracking-[.1em]" style={{ background: 'var(--wc-y)', color: '#000' }}>
+                        {MONTHS[trip.month]} {trip.year}
+                      </div>
+                      <div className="p-[3px_2px_4px]" style={{ background: 'rgba(255,255,255,.04)' }}>
+                        <div className="grid grid-cols-7 gap-0">
+                          {['S','M','T','W','T','F','S'].map((l, i) => (
+                            <div key={`h${i}`} className="text-center font-data text-[6px] leading-[10px]" style={{ color: 'var(--wc-t3)' }}>{l}</div>
+                          ))}
+                          {cells.map((d, i) => (
+                            <div
+                              key={i}
+                              className="text-center font-data text-[7px] leading-[13px] rounded-[3px]"
+                              style={d === trip.day ? { background: 'var(--wc-y)', color: '#000', fontWeight: 800 } : { color: d ? 'var(--wc-t2)' : 'transparent' }}
+                            >
+                              {d ?? ''}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="font-data text-[9px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.year}</div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
               <div className="flex gap-[8px]">
                 <button
