@@ -129,6 +129,98 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
   );
 }
 
+function InteractiveMap({ from, to }: { from: string; to: string }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!mapRef.current || !MAPS_KEY) return;
+    let cancelled = false;
+
+    loadGMaps().then(() => {
+      if (cancelled || !mapRef.current) return;
+      const g = window.google.maps;
+      const map = new g.Map(mapRef.current, {
+        zoom: 12,
+        center: { lat: -33.8688, lng: 151.2093 },
+        disableDefaultUI: true,
+        zoomControl: true,
+        gestureHandling: 'greedy',
+        styles: [
+          { featureType: 'all', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+          { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+          { featureType: 'administrative.locality', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+          { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#999999' }] },
+          { featureType: 'administrative.neighborhood', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+          { featureType: 'administrative.neighborhood', elementType: 'labels.text.fill', stylers: [{ color: '#bbbbbb' }] },
+          { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#222222' }] },
+          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#dddddd' }] },
+          { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#111111' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e0e8ef' }] },
+          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+          { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+          { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#f4f4f4' }] },
+          { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#eef2e8' }] },
+        ],
+      });
+      mapInstanceRef.current = map;
+
+      const ds = new g.DirectionsService();
+      const dr = new g.DirectionsRenderer({
+        map,
+        suppressMarkers: true,
+        polylineOptions: { strokeColor: '#F5C400', strokeWeight: 5, strokeOpacity: 0.85 },
+      });
+
+      ds.route({
+        origin: from,
+        destination: to,
+        travelMode: g.TravelMode.DRIVING,
+        region: 'au',
+      }).then((result: any) => {
+        if (cancelled) return;
+        dr.setDirections(result);
+        const bounds = result.routes?.[0]?.bounds;
+        if (bounds) map.fitBounds(bounds, 40);
+
+        const leg = result.routes?.[0]?.legs?.[0];
+        if (leg) {
+          new g.Marker({
+            position: leg.start_location,
+            map,
+            icon: {
+              path: g.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#22C55E',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            },
+            label: { text: 'A', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+          });
+          new g.Marker({
+            position: leg.end_location,
+            map,
+            icon: {
+              path: g.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#F5C400',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            },
+            label: { text: 'B', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+          });
+        }
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, [from, to]);
+
+  return <div ref={mapRef} className="w-full h-full" />;
+}
+
 interface TripCardProps {
   trip: Trip;
   tripIndex: number;
@@ -442,8 +534,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             >
               <X className="w-[16px] h-[16px] text-white" />
             </button>
-            <div className="relative w-full" style={{ height: '280px' }}>
-              <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+            <div className="relative w-full" style={{ height: '280px', background: '#f0f0f0' }}>
+              <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
             </div>
             <div className="p-[16px] flex flex-col gap-[12px]">
               <div className="flex items-center gap-[6px]">
