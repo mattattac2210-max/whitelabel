@@ -134,38 +134,9 @@ export function SortScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="sort-screen">
-      <div className="flex px-[14px] pt-[6px] pb-[3px] flex-shrink-0 gap-0">
-        <div className="flex items-center gap-[10px]">
-          {([
-            { id: 'step1', label: 'Sort', active: true, done: sortDone },
-            { id: 'step2', label: 'Classify', active: false, done: false },
-            { id: 'step3', label: 'Review', active: false, done: false },
-            { id: 'step4', label: 'Odometer', active: false, done: false },
-          ] as { id: string; label: string; active: boolean; done: boolean }[]).map((step, i, arr) => (
-            <div key={step.id} className="flex flex-col items-center flex-1 relative">
-              {i < arr.length - 1 && (
-                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
-              )}
-              <div
-                className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
-                style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
-                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
-                }}
-              >
-                {step.done ? '\u2713' : i + 1}
-              </div>
-              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
-                {step.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center px-4 pt-[3px] pb-[3px] flex-shrink-0 gap-[6px]">
+      <div className="flex items-center px-[14px] pt-[5px] pb-[3px] flex-shrink-0 gap-[6px]">
         <button
-          className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[5px] transition-all"
+          className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] transition-all"
           style={{
             background: 'rgba(255,255,255,.06)',
             border: '1px solid var(--wc-border)',
@@ -175,17 +146,46 @@ export function SortScreen() {
           onClick={() => dispatch({ type: 'UNDO_LAST' })}
           data-testid="button-undo"
         >
-          <Undo2 className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
-          <span className="font-heading font-bold text-[11px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</span>
+          <Undo2 className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</span>
         </button>
-        <div className="flex items-center gap-[6px] ml-auto">
-          <div className="flex items-center gap-1 rounded-[20px] px-[8px] py-[3px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <span className="font-heading font-black text-[14px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
-            <span className="font-heading font-semibold text-[10px] uppercase tracking-[.04em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
+
+        <div className="flex items-center gap-[6px]">
+          {([
+            { id: 'step1', label: 'Sort', active: true, done: sortDone },
+            { id: 'step2', label: 'Classify', active: false, done: false },
+            { id: 'step3', label: 'Review', active: false, done: false },
+            { id: 'step4', label: 'Odo', active: false, done: false },
+          ] as { id: string; label: string; active: boolean; done: boolean }[]).map((step, i, arr) => (
+            <div key={step.id} className="flex items-center gap-[3px]">
+              <div
+                className="w-[14px] h-[14px] rounded-full flex items-center justify-center font-heading text-[7px] font-bold transition-all"
+                style={{
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
+                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
+                }}
+              >
+                {step.done ? '\u2713' : i + 1}
+              </div>
+              <span className="font-data text-[7px] uppercase tracking-[.04em]" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
+                {step.label}
+              </span>
+              {i < arr.length - 1 && (
+                <div className="w-[6px] h-px" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-[5px] ml-auto">
+          <div className="flex items-center gap-[3px] rounded-[20px] px-[7px] py-[2px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
+            <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
           </div>
-          <div className="flex items-center gap-[4px] rounded-[20px] px-[8px] py-[3px]" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
+          <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
             <div className="w-[5px] h-[5px] rounded-full animate-gps" style={{ background: 'var(--wc-gr)' }} />
-            <span className="font-data text-[8px] tracking-[.08em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
+            <span className="font-data text-[7px] tracking-[.06em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
           </div>
         </div>
       </div>
