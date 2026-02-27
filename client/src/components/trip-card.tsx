@@ -194,7 +194,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
 
       <TripMap trip={trip} />
 
-      <div className="p-[7px_13px_10px] flex flex-col gap-[5px]">
+      <div className="p-[10px_13px_10px] flex flex-col gap-[5px] mt-[6px]">
         <div className="flex items-center gap-[5px]">
           <span className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
           <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
