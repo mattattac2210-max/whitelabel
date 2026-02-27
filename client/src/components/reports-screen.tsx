@@ -171,12 +171,21 @@ export function ReportsScreen() {
 
                       {isOpen && (
                         <div className="px-[14px] pb-[14px] max-h-[55vh] overflow-y-auto scrollbar-thin" style={{ borderTop: '1px solid var(--wc-border)' }}>
-                          <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px] animate-flash-yellow" style={{ background: 'var(--wc-y)', border: '1px solid var(--wc-y)' }}>
-                            <Archive className="w-[12px] h-[12px] flex-shrink-0 text-black" />
-                            <span className="text-[10px] leading-[1.4] font-bold text-black">
-                              Read-only snapshot. To modify, go back and create a new report.
-                            </span>
-                          </div>
+                          {state.sessionId === r.sessionId && state.trips.length > 0 ? (
+                            <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px] animate-flash-yellow" style={{ background: 'var(--wc-y)', border: '1px solid var(--wc-y)' }}>
+                              <Archive className="w-[12px] h-[12px] flex-shrink-0 text-black" />
+                              <span className="text-[10px] leading-[1.4] font-bold text-black">
+                                Read-only snapshot. To modify, go back and create a new report.
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}>
+                              <Archive className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                              <span className="text-[10px] leading-[1.4] font-bold" style={{ color: 'var(--wc-t3)' }}>
+                                Permanent archive. Sort cards deleted — this report can no longer be modified.
+                              </span>
+                            </div>
+                          )}
 
                           {isLinked && (
                             <div className="mb-[8px]">
