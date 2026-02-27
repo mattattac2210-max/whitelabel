@@ -13,8 +13,8 @@ function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () 
       onClick={onClose}
     >
       <div
-        className="w-full max-h-[100%] rounded-t-[28px] overflow-y-auto scrollbar-thin"
-        style={{ background: 'var(--wc-bg)', border: '1px solid var(--wc-border)', borderBottom: 'none' }}
+        className="w-full h-full overflow-y-auto scrollbar-thin"
+        style={{ background: 'var(--wc-bg)' }}
         onClick={e => e.stopPropagation()}
       >
         {children}
