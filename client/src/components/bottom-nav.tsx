@@ -21,12 +21,15 @@ export function BottomNav({ activeOverride }: { activeOverride?: Screen }) {
       {navItems.map(item => {
         const isActive = active === item.screen;
         const Icon = item.icon;
+        const hasSorted = state.trips.some(t => t.type !== null);
+        const isLocked = (item.screen === 'classify' || item.screen === 'review') && !hasSorted;
         return (
           <button
             key={item.screen}
-            className="flex flex-col items-center gap-[3px] cursor-pointer transition-opacity"
-            style={{ opacity: isActive ? 1 : 0.34 }}
+            className="flex flex-col items-center gap-[3px] transition-opacity"
+            style={{ opacity: isActive ? 1 : isLocked ? 0.15 : 0.34, cursor: isLocked ? 'default' : 'pointer' }}
             onClick={() => {
+              if (isLocked) return;
               if (item.screen === 'classify') {
                 dispatch({ type: 'INIT_CLASSIFY' });
               } else {
