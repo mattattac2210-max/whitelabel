@@ -14,6 +14,8 @@ export function ReportsScreen() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [conflictSessionId, setConflictSessionId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState<string | null>(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
 
   const locked = !state.freshSession && state.savedReports.length > 0;
 
@@ -360,24 +362,71 @@ export function ReportsScreen() {
 
       {locked ? (
         <div className="flex-shrink-0 px-[14px] py-[10px] flex flex-col gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
-          <button
-            className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase text-black cursor-pointer transition-all flex items-center justify-center gap-[6px]"
-            style={{ background: 'var(--wc-y)' }}
-            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'review' })}
-            data-testid="button-create-another-report"
-          >
-            <Plus className="w-[15px] h-[15px]" strokeWidth={2.5} />
-            Create Another Report
-          </button>
-          <button
-            className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
-            style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
-            onClick={() => setConfirmDelete(true)}
-            data-testid="button-delete-trips-reports"
-          >
-            <Trash2 className="w-[13px] h-[13px]" />
-            Delete All Sort Cards
-          </button>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px]" style={{ color: 'var(--wc-t3)' }}>Session Actions</div>
+          <div className="relative">
+            <button
+              className="w-full rounded-[11px] py-[12px] px-[14px] font-heading font-bold text-[13px] tracking-[.04em] uppercase cursor-pointer transition-all flex items-center justify-between"
+              style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+              onClick={() => setActionMenuOpen(!actionMenuOpen)}
+              data-testid="button-action-menu"
+            >
+              <span>Choose an action...</span>
+              <ChevronDown className={`w-[16px] h-[16px] transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--wc-t3)' }} />
+            </button>
+            {actionMenuOpen && (
+              <div
+                className="absolute bottom-full left-0 right-0 mb-[6px] rounded-[12px] overflow-hidden animate-pop"
+                style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)', boxShadow: '0 -10px 40px rgba(0,0,0,.5)' }}
+                data-testid="action-menu-dropdown"
+              >
+                <button
+                  className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
+                  style={{ borderBottom: '1px solid var(--wc-border)' }}
+                  onClick={() => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'review' }); }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,196,0,.06)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  data-testid="action-create-report"
+                >
+                  <Plus className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                  <div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Create Another Report</div>
+                    <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Re-sort trips and save a new revision</div>
+                  </div>
+                </button>
+                <button
+                  className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
+                  style={{ borderBottom: '1px solid var(--wc-border)' }}
+                  onClick={() => { setActionMenuOpen(false); setConfirmDelete(true); }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,196,0,.06)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  data-testid="action-delete-cards"
+                >
+                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t2)' }} />
+                  <div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>Delete Sort Cards Only</div>
+                    <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Keep reports, remove original trip cards</div>
+                  </div>
+                </button>
+                {sessionIds.map(sid => (
+                  <button
+                    key={sid}
+                    className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
+                    style={{ borderBottom: '1px solid var(--wc-border)' }}
+                    onClick={() => { setActionMenuOpen(false); setConfirmDeleteSession(sid); }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.04)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    data-testid={`action-delete-session-${sid}`}
+                  >
+                    <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'rgba(239,68,68,.7)' }} />
+                    <div>
+                      <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'rgba(239,68,68,.8)' }}>Delete {SESSION_LABELS[sid] || sid}</div>
+                      <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Remove cards + reports — come back and re-sort anytime</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <BottomNav activeOverride="reports" />
@@ -421,6 +470,60 @@ export function ReportsScreen() {
                 style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
                 onClick={() => setConfirmDelete(false)}
                 data-testid="button-cancel-delete-reports"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteSession && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setConfirmDeleteSession(null)}
+        >
+          <div
+            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+            data-testid="modal-delete-session"
+          >
+            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center">
+                Delete {SESSION_LABELS[confirmDeleteSession] || confirmDeleteSession}?
+              </div>
+            </div>
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[10px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
+                <strong>This will delete all sort cards and reports</strong> for this session. This action cannot be undone.
+              </span>
+            </div>
+            <div className="flex items-start gap-[6px] rounded-[8px] p-[8px_10px] mb-[14px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+              <Check className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-gr)' }} />
+              <span className="text-[11px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>
+                You can come back and re-sort these trips anytime by loading this session again.
+              </span>
+            </div>
+            <div className="flex flex-col gap-[8px]">
+              <button
+                className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
+                onClick={() => { dispatch({ type: 'DELETE_SESSION', sessionId: confirmDeleteSession }); setConfirmDeleteSession(null); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+                data-testid="button-confirm-delete-session"
+              >
+                Yes, Delete Session
+              </button>
+              <button
+                className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                onClick={() => setConfirmDeleteSession(null)}
+                data-testid="button-cancel-delete-session"
               >
                 Cancel
               </button>

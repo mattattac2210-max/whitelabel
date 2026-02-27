@@ -87,6 +87,7 @@ type Action =
   | { type: 'RESET_DEMO' }
   | { type: 'LOAD_BATCH2' }
   | { type: 'DELETE_ALL_TRIPS' }
+  | { type: 'DELETE_SESSION'; sessionId: string }
   | { type: 'PROMOTE_REPORT'; reportIndex: number };
 
 function nowStr(): string {
@@ -352,6 +353,20 @@ function reducer(state: AppState, action: Action): AppState {
         sessionStartTime: Date.now(),
         auditLog: [{ time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false }, ...state.auditLog],
       };
+    case 'DELETE_SESSION': {
+      const remaining = state.savedReports.filter(r => r.sessionId !== action.sessionId);
+      const isCurrentSession = state.sessionId === action.sessionId;
+      return {
+        ...initialState,
+        trips: isCurrentSession ? [] : state.trips,
+        savedReports: remaining,
+        sessionId: isCurrentSession ? state.sessionId : state.sessionId,
+        baseOdo: isCurrentSession ? initialState.baseOdo : state.baseOdo,
+        sessionStartTime: Date.now(),
+        freshSession: true,
+        auditLog: [{ time: nowStr(), desc: `Session "${action.sessionId}" deleted — reports removed. Can be re-sorted anytime.`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
       const targetSessionId = state.savedReports[idx].sessionId;
