@@ -130,7 +130,18 @@ export function ReportsScreen() {
                                 Active — Rev {r.revision}
                               </span>
                             )}
-                            {r.supersedes && (
+                            {r.supersedes && isLinked && (
+                              <span
+                                className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px] cursor-pointer"
+                                style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                                onClick={(e) => { e.stopPropagation(); dispatch({ type: 'PROMOTE_REPORT', reportIndex: i }); }}
+                                data-testid={`badge-make-active-${i}`}
+                              >
+                                <ArrowUpCircle className="w-[8px] h-[8px]" />
+                                Make Active
+                              </span>
+                            )}
+                            {r.supersedes && !isLinked && (
                               <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}>
                                 <Archive className="w-[8px] h-[8px]" />
                                 Archived
