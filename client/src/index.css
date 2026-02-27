@@ -272,16 +272,16 @@
 .animate-flash-up { animation: flash-up 1.3s ease-out forwards; }
 .animate-biz-pulse { animation: biz-pulse .5s ease; }
 
-@keyframes odoRoll0 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-20 * 38px)); } }
-@keyframes odoRoll1 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-21 * 38px)); } }
-@keyframes odoRoll2 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-22 * 38px)); } }
-@keyframes odoRoll3 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-23 * 38px)); } }
-@keyframes odoRoll4 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-24 * 38px)); } }
-@keyframes odoRoll5 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-25 * 38px)); } }
-@keyframes odoRoll6 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-26 * 38px)); } }
-@keyframes odoRoll7 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-27 * 38px)); } }
-@keyframes odoRoll8 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-28 * 38px)); } }
-@keyframes odoRoll9 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-29 * 38px)); } }
+@keyframes odoRoll0 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-20 * 56px)); } }
+@keyframes odoRoll1 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-21 * 56px)); } }
+@keyframes odoRoll2 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-22 * 56px)); } }
+@keyframes odoRoll3 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-23 * 56px)); } }
+@keyframes odoRoll4 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-24 * 56px)); } }
+@keyframes odoRoll5 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-25 * 56px)); } }
+@keyframes odoRoll6 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-26 * 56px)); } }
+@keyframes odoRoll7 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-27 * 56px)); } }
+@keyframes odoRoll8 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-28 * 56px)); } }
+@keyframes odoRoll9 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-29 * 56px)); } }
 
 @keyframes odoSavedPop {
   0% { transform: scale(.92); opacity: 0; }

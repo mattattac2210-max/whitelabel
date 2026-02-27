@@ -400,31 +400,31 @@ export function SummaryModal() {
             )}
           </div>
 
-          <div className="rounded-[8px] p-[6px_4px] mb-[8px]" style={{ background: '#0a0a0a', border: '1.5px solid rgba(255,255,255,.08)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,.6)' }}>
-            <div className="flex justify-center gap-[2px]" data-testid="input-manual-odo">
+          <div className="rounded-[12px] p-[8px_6px] mb-[10px]" style={{ background: '#0a0a0a', border: '2px solid rgba(255,255,255,.1)', boxShadow: 'inset 0 3px 12px rgba(0,0,0,.7)' }}>
+            <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => {
                 const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
                 const delay = i * 0.15;
                 const duration = 0.8 + i * 0.15;
                 return (
-                  <div key={i} className="flex flex-col items-center" style={{ width: '38px' }}>
+                  <div key={i} className="flex flex-col items-center" style={{ width: '52px' }}>
                     <button
-                      className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-t-[5px] transition-all active:scale-95"
-                      style={{ background: 'rgba(255,255,255,.04)' }}
+                      className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-t-[8px] transition-all active:scale-95"
+                      style={{ background: 'rgba(255,255,255,.06)' }}
                       onClick={() => spinDigit(i, 1)}
                       data-testid={`button-odo-up-${i}`}
                     >
-                      <ChevronUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                      <ChevronUp className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t3)' }} />
                     </button>
                     <div
-                      className="w-full h-[38px] overflow-hidden relative"
+                      className="w-full h-[56px] overflow-hidden relative"
                       style={{
                         background: i < NUM_DIGITS - 1
                           ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
                           : 'linear-gradient(180deg, #2a1800 0%, #3a2000 40%, #3a2000 60%, #2a1800 100%)',
-                        borderTop: '1px solid rgba(255,255,255,.06)',
-                        borderBottom: '1px solid rgba(255,255,255,.06)',
-                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,.4)',
+                        borderTop: '1.5px solid rgba(255,255,255,.08)',
+                        borderBottom: '1.5px solid rgba(255,255,255,.08)',
+                        boxShadow: 'inset 0 2px 6px rgba(0,0,0,.5)',
                       }}
                     >
                       {!rollDone ? (
@@ -437,10 +437,10 @@ export function SummaryModal() {
                           {rollNumbers.concat(rollNumbers).concat(rollNumbers.slice(0, digit + 1)).map((n, j) => (
                             <div
                               key={j}
-                              className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none flex-shrink-0"
+                              className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none flex-shrink-0"
                               style={{
                                 color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
-                                textShadow: '0 0 8px rgba(255,255,255,.15)',
+                                textShadow: '0 0 12px rgba(255,255,255,.2)',
                               }}
                             >
                               {n}
@@ -449,10 +449,10 @@ export function SummaryModal() {
                         </div>
                       ) : (
                         <div
-                          className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none"
+                          className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none"
                           style={{
                             color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
-                            textShadow: '0 0 8px rgba(255,255,255,.15)',
+                            textShadow: '0 0 12px rgba(255,255,255,.2)',
                           }}
                         >
                           {digit}
@@ -460,22 +460,22 @@ export function SummaryModal() {
                       )}
                     </div>
                     <button
-                      className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-b-[5px] transition-all active:scale-95"
-                      style={{ background: 'rgba(255,255,255,.04)' }}
+                      className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-b-[8px] transition-all active:scale-95"
+                      style={{ background: 'rgba(255,255,255,.06)' }}
                       onClick={() => spinDigit(i, -1)}
                       data-testid={`button-odo-down-${i}`}
                     >
-                      <ChevronDown className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                      <ChevronDown className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t3)' }} />
                     </button>
                   </div>
                 );
               })}
-              <div className="flex flex-col items-center justify-center" style={{ width: '20px' }}>
-                <div className="h-[22px]" />
-                <div className="h-[38px] flex items-end pb-[5px]">
-                  <span className="font-data text-[9px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
+              <div className="flex flex-col items-center justify-center" style={{ width: '24px' }}>
+                <div className="h-[30px]" />
+                <div className="h-[56px] flex items-end pb-[8px]">
+                  <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
                 </div>
-                <div className="h-[22px]" />
+                <div className="h-[30px]" />
               </div>
             </div>
           </div>
