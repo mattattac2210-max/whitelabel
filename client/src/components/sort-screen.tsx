@@ -281,7 +281,7 @@ export function SortScreen() {
               ${Math.round(state.dedTotal).toLocaleString('en-AU')}
             </div>
             <div className="flex flex-col gap-[7px] w-full mt-1">
-              {state.savedReports.length > 0 && (
+              {!state.freshSession && state.savedReports.length > 0 && (
                 <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)' }} data-testid="warning-existing-report">
                   <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" stroke="var(--wc-am)" />
                   <div className="text-[11px] leading-[1.5]" style={{ color: 'var(--wc-am)' }}>
@@ -293,7 +293,7 @@ export function SortScreen() {
                 className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
                 style={{ background: 'var(--wc-y)' }}
                 onClick={() => {
-                  if (state.savedReports.length > 0) {
+                  if (!state.freshSession && state.savedReports.length > 0) {
                     dispatch({ type: 'GO_SCREEN', screen: 'review' });
                   } else {
                     dispatch({ type: 'INIT_CLASSIFY' });
@@ -301,7 +301,7 @@ export function SortScreen() {
                 }}
                 data-testid="button-classify-trips"
               >
-                {state.savedReports.length > 0 ? 'Edit & Create Rev ' + (state.savedReports.length + 1) + ' \u2192' : 'Classify Business Trips \u2192'}
+                {!state.freshSession && state.savedReports.length > 0 ? 'Edit & Create Rev ' + (state.savedReports.length + 1) + ' \u2192' : 'Classify Business Trips \u2192'}
               </button>
               <button
                 className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"

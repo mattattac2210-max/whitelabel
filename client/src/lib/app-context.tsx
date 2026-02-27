@@ -54,6 +54,7 @@ interface AppState {
   atoModalOpen: boolean;
   summaryModalOpen: boolean;
   conflictResolved: boolean;
+  freshSession: boolean;
 }
 
 type Action =
@@ -106,6 +107,7 @@ const initialState: AppState = {
   atoModalOpen: false,
   summaryModalOpen: false,
   conflictResolved: false,
+  freshSession: true,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -283,6 +285,7 @@ function reducer(state: AppState, action: Action): AppState {
         savedReports: [report, ...updatedPrevious],
         summaryModalOpen: false,
         conflictResolved: false,
+        freshSession: false,
         currentScreen: 'reports',
       };
     }
