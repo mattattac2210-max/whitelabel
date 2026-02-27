@@ -176,12 +176,17 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               }}
             >
               <div className="flex flex-col items-center gap-[10px]">
-                <svg width="90" height="90" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 12 L44 4 M50 12 L56 4 M50 12 L50 2 M50 12 L42 8 M50 12 L58 8" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M45 65 L45 28 C45 23 48 20 50 20 C52 20 55 23 55 28 L55 55" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <path d="M55 50 L55 42 C55 38 58 36 60 36 C62 36 65 38 65 42 L65 55" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <path d="M65 52 L65 46 C65 42 68 40 70 40 C72 40 75 42 75 46 L75 60" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <path d="M35 65 L35 42 C35 38 32 36 30 36 C28 36 25 38 25 42 L25 70 C25 90 35 105 50 105 L55 105 C70 105 80 90 80 70 L80 55 C80 51 77 48 75 48" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" fill="none" />
+                <svg width="90" height="108" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line x1="40" y1="8" x2="40" y2="0" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="40" y1="8" x2="33" y2="2" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="40" y1="8" x2="47" y2="2" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="40" y1="8" x2="30" y2="6" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="40" y1="8" x2="50" y2="6" stroke="rgba(220,220,220,.7)" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M36 50 L36 18 C36 14.5 37.8 12 40 12 C42.2 12 44 14.5 44 18 L44 50" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M44 46 L44 40 C44 37 45.5 35 47.5 35 C49.5 35 51 37 51 40 L51 50" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M51 48 L51 43 C51 40 52.5 38 54.5 38 C56.5 38 58 40 58 43 L58 52" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M58 50 L58 46 C58 43 59.5 41 61.5 41 C63.5 41 65 43 65 46 L65 62 C65 78 55 90 42 90 C29 90 18 78 18 62 L18 40 C18 37 19.5 35 21.5 35 C23.5 35 25 37 25 40 L25 50" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="25" y1="50" x2="36" y2="50" stroke="rgba(220,220,220,.8)" strokeWidth="3" strokeLinecap="round" />
                 </svg>
                 <div className="flex items-center gap-[10px]">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
