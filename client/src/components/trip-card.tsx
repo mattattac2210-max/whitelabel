@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoStart, getTripOdoEnd, RATE } from '@/lib/trip-data';
 import { MapPin } from 'lucide-react';
+import fingerIcon from '@assets/46c5b5a87189b206ba7af37a40a66ae0fc5047ee3551a29136bc2e30608cab_1772184358120.jpg';
 
 
 interface TripCardProps {
@@ -178,11 +179,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               }}
             >
               <div className="flex flex-col items-center gap-[10px]">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.75)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 13.5V8a1.5 1.5 0 0 1 3 0v3" />
-                  <path d="M13 11.5v-1a1.5 1.5 0 0 1 3 0v1.5" />
-                  <path d="M16 12v-.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6V9a1.5 1.5 0 0 1 3 0v4.5" />
-                </svg>
+                <img src={fingerIcon} alt="" width="90" height="90" style={{ filter: 'invert(1)', objectFit: 'contain' }} draggable={false} />
                 <div className="flex items-center gap-[10px]">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M5 12l5-5M5 12l5 5" />
