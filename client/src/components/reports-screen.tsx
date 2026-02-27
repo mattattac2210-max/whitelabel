@@ -498,16 +498,10 @@ export function ReportsScreen() {
                 Delete {SESSION_LABELS[confirmDeleteSession] || confirmDeleteSession}?
               </div>
             </div>
-            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[10px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
-              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
-              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
-                <strong>This will delete all sort cards and reports</strong> for this session. This action cannot be undone.
-              </span>
-            </div>
-            <div className="flex items-start gap-[6px] rounded-[8px] p-[8px_10px] mb-[14px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
-              <Check className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-gr)' }} />
-              <span className="text-[11px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>
-                You can come back and re-sort these trips anytime by loading this session again.
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[14px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
+                This will <strong style={{ color: 'var(--wc-am)' }}>delete your saved reports</strong> for this session. Your trip data will be reloaded so you can re-sort and create new reports anytime.
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
