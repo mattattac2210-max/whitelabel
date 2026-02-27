@@ -35,7 +35,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
     const fromEnc = encodeURIComponent(from);
     const toEnc = encodeURIComponent(to);
-    const darkStyles = 'style=feature:all|element:geometry|color:0x1a1a2e&style=feature:all|element:labels.text.fill|color:0x8a8a8a&style=feature:all|element:labels.text.stroke|color:0x0a0a14&style=feature:road|element:geometry|color:0x2a2a3e&style=feature:road.highway|element:geometry|color:0x3a3a50&style=feature:water|element:geometry|color:0x0d1b2a&style=feature:poi|visibility:off';
+    const darkStyles = 'style=feature:all|element:geometry|color:0xffffff&style=feature:all|element:labels|visibility:off&style=feature:road|element:geometry.fill|color:0x000000&style=feature:road|element:geometry.stroke|color:0xcccccc&style=feature:water|element:geometry|color:0xe8e8e8&style=feature:poi|visibility:off&style=feature:transit|visibility:off&style=feature:administrative|visibility:off&style=feature:landscape.man_made|element:geometry|color:0xf0f0f0';
     const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
 
     const buildUrl = (polyPart?: string) => {
@@ -103,7 +103,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
       src={imgUrl}
       alt="Route map"
       className="absolute inset-0 w-full h-full object-cover"
-      style={{ filter: 'brightness(0.85) contrast(1.1)' }}
+      style={{ filter: 'brightness(0.95)' }}
       onError={() => setError(true)}
       loading="lazy"
       draggable={false}
