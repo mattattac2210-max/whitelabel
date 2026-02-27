@@ -127,6 +127,7 @@ function reducer(state: AppState, action: Action): AppState {
         perCount: state.perCount + (isBiz ? 0 : 1),
         lastAction: { idx: state.currentIndex, type: action.tripType, ded: earned },
         currentIndex: state.currentIndex + 1,
+        freshSession: true,
       };
     }
     case 'UNDO_LAST': {
