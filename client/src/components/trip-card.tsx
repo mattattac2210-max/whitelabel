@@ -624,7 +624,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             className="relative w-[370px] max-h-[800px] rounded-[20px] overflow-hidden flex flex-col touch-pan-y"
             style={{
               background: 'var(--wc-card)',
-              border: '1px solid var(--wc-border)',
+              border: '1.5px solid #F5C400',
+              boxShadow: '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
               transform: detailDragX ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg)` : 'none',
               transition: detailDragging ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
             }}
