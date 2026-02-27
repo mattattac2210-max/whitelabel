@@ -93,8 +93,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
       className="absolute top-0 left-0 right-0 bottom-0 rounded-[20px] overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
       style={{
         background: 'var(--wc-card)',
-        border: '1px solid var(--wc-border)',
-        boxShadow: '0 16px 50px rgba(0,0,0,.7)',
+        border: '1.5px solid var(--wc-y)',
+        boxShadow: '0 0 18px rgba(245,196,0,.25), 0 0 40px rgba(245,196,0,.1), 0 16px 50px rgba(0,0,0,.7)',
         transform: getTransform(),
         opacity: getOpacity(),
         transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
