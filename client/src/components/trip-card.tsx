@@ -456,7 +456,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         </>
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
-        <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}>
+        <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}
+          onPointerDown={e => e.stopPropagation()}
+          onPointerUp={e => { e.stopPropagation(); setShowDetail(true); }}
+          data-testid="map-tap-area">
           <div className="absolute inset-[-20%_0_0_0]" style={{ transform: 'rotateX(28deg) scale(1.15)', transformOrigin: '50% 55%' }}>
             <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} interactive={false} />
           </div>
