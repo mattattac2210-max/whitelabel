@@ -278,6 +278,14 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes flashYellow {
+  0%, 100% { background: rgba(245,196,0,.1); }
+  25% { background: rgba(245,196,0,.25); }
+  50% { background: rgba(245,196,0,.08); }
+  75% { background: rgba(245,196,0,.2); }
+}
+.animate-flash-yellow { animation: flashYellow 1.5s ease-in-out; }
+
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 

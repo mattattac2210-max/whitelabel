@@ -104,9 +104,9 @@ export function ReportsScreen() {
                 {isOpen && (
                   <div className="px-[14px] pb-[14px] max-h-[55vh] overflow-y-auto scrollbar-thin" style={{ borderTop: '1px solid var(--wc-border)' }}>
 
-                    <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
-                      <Archive className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
-                      <span className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                    <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px] animate-flash-yellow" style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)' }}>
+                      <Archive className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                      <span className="text-[10px] leading-[1.4] font-semibold" style={{ color: 'var(--wc-y)' }}>
                         Read-only snapshot. To modify, go back and create a new report.
                       </span>
                     </div>
