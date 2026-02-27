@@ -585,7 +585,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(160,160,160,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
             Swipe left
           </div>
-          <div className="font-data text-[7px]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
+          <div className="font-data text-[7px] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
           <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(245,196,0,.65)' }}>
             Swipe right
             <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(245,196,0,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
