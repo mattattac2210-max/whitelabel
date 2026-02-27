@@ -453,7 +453,7 @@ export function ReportsScreen() {
             <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
               <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
               <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
-                <strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.
+                <strong>This locks in your reports as they currently are.</strong> Your saved reports will remain, but you won't be able to create new revisions for this session.
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
