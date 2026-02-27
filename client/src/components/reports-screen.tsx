@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive } from 'lucide-react';
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
@@ -34,22 +34,47 @@ export function ReportsScreen() {
             const perTrips = r.trips?.filter(t => t.type === 'personal') || [];
 
             return (
-              <div key={i} className="rounded-[13px] overflow-hidden" style={{ background: 'var(--wc-card)', border: `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`, transition: 'border-color .2s' }} data-testid={`report-${i}`}>
+              <div
+                key={i}
+                className="rounded-[13px] overflow-hidden"
+                style={{
+                  background: 'var(--wc-card)',
+                  border: `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`,
+                  transition: 'border-color .2s',
+                  opacity: r.supersedes ? 0.55 : 1,
+                }}
+                data-testid={`report-${i}`}
+              >
                 <button
                   className="w-full p-[12px_14px] text-left cursor-pointer"
                   style={{ background: 'transparent' }}
                   onClick={() => setExpandedIdx(isOpen ? null : i)}
                   data-testid={`report-toggle-${i}`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-data text-[9px] uppercase tracking-[.08em] mb-1" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
-                      <div className="font-heading font-bold text-[15px] text-white mb-[6px]">Sort Session &mdash; {r.bizCount + r.perCount} trips</div>
+                  <div className="flex items-start justify-between mb-[2px]">
+                    <div className="flex items-center gap-[6px] flex-wrap">
+                      <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
+                      {r.revision > 1 && !r.supersedes && (
+                        <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.2)', color: 'var(--wc-y)' }}>
+                          <Star className="w-[8px] h-[8px]" />
+                          Rev {r.revision} &mdash; Latest
+                        </span>
+                      )}
+                      {r.supersedes && (
+                        <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}>
+                          <Archive className="w-[8px] h-[8px]" />
+                          Superseded
+                        </span>
+                      )}
                     </div>
                     {isOpen
                       ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                       : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                     }
+                  </div>
+                  <div className="font-heading font-bold text-[15px] text-white mb-[6px]">
+                    {r.supersedes ? 'Previous Report' : 'Sort Session'} &mdash; {r.bizCount + r.perCount} trips
+                    {r.revision > 1 && !r.supersedes && <span className="font-data text-[9px] font-normal ml-[6px]" style={{ color: 'var(--wc-am)' }}>changes need verification</span>}
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>

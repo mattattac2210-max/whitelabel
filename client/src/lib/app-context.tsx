@@ -29,6 +29,8 @@ interface SavedReport {
   trips: SavedTripSummary[];
   auditLog: { time: string; desc: string }[];
   areasToCheck: string[];
+  revision: number;
+  supersedes: boolean;
 }
 
 interface AppState {
@@ -170,7 +172,15 @@ function reducer(state: AppState, action: Action): AppState {
       newTrips[action.tripIndex] = { ...trip, type: action.tripType };
       if (action.tripType === 'business') { newDed += trip.km * RATE; newBiz++; }
       else { newPer++; }
-      return { ...state, trips: newTrips, dedTotal: newDed, bizCount: newBiz, perCount: newPer };
+      const reclassDesc = `Reclassified "${trip.from} \u2192 ${trip.to}" from ${oldType || 'unsorted'} to ${action.tripType}`;
+      return {
+        ...state,
+        trips: newTrips,
+        dedTotal: newDed,
+        bizCount: newBiz,
+        perCount: newPer,
+        auditLog: [{ time: nowStr(), desc: reclassDesc, hasPhoto: false }, ...state.auditLog],
+      };
     }
     case 'VERIFY_TRIP': {
       const newTrips = [...state.trips];
@@ -240,6 +250,11 @@ function reducer(state: AppState, action: Action): AppState {
       const unsorted = state.trips.filter(t => t.type === null);
       if (unsorted.length > 0) areas.push(`${unsorted.length} trip${unsorted.length > 1 ? 's' : ''} not sorted yet`);
       if (areas.length === 0) areas.push('All clear \u2014 looking good for ATO compliance');
+      const revisionNum = state.savedReports.length + 1;
+      const isRevision = state.savedReports.length > 0;
+      if (isRevision) {
+        areas.unshift('This is a revised report \u2014 verify changes against previous version');
+      }
       const report: SavedReport = {
         timestamp: ts,
         bizCount: biz.length,
@@ -254,10 +269,13 @@ function reducer(state: AppState, action: Action): AppState {
         trips: tripSummaries,
         auditLog: state.auditLog.map(e => ({ time: e.time, desc: e.desc })),
         areasToCheck: areas,
+        revision: revisionNum,
+        supersedes: false,
       };
+      const updatedPrevious = state.savedReports.map(r => ({ ...r, supersedes: true }));
       return {
         ...state,
-        savedReports: [report, ...state.savedReports],
+        savedReports: [report, ...updatedPrevious],
         summaryModalOpen: false,
         currentScreen: 'sort',
       };
