@@ -316,6 +316,9 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const startXRef = useRef(0);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
+  const [detailDragX, setDetailDragX] = useState(0);
+  const [detailDragging, setDetailDragging] = useState(false);
+  const detailStartX = useRef(0);
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
@@ -614,14 +617,63 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setShowDetail(false)}
+          onClick={() => { if (!detailDragging) setShowDetail(false); }}
           data-testid="detail-overlay"
         >
           <div
-            className="relative w-[370px] max-h-[800px] rounded-[20px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
+            className="relative w-[370px] max-h-[800px] rounded-[20px] overflow-hidden flex flex-col touch-pan-y"
+            style={{
+              background: 'var(--wc-card)',
+              border: '1px solid var(--wc-border)',
+              transform: detailDragX ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg)` : 'none',
+              transition: detailDragging ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
+            }}
             onClick={e => e.stopPropagation()}
+            onPointerDown={e => {
+              const target = e.target as HTMLElement;
+              if (target.closest('button') || target.tagName === 'BUTTON') return;
+              setDetailDragging(true);
+              detailStartX.current = e.clientX;
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={e => {
+              if (!detailDragging) return;
+              setDetailDragX(e.clientX - detailStartX.current);
+            }}
+            onPointerUp={() => {
+              if (!detailDragging) return;
+              setDetailDragging(false);
+              if (detailDragX > 60) {
+                setShowDetail(false);
+                setDetailDragX(0);
+                flyOut('right');
+              } else if (detailDragX < -60) {
+                setShowDetail(false);
+                setDetailDragX(0);
+                flyOut('left');
+              } else {
+                setDetailDragX(0);
+              }
+            }}
           >
+            {detailDragX > 15 && (
+              <div className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
+                style={{ background: `rgba(245,196,0,${Math.min(Math.abs(detailDragX) / 200, 0.25)})` }}>
+                <div className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
+                  style={{ color: 'var(--wc-y)', border: '3px solid var(--wc-y)', opacity: Math.min(Math.abs(detailDragX) / 80, 1) }}>
+                  Business
+                </div>
+              </div>
+            )}
+            {detailDragX < -15 && (
+              <div className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
+                style={{ background: `rgba(160,160,160,${Math.min(Math.abs(detailDragX) / 200, 0.18)})` }}>
+                <div className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
+                  style={{ color: 'rgba(180,180,180,.9)', border: '3px solid rgba(180,180,180,.6)', opacity: Math.min(Math.abs(detailDragX) / 80, 1) }}>
+                  Personal
+                </div>
+              </div>
+            )}
             <button
               className="absolute top-[10px] right-[10px] z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center"
               style={{ background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.15)' }}
