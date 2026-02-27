@@ -210,26 +210,31 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </button>
         </div>
 
-        <div className="flex items-center gap-[7px] py-[3px]">
-          <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
-            <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
+        <div className="flex gap-[7px]">
+          <div className="flex-1 flex flex-col gap-[5px] min-w-0">
+            <div className="flex items-center gap-[7px] py-[3px]">
+              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
+                <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-[12px] text-white truncate">{trip.from}</div>
+                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-[7px] py-[3px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
+                <MapPin className="w-[11px] h-[11px]" stroke="#F5C400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-[12px] text-white truncate">{trip.to}</div>
+                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+              </div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[12px] text-white truncate">{trip.from}</div>
-            <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
-          </div>
-          <div className="flex-shrink-0 text-right rounded-[8px] p-[4px_9px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <div className="font-heading font-black text-[16px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km} km</div>
-            <div className="font-data text-[9px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-[7px] py-[3px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-          <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-            <MapPin className="w-[11px] h-[11px]" stroke="#F5C400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[12px] text-white truncate">{trip.to}</div>
-            <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[12px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
+            <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>km</div>
+            <div className="font-data text-[9px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
           </div>
         </div>
 
