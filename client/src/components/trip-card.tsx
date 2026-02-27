@@ -177,7 +177,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               }}
             >
               <div className="flex flex-col items-center gap-[10px]">
-                <img src={fingerIcon} alt="" width="90" height="90" style={{ filter: 'invert(1)', objectFit: 'contain' }} draggable={false} />
+                <img src={fingerIcon} alt="" width="90" height="90" style={{ filter: 'invert(1)', objectFit: 'contain', mixBlendMode: 'screen' }} draggable={false} />
                 <div className="flex items-center gap-[10px]">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M5 12l5-5M5 12l5 5" />
