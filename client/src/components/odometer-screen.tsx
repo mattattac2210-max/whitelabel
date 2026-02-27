@@ -110,8 +110,8 @@ export function OdometerScreen() {
                     <input
                       className="flex-1 rounded-[11px] p-[13px_14px] font-heading font-extrabold text-[22px] text-white outline-none tracking-[.02em]"
                       type="number"
-                      placeholder={String(oEnd)}
-                      value={odoInputs[i] ?? ''}
+                      placeholder={String(Math.round(oEnd))}
+                      value={odoInputs[i] ?? String(Math.round(oEnd))}
                       onChange={e => setOdoInputs(prev => ({ ...prev, [i]: e.target.value }))}
                       style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid var(--wc-border)' }}
                       data-testid={`odo-input-${i}`}
