@@ -51,25 +51,6 @@ export function ReportsScreen() {
         </button>
       )}
 
-      {hasMultiple && state.conflictResolved && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[7px_12px] flex-shrink-0" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-          <Check className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
-          <div className="flex-1">
-            <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Conflicting Reports</div>
-            <span className="text-[10px]" style={{ color: 'var(--wc-t2)' }}>
-              You have resolved all current issues.
-            </span>
-          </div>
-          <button
-            className="font-heading font-bold text-[9px] uppercase tracking-[.05em] px-[6px] py-[3px] rounded-[5px] cursor-pointer"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-            onClick={() => setShowConflictModal(true)}
-            data-testid="button-edit-selection"
-          >
-            Edit
-          </button>
-        </div>
-      )}
 
       <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
