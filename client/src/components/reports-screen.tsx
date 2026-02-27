@@ -1002,7 +1002,6 @@ export function ReportsScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="reports-screen">
-
       <div className="flex items-center gap-[8px] px-4 pt-2 pb-[5px] flex-shrink-0">
         {!locked && (
           <button className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
@@ -1023,7 +1022,6 @@ export function ReportsScreen() {
           <span className="text-[11px] text-white">{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
-
       <div className="flex gap-[4px] px-[14px] pb-[6px] flex-shrink-0">
         {([
           { id: 'list', label: 'List', Icon: List },
@@ -1031,7 +1029,7 @@ export function ReportsScreen() {
           { id: 'timeline', label: '12-Week', Icon: BarChart2 },
         ] as const).map(({ id, label, Icon }) => (
           <button key={id}
-            className="flex items-center gap-[4px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold text-[10px] uppercase tracking-[.04em] transition-all"
+            className="flex items-center gap-[4px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold uppercase tracking-[.04em] transition-all text-[18px]"
             style={{
               background: view === id ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.03)',
               border: `1px solid ${view === id ? 'rgba(245,196,0,.35)' : 'var(--wc-border)'}`,
@@ -1044,7 +1042,6 @@ export function ReportsScreen() {
           </button>
         ))}
       </div>
-
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
 
         {view === 'timeline' && (
@@ -1320,7 +1317,6 @@ export function ReportsScreen() {
           )
         )}
       </div>
-
       {locked ? (
         <div className="flex-shrink-0 px-[14px] py-[10px] flex flex-col gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
           <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px] text-white">Session Actions</div>
@@ -1382,7 +1378,6 @@ export function ReportsScreen() {
       ) : (
         <BottomNav activeOverride="reports" />
       )}
-
       {auditReport && <PreAuditChecklist report={auditReport} onClose={() => setAuditReport(null)} />}
       {taxInfoOpen && <TaxInfoModal onClose={() => setTaxInfoOpen(false)} />}
       {vehicleModal && (
@@ -1392,7 +1387,6 @@ export function ReportsScreen() {
           onClose={() => setVehicleModal(null)}
         />
       )}
-
       {conflictSessionId && (() => {
         const groupReports = state.savedReports.map((r, i) => ({ ...r, globalIdx: i })).filter(r => r.sessionId === conflictSessionId);
         if (groupReports.length < 2) return null;
@@ -1428,7 +1422,6 @@ export function ReportsScreen() {
           </div>
         );
       })()}
-
       {confirmDelete && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }} onClick={() => setConfirmDelete(false)}>
           <div className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-delete-confirm">
@@ -1452,7 +1445,6 @@ export function ReportsScreen() {
           </div>
         </div>
       )}
-
       {confirmDeleteSession && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }} onClick={() => setConfirmDeleteSession(null)}>
           <div className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-delete-session">
