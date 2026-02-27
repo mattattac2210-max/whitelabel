@@ -49,11 +49,29 @@ function InfoBlock({ title, color, children }: { title: string; color: string; c
   );
 }
 
-function TableRow({ label, val, highlight }: { label: string; val: string; highlight?: boolean }) {
+function TableRow({ label, val, highlight, tip }: { label: string; val: string; highlight?: boolean; tip?: string }) {
+  const [showTip, setShowTip] = useState(false);
   return (
-    <div className="flex flex-col py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-      <span className="text-[11px] text-white/60 mb-[2px]">{label}</span>
+    <div className="flex flex-col py-[5px] relative" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+      <div className="flex items-center gap-[6px]">
+        <span className="text-[11px] text-white/60 mb-[2px]">{label}</span>
+        {tip && (
+          <button
+            className="w-[16px] h-[16px] rounded-full flex items-center justify-center flex-shrink-0 mb-[2px]"
+            style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)' }}
+            onClick={() => setShowTip(!showTip)}
+            data-testid={`tip-${label.replace(/\s+/g, '-').toLowerCase()}`}
+          >
+            <HelpCircle className="w-[10px] h-[10px] text-white/50" />
+          </button>
+        )}
+      </div>
       <span className="text-[14px] font-data text-white" style={{ color: highlight ? 'var(--wc-y)' : 'white', fontWeight: highlight ? 700 : 400 }}>{val}</span>
+      {showTip && tip && (
+        <div className="mt-[4px] rounded-[8px] p-[8px_10px] text-[11px] leading-[1.5] text-white/80" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.15)' }}>
+          {tip}
+        </div>
+      )}
     </div>
   );
 }
@@ -917,12 +935,12 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Example — Mid-Year Purchase</span>
               </div>
               <div className="p-[14px_16px] flex flex-col gap-[3px]">
-                <TableRow label="Purchased" val="1 Jan 2025" />
-                <TableRow label="Days owned in FY2025" val="181 of 365 days" />
-                <TableRow label="Total car expenses" val="$8,000" />
-                <TableRow label="Business use %" val="65%" highlight />
-                <TableRow label="Pro-rata factor" val="181 \u00F7 365 = 0.496" />
-                <TableRow label="Deductible amount" val="$8,000 \u00D7 65% \u00D7 0.496 = $2,579" highlight />
+                <TableRow label="Purchased" val="1 Jan 2025" tip="The date you bought or started using the car for work. This determines how many days you held the vehicle in the financial year." />
+                <TableRow label="Days owned in FY2025" val="181 of 365 days" tip="The financial year runs 1 Jul to 30 Jun (365 days). You only owned the car from 1 Jan, so 181 days out of 365." />
+                <TableRow label="Total car expenses" val="$8,000" tip="All your car running costs added up: fuel, rego, insurance, servicing, depreciation, loan interest, etc." />
+                <TableRow label="Business use %" val="65%" highlight tip="The percentage of your total driving that was for work purposes, based on your logbook records." />
+                <TableRow label="Pro-rata factor" val="181 \u00F7 365 = 0.496" tip="Because you only owned the car for part of the year, the ATO scales your claim down. 181 days divided by 365 = 0.496 (about half the year)." />
+                <TableRow label="Deductible amount" val="$8,000 \u00D7 65% \u00D7 0.496 = $2,579" highlight tip="Your total expenses ($8,000) multiplied by your business use (65%) and then by the pro-rata factor (0.496) gives you the amount you can claim as a tax deduction." />
                 <p className="text-[11px] mt-[6px] text-white">* Simplified. Depreciation, fuel, insurance each have separate treatment. Consult a registered tax agent.</p>
               </div>
             </div>
@@ -932,11 +950,11 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-gr)' }}>Example — Full Year Logbook Method</span>
               </div>
               <div className="p-[14px_16px] flex flex-col gap-[3px]">
-                <TableRow label="Total km driven (FY)" val="22,000 km" />
-                <TableRow label="Business km (from logbook)" val="11,440 km" />
-                <TableRow label="Business use %" val="52%" highlight />
-                <TableRow label="Total car expenses" val="$12,000" />
-                <TableRow label="Deductible amount" val="$12,000 \u00D7 52% = $6,240" highlight />
+                <TableRow label="Total km driven (FY)" val="22,000 km" tip="The total kilometres you drove the car during the full financial year (1 Jul to 30 Jun), for all purposes combined." />
+                <TableRow label="Business km (from logbook)" val="11,440 km" tip="The kilometres your 12-week logbook recorded as work-related trips. This sets your business use percentage." />
+                <TableRow label="Business use %" val="52%" highlight tip="Business km divided by total km: 11,440 / 22,000 = 52%. This percentage applies to all your car expenses for the year." />
+                <TableRow label="Total car expenses" val="$12,000" tip="All your car running costs for the year: fuel, rego, insurance, servicing, depreciation, loan interest, etc. You need receipts for all of these." />
+                <TableRow label="Deductible amount" val="$12,000 \u00D7 52% = $6,240" highlight tip="Your total expenses ($12,000) multiplied by your business use percentage (52%) gives you the amount you can claim as a tax deduction." />
               </div>
             </div>
           </>)}
