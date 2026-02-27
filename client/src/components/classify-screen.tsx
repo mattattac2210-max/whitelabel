@@ -170,7 +170,7 @@ export function ClassifyScreen() {
         data-testid="classify-trip-card"
       >
         <div className="flex gap-0">
-          <div className="flex-1 min-w-0 p-[14px_14px] flex flex-col justify-center gap-[8px]">
+          <div className="flex-1 min-w-0 p-[14px_10px_14px_14px] flex flex-col justify-center gap-[8px]">
             <div className="flex items-center gap-[8px]">
               <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
                 <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
@@ -198,7 +198,7 @@ export function ClassifyScreen() {
             </div>
             <div className="font-heading font-extrabold text-[18px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
           </div>
-          <div className="w-[130px] aspect-square flex-shrink-0 self-center">
+          <div className="w-[140px] aspect-square flex-shrink-0 self-center">
             <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
         </div>
