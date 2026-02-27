@@ -35,15 +35,15 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
     const fromEnc = encodeURIComponent(from);
     const toEnc = encodeURIComponent(to);
-    const darkStyles = 'style=feature:all|element:geometry|color:0xffffff&style=feature:all|element:labels|visibility:off&style=feature:road|element:geometry.fill|color:0x000000&style=feature:road|element:geometry.stroke|color:0xcccccc&style=feature:water|element:geometry|color:0xe8e8e8&style=feature:poi|visibility:off&style=feature:transit|visibility:off&style=feature:administrative|visibility:off&style=feature:landscape.man_made|element:geometry|color:0xf0f0f0';
+    const mapStyles = 'style=feature:all|element:geometry|color:0xffffff&style=feature:all|element:labels|visibility:off&style=feature:administrative.locality|element:labels.text|visibility:on&style=feature:administrative.locality|element:labels.text.fill|color:0x999999&style=feature:administrative.locality|element:labels.text.stroke|color:0xffffff&style=feature:administrative.neighborhood|element:labels.text|visibility:on&style=feature:administrative.neighborhood|element:labels.text.fill|color:0xbbbbbb&style=feature:administrative.neighborhood|element:labels.text.stroke|color:0xffffff&style=feature:road|element:geometry.fill|color:0x222222&style=feature:road|element:geometry.stroke|color:0xdddddd&style=feature:road.highway|element:geometry.fill|color:0x111111&style=feature:road.highway|element:geometry.stroke|color:0xcccccc&style=feature:water|element:geometry|color:0xe0e8ef&style=feature:poi|visibility:off&style=feature:transit|visibility:off&style=feature:landscape.man_made|element:geometry|color:0xf4f4f4&style=feature:landscape.natural|element:geometry|color:0xeef2e8';
     const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
 
     const buildUrl = (polyPart?: string) => {
       if (polyPart) {
         const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
-        return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
+        return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
       }
-      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}&key=${MAPS_KEY}`;
+      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`;
     };
 
     const cached = polylineCache.get(cacheKey);
@@ -89,7 +89,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
   if (error || !imgUrl) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0c1018' }}>
+      <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#f0f0f0' }}>
         <div className="flex flex-col items-center gap-[4px]">
           <MapPin className="w-[18px] h-[18px] opacity-25" style={{ color: 'var(--wc-t3)' }} />
           <span className="font-data text-[8px] uppercase tracking-[.1em] opacity-30" style={{ color: 'var(--wc-t3)' }}>Map</span>
@@ -269,10 +269,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </div>
         </>
       )}
-      <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#0c1018' }}>
-        <div className="flex-1 relative overflow-hidden">
-          <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
-          <div className="absolute bottom-[6px] left-[8px] rounded-[7px] px-[8px] py-[3px] flex items-center gap-[4px]" style={{ background: 'rgba(0,0,0,.7)', backdropFilter: 'blur(4px)', border: '1px solid rgba(245,196,0,.25)' }}>
+      <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
+        <div className="flex-1 relative overflow-hidden" style={{ perspective: '600px' }}>
+          <div className="absolute inset-0" style={{ transform: 'rotateX(25deg) scale(1.25)', transformOrigin: '50% 80%' }}>
+            <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+          </div>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.2) 100%)' }} />
+          <div className="absolute bottom-[6px] left-[8px] rounded-[7px] px-[8px] py-[3px] flex items-center gap-[4px] z-10" style={{ background: 'rgba(0,0,0,.7)', backdropFilter: 'blur(4px)', border: '1px solid rgba(245,196,0,.25)' }}>
             <span className="font-heading font-extrabold text-[14px]" style={{ color: 'var(--wc-y)' }}>{trip.km}</span>
             <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
             <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
