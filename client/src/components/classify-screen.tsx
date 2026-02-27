@@ -1,12 +1,80 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
 import { CATEGORIES, RATE } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Check } from 'lucide-react';
+import { ArrowLeft, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Check, MapPin } from 'lucide-react';
+
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const iconMap: Record<string, typeof Wrench> = {
   Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark,
 };
+
+function loadGMaps(): Promise<void> {
+  if ((window as any)._gmapsLoaded) return Promise.resolve();
+  if ((window as any)._gmapsPromise) return (window as any)._gmapsPromise;
+  (window as any)._gmapsPromise = new Promise<void>((resolve, reject) => {
+    if (!MAPS_KEY) { reject(new Error('No key')); return; }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places,geometry`;
+    script.async = true;
+    script.onload = () => { (window as any)._gmapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed'));
+    document.head.appendChild(script);
+  });
+  return (window as any)._gmapsPromise;
+}
+
+function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
+  const [url, setUrl] = useState('');
+  const fetchedRef = useRef('');
+
+  useEffect(() => {
+    if (!MAPS_KEY) return;
+    const key = `${from}|${to}`;
+    if (fetchedRef.current === key) return;
+    fetchedRef.current = key;
+
+    const mapStyles = [
+      'style=feature:all|element:geometry|color:0xffffff',
+      'style=feature:all|element:labels|visibility:off',
+      'style=feature:road|element:geometry|color:0x000000',
+      'style=feature:water|element:geometry|color:0xd4e8f0',
+    ].join('&');
+    const markers = `markers=size:small|color:0x22C55E|${encodeURIComponent(from)}&markers=size:small|color:0xF5C400|${encodeURIComponent(to)}`;
+
+    loadGMaps().then(() => {
+      const ds = new google.maps.DirectionsService();
+      ds.route({ origin: from, destination: to, travelMode: google.maps.TravelMode.DRIVING, region: 'au' })
+        .then((result: any) => {
+          const poly = result.routes?.[0]?.overview_polyline;
+          if (poly) {
+            const safePoly = poly.replace(/\|/g, '%7C');
+            setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`);
+          } else {
+            setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`);
+          }
+        })
+        .catch(() => {
+          setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`);
+        });
+    });
+  }, [from, to]);
+
+  if (!url) {
+    return (
+      <div className="w-[100px] flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,.04)' }}>
+        <div className="w-[14px] h-[14px] border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--wc-y)', borderTopColor: 'transparent' }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-[100px] flex-shrink-0 relative overflow-hidden" data-testid="classify-mini-map">
+      <img src={url} alt="route" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+    </div>
+  );
+}
 
 export function ClassifyScreen() {
   const { state, dispatch } = useApp();
@@ -101,13 +169,30 @@ export function ClassifyScreen() {
         onClick={() => setMicroOpen(!microOpen)}
         data-testid="classify-trip-card"
       >
-        <div className="flex items-center gap-2 p-[9px_12px]">
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[12px] text-white truncate">{trip.from} &rarr; {trip.to}</div>
-            <div className="text-[11px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.date} &middot; {trip.km} km &middot; {trip.duration}</div>
+        <div className="flex gap-0">
+          <div className="flex-1 min-w-0 p-[10px_12px] flex flex-col justify-center gap-[6px]">
+            <div className="flex items-center gap-[6px]">
+              <div className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
+                <MapPin className="w-[8px] h-[8px]" stroke="#22C55E" />
+              </div>
+              <div className="font-semibold text-[11px] text-white truncate">{trip.from}</div>
+            </div>
+            <div className="flex items-center gap-[6px]">
+              <div className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
+                <MapPin className="w-[8px] h-[8px]" stroke="#F5C400" />
+              </div>
+              <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
+            </div>
+            <div className="flex items-center gap-[6px] mt-[2px]">
+              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.date}</span>
+              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
+              <span className="font-heading font-bold text-[11px]" style={{ color: 'var(--wc-y)' }}>{trip.km} km</span>
+              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
+              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+            </div>
+            <div className="font-heading font-extrabold text-[14px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
           </div>
-          <div className="font-heading font-extrabold text-[16px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
-          <div className="text-[14px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: microOpen ? 'rotate(180deg)' : 'none' }}>&or;</div>
+          <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
         </div>
         {microOpen && (
           <div className="p-[0_12px_12px] border-t" style={{ borderColor: 'var(--wc-border)' }} onClick={e => e.stopPropagation()}>
