@@ -409,16 +409,16 @@ export function ReportsScreen() {
                 </button>
                 <button
                   className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
-                  style={{ background: 'rgba(255,255,255,.04)', borderBottom: '1px solid var(--wc-border)' }}
+                  style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,.1)' }}
                   onClick={() => { setActionMenuOpen(false); setConfirmDelete(true); }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.08)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f0f0f0')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                   data-testid="action-delete-cards"
                 >
-                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: '#222' }} />
                   <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Done — Delete Sort Cards</div>
-                    <div className="text-[10px] mt-[1px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>This exits the sorting page and no further modifications are possible. Ensure your records are correct before selecting this option. Reports are kept, original trip cards are removed.</div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: '#111' }}>Done — Delete Sort Cards</div>
+                    <div className="text-[10px] mt-[1px] leading-[1.4]" style={{ color: '#444' }}>This exits the sorting page and no further modifications are possible. Ensure your records are correct before selecting this option. Reports are kept, original trip cards are removed.</div>
                   </div>
                 </button>
                 <div className="p-[10px_14px_4px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
