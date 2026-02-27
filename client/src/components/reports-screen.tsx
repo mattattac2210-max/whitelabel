@@ -407,20 +407,34 @@ export function ReportsScreen() {
                     <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Keep reports, remove original trip cards</div>
                   </div>
                 </button>
-                <button
-                  className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
-                  style={{ background: 'rgba(239,68,68,.06)', borderBottom: '1px solid var(--wc-border)' }}
-                  onClick={() => { setActionMenuOpen(false); setConfirmDeleteSession('pick'); }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.12)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,.06)')}
-                  data-testid="action-delete-session"
-                >
-                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: '#EF4444' }} />
-                  <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: '#EF4444' }}>Delete a Session</div>
-                    <div className="text-[10px] mt-[1px]" style={{ color: 'rgba(239,68,68,.6)' }}>Remove cards + reports &mdash; come back and re-sort anytime</div>
+                <div className="p-[10px_14px_4px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                  <div className="flex items-center gap-[6px] mb-[6px]">
+                    <Trash2 className="w-[13px] h-[13px] flex-shrink-0" style={{ color: '#EF4444' }} />
+                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: '#EF4444' }}>Delete a Session</span>
                   </div>
-                </button>
+                  <div className="flex flex-col gap-[4px] mb-[8px]">
+                    {sessionIds.map(sid => (
+                      <button
+                        key={sid}
+                        className="w-full rounded-[8px] p-[8px_10px] text-left cursor-pointer transition-all flex items-center gap-[8px]"
+                        style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.15)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.14)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,.06)')}
+                        onClick={() => { setActionMenuOpen(false); setConfirmDeleteSession(sid); }}
+                        data-testid={`action-delete-session-${sid}`}
+                      >
+                        <Trash2 className="w-[12px] h-[12px] flex-shrink-0" style={{ color: '#EF4444' }} />
+                        <span className="font-heading font-bold text-[12px] uppercase tracking-[.04em]" style={{ color: '#EF4444' }}>{SESSION_LABELS[sid] || sid}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-start gap-[5px] mb-[8px]">
+                    <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+                    <span className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                      Altering sessions is <strong style={{ color: 'var(--wc-am)' }}>not recommended.</strong> All data is retained on your behalf for ATO compliance.
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -475,53 +489,6 @@ export function ReportsScreen() {
         </div>
       )}
 
-      {confirmDeleteSession === 'pick' && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setConfirmDeleteSession(null)}
-        >
-          <div
-            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
-            onClick={e => e.stopPropagation()}
-            data-testid="modal-pick-session"
-          >
-            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
-                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
-              </div>
-              <div className="font-heading font-black text-[18px] uppercase text-white text-center">Which Session?</div>
-              <div className="text-[11px] text-center" style={{ color: 'var(--wc-t2)' }}>Select a session to delete</div>
-            </div>
-            <div className="flex flex-col gap-[6px] mb-[14px]">
-              {sessionIds.map(sid => (
-                <button
-                  key={sid}
-                  className="w-full rounded-[10px] p-[10px_12px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
-                  style={{ background: 'rgba(239,68,68,.06)', border: '1.5px solid rgba(239,68,68,.2)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.12)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,.06)')}
-                  onClick={() => setConfirmDeleteSession(sid)}
-                  data-testid={`pick-session-${sid}`}
-                >
-                  <Trash2 className="w-[14px] h-[14px] flex-shrink-0" style={{ color: '#EF4444' }} />
-                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: '#EF4444' }}>{SESSION_LABELS[sid] || sid}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-              style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-              onClick={() => setConfirmDeleteSession(null)}
-              data-testid="button-cancel-pick-session"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       {confirmDeleteSession && confirmDeleteSession !== 'pick' && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center"
@@ -546,6 +513,8 @@ export function ReportsScreen() {
               <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
               <span className="text-[12px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
                 This will <strong style={{ color: 'var(--wc-am)' }}>delete your saved reports</strong> for this session. Your trip data will be reloaded so you can re-sort and create new reports anytime.
+                <br /><br />
+                <span style={{ color: 'var(--wc-t3)' }}>Altering sessions is not recommended. All data is retained on your behalf for ATO compliance.</span>
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
