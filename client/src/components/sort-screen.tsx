@@ -250,22 +250,29 @@ export function SortScreen() {
               All sort cards have been deleted. Use Reset Demo to load sample trips, or connect your GPS to import new trips.
             </div>
             <div className="flex flex-col gap-[7px] w-full mt-1">
-              <button
-                className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
-                style={{ background: 'var(--wc-y)' }}
-                onClick={() => dispatch({ type: 'RESET_DEMO' })}
-                data-testid="button-reload-demo"
-              >
-                Load Batch 1 — Week 1
-              </button>
-              <button
-                className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
-                style={{ background: 'transparent', border: '1.5px solid var(--wc-y)', color: 'var(--wc-y)' }}
-                onClick={() => dispatch({ type: 'LOAD_BATCH2' })}
-                data-testid="button-load-batch2"
-              >
-                Load Batch 2 — Week 2
-              </button>
+              {!state.savedReports.some(r => r.sessionId === 'batch1') && (
+                <button
+                  className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
+                  style={{ background: 'var(--wc-y)' }}
+                  onClick={() => dispatch({ type: 'RESET_DEMO' })}
+                  data-testid="button-reload-demo"
+                >
+                  Load Batch 1 — Week 1
+                </button>
+              )}
+              {!state.savedReports.some(r => r.sessionId === 'batch2') && (
+                <button
+                  className={`w-full rounded-[11px] py-${state.savedReports.some(r => r.sessionId === 'batch1') ? '3' : '[10px]'} font-heading font-${state.savedReports.some(r => r.sessionId === 'batch1') ? 'extrabold text-[16px]' : 'bold text-[14px]'} tracking-[.06em] uppercase cursor-pointer transition-all`}
+                  style={state.savedReports.some(r => r.sessionId === 'batch1')
+                    ? { background: 'var(--wc-y)', color: '#000' }
+                    : { background: 'transparent', border: '1.5px solid var(--wc-y)', color: 'var(--wc-y)' }
+                  }
+                  onClick={() => dispatch({ type: 'LOAD_BATCH2' })}
+                  data-testid="button-load-batch2"
+                >
+                  Load Batch 2 — Week 2
+                </button>
+              )}
               {state.savedReports.length > 0 && (
                 <button
                   className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
