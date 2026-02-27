@@ -462,7 +462,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
         <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}
           onPointerDown={e => {
-            e.stopPropagation();
             longPressTriggered.current = false;
             longPressTimer.current = setTimeout(() => {
               longPressTriggered.current = true;
@@ -472,8 +471,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           onPointerMove={() => {
             if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
           }}
-          onPointerUp={e => {
-            e.stopPropagation();
+          onPointerUp={() => {
             if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
           }}
           onPointerCancel={() => {
