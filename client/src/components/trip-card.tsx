@@ -498,7 +498,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </button>
           <button
             className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            style={{ background: '#999', border: '1px solid #999', color: '#000' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={onEdit}
             data-testid="button-edit-trip"
