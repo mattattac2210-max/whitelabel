@@ -37,44 +37,6 @@ export function ReportsScreen() {
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} session{state.savedReports.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {unresolvedConflict && (
-        <button
-          className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[8px_12px] flex-shrink-0 cursor-pointer transition-all animate-flash-yellow text-left"
-          style={{ background: 'var(--wc-y)', border: '1px solid var(--wc-y)' }}
-          onClick={() => setShowConflictModal(true)}
-          data-testid="button-conflict-banner"
-        >
-          <ShieldAlert className="w-[16px] h-[16px] flex-shrink-0 text-black" />
-          <div>
-            <div className="font-heading font-black text-[11px] uppercase tracking-[.04em] text-black">
-              Conflicting Reports
-            </div>
-            <div className="text-[10px] leading-[1.3] text-black font-medium" style={{ opacity: .7 }}>
-              Tap to resolve — only one report can be active for final submission.
-            </div>
-          </div>
-        </button>
-      )}
-
-      {hasMultiple && hasActiveReport && !unresolvedConflict && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[7px_12px] flex-shrink-0" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-          <Check className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
-          <div className="flex-1">
-            <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Conflicting Reports</div>
-            <span className="text-[10px]" style={{ color: 'var(--wc-t2)' }}>
-              You have resolved all current issues.
-            </span>
-          </div>
-          <button
-            className="font-heading font-bold text-[9px] uppercase tracking-[.05em] px-[6px] py-[3px] rounded-[5px] cursor-pointer"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-            onClick={() => setShowConflictModal(true)}
-            data-testid="button-edit-active-report"
-          >
-            Edit
-          </button>
-        </div>
-      )}
 
       <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
@@ -87,9 +49,36 @@ export function ReportsScreen() {
             data-testid="linked-reports-group"
           >
             {hasMultiple && (
-              <div className="flex items-center gap-[6px] px-[6px] pt-[2px] pb-[2px]">
-                <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
-                <span className="font-heading font-bold text-[9px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>Linked Reports</span>
+              <div className="flex flex-col gap-[6px] px-[6px] pt-[2px] pb-[2px]">
+                <div className="flex items-center gap-[6px]">
+                  <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
+                  <span className="font-heading font-bold text-[9px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>Linked Reports</span>
+                </div>
+                {hasActiveReport ? (
+                  <button
+                    className="flex items-center gap-[6px] rounded-[8px] p-[5px_8px] cursor-pointer transition-all text-left"
+                    style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}
+                    onClick={() => setShowConflictModal(true)}
+                    data-testid="button-edit-active-report"
+                  >
+                    <Check className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
+                    <span className="flex-1 text-[9px]" style={{ color: 'var(--wc-t2)' }}>
+                      <span style={{ color: 'var(--wc-gr)' }}>Resolved</span> — tap to change active report
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    className="flex items-center gap-[6px] rounded-[8px] p-[5px_8px] cursor-pointer transition-all animate-flash-yellow text-left"
+                    style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)' }}
+                    onClick={() => setShowConflictModal(true)}
+                    data-testid="button-resolve-conflict"
+                  >
+                    <ShieldAlert className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
+                    <span className="flex-1 text-[9px]" style={{ color: 'var(--wc-am)' }}>
+                      Tap to select active report
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           {state.savedReports.map((r, i) => {
