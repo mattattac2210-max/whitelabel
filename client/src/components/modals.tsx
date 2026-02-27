@@ -374,6 +374,7 @@ export function SummaryModal() {
           <div>
             <div className="font-heading font-black text-[22px] uppercase text-white leading-none">Session Complete</div>
             <div className="text-[13px] mt-[3px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: scoreCol }}>Audit Score: {score}%</div>
           </div>
         </div>
 
