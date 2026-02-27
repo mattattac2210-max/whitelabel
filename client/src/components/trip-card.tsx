@@ -150,7 +150,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </div>
         </>
       )}
-
       <div className="w-full h-[160px] relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018', borderBottom: '1px solid var(--wc-border)' }}>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
@@ -159,8 +158,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </div>
         </div>
       </div>
-
-      <div className="p-[10px_13px_10px] flex flex-col gap-[5px]">
+      <div className="p-[10px_13px_10px] flex flex-col gap-[5px] pl-[13px] pr-[13px] mt-[10px] mb-[10px]">
         <div className="flex items-center gap-[5px]">
           <span className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
           <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
