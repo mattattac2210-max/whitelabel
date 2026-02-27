@@ -182,7 +182,7 @@ export function ReportsScreen() {
                             <div className="flex items-center gap-[6px] mt-[10px] mb-[8px] rounded-[8px] p-[7px_10px]" style={{ background: 'rgba(255,255,255,.45)', border: '1px solid rgba(255,255,255,.5)' }}>
                               <Archive className="w-[12px] h-[12px] flex-shrink-0 text-black" />
                               <span className="text-[10px] leading-[1.4] font-bold text-black">
-                                Permanent archive. Sort cards deleted — this report can no longer be modified.
+                                Read-only. Sort cards deleted — original data can no longer be modified.
                               </span>
                             </div>
                           )}
