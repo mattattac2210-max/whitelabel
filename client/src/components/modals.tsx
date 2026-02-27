@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE, getTripOdoEnd } from '@/lib/trip-data';
 import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown } from 'lucide-react';
+import { AddressInput } from './address-input';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   if (!open) return null;
@@ -113,23 +114,23 @@ export function EditModal() {
 
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>From Address</label>
-          <input
+          <AddressInput
             className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
             style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
             value={editFrom}
-            onChange={e => setEditFrom(e.target.value)}
+            onChange={setEditFrom}
             data-testid="input-edit-from"
           />
         </div>
 
         {stops.map((s, i) => (
           <div key={i} className="flex items-center gap-[5px] mb-1">
-            <input
+            <AddressInput
               className="flex-1 rounded-[7px] p-[6px_9px] text-[12px] text-white outline-none"
               style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
               placeholder={`Stop ${i + 1} address`}
               value={s}
-              onChange={e => { const n = [...stops]; n[i] = e.target.value; setStops(n); }}
+              onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
             />
             <button className="rounded-[6px] p-[5px_7px] text-[11px] cursor-pointer" style={{ background: 'var(--wc-red)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }} onClick={() => { const n = [...stops]; n.splice(i, 1); setStops(n); }}>X</button>
           </div>
@@ -138,11 +139,11 @@ export function EditModal() {
 
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>To Address</label>
-          <input
+          <AddressInput
             className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
             style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
             value={editTo}
-            onChange={e => setEditTo(e.target.value)}
+            onChange={setEditTo}
             data-testid="input-edit-to"
           />
         </div>
