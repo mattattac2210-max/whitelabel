@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
 import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd } from './trip-data';
 
-export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports';
+export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export';
 
 interface SavedTripSummary {
   from: string;
