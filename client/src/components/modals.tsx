@@ -411,8 +411,8 @@ export function SummaryModal() {
             <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => {
                 const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
-                const delay = i * 0.15;
-                const duration = 0.8 + i * 0.15;
+                const delay = (NUM_DIGITS - 1 - i) * 0.15;
+                const duration = 0.8 + (NUM_DIGITS - 1 - i) * 0.15;
                 return (
                   <div key={i} className="flex flex-col items-center" style={{ width: '52px' }}>
                     <button
