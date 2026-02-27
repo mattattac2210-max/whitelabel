@@ -1,0 +1,245 @@
+import { useState } from 'react';
+import { useApp } from '@/lib/app-context';
+import { RATE, getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
+import { BottomNav } from './bottom-nav';
+import { ArrowLeft, AlertTriangle, Check } from 'lucide-react';
+
+export function ReviewScreen() {
+  const { state, dispatch } = useApp();
+  const [tab, setTab] = useState<'list' | 'cal'>('list');
+  const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
+
+  const biz = state.trips.filter(t => t.type === 'business');
+  const per = state.trips.filter(t => t.type === 'personal');
+  const unclassified = biz.filter(t => !t.purposeLabel).length;
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTH = 1;
+  const YEAR = 2026;
+  const first = new Date(YEAR, MONTH, 1).getDay();
+  const off = first === 0 ? 6 : first - 1;
+  const dim = new Date(YEAR, MONTH + 1, 0).getDate();
+
+  return (
+    <div className="flex flex-col h-full" data-testid="review-screen">
+      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+        <button
+          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
+          data-testid="button-back-review"
+        >
+          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+        </button>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Review</span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.trips.length} trips</span>
+      </div>
+
+      <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
+        <div className="flex items-center gap-[10px]">
+          {[
+            { id: 'step1', label: 'Sort', done: true },
+            { id: 'step2', label: 'Classify', done: unclassified === 0 },
+            { id: 'step3', label: 'Review', active: true },
+            { id: 'step4', label: 'Odometer' },
+          ].map((step, i, arr) => (
+            <div key={step.id} className="flex flex-col items-center flex-1 relative">
+              {i < arr.length - 1 && (
+                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
+              )}
+              <div
+                className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
+                style={{
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
+                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
+                }}
+              >
+                {step.done ? '\u2713' : i + 1}
+              </div>
+              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
+                {step.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {unclassified > 0 && (
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(245,196,0,.07)', border: '1px solid rgba(245,196,0,.25)' }}>
+          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(245,196,0,.9)" />
+          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(245,196,0,.85)' }}>
+            <strong style={{ color: 'var(--wc-y)' }}>{unclassified} business trip{unclassified > 1 ? 's' : ''}</strong> have no purpose set &mdash; tap to expand and classify.
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-[5px] px-[14px] pb-[5px] flex-shrink-0">
+        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
+          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-y)' }} data-testid="text-review-biz">{biz.length} trips</div>
+        </div>
+        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Personal</div>
+          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-t2)' }}>{per.length} trips</div>
+        </div>
+        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction*</div>
+          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-gr)' }}>${Math.round(state.dedTotal).toLocaleString('en-AU')}</div>
+        </div>
+      </div>
+
+      <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
+        <button
+          className="flex-1 py-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase text-center cursor-pointer transition-all"
+          style={{ borderBottom: tab === 'list' ? '2px solid var(--wc-y)' : '2px solid var(--wc-border)', color: tab === 'list' ? 'var(--wc-y)' : 'var(--wc-t3)' }}
+          onClick={() => setTab('list')}
+          data-testid="tab-list"
+        >
+          List View
+        </button>
+        <button
+          className="flex-1 py-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase text-center cursor-pointer transition-all"
+          style={{ borderBottom: tab === 'cal' ? '2px solid var(--wc-y)' : '2px solid var(--wc-border)', color: tab === 'cal' ? 'var(--wc-y)' : 'var(--wc-t3)' }}
+          onClick={() => setTab('cal')}
+          data-testid="tab-calendar"
+        >
+          Calendar
+        </button>
+      </div>
+
+      {tab === 'list' ? (
+        <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
+          {state.trips.map((t, i) => {
+            const oStart = Math.round(getTripOdoStart(state.trips, i));
+            const oEnd = Math.round(getTripOdoEnd(state.trips, i));
+            const ded = t.type === 'business' ? '$' + (t.km * RATE).toFixed(2) : '\u2014';
+            const typeClass = t.type === 'business' ? 'biz' : t.type === 'personal' ? 'per' : 'unsorted';
+            const isExpanded = expandedTrip === i;
+
+            return (
+              <div
+                key={i}
+                className="rounded-[13px] cursor-pointer transition-all"
+                style={{
+                  background: 'var(--wc-card)',
+                  border: '1px solid var(--wc-border)',
+                  borderLeft: t.type === 'business' ? '3px solid rgba(245,196,0,.6)' : t.type === 'personal' ? '3px solid rgba(239,68,68,.4)' : '3px solid rgba(255,255,255,.15)',
+                }}
+                data-testid={`review-trip-${i}`}
+              >
+                <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : i)}>
+                  <div className="flex-1 min-w-0">
+                    <div className={`font-semibold text-[13px] text-white mb-[3px] ${isExpanded ? '' : 'truncate'}`}>{t.from} &rarr; {t.to}</div>
+                    <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km &middot; {t.duration}</div>
+                  </div>
+                  <div className="font-heading font-bold text-[14px] flex-shrink-0" style={{ color: 'var(--wc-t2)' }}>{t.km} km</div>
+                  <span
+                    className="font-heading font-bold text-[11px] px-2 py-[3px] rounded-[6px] uppercase tracking-[.04em] flex-shrink-0"
+                    style={{
+                      background: t.type === 'business' ? 'var(--wc-yd)' : t.type === 'personal' ? 'var(--wc-red)' : 'rgba(255,255,255,.06)',
+                      color: t.type === 'business' ? 'var(--wc-y)' : t.type === 'personal' ? 'var(--wc-re)' : 'var(--wc-t3)',
+                      border: t.type === 'business' ? '1px solid rgba(245,196,0,.22)' : t.type === 'personal' ? '1px solid rgba(239,68,68,.18)' : '1px solid var(--wc-border)',
+                    }}
+                  >
+                    {t.type || 'Unsorted'}
+                  </span>
+                  <div className="text-[14px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>&or;</div>
+                </div>
+                {isExpanded && (
+                  <div className="p-[10px_14px_13px] flex flex-col gap-2 border-t" style={{ borderColor: 'var(--wc-border)' }}>
+                    <div className="text-[12px] leading-[1.8]" style={{ color: 'var(--wc-t2)' }}>
+                      <strong className="text-white">From:</strong> {t.from}, {t.fromSub}<br />
+                      <strong className="text-white">To:</strong> {t.to}, {t.toSub}<br />
+                      <strong className="text-white">Time:</strong> {t.time} &middot; <strong className="text-white">Duration:</strong> {t.duration}<br />
+                      <strong className="text-white">Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km<br />
+                      <strong className="text-white">Deduction est.:</strong> {ded}
+                    </div>
+                    {t.purposeLabel && (
+                      <div className="text-[12px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
+                    )}
+                    <div className="flex gap-[6px] flex-wrap">
+                      <button
+                        className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                        style={{ borderColor: 'rgba(239,68,68,.3)', color: 'rgba(239,68,68,.7)', background: t.type === 'personal' ? 'var(--wc-red)' : 'transparent', border: '1.5px solid rgba(239,68,68,.3)' }}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: i, tripType: 'personal' }); }}
+                        data-testid={`reclassify-personal-${i}`}
+                      >
+                        &larr; Personal
+                      </button>
+                      <button
+                        className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                        style={{ borderColor: 'rgba(245,196,0,.4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgba(245,196,0,.4)' }}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: i, tripType: 'business' }); }}
+                        data-testid={`reclassify-business-${i}`}
+                      >
+                        Business &rarr;
+                      </button>
+                      <button
+                        className="py-2 px-3 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                        style={{ border: '1px solid var(--wc-border)', background: 'rgba(255,255,255,.04)', color: 'var(--wc-t2)' }}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: i }); }}
+                        data-testid={`edit-trip-${i}`}
+                      >
+                        Edit &rsaquo;
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex-1 px-[14px] flex flex-col gap-[6px]">
+          <div className="font-heading font-bold text-[14px] text-white uppercase tracking-[.06em] text-center">February 2026</div>
+          <div className="grid grid-cols-7 gap-[3px]">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+              <div key={i} className="font-data text-[8px] text-center py-[2px]" style={{ color: 'var(--wc-t3)' }}>{d}</div>
+            ))}
+            {Array.from({ length: off }).map((_, i) => (
+              <div key={`e${i}`} className="text-transparent text-center text-[13px]">.</div>
+            ))}
+            {Array.from({ length: dim }).map((_, i) => {
+              const d = i + 1;
+              const dayTrips = state.trips.filter(t => t.day === d && t.month === MONTH && t.year === YEAR);
+              const hasBiz = dayTrips.some(t => t.type === 'business');
+              const hasPer = dayTrips.some(t => t.type === 'personal');
+
+              return (
+                <div key={d} className="font-heading font-semibold text-[13px] text-center py-[5px] rounded-[6px] cursor-default leading-none relative" style={{ color: dayTrips.length ? 'var(--wc-t2)' : 'var(--wc-t3)' }}>
+                  {d}
+                  {dayTrips.length > 0 && (
+                    <div className="w-[5px] h-[5px] rounded-full absolute bottom-[1px] left-1/2 -translate-x-1/2" style={{ background: hasBiz ? 'var(--wc-y)' : hasPer ? 'var(--wc-t3)' : 'var(--wc-re)' }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-[10px] justify-center flex-shrink-0">
+            {[{ color: 'var(--wc-y)', label: 'Business' }, { color: 'var(--wc-t3)', label: 'Personal' }, { color: 'var(--wc-re)', label: 'Unsorted' }].map(l => (
+              <div key={l.label} className="flex items-center gap-1 text-[9px]" style={{ color: 'var(--wc-t2)' }}>
+                <div className="w-[6px] h-[6px] rounded-full" style={{ background: l.color }} />
+                {l.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="px-[14px] py-[6px] flex-shrink-0">
+        <button
+          className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+          style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'odometer' })}
+          data-testid="button-done-review"
+        >
+          <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+          Continue to Odometer &rarr;
+        </button>
+      </div>
+
+      <BottomNav activeOverride="review" />
+    </div>
+  );
+}
