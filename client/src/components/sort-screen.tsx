@@ -292,9 +292,19 @@ export function SortScreen() {
             </div>
             <div className="font-heading font-black text-[26px] uppercase text-white text-center leading-none" data-testid="text-complete">All Sorted!</div>
             <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>Total estimated deduction*</div>
-            <div className="font-heading font-black text-[44px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-total-deduction">
-              ${Math.round(state.dedTotal).toLocaleString('en-AU')}
-            </div>
+            {(() => {
+              const otherDed = state.savedReports
+                .filter(r => r.sessionId !== state.sessionId && !r.supersedes)
+                .reduce((sum, r) => {
+                  const biz = (r.trips || []).filter(t => t.type === 'business');
+                  return sum + biz.reduce((s, t) => s + t.km * RATE, 0);
+                }, 0);
+              return (
+                <div className="font-heading font-black text-[44px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-total-deduction">
+                  ${Math.round(state.dedTotal + otherDed).toLocaleString('en-AU')}
+                </div>
+              );
+            })()}
             <div className="flex flex-col gap-[7px] w-full mt-1">
               {(() => {
                 const sessionReports = state.savedReports.filter(r => r.sessionId === state.sessionId);
@@ -364,9 +374,20 @@ export function SortScreen() {
             <div className="flex items-baseline justify-between">
               <div>
                 <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook Claim Est.*</div>
-                <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-y)' }} data-testid="text-deduction">
-                  ${Math.round(state.dedTotal).toLocaleString('en-AU')}
-                </div>
+                {(() => {
+                  const otherSessionsDed = state.savedReports
+                    .filter(r => r.sessionId !== state.sessionId && !r.supersedes)
+                    .reduce((sum, r) => {
+                      const bizTrips = (r.trips || []).filter(t => t.type === 'business');
+                      return sum + bizTrips.reduce((s, t) => s + t.km * RATE, 0);
+                    }, 0);
+                  const runningTotal = Math.round(state.dedTotal + otherSessionsDed);
+                  return (
+                    <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-y)' }} data-testid="text-deduction">
+                      ${runningTotal.toLocaleString('en-AU')}
+                    </div>
+                  );
+                })()}
               </div>
               <div className="text-right">
                 <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
