@@ -196,7 +196,7 @@ export function ClassifyScreen() {
             </div>
             <div className="font-heading font-extrabold text-[18px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
           </div>
-          <div className="w-[150px] aspect-square flex-shrink-0 self-center">
+          <div className="w-[150px] aspect-square flex-shrink-0 self-center rounded-[14px] overflow-hidden">
             <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
         </div>
