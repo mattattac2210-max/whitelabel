@@ -291,19 +291,15 @@ export function SortScreen() {
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="var(--wc-y)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             <div className="font-heading font-black text-[26px] uppercase text-white text-center leading-none" data-testid="text-complete">All Sorted!</div>
-            <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>Total estimated deduction*</div>
+            <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>This session's estimated deduction*</div>
             {(() => {
-              const savedDed = state.savedReports
-                .filter(r => !r.supersedes)
-                .reduce((sum, r) => {
-                  const biz = (r.trips || []).filter(t => t.type === 'business');
-                  return sum + biz.reduce((s, t) => s + t.km * RATE, 0);
-                }, 0);
-              const hasReport = state.savedReports.some(r => r.sessionId === state.sessionId && !r.supersedes);
-              const unsaved = hasReport ? 0 : state.dedTotal;
+              const activeSessionReport = state.savedReports.find(r => r.sessionId === state.sessionId && !r.supersedes);
+              const sessionDed = activeSessionReport
+                ? (activeSessionReport.trips || []).filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0)
+                : state.dedTotal;
               return (
                 <div className="font-heading font-black text-[44px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-total-deduction">
-                  ${Math.round(savedDed + unsaved).toLocaleString('en-AU')}
+                  ${Math.round(sessionDed).toLocaleString('en-AU')}
                 </div>
               );
             })()}
