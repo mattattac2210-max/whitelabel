@@ -3,47 +3,6 @@ import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoStart, getTripOdoEnd, RATE } from '@/lib/trip-data';
 import { MapPin } from 'lucide-react';
 
-function TripMap({ trip }: { trip: Trip }) {
-  return (
-    <div className="w-full h-[158px] relative overflow-hidden flex-shrink-0" style={{ background: '#0c1018' }}>
-      <svg className="w-full h-full absolute inset-0" viewBox="0 0 350 158">
-        <defs>
-          <filter id="yg"><feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-        </defs>
-        <rect width="350" height="158" fill="#0c1018" />
-        <ellipse cx="38" cy="134" rx="50" ry="38" fill="#0d1f35" opacity=".7" />
-        <line x1="0" y1="79" x2="350" y2="79" stroke="#1a2535" strokeWidth="10" />
-        <line x1="0" y1="36" x2="350" y2="36" stroke="#1a2535" strokeWidth="6" />
-        <line x1="0" y1="128" x2="350" y2="128" stroke="#1a2535" strokeWidth="6" />
-        <line x1="70" y1="0" x2="70" y2="158" stroke="#1a2535" strokeWidth="10" />
-        <line x1="175" y1="0" x2="175" y2="158" stroke="#1a2535" strokeWidth="6" />
-        <line x1="280" y1="0" x2="280" y2="158" stroke="#1a2535" strokeWidth="10" />
-        <rect x="78" y="42" width="36" height="30" rx="3" fill="#141c28" opacity=".8" />
-        <rect x="120" y="42" width="48" height="30" rx="3" fill="#111824" opacity=".8" />
-        <rect x="183" y="85" width="40" height="38" rx="3" fill="#141c28" opacity=".8" />
-        <rect x="183" y="42" width="88" height="34" rx="3" fill="#0f1520" opacity=".8" />
-        <rect x="288" y="42" width="55" height="30" rx="3" fill="#141c28" opacity=".8" />
-        <rect x="78" y="85" width="88" height="38" rx="4" fill="#0f1e14" opacity=".65" />
-        <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#F5C400" strokeWidth="8" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity=".18" filter="url(#yg)" />
-        <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#F5C400" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="5 11" opacity=".3">
-          <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="1.4s" repeatCount="indefinite" />
-        </path>
-        <g transform="translate(47,106)">
-          <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 34 15 34s15-25.7 15-34C30 6.7 23.3 0 15 0z" fill="#22C55E" />
-          <circle cx="15" cy="15" r="7" fill="rgba(0,0,0,.4)" />
-          <text x="15" y="19.5" textAnchor="middle" fill="white" fontSize="10" fontFamily="Arial" fontWeight="900">A</text>
-        </g>
-        <g transform="translate(267,8)">
-          <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 34 15 34s15-25.7 15-34C30 6.7 23.3 0 15 0z" fill="#F5C400" />
-          <circle cx="15" cy="15" r="7" fill="rgba(0,0,0,.4)" />
-          <text x="15" y="19.5" textAnchor="middle" fill="black" fontSize="10" fontFamily="Arial" fontWeight="900">B</text>
-        </g>
-      </svg>
-      <div className="absolute bottom-0 left-0 right-0 h-[44px] pointer-events-none z-[5]" style={{ background: 'linear-gradient(180deg,transparent,var(--wc-card))' }} />
-    </div>
-  );
-}
 
 interface TripCardProps {
   trip: Trip;
@@ -192,9 +151,16 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
         </>
       )}
 
-      <TripMap trip={trip} />
+      <div className="w-full h-[160px] relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018', borderBottom: '1px solid var(--wc-border)' }}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
+            <MapPin className="w-[20px] h-[20px] opacity-30" />
+            <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
+          </div>
+        </div>
+      </div>
 
-      <div className="p-[10px_13px_10px] flex flex-col gap-[5px] mt-[6px]">
+      <div className="p-[10px_13px_10px] flex flex-col gap-[5px]">
         <div className="flex items-center gap-[5px]">
           <span className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
           <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
