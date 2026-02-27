@@ -1,11 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle } from 'lucide-react';
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+
+  const hasConflict = state.savedReports.length > 1;
+  const activeReport = state.savedReports.find(r => !r.supersedes);
+  const supersededReports = state.savedReports.filter(r => r.supersedes);
+
+  useEffect(() => {
+    if (hasConflict) {
+      setShowConflictModal(true);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full" data-testid="reports-screen">
@@ -21,6 +32,25 @@ export function ReportsScreen() {
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Session Reports</span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} session{state.savedReports.length !== 1 ? 's' : ''}</span>
       </div>
+
+      {hasConflict && (
+        <button
+          className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[8px_12px] flex-shrink-0 cursor-pointer transition-all animate-flash-yellow text-left"
+          style={{ background: 'var(--wc-y)', border: '1px solid var(--wc-y)' }}
+          onClick={() => setShowConflictModal(true)}
+          data-testid="button-conflict-banner"
+        >
+          <ShieldAlert className="w-[16px] h-[16px] flex-shrink-0 text-black" />
+          <div>
+            <div className="font-heading font-black text-[11px] uppercase tracking-[.04em] text-black">
+              {supersededReports.length} conflicting report{supersededReports.length !== 1 ? 's' : ''}
+            </div>
+            <div className="text-[10px] leading-[1.3] text-black font-medium" style={{ opacity: .7 }}>
+              Tap to resolve — only one report can be active for final submission.
+            </div>
+          </div>
+        </button>
+      )}
 
       <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
@@ -39,7 +69,7 @@ export function ReportsScreen() {
                 className="rounded-[13px] overflow-hidden"
                 style={{
                   background: 'var(--wc-card)',
-                  border: `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`,
+                  border: `1px solid ${!r.supersedes ? 'rgba(245,196,0,.25)' : isOpen ? 'rgba(255,255,255,.12)' : 'var(--wc-border)'}`,
                   transition: 'border-color .2s',
                   opacity: r.supersedes ? 0.55 : 1,
                 }}
@@ -54,16 +84,16 @@ export function ReportsScreen() {
                   <div className="flex items-start justify-between mb-[2px]">
                     <div className="flex items-center gap-[6px] flex-wrap">
                       <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
-                      {r.revision > 1 && !r.supersedes && (
-                        <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.2)', color: 'var(--wc-y)' }}>
-                          <Star className="w-[8px] h-[8px]" />
-                          Rev {r.revision} &mdash; Latest
+                      {!r.supersedes && (
+                        <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}>
+                          <Check className="w-[8px] h-[8px]" />
+                          Active — Rev {r.revision}
                         </span>
                       )}
                       {r.supersedes && (
                         <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}>
                           <Archive className="w-[8px] h-[8px]" />
-                          Superseded
+                          Archived
                         </span>
                       )}
                     </div>
@@ -73,8 +103,7 @@ export function ReportsScreen() {
                     }
                   </div>
                   <div className="font-heading font-bold text-[15px] text-white mb-[6px]">
-                    {r.supersedes ? 'Previous Report' : 'Sort Session'} &mdash; {r.bizCount + r.perCount} trips
-                    {r.revision > 1 && !r.supersedes && <span className="font-data text-[9px] font-normal ml-[6px]" style={{ color: 'var(--wc-am)' }}>changes need verification</span>}
+                    {r.supersedes ? 'Archived Report' : 'Active Report'} &mdash; {r.bizCount + r.perCount} trips
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
@@ -110,6 +139,27 @@ export function ReportsScreen() {
                         Read-only snapshot. To modify, go back and create a new report.
                       </span>
                     </div>
+
+                    {hasConflict && (
+                      <div className="mb-[8px]">
+                        {r.supersedes ? (
+                          <button
+                            className="w-full rounded-[8px] py-[7px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[5px]"
+                            style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                            onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: i })}
+                            data-testid={`button-promote-${i}`}
+                          >
+                            <ArrowUpCircle className="w-[13px] h-[13px]" />
+                            Make This the Active Report
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-[5px] rounded-[8px] p-[6px_10px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
+                            <Check className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />
+                            <span className="text-[10px] font-bold" style={{ color: 'var(--wc-gr)' }}>This is your active report for final submission</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {r.areasToCheck && r.areasToCheck.length > 0 && (
                       <div className="mt-[12px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
@@ -196,6 +246,92 @@ export function ReportsScreen() {
       </div>
 
       <BottomNav activeOverride="reports" />
+
+      {showConflictModal && hasConflict && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.8)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowConflictModal(false)}
+        >
+          <div
+            className="mx-5 w-full max-w-[360px] rounded-[16px] p-[20px_16px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+            data-testid="modal-conflict"
+          >
+            <div className="flex flex-col items-center gap-[8px] mb-[14px]">
+              <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+                <ShieldAlert className="w-[24px] h-[24px]" style={{ color: 'var(--wc-am)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center leading-[1.2]">
+                Conflicting Reports
+              </div>
+              <div className="text-[12px] text-center leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
+                Multiple reports exist for this session. Only <strong className="text-white">one report</strong> can be active for your final ATO submission. Please select which report is correct.
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-[8px] mb-[14px]">
+              {state.savedReports.map((r, i) => (
+                <div
+                  key={i}
+                  className="rounded-[10px] p-[10px_12px] cursor-pointer transition-all"
+                  style={{
+                    background: !r.supersedes ? 'rgba(34,197,94,.06)' : 'rgba(255,255,255,.03)',
+                    border: !r.supersedes ? '1.5px solid rgba(34,197,94,.3)' : '1.5px solid var(--wc-border)',
+                  }}
+                  onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: i })}
+                  data-testid={`conflict-select-${i}`}
+                >
+                  <div className="flex items-center justify-between mb-[4px]">
+                    <div className="flex items-center gap-[6px]">
+                      <div
+                        className="w-[16px] h-[16px] rounded-full flex items-center justify-center"
+                        style={{
+                          background: !r.supersedes ? 'var(--wc-gr)' : 'transparent',
+                          border: !r.supersedes ? '2px solid var(--wc-gr)' : '2px solid var(--wc-border)',
+                        }}
+                      >
+                        {!r.supersedes && <Check className="w-[10px] h-[10px] text-black" />}
+                      </div>
+                      <span className="font-heading font-bold text-[13px] text-white">Rev {r.revision}</span>
+                      {!r.supersedes && (
+                        <span className="font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(34,197,94,.15)', color: 'var(--wc-gr)' }}>Active</span>
+                      )}
+                      {r.supersedes && (
+                        <span className="font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.04)', color: 'var(--wc-t3)' }}>Archived</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-[8px] flex-wrap text-[10px]" style={{ color: 'var(--wc-t2)' }}>
+                    <span><strong style={{ color: 'var(--wc-y)' }}>{r.bizCount}</strong> biz</span>
+                    <span><strong>{r.perCount}</strong> per</span>
+                    <span>Est. <strong style={{ color: 'var(--wc-y)' }}>{r.est}</strong></span>
+                    <span><strong style={{ color: 'var(--wc-y)' }}>{r.totalKm}</strong> km</span>
+                  </div>
+                  <div className="font-data text-[8px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-start gap-[6px] rounded-[8px] p-[8px_10px] mb-[12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+              <AlertTriangle className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+              <span className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-am)' }}>
+                You can change your selection at any time. The archived report is kept for reference but will not be used in your final report.
+              </span>
+            </div>
+
+            <button
+              className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all text-black"
+              style={{ background: 'var(--wc-y)' }}
+              onClick={() => setShowConflictModal(false)}
+              data-testid="button-conflict-done"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

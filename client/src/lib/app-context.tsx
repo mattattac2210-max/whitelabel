@@ -76,7 +76,8 @@ type Action =
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
   | { type: 'SET_MANUAL_ODO'; reading: number }
   | { type: 'RESET_DEMO' }
-  | { type: 'DELETE_ALL_TRIPS' };
+  | { type: 'DELETE_ALL_TRIPS' }
+  | { type: 'PROMOTE_REPORT'; reportIndex: number };
 
 function nowStr(): string {
   const n = new Date();
@@ -309,6 +310,18 @@ function reducer(state: AppState, action: Action): AppState {
         sessionStartTime: Date.now(),
         auditLog: [{ time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false }, ...state.auditLog],
       };
+    case 'PROMOTE_REPORT': {
+      const idx = action.reportIndex;
+      const updated = state.savedReports.map((r, i) => ({
+        ...r,
+        supersedes: i !== idx,
+      }));
+      return {
+        ...state,
+        savedReports: updated,
+        auditLog: [{ time: nowStr(), desc: `Report Rev ${state.savedReports[idx].revision} promoted to active`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     default:
       return state;
   }
