@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE, getTripOdoEnd } from '@/lib/trip-data';
-import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, Minus, Plus } from 'lucide-react';
+import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown } from 'lucide-react';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   if (!open) return null;
@@ -224,7 +224,26 @@ export function ATOModal() {
 export function SummaryModal() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
-  const [manualOdo, setManualOdo] = useState('');
+  const NUM_DIGITS = 6;
+  const toDigits = (n: number): number[] => {
+    const s = String(Math.max(0, Math.floor(n))).padStart(NUM_DIGITS, '0');
+    return s.slice(-NUM_DIGITS).split('').map(Number);
+  };
+  const [odoDigits, setOdoDigits] = useState<number[]>(() =>
+    toDigits(state.lastOdoReading || 0)
+  );
+  const digitsToNum = (d: number[]) => parseInt(d.join(''), 10);
+  const spinDigit = (idx: number, dir: 1 | -1) => {
+    setOdoDigits(prev => {
+      const next = [...prev];
+      next[idx] = (next[idx] + dir + 10) % 10;
+      return next;
+    });
+  };
+  const lastReading = state.lastOdoReading;
+  useEffect(() => {
+    if (lastReading) setOdoDigits(toDigits(lastReading));
+  }, [lastReading]);
 
   if (!state.summaryModalOpen) return null;
 
@@ -285,48 +304,54 @@ export function SummaryModal() {
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-[12px] mb-[14px]">
-            <button
-              className="w-[48px] h-[48px] rounded-full flex items-center justify-center cursor-pointer transition-all active:scale-90"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
-              onClick={() => {
-                const cur = parseInt(manualOdo) || state.lastOdoReading || 0;
-                if (cur > 0) setManualOdo(String(cur - 1));
-              }}
-              data-testid="button-odo-minus"
-            >
-              <Minus className="w-[22px] h-[22px]" style={{ color: 'var(--wc-t2)' }} />
-            </button>
-
-            <div className="flex-1 max-w-[200px]">
-              <input
-                type="number"
-                className="w-full text-center rounded-[12px] px-[10px] py-[14px] font-heading font-black text-[28px] text-white outline-none"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1.5px solid var(--wc-border)', caretColor: 'var(--wc-am)' }}
-                value={manualOdo || (state.lastOdoReading ? String(state.lastOdoReading) : '')}
-                onChange={e => setManualOdo(e.target.value)}
-                placeholder="0"
-                data-testid="input-manual-odo"
-              />
-              <div className="text-center font-data text-[10px] uppercase tracking-[.1em] mt-[6px]" style={{ color: 'var(--wc-t3)' }}>
-                kilometres
+          <div className="rounded-[10px] p-[10px_6px] mb-[14px]" style={{ background: '#0a0a0a', border: '1.5px solid rgba(255,255,255,.08)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04)' }}>
+            <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
+              {odoDigits.map((digit, i) => (
+                <div key={i} className="flex flex-col items-center" style={{ width: '44px' }}>
+                  <button
+                    className="w-full h-[28px] flex items-center justify-center cursor-pointer rounded-t-[6px] transition-all active:scale-95"
+                    style={{ background: 'rgba(255,255,255,.04)' }}
+                    onClick={() => spinDigit(i, 1)}
+                    data-testid={`button-odo-up-${i}`}
+                  >
+                    <ChevronUp className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                  </button>
+                  <div
+                    className="w-full h-[52px] flex items-center justify-center font-data font-bold text-[32px] select-none"
+                    style={{
+                      background: i < NUM_DIGITS - 1
+                        ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
+                        : 'linear-gradient(180deg, #2a1800 0%, #3a2000 40%, #3a2000 60%, #2a1800 100%)',
+                      color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
+                      borderTop: '1px solid rgba(255,255,255,.06)',
+                      borderBottom: '1px solid rgba(255,255,255,.06)',
+                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,.4)',
+                      textShadow: '0 0 8px rgba(255,255,255,.15)',
+                    }}
+                  >
+                    {digit}
+                  </div>
+                  <button
+                    className="w-full h-[28px] flex items-center justify-center cursor-pointer rounded-b-[6px] transition-all active:scale-95"
+                    style={{ background: 'rgba(255,255,255,.04)' }}
+                    onClick={() => spinDigit(i, -1)}
+                    data-testid={`button-odo-down-${i}`}
+                  >
+                    <ChevronDown className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                  </button>
+                </div>
+              ))}
+              <div className="flex flex-col items-center justify-center" style={{ width: '24px' }}>
+                <div className="h-[28px]" />
+                <div className="h-[52px] flex items-end pb-[8px]">
+                  <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
+                </div>
+                <div className="h-[28px]" />
               </div>
             </div>
-
-            <button
-              className="w-[48px] h-[48px] rounded-full flex items-center justify-center cursor-pointer transition-all active:scale-90"
-              style={{ background: 'rgba(245,158,11,.1)', border: '1.5px solid rgba(245,158,11,.3)' }}
-              onClick={() => {
-                const cur = parseInt(manualOdo) || state.lastOdoReading || 0;
-                setManualOdo(String(cur + 1));
-              }}
-              data-testid="button-odo-plus"
-            >
-              <Plus className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
-            </button>
           </div>
 
-          {!state.lastOdoVerifiedAt && !manualOdo && (
+          {!state.lastOdoVerifiedAt && digitsToNum(odoDigits) === 0 && (
             <div className="text-center text-[11px] mb-[10px]" style={{ color: 'var(--wc-t3)' }}>
               No odometer verified yet this session
             </div>
@@ -336,10 +361,9 @@ export function SummaryModal() {
             className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
             style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
             onClick={() => {
-              const val = parseInt(manualOdo) || state.lastOdoReading;
-              if (val && val > 0) {
+              const val = digitsToNum(odoDigits);
+              if (val > 0) {
                 dispatch({ type: 'SET_MANUAL_ODO', reading: val });
-                setManualOdo('');
               }
             }}
             data-testid="button-save-odo"
