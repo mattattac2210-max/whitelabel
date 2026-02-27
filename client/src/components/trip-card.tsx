@@ -414,7 +414,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
           <button
             className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
-            style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+            style={{ background: '#F5C400', border: '1px solid #F5C400', color: '#000' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={() => setShowDetail(true)}
             data-testid="button-see-details"
