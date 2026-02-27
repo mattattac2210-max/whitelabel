@@ -41,9 +41,9 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const buildUrl = (polyPart?: string) => {
       if (polyPart) {
         const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
-        return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
+        return `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
       }
-      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`;
+      return `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`;
     };
 
     const cached = polylineCache.get(cacheKey);
@@ -271,7 +271,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
         <div className="flex-1 relative overflow-hidden" style={{ perspective: '600px' }}>
-          <div className="absolute inset-0" style={{ transform: 'rotateX(18deg) scale(0.95)', transformOrigin: '50% 70%' }}>
+          <div className="absolute inset-0" style={{ transform: 'rotateX(18deg) scale(1.12)', transformOrigin: '50% 70%' }}>
             <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.2) 100%)' }} />
