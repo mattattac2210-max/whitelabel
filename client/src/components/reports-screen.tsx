@@ -402,19 +402,12 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
   }
 
   function weekCoverageFraction(wStart: Date, wEnd: Date): number {
-    const coveredDays = new Set<number>();
+    const coveredDays = new Set<string>();
     for (const r of activeReports) {
       const dates = (r.trips || []).map((t: any) => parseAUDate(t.date)).filter(Boolean) as Date[];
-      if (!dates.length) continue;
-      const minD = new Date(Math.min(...dates.map(d => d.getTime())));
-      const maxD = new Date(Math.max(...dates.map(d => d.getTime())));
-      const overlapStart = minD > wStart ? minD : wStart;
-      const overlapEnd = maxD < wEnd ? maxD : wEnd;
-      if (overlapStart <= overlapEnd) {
-        const d = new Date(overlapStart);
-        while (d <= overlapEnd) {
-          coveredDays.add(d.getDate() * 100 + d.getMonth());
-          d.setDate(d.getDate() + 1);
+      for (const d of dates) {
+        if (d >= wStart && d <= wEnd) {
+          coveredDays.add(d.toDateString());
         }
       }
     }
