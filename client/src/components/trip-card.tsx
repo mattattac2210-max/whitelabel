@@ -331,6 +331,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
     flyingRef.current = true;
     setIsFlying(true);
     const type = dir === 'right' ? 'business' : 'personal';
+    if (dir === 'right' && navigator.vibrate) navigator.vibrate(30);
     setDragX(dir === 'right' ? 500 : -500);
     setTimeout(() => {
       setDragX(0);
@@ -364,6 +365,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   }, [isDragging, isFlying, dragX, flyOut]);
 
   const handleBusiness = useCallback(() => {
+    if (navigator.vibrate) navigator.vibrate(30);
     flyOut('right');
   }, [flyOut]);
 
