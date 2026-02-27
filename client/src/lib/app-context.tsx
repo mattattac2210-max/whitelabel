@@ -278,7 +278,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         savedReports: [report, ...updatedPrevious],
         summaryModalOpen: false,
-        currentScreen: 'sort',
+        currentScreen: 'reports',
       };
     }
     case 'SET_MANUAL_ODO':

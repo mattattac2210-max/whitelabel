@@ -424,7 +424,7 @@ export function SummaryModal() {
             data-testid="button-save-session"
           >
             <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
-            Save &amp; Return to Dashboard
+            Save &amp; Generate Report
           </button>
           <button
             className="w-full rounded-[13px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
