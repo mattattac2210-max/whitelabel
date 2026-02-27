@@ -323,6 +323,9 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const detailLocked = useRef(false);
   const detailMultitouch = useRef(false);
   const activePointers = useRef(new Set<number>());
+  const pointerPositions = useRef(new Map<number, { x: number; y: number }>());
+  const pinchStartDist = useRef(0);
+  const [detailScale, setDetailScale] = useState(1);
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
@@ -630,18 +633,27 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               background: 'var(--wc-card)',
               border: '1.5px solid #F5C400',
               boxShadow: '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
-              transform: detailDragX ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg)` : 'none',
-              transition: detailDragging ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
+              transform: detailDragX
+                ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg) scale(${detailScale})`
+                : detailScale > 1
+                  ? `scale(${detailScale})`
+                  : 'none',
+              transition: detailDragging || detailScale > 1 ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
             }}
             onClick={e => e.stopPropagation()}
             onPointerDown={e => {
               const target = e.target as HTMLElement;
               if (target.closest('button') || target.tagName === 'BUTTON') return;
               activePointers.current.add(e.pointerId);
+              pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
               if (activePointers.current.size > 1) {
                 detailMultitouch.current = true;
                 setDetailDragging(false);
                 setDetailDragX(0);
+                const pts = Array.from(pointerPositions.current.values());
+                if (pts.length >= 2) {
+                  pinchStartDist.current = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+                }
                 return;
               }
               detailMultitouch.current = false;
@@ -652,6 +664,16 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
             }}
             onPointerMove={e => {
+              pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+              if (detailMultitouch.current && pointerPositions.current.size >= 2) {
+                const pts = Array.from(pointerPositions.current.values());
+                const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+                if (pinchStartDist.current > 0) {
+                  const ratio = dist / pinchStartDist.current;
+                  setDetailScale(Math.min(1.35, Math.max(1, ratio)));
+                }
+                return;
+              }
               if (!detailDragging || detailMultitouch.current) return;
               const dx = e.clientX - detailStartX.current;
               const dy = e.clientY - detailStartY.current;
@@ -667,8 +689,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             }}
             onPointerUp={e => {
               activePointers.current.delete(e.pointerId);
+              pointerPositions.current.delete(e.pointerId);
+              if (activePointers.current.size === 0) {
+                detailMultitouch.current = false;
+                pinchStartDist.current = 0;
+                setDetailScale(1);
+              }
               if (!detailDragging || detailMultitouch.current) {
-                if (activePointers.current.size === 0) detailMultitouch.current = false;
                 setDetailDragging(false);
                 setDetailDragX(0);
                 return;
@@ -688,6 +715,12 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             }}
             onPointerCancel={e => {
               activePointers.current.delete(e.pointerId);
+              pointerPositions.current.delete(e.pointerId);
+              if (activePointers.current.size === 0) {
+                detailMultitouch.current = false;
+                pinchStartDist.current = 0;
+                setDetailScale(1);
+              }
               setDetailDragging(false);
               setDetailDragX(0);
             }}
