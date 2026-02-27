@@ -270,7 +270,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         </>
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
-        <div className="flex-1 relative overflow-hidden" style={{ perspective: '400px' }}>
+        <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '400px' }}>
           <div className="absolute inset-0" style={{ transform: 'rotateX(35deg) scale(1.35)', transformOrigin: '50% 65%' }}>
             <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
