@@ -618,24 +618,38 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <span className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
                 <span className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
               </div>
-              <div className="flex flex-col gap-[8px]">
-                <div className="flex items-start gap-[10px]">
-                  <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(34,197,94,.14)' }}>
-                    <MapPin className="w-[14px] h-[14px]" stroke="#22C55E" />
+              <div className="flex gap-[10px]">
+                <div className="flex-1 flex flex-col gap-[8px] min-w-0">
+                  <div className="flex items-start gap-[10px]">
+                    <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(34,197,94,.14)' }}>
+                      <MapPin className="w-[14px] h-[14px]" stroke="#22C55E" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-heading font-semibold text-[14px] text-white truncate">{trip.from}</div>
+                      <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-heading font-semibold text-[14px] text-white">{trip.from}</div>
-                    <div className="text-[11px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+                  <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
+                  <div className="flex items-start gap-[10px]">
+                    <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>
+                      <MapPin className="w-[14px] h-[14px]" stroke="#F5C400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-heading font-semibold text-[14px] text-white truncate">{trip.to}</div>
+                      <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
-                <div className="flex items-start gap-[10px]">
-                  <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>
-                    <MapPin className="w-[14px] h-[14px]" stroke="#F5C400" />
+                <div className="flex-shrink-0 self-center w-[68px] rounded-[12px] overflow-hidden flex flex-col" style={{ border: '1px solid var(--wc-border)' }} data-testid="detail-mini-calendar">
+                  <div className="py-[4px] text-center font-heading font-bold text-[9px] uppercase tracking-[.1em]" style={{ background: 'var(--wc-y)', color: '#000' }}>
+                    {trip.date.split(',')[0]}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-heading font-semibold text-[14px] text-white">{trip.to}</div>
-                    <div className="text-[11px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                  <div className="flex flex-col items-center py-[6px]" style={{ background: 'rgba(255,255,255,.04)' }}>
+                    <div className="font-heading font-black text-[28px] leading-none text-white">{trip.day}</div>
+                    <div className="font-heading font-semibold text-[10px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>
+                      {trip.date.split(' ').pop()}
+                    </div>
+                    <div className="font-data text-[9px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.year}</div>
                   </div>
                 </div>
               </div>
