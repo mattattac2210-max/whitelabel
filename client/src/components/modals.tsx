@@ -268,58 +268,60 @@ export function SummaryModal() {
 
   return (
     <ModalOverlay open={state.summaryModalOpen} onClose={() => dispatch({ type: 'CLOSE_SUMMARY' })}>
-      <div className="pt-4 pb-8 overflow-y-auto max-h-[85vh] scrollbar-thin">
-        <div className="flex flex-col items-center gap-3 px-[18px] mb-4">
+      <div className="pt-3 pb-5 flex flex-col" style={{ maxHeight: '100%' }}>
+        <div className="flex items-center gap-[10px] px-[18px] mb-3">
           <div
-            className="w-[64px] h-[64px] rounded-full flex items-center justify-center"
-            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)' }}
+            className="w-[44px] h-[44px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ border: `2.5px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)' }}
           >
-            <span className="font-heading font-black text-[22px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
+            <span className="font-heading font-black text-[16px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
           </div>
-          <div className="font-heading font-black text-[24px] uppercase text-white text-center leading-none">Session Complete</div>
-          <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.length} trips this session.</div>
-        </div>
-
-        <div className="flex gap-2 px-[18px] mb-4">
-          <div className="flex-1 rounded-[12px] p-[10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[7px] uppercase tracking-[.1em] mb-1" style={{ color: 'var(--wc-t3)' }}>Distance</div>
-            <div className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
-          </div>
-          <div className="flex-1 rounded-[12px] p-[10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[7px] uppercase tracking-[.1em] mb-1" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
-            <div className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
-          </div>
-          <div className="flex-1 rounded-[12px] p-[10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[7px] uppercase tracking-[.1em] mb-1" style={{ color: 'var(--wc-t3)' }}>Photos</div>
-            <div className="font-heading font-black text-[18px]" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
+          <div>
+            <div className="font-heading font-black text-[18px] uppercase text-white leading-none">Session Complete</div>
+            <div className="text-[11px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
           </div>
         </div>
 
-        <div className="mx-[18px] mb-4 rounded-[14px] p-[16px_16px_18px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-center gap-[8px] mb-[14px]">
-            <Gauge className="w-[20px] h-[20px]" style={{ color: 'var(--wc-am)' }} />
-            <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white">Odometer</span>
+        <div className="flex gap-[6px] px-[18px] mb-3">
+          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
+            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
+          </div>
+          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
+            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
+          </div>
+          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Photos</div>
+            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
+          </div>
+        </div>
+
+        <div className="mx-[18px] mb-3 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[6px] mb-[8px]">
+            <Gauge className="w-[16px] h-[16px]" style={{ color: 'var(--wc-am)' }} />
+            <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Odometer</span>
             {state.lastOdoVerifiedAt && (
-              <span className="ml-auto font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>
+              <span className="ml-auto font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>
                 verified {state.lastOdoVerifiedAt}
               </span>
             )}
           </div>
 
-          <div className="rounded-[10px] p-[10px_6px] mb-[14px]" style={{ background: '#0a0a0a', border: '1.5px solid rgba(255,255,255,.08)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04)' }}>
-            <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
+          <div className="rounded-[8px] p-[6px_4px] mb-[8px]" style={{ background: '#0a0a0a', border: '1.5px solid rgba(255,255,255,.08)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,.6)' }}>
+            <div className="flex justify-center gap-[2px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => (
-                <div key={i} className="flex flex-col items-center" style={{ width: '44px' }}>
+                <div key={i} className="flex flex-col items-center" style={{ width: '38px' }}>
                   <button
-                    className="w-full h-[28px] flex items-center justify-center cursor-pointer rounded-t-[6px] transition-all active:scale-95"
+                    className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-t-[5px] transition-all active:scale-95"
                     style={{ background: 'rgba(255,255,255,.04)' }}
                     onClick={() => spinDigit(i, 1)}
                     data-testid={`button-odo-up-${i}`}
                   >
-                    <ChevronUp className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                    <ChevronUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
                   </button>
                   <div
-                    className="w-full h-[52px] flex items-center justify-center font-data font-bold text-[32px] select-none"
+                    className="w-full h-[38px] flex items-center justify-center font-data font-bold text-[24px] select-none"
                     style={{
                       background: i < NUM_DIGITS - 1
                         ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
@@ -334,34 +336,28 @@ export function SummaryModal() {
                     {digit}
                   </div>
                   <button
-                    className="w-full h-[28px] flex items-center justify-center cursor-pointer rounded-b-[6px] transition-all active:scale-95"
+                    className="w-full h-[22px] flex items-center justify-center cursor-pointer rounded-b-[5px] transition-all active:scale-95"
                     style={{ background: 'rgba(255,255,255,.04)' }}
                     onClick={() => spinDigit(i, -1)}
                     data-testid={`button-odo-down-${i}`}
                   >
-                    <ChevronDown className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                    <ChevronDown className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
                   </button>
                 </div>
               ))}
-              <div className="flex flex-col items-center justify-center" style={{ width: '24px' }}>
-                <div className="h-[28px]" />
-                <div className="h-[52px] flex items-end pb-[8px]">
-                  <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
+              <div className="flex flex-col items-center justify-center" style={{ width: '20px' }}>
+                <div className="h-[22px]" />
+                <div className="h-[38px] flex items-end pb-[5px]">
+                  <span className="font-data text-[9px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
                 </div>
-                <div className="h-[28px]" />
+                <div className="h-[22px]" />
               </div>
             </div>
           </div>
 
-          {!state.lastOdoVerifiedAt && digitsToNum(odoDigits) === 0 && (
-            <div className="text-center text-[11px] mb-[10px]" style={{ color: 'var(--wc-t3)' }}>
-              No odometer verified yet this session
-            </div>
-          )}
-
           {odoSaved ? (
             <div
-              className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
+              className="w-full rounded-[8px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
               style={{
                 background: 'rgba(34,197,94,.12)',
                 border: '1.5px solid rgba(34,197,94,.3)',
@@ -370,12 +366,12 @@ export function SummaryModal() {
               }}
               data-testid="odo-saved-confirm"
             >
-              <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
+              <Check className="w-[14px] h-[14px]" strokeWidth={2.5} />
               Saved
             </div>
           ) : (
             <button
-              className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              className="w-full rounded-[8px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
               style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
               onClick={() => {
                 const val = digitsToNum(odoDigits);
@@ -391,43 +387,33 @@ export function SummaryModal() {
           )}
         </div>
 
-        <div className="mx-[18px] mb-4">
-          <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] text-white mb-2">12-week Logbook Progress</div>
-          <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="flex items-baseline justify-between mb-2">
-              <div className="text-[13px]" style={{ color: 'var(--wc-t2)' }}>
-                <span className="font-heading font-black text-[20px] text-white">{weeksDone}</span> / 12 weeks
-              </div>
-              <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
+        <div className="mx-[18px] mb-3 rounded-[10px] p-[8px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-baseline justify-between mb-[4px]">
+            <div className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+              <span className="font-heading font-black text-[16px] text-white">{weeksDone}</span> / 12 weeks
             </div>
-            <div className="h-[6px] rounded-[3px] overflow-hidden mb-2" style={{ background: 'rgba(255,255,255,.07)' }}>
-              <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }} />
-            </div>
-            <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
-              Due <strong className="text-white">{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
-            </div>
+            <span className="font-heading font-black text-[14px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
+          </div>
+          <div className="h-[4px] rounded-[2px] overflow-hidden mb-[4px]" style={{ background: 'rgba(255,255,255,.07)' }}>
+            <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }} />
+          </div>
+          <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+            Due <strong className="text-white">{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
           </div>
         </div>
 
-        <div className="mx-[18px] mb-4 rounded-[12px] p-[13px_14px] flex gap-[10px] items-center" style={{ background: 'rgba(245,196,0,.05)', border: '1px solid rgba(245,196,0,.15)' }}>
-          <Target className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-          <div className="text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-            Every trip sorted now means a <strong style={{ color: 'var(--wc-y)' }}>bigger, faster claim</strong> at tax time. Check back soon.
-          </div>
-        </div>
-
-        <div className="px-[18px] flex flex-col gap-[7px]">
+        <div className="px-[18px] flex flex-col gap-[5px]">
           <button
-            className="w-full rounded-[13px] py-[14px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[11px] py-[12px] font-heading font-black text-[15px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
-            <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+            <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
             Save &amp; Generate Report
           </button>
           <button
-            className="w-full rounded-[13px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full rounded-[11px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => dispatch({ type: 'CLOSE_SUMMARY' })}
             data-testid="button-back-modify"
@@ -435,7 +421,7 @@ export function SummaryModal() {
             &larr; Go Back &amp; Modify
           </button>
           <button
-            className="w-full rounded-[13px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full py-[6px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', color: 'var(--wc-t3)' }}
             onClick={() => { dispatch({ type: 'CLOSE_SUMMARY' }); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
             data-testid="button-exit-no-save"
