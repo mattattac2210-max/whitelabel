@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, Camera, Check, Shield, Image, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
