@@ -81,7 +81,6 @@ export function ClassifyScreen() {
   const [armed, setArmed] = useState<number | null>(null);
   const [customText, setCustomText] = useState('');
   const [customArmed, setCustomArmed] = useState(false);
-  const [microOpen, setMicroOpen] = useState(false);
   const [justAdvanced, setJustAdvanced] = useState(false);
 
   const { classifyStep, classifyBizTrips, trips } = state;
@@ -159,14 +158,13 @@ export function ClassifyScreen() {
       </div>
 
       <div
-        className="mx-[10px] mb-[10px] rounded-[14px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
+        className="mx-[10px] mb-[10px] rounded-[14px] overflow-hidden flex-shrink-0 transition-all"
         style={{
           background: 'var(--wc-card)',
           border: justAdvanced ? '1.5px solid rgba(245,196,0,.85)' : '1.5px solid rgba(245,196,0,.5)',
           boxShadow: justAdvanced ? '0 0 20px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.12)' : '0 0 14px rgba(245,196,0,.15), 0 0 30px rgba(245,196,0,.06)',
           transition: 'border .6s ease, box-shadow .6s ease',
         }}
-        onClick={() => setMicroOpen(!microOpen)}
         data-testid="classify-trip-card"
       >
         <div className="flex gap-0">
@@ -202,30 +200,6 @@ export function ClassifyScreen() {
             <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
         </div>
-        {microOpen && (
-          <div className="p-[0_14px_14px] border-t" style={{ borderColor: 'var(--wc-border)' }} onClick={e => e.stopPropagation()}>
-            <div className="flex gap-[7px] mb-[6px] mt-2">
-              <div className="flex-1">
-                <span className="font-data text-[7px] uppercase tracking-[.09em] block mb-1" style={{ color: 'var(--wc-t3)' }}>From</span>
-                <input className="w-full rounded-lg px-[9px] py-[6px] text-[12px] text-white outline-none transition-all" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} defaultValue={`${trip.from}, ${trip.fromSub}`} />
-              </div>
-              <div className="flex-1">
-                <span className="font-data text-[7px] uppercase tracking-[.09em] block mb-1" style={{ color: 'var(--wc-t3)' }}>To</span>
-                <input className="w-full rounded-lg px-[9px] py-[6px] text-[12px] text-white outline-none transition-all" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} defaultValue={`${trip.to}, ${trip.toSub}`} />
-              </div>
-            </div>
-            <div className="flex gap-[7px]">
-              <div className="flex-1">
-                <span className="font-data text-[7px] uppercase tracking-[.09em] block mb-1" style={{ color: 'var(--wc-t3)' }}>Distance (km)</span>
-                <input className="w-full rounded-lg px-[9px] py-[6px] text-[12px] text-white outline-none" type="number" step="0.1" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} defaultValue={trip.km} />
-              </div>
-              <div className="flex-1">
-                <span className="font-data text-[7px] uppercase tracking-[.09em] block mb-1" style={{ color: 'var(--wc-t3)' }}>Duration</span>
-                <input className="w-full rounded-lg px-[9px] py-[6px] text-[12px] text-white outline-none" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} defaultValue={trip.duration} />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="flex-1 min-h-0 px-[14px] flex flex-col gap-[7px] overflow-y-auto pb-[6px] scrollbar-hide">
