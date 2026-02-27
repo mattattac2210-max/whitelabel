@@ -229,8 +229,9 @@ export function SummaryModal() {
     const s = String(Math.max(0, Math.floor(n))).padStart(NUM_DIGITS, '0');
     return s.slice(-NUM_DIGITS).split('').map(Number);
   };
+  const lastSavedOdo = state.savedReports.find(r => r.lastOdoReading)?.lastOdoReading;
   const [odoDigits, setOdoDigits] = useState<number[]>(() =>
-    toDigits(state.lastOdoReading || 0)
+    toDigits(state.lastOdoReading || lastSavedOdo || 0)
   );
   const digitsToNum = (d: number[]) => parseInt(d.join(''), 10);
   const spinDigit = (idx: number, dir: 1 | -1) => {
