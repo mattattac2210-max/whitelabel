@@ -172,7 +172,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </button>
         </div>
       </div>
-      <div className="p-[3px_13px_10px] flex flex-col gap-[5px]">
+      <div className="p-[0px_13px_10px] flex flex-col gap-[5px]">
 
         <div className="flex gap-[7px]">
           <div className="flex-1 flex flex-col gap-[5px] min-w-0">
