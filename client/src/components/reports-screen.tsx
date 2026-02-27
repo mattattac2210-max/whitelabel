@@ -430,38 +430,38 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
   });
 
   return (
-    <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-      <div className="flex items-center justify-between mb-[10px]">
-        <div className="flex items-center gap-[6px]">
-          <BarChart2 className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
-          <span className="font-heading font-bold text-[11px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>12-Week Coverage</span>
+    <div className="rounded-[14px] p-[16px_18px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+      <div className="flex items-center justify-between mb-[14px]">
+        <div className="flex items-center gap-[8px]">
+          <BarChart2 className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[15px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>12-Week Coverage</span>
         </div>
-        <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>Active reports only</span>
+        <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>Active reports only</span>
       </div>
 
-      <div className="flex gap-[2px] mb-[2px]">
+      <div className="flex gap-[3px] mb-[4px]">
         {weeks.map((_, i) => (
-          <div key={i} className="flex-1 font-data text-[7px] text-center" style={{ color: 'var(--wc-t3)' }}>
+          <div key={i} className="flex-1 font-data text-[10px] text-center" style={{ color: 'var(--wc-t3)' }}>
             {monthLabels[i]}
           </div>
         ))}
       </div>
 
-      <div className="flex gap-[2px] mb-[3px]">
+      <div className="flex gap-[3px] mb-[5px]">
         {weeks.map((w, i) => {
           const fraction = weekCoverageFraction(w.start, w.end);
           const covered = fraction > 0;
           const isCurrent = today >= w.start && today <= w.end;
           const fillPct = Math.min(fraction * 100, 100);
           return (
-            <div key={i} className="flex-1 rounded-[3px] overflow-hidden relative"
+            <div key={i} className="flex-1 rounded-[4px] overflow-hidden relative"
               style={{
-                height: '20px',
+                height: '32px',
                 background: isCurrent && !covered ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.05)',
-                border: isCurrent ? '1px solid rgba(245,196,0,.35)' : 'none',
+                border: isCurrent ? '1.5px solid rgba(245,196,0,.35)' : 'none',
               }}>
               {covered && (
-                <div className="absolute left-0 top-0 bottom-0 rounded-[3px]"
+                <div className="absolute left-0 top-0 bottom-0 rounded-[4px]"
                   style={{
                     width: `${fillPct}%`,
                     background: 'var(--wc-y)',
@@ -474,39 +474,39 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         })}
       </div>
 
-      <div className="flex gap-[2px] mb-[8px]">
+      <div className="flex gap-[3px] mb-[10px]">
         {weeks.map((_, i) => (
-          <div key={i} className="flex-1 font-data text-[6px] text-center" style={{ color: 'rgba(255,255,255,.18)' }}>W{i+1}</div>
+          <div key={i} className="flex-1 font-data text-[9px] text-center" style={{ color: 'rgba(255,255,255,.25)' }}>W{i+1}</div>
         ))}
       </div>
 
-      <div className="flex gap-[12px]">
+      <div className="flex gap-[14px] flex-wrap">
         {[
-          { label: 'Full week', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'var(--wc-y)' }} /> },
-          { label: 'Partial', custom: <div className="w-[8px] h-[8px] rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.05)' }}><div className="absolute left-0 top-0 bottom-0" style={{ width: '50%', background: 'var(--wc-y)' }} /></div> },
-          { label: 'This week', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.35)' }} /> },
-          { label: 'No data', custom: <div className="w-[8px] h-[8px] rounded-[2px]" style={{ background: 'rgba(255,255,255,.05)' }} /> },
+          { label: 'Full week', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'var(--wc-y)' }} /> },
+          { label: 'Partial', custom: <div className="w-[12px] h-[12px] rounded-[3px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.05)' }}><div className="absolute left-0 top-0 bottom-0" style={{ width: '50%', background: 'var(--wc-y)' }} /></div> },
+          { label: 'This week', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'rgba(245,196,0,.12)', border: '1.5px solid rgba(245,196,0,.35)' }} /> },
+          { label: 'No data', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.05)' }} /> },
         ].map((l, i) => (
-          <div key={i} className="flex items-center gap-[4px]">
+          <div key={i} className="flex items-center gap-[6px]">
             {l.custom}
-            <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>{l.label}</span>
+            <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>{l.label}</span>
           </div>
         ))}
       </div>
 
       {activeReports.length > 0 && (
-        <div className="mt-[10px] pt-[8px] flex gap-[10px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
+        <div className="mt-[14px] pt-[12px] flex gap-[16px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
           <div>
-            <div className="font-data text-[7px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sessions saved</div>
-            <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-y)' }}>{activeReports.length}</div>
+            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sessions saved</div>
+            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{activeReports.length}</div>
           </div>
           <div>
-            <div className="font-data text-[7px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Weeks covered</div>
-            <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-y)' }}>{weeks.filter(w => weekHasCoverage(w.start, w.end)).length}</div>
+            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Weeks covered</div>
+            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{weeks.filter(w => weekHasCoverage(w.start, w.end)).length}</div>
           </div>
           <div>
-            <div className="font-data text-[7px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Total biz km</div>
-            <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-y)' }}>
+            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Total biz km</div>
+            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>
               {activeReports.reduce((s, r) => s + (r.trips || []).filter((t: any) => t.type === 'business').reduce((ss: number, t: any) => ss + t.km, 0), 0).toFixed(0)}
             </div>
           </div>
