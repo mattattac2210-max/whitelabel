@@ -155,7 +155,7 @@ export function SortScreen() {
         </div>
       </div>
 
-      <div className="flex-1 relative mx-[14px] min-h-[180px] max-h-[310px]">
+      <div className="flex-1 relative mx-[14px]">
         {flashAmt && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
             <div className="font-heading font-black text-[58px] leading-none animate-big-pop" style={{ color: 'var(--wc-gr)', textShadow: '0 0 40px rgba(34,197,94,.5)' }}>
@@ -218,49 +218,51 @@ export function SortScreen() {
         )}
       </div>
 
-      <div className="flex-shrink-0 px-[14px] flex flex-col gap-1 pb-1">
-        <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: 'var(--wc-y)' }} />
-          <div className="flex items-baseline justify-between">
-            <div>
-              <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook Claim Est.*</div>
-              <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-y)' }} data-testid="text-deduction">
-                ${Math.round(state.dedTotal).toLocaleString('en-AU')}
+      <div className="flex-shrink-0" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
+        <div className="px-[14px] pt-[6px] flex flex-col gap-1">
+          <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: 'var(--wc-y)' }} />
+            <div className="flex items-baseline justify-between">
+              <div>
+                <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook Claim Est.*</div>
+                <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-y)' }} data-testid="text-deduction">
+                  ${Math.round(state.dedTotal).toLocaleString('en-AU')}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
+                <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-t2)' }} data-testid="text-biz-count">{state.bizCount} trips</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
-              <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-t2)' }} data-testid="text-biz-count">{state.bizCount} trips</div>
+            <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
+              *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO rates TR 2021/1</button> &middot; Estimates only &middot; Not tax advice
+            </div>
+            <div className="mt-[6px]">
+              <div className="h-1 rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.07)' }}>
+                <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#ffe066)' }} />
+              </div>
+              <div className="flex justify-between mt-[3px]">
+                <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Logbook coverage: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
+                <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgba(245,196,0,.55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
+              </div>
             </div>
           </div>
-          <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-            *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO rates TR 2021/1</button> &middot; Estimates only &middot; Not tax advice
+
+          <div className="flex gap-[5px]">
+            <BusinessDial pct={stats.bizPct} />
+            {currentTrip && <MiniCalendar day={currentTrip.day} month={currentTrip.month} year={currentTrip.year} />}
+            {!currentTrip && state.trips.length > 0 && <MiniCalendar day={state.trips[state.trips.length - 1].day} month={state.trips[state.trips.length - 1].month} year={state.trips[state.trips.length - 1].year} />}
           </div>
-          <div className="mt-[6px]">
-            <div className="h-1 rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.07)' }}>
-              <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#ffe066)' }} />
-            </div>
-            <div className="flex justify-between mt-[3px]">
-              <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Logbook coverage: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
-              <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgba(245,196,0,.55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
+
+          <div className="py-[2px]">
+            <div className="text-[9px] text-center leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+              <span style={{ color: 'rgba(239,68,68,.55)' }}>False or inflated claims are a serious offence.</span> WorkCar logs all classifications with timestamps to an immutable audit trail.
             </div>
           </div>
         </div>
 
-        <div className="flex gap-[5px]">
-          <BusinessDial pct={stats.bizPct} />
-          {currentTrip && <MiniCalendar day={currentTrip.day} month={currentTrip.month} year={currentTrip.year} />}
-          {!currentTrip && state.trips.length > 0 && <MiniCalendar day={state.trips[state.trips.length - 1].day} month={state.trips[state.trips.length - 1].month} year={state.trips[state.trips.length - 1].year} />}
-        </div>
+        <BottomNav activeOverride="sort" />
       </div>
-
-      <div className="px-[14px] py-[2px] flex-shrink-0">
-        <div className="text-[9px] text-center leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-          <span style={{ color: 'rgba(239,68,68,.55)' }}>False or inflated claims are a serious offence.</span> WorkCar logs all classifications with timestamps to an immutable audit trail.
-        </div>
-      </div>
-
-      <BottomNav activeOverride="sort" />
     </div>
   );
 }
