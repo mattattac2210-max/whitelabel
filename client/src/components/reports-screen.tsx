@@ -365,13 +365,13 @@ export function ReportsScreen() {
           <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px]" style={{ color: 'var(--wc-t3)' }}>Session Actions</div>
           <div className="relative">
             <button
-              className="w-full rounded-[11px] py-[12px] px-[14px] font-heading font-bold text-[13px] tracking-[.04em] uppercase cursor-pointer transition-all flex items-center justify-between"
-              style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+              className="w-full rounded-[12px] py-[14px] px-[16px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all flex items-center justify-between animate-flash-yellow"
+              style={{ background: 'var(--wc-y)', border: '2px solid var(--wc-y)', color: '#000' }}
               onClick={() => setActionMenuOpen(!actionMenuOpen)}
               data-testid="button-action-menu"
             >
               <span>Choose an action...</span>
-              <ChevronDown className={`w-[16px] h-[16px] transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--wc-t3)' }} />
+              <ChevronDown className={`w-[18px] h-[18px] transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`} style={{ color: '#000' }} />
             </button>
             {actionMenuOpen && (
               <div
