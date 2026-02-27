@@ -79,7 +79,7 @@ function BusinessDial({ pct }: { pct: number }) {
       <div className="flex justify-between w-full font-data text-[6px]" style={{ color: 'var(--wc-t3)' }}>
         <span>0%</span><span>100%</span>
       </div>
-      <div className="text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>Avg: <span className="font-semibold" style={{ color: 'rgba(245,196,0,.65)' }}>55\u201375%</span></div>
+      <div className="text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>Avg: <span className="font-semibold" style={{ color: 'rgba(245,196,0,.65)' }}>55&ndash;75%</span></div>
     </div>
   );
 }
