@@ -331,11 +331,14 @@ export function SummaryModal() {
     if (lastReading) setOdoDigits(toDigits(lastReading));
   }, [lastReading]);
 
+  const [barFill, setBarFill] = useState(0);
   useEffect(() => {
     if (state.summaryModalOpen) {
       setRollDone(false);
-      const t = setTimeout(() => setRollDone(true), 1800);
-      return () => clearTimeout(t);
+      setBarFill(0);
+      const t1 = setTimeout(() => setRollDone(true), 1800);
+      const t2 = setTimeout(() => setBarFill(100), 50);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [state.summaryModalOpen]);
 
@@ -520,7 +523,7 @@ export function SummaryModal() {
             <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
           </div>
           <div className="h-[6px] rounded-[3px] overflow-hidden mb-[6px]" style={{ background: 'rgba(255,255,255,.07)' }}>
-            <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }} />
+            <div className="h-full rounded-[3px]" style={{ width: `${Math.min(barFill, pct)}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)', transition: 'width 1.2s cubic-bezier(.25,.8,.25,1)' }} />
           </div>
           <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
             Due <strong className="text-white">{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
