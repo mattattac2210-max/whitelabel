@@ -163,10 +163,33 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         </>
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#0c1018' }}>
-        <div className="flex-1 flex items-center justify-center relative">
-          <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
-            <MapPin className="w-[20px] h-[20px] opacity-30" />
-            <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
+        <div className="flex-1 flex items-center justify-center relative px-[16px] py-[10px]">
+          <div className="w-full flex items-center gap-[8px]">
+            <div className="flex flex-col items-center gap-[3px] flex-shrink-0">
+              <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,.15)', border: '2px solid rgba(34,197,94,.5)' }}>
+                <MapPin className="w-[13px] h-[13px]" stroke="#22C55E" />
+              </div>
+              <span className="font-data text-[7px] uppercase tracking-[.06em] max-w-[60px] text-center truncate" style={{ color: 'rgba(34,197,94,.7)' }}>{trip.from}</span>
+            </div>
+            <div className="flex-1 flex flex-col items-center gap-[2px] relative min-w-0">
+              <div className="w-full relative" style={{ height: '2px' }}>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(34,197,94,.4), rgba(245,196,0,.15) 30%, rgba(245,196,0,.15) 70%, rgba(245,196,0,.4))' }} />
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, #0c1018 4px, #0c1018 8px)',
+                }} />
+              </div>
+              <div className="rounded-[6px] px-[8px] py-[2px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.18)' }}>
+                <span className="font-heading font-extrabold text-[13px]" style={{ color: 'var(--wc-y)' }}>{trip.km}</span>
+                <span className="font-data text-[8px] ml-[2px]" style={{ color: 'var(--wc-t3)' }}>km</span>
+              </div>
+              <div className="font-data text-[7px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
+            </div>
+            <div className="flex flex-col items-center gap-[3px] flex-shrink-0">
+              <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,196,0,.12)', border: '2px solid rgba(245,196,0,.45)' }}>
+                <MapPin className="w-[13px] h-[13px]" stroke="#F5C400" />
+              </div>
+              <span className="font-data text-[7px] uppercase tracking-[.06em] max-w-[60px] text-center truncate" style={{ color: 'rgba(245,196,0,.65)' }}>{trip.to}</span>
+            </div>
           </div>
           {isTop && tutorialPhase !== 'done' && (
             <div
@@ -227,11 +250,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
               </div>
             </div>
-          </div>
-          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
-            <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>km</div>
-            <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
           </div>
         </div>
 
