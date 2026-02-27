@@ -7,6 +7,21 @@ const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const polylineCache = new Map<string, string>();
 
+function loadGMaps(): Promise<void> {
+  if (window._gmapsLoaded) return Promise.resolve();
+  if (window._gmapsPromise) return window._gmapsPromise;
+  window._gmapsPromise = new Promise<void>((resolve, reject) => {
+    if (!MAPS_KEY) { reject(new Error('No key')); return; }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => { window._gmapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed'));
+    document.head.appendChild(script);
+  });
+  return window._gmapsPromise;
+}
+
 function StaticRouteMap({ from, to }: { from: string; to: string }) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -16,6 +31,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const cacheKey = `${from}|${to}`;
     if (!MAPS_KEY || fetchedRef.current === cacheKey) return;
     fetchedRef.current = cacheKey;
+    let cancelled = false;
 
     const fromEnc = encodeURIComponent(from);
     const toEnc = encodeURIComponent(to);
@@ -23,8 +39,11 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
 
     const buildUrl = (polyPart?: string) => {
-      const pathParam = polyPart ? `&path=color:0xF5C400CC|weight:4|enc:${polyPart}` : '';
-      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}${pathParam}&key=${MAPS_KEY}`;
+      if (polyPart) {
+        const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
+        return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`;
+      }
+      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}&key=${MAPS_KEY}`;
     };
 
     const cached = polylineCache.get(cacheKey);
@@ -34,17 +53,20 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
       return;
     }
 
-    if (window._gmapsLoaded && window.google?.maps) {
+    loadGMaps().then(() => {
+      if (cancelled) return;
       const ds = new window.google.maps.DirectionsService();
       ds.route({
         origin: from,
         destination: to,
         travelMode: window.google.maps.TravelMode.DRIVING,
         region: 'au',
-      }, (result: any, status: string) => {
-        if (status === 'OK' && result?.routes?.[0]?.overview_polyline) {
-          const poly = result.routes[0].overview_polyline;
-          const encoded = typeof poly === 'string' ? poly : poly.toJSON?.() || '';
+      }).then((result: any) => {
+        if (cancelled) return;
+        const route = result?.routes?.[0];
+        const poly = route?.overview_polyline;
+        if (poly) {
+          const encoded = typeof poly === 'string' ? poly : (poly.points ? poly.points : (typeof poly.toJSON === 'function' ? poly.toJSON() : ''));
           if (encoded) {
             polylineCache.set(cacheKey, encoded);
             setImgUrl(buildUrl(encoded));
@@ -55,11 +77,14 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
           setImgUrl(buildUrl());
         }
         setError(false);
+      }).catch(() => {
+        if (!cancelled) { setImgUrl(buildUrl()); setError(false); }
       });
-    } else {
-      setImgUrl(buildUrl());
-      setError(false);
-    }
+    }).catch(() => {
+      if (!cancelled) { setImgUrl(buildUrl()); setError(false); }
+    });
+
+    return () => { cancelled = true; };
   }, [from, to]);
 
   if (error || !imgUrl) {
