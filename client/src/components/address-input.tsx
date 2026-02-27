@@ -1,6 +1,31 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
+declare global {
+  interface Window {
+    google: any;
+    _gmapsLoaded: boolean;
+    _gmapsPromise: Promise<void> | null;
+  }
+}
+
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+function loadGoogleMaps(): Promise<void> {
+  if (window._gmapsLoaded) return Promise.resolve();
+  if (window._gmapsPromise) return window._gmapsPromise;
+  window._gmapsPromise = new Promise<void>((resolve, reject) => {
+    if (!API_KEY) { reject(new Error('No API key')); return; }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => { window._gmapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load Google Maps'));
+    document.head.appendChild(script);
+  });
+  return window._gmapsPromise;
+}
+
 interface Prediction {
   description: string;
   placeId: string;
@@ -15,48 +40,31 @@ interface AddressInputProps {
   'data-testid'?: string;
 }
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
-async function fetchSuggestions(input: string): Promise<Prediction[]> {
-  if (!API_KEY || input.length < 2) return [];
-  try {
-    const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': API_KEY,
-      },
-      body: JSON.stringify({
-        input,
-        includedRegionCodes: ['au'],
-        languageCode: 'en-AU',
-      }),
-    });
-    if (!res.ok) {
-      console.error('Places API error:', res.status, await res.text());
-      return [];
-    }
-    const data = await res.json();
-    return (data.suggestions || [])
-      .filter((s: any) => s.placePrediction)
-      .map((s: any) => ({
-        description: s.placePrediction.text?.text || s.placePrediction.structuredFormat?.mainText?.text || '',
-        placeId: s.placePrediction.placeId || '',
-      }));
-  } catch (err) {
-    console.error('Places API fetch error:', err);
-    return [];
-  }
-}
-
 export function AddressInput({ value, onChange, placeholder, className, style, ...rest }: AddressInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const serviceRef = useRef<any>(null);
+  const sessionRef = useRef<any>(null);
+  const [ready, setReady] = useState(!!window._gmapsLoaded);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadGoogleMaps().then(() => setReady(true)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!ready || serviceRef.current) return;
+    try {
+      serviceRef.current = new window.google.maps.places.AutocompleteService();
+      sessionRef.current = new window.google.maps.places.AutocompleteSessionToken();
+    } catch (e) {
+      console.error('Failed to init AutocompleteService:', e);
+    }
+  }, [ready]);
 
   const updatePosition = useCallback(() => {
     if (!inputRef.current) return;
@@ -66,18 +74,33 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
 
   const doSearch = useCallback((input: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (input.length < 2) { setPredictions([]); setShowDropdown(false); return; }
-    debounceRef.current = setTimeout(async () => {
-      const results = await fetchSuggestions(input);
-      if (results.length > 0) {
-        setPredictions(results);
-        updatePosition();
-        setShowDropdown(true);
-        setActiveIdx(-1);
-      } else {
-        setPredictions([]);
-        setShowDropdown(false);
-      }
+    if (!serviceRef.current || input.length < 2) {
+      setPredictions([]);
+      setShowDropdown(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      serviceRef.current.getPlacePredictions(
+        {
+          input,
+          componentRestrictions: { country: 'au' },
+          sessionToken: sessionRef.current,
+        },
+        (results: any[] | null, status: string) => {
+          if (status === 'OK' && results && results.length > 0) {
+            setPredictions(results.map((r: any) => ({
+              description: r.description,
+              placeId: r.place_id,
+            })));
+            updatePosition();
+            setShowDropdown(true);
+            setActiveIdx(-1);
+          } else {
+            setPredictions([]);
+            setShowDropdown(false);
+          }
+        }
+      );
     }, 250);
   }, [updatePosition]);
 
@@ -91,8 +114,10 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
     onChange(pred.description);
     setPredictions([]);
     setShowDropdown(false);
-    inputRef.current?.blur();
-  }, [onChange]);
+    if (ready) {
+      try { sessionRef.current = new window.google.maps.places.AutocompleteSessionToken(); } catch {}
+    }
+  }, [onChange, ready]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showDropdown || predictions.length === 0) return;
@@ -121,9 +146,7 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, []);
 
   const dropdown = showDropdown && predictions.length > 0 ? createPortal(
