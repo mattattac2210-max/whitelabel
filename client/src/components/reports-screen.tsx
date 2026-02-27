@@ -431,7 +431,7 @@ export function ReportsScreen() {
                   <div className="flex items-start gap-[5px] mb-[8px]">
                     <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
                     <span className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-                      Altering sessions is <strong style={{ color: 'var(--wc-am)' }}>not recommended.</strong> All data is retained on your behalf for ATO compliance.
+                      <strong style={{ color: 'var(--wc-am)' }}>Not recommended.</strong> If you've made a mistake, create a new report and set it as active instead. All data is retained for ATO compliance.
                     </span>
                   </div>
                 </div>
@@ -514,7 +514,7 @@ export function ReportsScreen() {
               <span className="text-[12px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
                 This will <strong style={{ color: 'var(--wc-am)' }}>delete your saved reports</strong> for this session. Your trip data will be reloaded so you can re-sort and create new reports anytime.
                 <br /><br />
-                <span style={{ color: 'var(--wc-t3)' }}>Altering sessions is not recommended. All data is retained on your behalf for ATO compliance.</span>
+                <span style={{ color: 'var(--wc-t3)' }}>If you've made a mistake, we recommend creating a new report for those trips and setting it as active instead. All data is retained on your behalf for ATO compliance.</span>
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
