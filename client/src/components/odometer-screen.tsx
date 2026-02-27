@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
@@ -10,6 +10,8 @@ export function OdometerScreen() {
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
   const [heroCollapsed, setHeroCollapsed] = useState(true);
   const [odoInputs, setOdoInputs] = useState<Record<number, string>>({});
+  const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const score = stats.auditScore;
   const scoreFill = score > 80 ? 'linear-gradient(90deg,var(--wc-gr),#22ff88)' : score > 65 ? 'linear-gradient(90deg,var(--wc-am),var(--wc-gr))' : 'linear-gradient(90deg,var(--wc-re),var(--wc-am))';
@@ -135,21 +137,49 @@ export function OdometerScreen() {
                   >
                     +
                   </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    ref={el => { fileInputRefs.current[i] = el; }}
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = ev => {
+                          setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
+                          dispatch({ type: 'ADD_PHOTO', tripIndex: i });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                      e.target.value = '';
+                    }}
+                    data-testid={`photo-file-${i}`}
+                  />
                   <button
-                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center cursor-pointer transition-all"
-                    style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
-                    onClick={() => dispatch({ type: 'ADD_PHOTO', tripIndex: i })}
+                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
+                    style={{
+                      background: photoThumbs[i] ? 'transparent' : 'rgba(245,196,0,.07)',
+                      border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgba(245,196,0,.25)',
+                      color: 'var(--wc-y)',
+                    }}
+                    onClick={() => fileInputRefs.current[i]?.click()}
                     data-testid={`photo-btn-${i}`}
                   >
-                    <Camera className="w-[18px] h-[18px]" />
+                    {photoThumbs[i] ? (
+                      <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[9px]" />
+                    ) : (
+                      <Camera className="w-[18px] h-[18px]" />
+                    )}
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
                     {t.photo ? (
-                      <><Check className="w-3 h-3 inline mr-1" /> Photo attached</>
+                      <><Check className="w-3 h-3 inline mr-1" /> Photo attached +2 pts</>
                     ) : (
-                      'No photo - add for +2 pts'
+                      'Tap camera to add photo +2 pts'
                     )}
                   </div>
                   <button
