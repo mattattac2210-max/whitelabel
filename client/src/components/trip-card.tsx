@@ -90,7 +90,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
   return (
     <div
       ref={cardRef}
-      className="absolute top-0 left-0 right-0 rounded-[20px] overflow-hidden cursor-grab active:cursor-grabbing"
+      className="absolute top-0 left-0 right-0 bottom-0 rounded-[20px] overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
       style={{
         background: 'var(--wc-card)',
         border: '1px solid var(--wc-border)',
@@ -150,8 +150,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </div>
         </>
       )}
-      <div className="w-full relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018' }}>
-        <div className="h-[140px] flex items-center justify-center">
+      <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px]" style={{ background: '#0c1018' }}>
+        <div className="h-full flex items-center justify-center">
           <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
             <MapPin className="w-[20px] h-[20px] opacity-30" />
             <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
@@ -172,7 +172,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </button>
         </div>
       </div>
-      <div className="p-[0px_13px_7px] flex flex-col gap-[3px]">
+      <div className="p-[0px_13px_7px] flex flex-col gap-[3px] flex-shrink-0">
 
         <div className="flex gap-[7px]">
           <div className="flex-1 flex flex-col gap-[3px] min-w-0">
