@@ -16,6 +16,7 @@ interface SavedTripSummary {
 }
 
 interface SavedReport {
+  sessionId: string;
   timestamp: string;
   bizCount: number;
   perCount: number;
@@ -55,6 +56,7 @@ interface AppState {
   summaryModalOpen: boolean;
   conflictResolved: boolean;
   freshSession: boolean;
+  sessionId: string;
 }
 
 type Action =
@@ -109,6 +111,7 @@ const initialState: AppState = {
   summaryModalOpen: false,
   conflictResolved: false,
   freshSession: true,
+  sessionId: 'batch1',
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -259,12 +262,14 @@ function reducer(state: AppState, action: Action): AppState {
       const unsorted = state.trips.filter(t => t.type === null);
       if (unsorted.length > 0) areas.push(`${unsorted.length} trip${unsorted.length > 1 ? 's' : ''} not sorted yet`);
       if (areas.length === 0) areas.push('All clear \u2014 looking good for ATO compliance');
-      const revisionNum = state.savedReports.length + 1;
-      const isRevision = state.savedReports.length > 0;
+      const sameSessionReports = state.savedReports.filter(r => r.sessionId === state.sessionId);
+      const revisionNum = sameSessionReports.length + 1;
+      const isRevision = sameSessionReports.length > 0;
       if (isRevision) {
         areas.unshift('This is a revised report \u2014 verify changes against previous version');
       }
       const report: SavedReport = {
+        sessionId: state.sessionId,
         timestamp: ts,
         bizCount: biz.length,
         perCount: per.length,
@@ -281,7 +286,9 @@ function reducer(state: AppState, action: Action): AppState {
         revision: revisionNum,
         supersedes: false,
       };
-      const updatedPrevious = state.savedReports.map(r => ({ ...r, supersedes: true }));
+      const updatedPrevious = state.savedReports.map(r =>
+        r.sessionId === state.sessionId ? { ...r, supersedes: true } : r
+      );
       return {
         ...state,
         savedReports: [report, ...updatedPrevious],
@@ -316,6 +323,7 @@ function reducer(state: AppState, action: Action): AppState {
         trips: batch2Trips.map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
+        sessionId: 'batch2',
       };
     case 'DELETE_ALL_TRIPS':
       return {
@@ -327,9 +335,10 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
+      const targetSessionId = state.savedReports[idx].sessionId;
       const updated = state.savedReports.map((r, i) => ({
         ...r,
-        supersedes: i !== idx,
+        supersedes: r.sessionId === targetSessionId ? i !== idx : r.supersedes,
       }));
       return {
         ...state,
