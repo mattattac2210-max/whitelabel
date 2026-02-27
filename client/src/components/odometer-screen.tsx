@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
@@ -74,6 +74,10 @@ export function OdometerScreen() {
           const endKey = `${i}-end`;
           const curStart = parseInt(odoInputs[startKey] ?? String(oStart)) || oStart;
           const curEnd = parseInt(odoInputs[endKey] ?? String(oEnd)) || oEnd;
+
+          const prevEnd = i > 0 ? Math.round(getTripOdoEnd(state.trips, i - 1)) : null;
+          const prevEndLocal = i > 0 ? parseInt(odoInputs[`${i - 1}-end`] ?? String(prevEnd)) || prevEnd : null;
+          const hasMismatch = prevEndLocal != null && curStart !== prevEndLocal;
 
           return (
             <div
@@ -167,6 +171,22 @@ export function OdometerScreen() {
                 <div className="font-data text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>
                   Distance: <span style={{ color: 'var(--wc-y)' }}>{(curEnd - curStart).toLocaleString('en-AU')} km</span>
                 </div>
+                {hasMismatch && (
+                  <div className="flex items-center gap-[6px] rounded-[8px] px-[10px] py-[5px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)' }}>
+                    <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
+                    <span className="font-data text-[9px] flex-1" style={{ color: 'var(--wc-am)' }}>
+                      Start ({curStart.toLocaleString('en-AU')}) doesn't match previous trip end ({prevEndLocal!.toLocaleString('en-AU')})
+                    </span>
+                    <button
+                      className="rounded-[6px] px-[8px] py-[3px] font-heading font-bold text-[9px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-95"
+                      style={{ background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
+                      onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(prevEndLocal) }))}
+                      data-testid={`odo-fix-${i}`}
+                    >
+                      Fix
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-[6px]">
                     <input
@@ -217,7 +237,7 @@ export function OdometerScreen() {
                     className="rounded-[9px] px-[12px] py-[5px] font-heading font-extrabold text-[11px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[4px] transition-all active:scale-95"
                     style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
                     onClick={() => {
-                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, reading: curEnd, photo: t.photo });
+                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
                       if (state.verifiedSet.size + 1 >= state.trips.length) {
                         setTimeout(() => dispatch({ type: 'OPEN_SUMMARY' }), 500);
                       }

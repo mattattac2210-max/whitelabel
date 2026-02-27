@@ -42,7 +42,7 @@ type Action =
   | { type: 'CLASSIFY_NEXT' }
   | { type: 'INIT_CLASSIFY' }
   | { type: 'RECLASSIFY'; tripIndex: number; tripType: 'business' | 'personal' }
-  | { type: 'VERIFY_TRIP'; tripIndex: number; reading: number; photo: boolean }
+  | { type: 'VERIFY_TRIP'; tripIndex: number; startReading: number; reading: number; photo: boolean }
   | { type: 'ADD_PHOTO'; tripIndex: number }
   | { type: 'UPDATE_TRIP'; tripIndex: number; updates: Partial<Trip> }
   | { type: 'OPEN_EDIT'; tripIndex: number }
@@ -155,6 +155,7 @@ function reducer(state: AppState, action: Action): AppState {
       newTrips[action.tripIndex] = {
         ...newTrips[action.tripIndex],
         verified: true,
+        odoStartReading: action.startReading,
         odoReading: action.reading,
         photo: action.photo || newTrips[action.tripIndex].photo,
       };
