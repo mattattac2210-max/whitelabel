@@ -620,6 +620,14 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
                 <span className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
                 <span className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+                <button
+                  className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em]"
+                  style={{ background: '#999', border: '1px solid #999', color: '#000' }}
+                  onClick={() => { setShowDetail(false); onEdit(); }}
+                  data-testid="button-detail-edit"
+                >
+                  Edit &rsaquo;
+                </button>
               </div>
               <div className="flex gap-[10px]">
                 <div className="flex-1 flex flex-col gap-[8px] min-w-0">
