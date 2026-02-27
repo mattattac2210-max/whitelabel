@@ -239,7 +239,9 @@ export function SummaryModal() {
       next[idx] = (next[idx] + dir + 10) % 10;
       return next;
     });
+    setOdoSaved(false);
   };
+  const [odoSaved, setOdoSaved] = useState(false);
   const lastReading = state.lastOdoReading;
   useEffect(() => {
     if (lastReading) setOdoDigits(toDigits(lastReading));
@@ -357,19 +359,36 @@ export function SummaryModal() {
             </div>
           )}
 
-          <button
-            className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
-            style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
-            onClick={() => {
-              const val = digitsToNum(odoDigits);
-              if (val > 0) {
-                dispatch({ type: 'SET_MANUAL_ODO', reading: val });
-              }
-            }}
-            data-testid="button-save-odo"
-          >
-            Save Odometer Reading
-          </button>
+          {odoSaved ? (
+            <div
+              className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: 'rgba(34,197,94,.12)',
+                border: '1.5px solid rgba(34,197,94,.3)',
+                color: 'var(--wc-gr)',
+                animation: 'odoSavedPop .4s ease-out',
+              }}
+              data-testid="odo-saved-confirm"
+            >
+              <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
+              Saved
+            </div>
+          ) : (
+            <button
+              className="w-full rounded-[10px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
+              onClick={() => {
+                const val = digitsToNum(odoDigits);
+                if (val > 0) {
+                  dispatch({ type: 'SET_MANUAL_ODO', reading: val });
+                  setOdoSaved(true);
+                }
+              }}
+              data-testid="button-save-odo"
+            >
+              Save Odometer Reading
+            </button>
+          )}
         </div>
 
         <div className="mx-[18px] mb-4">
