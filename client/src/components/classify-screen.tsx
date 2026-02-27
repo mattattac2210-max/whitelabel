@@ -63,14 +63,14 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
 
   if (!url) {
     return (
-      <div className="w-[100px] flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,.04)' }}>
+      <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.04)' }}>
         <div className="w-[14px] h-[14px] border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--wc-y)', borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
   return (
-    <div className="w-[100px] flex-shrink-0 relative overflow-hidden" data-testid="classify-mini-map">
+    <div className="w-full h-full relative overflow-hidden" data-testid="classify-mini-map">
       <img src={url} alt="route" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
     </div>
   );
@@ -159,7 +159,7 @@ export function ClassifyScreen() {
       </div>
 
       <div
-        className="mx-[14px] mb-2 rounded-[14px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
+        className="mx-[14px] mb-[10px] rounded-[14px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
         style={{
           background: 'var(--wc-card)',
           border: justAdvanced ? '1.5px solid rgba(245,196,0,.85)' : '1.5px solid rgba(245,196,0,.5)',
@@ -170,32 +170,40 @@ export function ClassifyScreen() {
         data-testid="classify-trip-card"
       >
         <div className="flex gap-0">
-          <div className="flex-1 min-w-0 p-[10px_12px] flex flex-col justify-center gap-[6px]">
-            <div className="flex items-center gap-[6px]">
-              <div className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
-                <MapPin className="w-[8px] h-[8px]" stroke="#22C55E" />
+          <div className="flex-1 min-w-0 p-[14px_14px] flex flex-col justify-center gap-[8px]">
+            <div className="flex items-center gap-[8px]">
+              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
+                <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
               </div>
-              <div className="font-semibold text-[11px] text-white truncate">{trip.from}</div>
-            </div>
-            <div className="flex items-center gap-[6px]">
-              <div className="w-[16px] h-[16px] rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[8px] h-[8px]" stroke="#F5C400" />
+              <div className="min-w-0">
+                <div className="font-semibold text-[13px] text-white truncate">{trip.from}</div>
+                <div className="font-data text-[9px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
               </div>
-              <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
             </div>
-            <div className="flex items-center gap-[6px] mt-[2px]">
-              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.date}</span>
-              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
-              <span className="font-heading font-bold text-[11px]" style={{ color: 'var(--wc-y)' }}>{trip.km} km</span>
-              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
-              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+            <div className="flex items-center gap-[8px]">
+              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
+                <MapPin className="w-[11px] h-[11px]" stroke="#F5C400" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-[13px] text-white truncate">{trip.to}</div>
+                <div className="font-data text-[9px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+              </div>
             </div>
-            <div className="font-heading font-extrabold text-[14px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
+            <div className="flex items-center gap-[6px] mt-[2px] flex-wrap">
+              <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.date}</span>
+              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
+              <span className="font-heading font-bold text-[13px]" style={{ color: 'var(--wc-y)' }}>{trip.km} km</span>
+              <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
+              <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+            </div>
+            <div className="font-heading font-extrabold text-[18px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
           </div>
-          <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+          <div className="w-[130px] flex-shrink-0">
+            <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+          </div>
         </div>
         {microOpen && (
-          <div className="p-[0_12px_12px] border-t" style={{ borderColor: 'var(--wc-border)' }} onClick={e => e.stopPropagation()}>
+          <div className="p-[0_14px_14px] border-t" style={{ borderColor: 'var(--wc-border)' }} onClick={e => e.stopPropagation()}>
             <div className="flex gap-[7px] mb-[6px] mt-2">
               <div className="flex-1">
                 <span className="font-data text-[7px] uppercase tracking-[.09em] block mb-1" style={{ color: 'var(--wc-t3)' }}>From</span>
@@ -220,36 +228,38 @@ export function ClassifyScreen() {
         )}
       </div>
 
-      <div className="flex-1 px-[14px] grid grid-cols-2 gap-[7px] content-start overflow-y-auto pb-1 scrollbar-hide">
-        {CATEGORIES.map((cat, i) => {
-          const isArmed = armed === i;
-          const Icon = iconMap[cat.icon] || Wrench;
-          return (
-            <button
-              key={i}
-              className="rounded-[13px] p-[12px_10px] cursor-pointer transition-all flex flex-col items-center gap-[5px] text-center"
-              style={{
-                background: isArmed ? 'var(--wc-y)' : 'rgba(255,255,255,.04)',
-                border: isArmed ? '1.5px solid var(--wc-y)' : '1.5px solid var(--wc-border)',
-                transform: isArmed ? 'scale(1.03)' : 'none',
-                boxShadow: isArmed ? '0 0 22px rgba(245,196,0,.3)' : 'none',
-              }}
-              onClick={() => handleArm(i)}
-              data-testid={`classify-cat-${i}`}
-            >
-              {isArmed ? (
-                <Check className="w-6 h-6" style={{ color: '#000' }} />
-              ) : (
-                <Icon className="w-6 h-6" style={{ color: 'var(--wc-t2)' }} />
-              )}
-              <span className="font-heading font-bold text-[13px] uppercase tracking-[.03em] leading-[1.2]" style={{ color: isArmed ? '#000' : 'var(--wc-t2)' }}>
-                {isArmed ? 'Confirm' : cat.label}
-              </span>
-            </button>
-          );
-        })}
+      <div className="flex-1 min-h-0 px-[14px] flex flex-col gap-[7px] overflow-y-auto pb-[6px] scrollbar-hide">
+        <div className="grid grid-cols-2 gap-[7px] flex-1 content-stretch">
+          {CATEGORIES.map((cat, i) => {
+            const isArmed = armed === i;
+            const Icon = iconMap[cat.icon] || Wrench;
+            return (
+              <button
+                key={i}
+                className="rounded-[13px] p-[10px_10px] cursor-pointer transition-all flex flex-col items-center justify-center gap-[4px] text-center"
+                style={{
+                  background: isArmed ? 'var(--wc-y)' : 'rgba(255,255,255,.04)',
+                  border: isArmed ? '1.5px solid var(--wc-y)' : '1.5px solid var(--wc-border)',
+                  transform: isArmed ? 'scale(1.03)' : 'none',
+                  boxShadow: isArmed ? '0 0 22px rgba(245,196,0,.3)' : 'none',
+                }}
+                onClick={() => handleArm(i)}
+                data-testid={`classify-cat-${i}`}
+              >
+                {isArmed ? (
+                  <Check className="w-6 h-6" style={{ color: '#000' }} />
+                ) : (
+                  <Icon className="w-6 h-6" style={{ color: 'var(--wc-t2)' }} />
+                )}
+                <span className="font-heading font-bold text-[13px] uppercase tracking-[.03em] leading-[1.2]" style={{ color: isArmed ? '#000' : 'var(--wc-t2)' }}>
+                  {isArmed ? 'Confirm' : cat.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-        <div className="col-span-2 flex gap-[7px] items-center rounded-[13px] p-[10px_12px] mt-[2px]" style={{ background: 'rgba(255,255,255,.03)', border: '1.5px dashed rgba(255,255,255,.1)' }}>
+        <div className="flex gap-[7px] items-center rounded-[13px] p-[10px_12px] flex-shrink-0" style={{ background: 'rgba(255,255,255,.03)', border: '1.5px dashed rgba(255,255,255,.1)' }}>
           <input
             className="flex-1 bg-transparent border-none outline-none text-[13px] text-white"
             style={{ caretColor: 'var(--wc-y)' }}
