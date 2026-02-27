@@ -326,6 +326,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const pointerPositions = useRef(new Map<number, { x: number; y: number }>());
   const pinchStartDist = useRef(0);
   const [detailScale, setDetailScale] = useState(1);
+  const pinchCooldown = useRef(false);
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
@@ -656,6 +657,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 }
                 return;
               }
+              if (pinchCooldown.current) return;
               detailMultitouch.current = false;
               detailLocked.current = false;
               detailStartX.current = e.clientX;
@@ -690,12 +692,19 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             onPointerUp={e => {
               activePointers.current.delete(e.pointerId);
               pointerPositions.current.delete(e.pointerId);
-              if (activePointers.current.size === 0) {
-                detailMultitouch.current = false;
-                pinchStartDist.current = 0;
-                setDetailScale(1);
+              if (detailMultitouch.current) {
+                if (activePointers.current.size === 0) {
+                  detailMultitouch.current = false;
+                  pinchStartDist.current = 0;
+                  setDetailScale(1);
+                  pinchCooldown.current = true;
+                  setTimeout(() => { pinchCooldown.current = false; }, 400);
+                }
+                setDetailDragging(false);
+                setDetailDragX(0);
+                return;
               }
-              if (!detailDragging || detailMultitouch.current) {
+              if (!detailDragging || pinchCooldown.current) {
                 setDetailDragging(false);
                 setDetailDragX(0);
                 return;
@@ -720,6 +729,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 detailMultitouch.current = false;
                 pinchStartDist.current = 0;
                 setDetailScale(1);
+                pinchCooldown.current = true;
+                setTimeout(() => { pinchCooldown.current = false; }, 400);
               }
               setDetailDragging(false);
               setDetailDragX(0);
