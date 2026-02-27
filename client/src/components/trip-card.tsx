@@ -151,7 +151,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
         </>
       )}
       <div className="w-full relative overflow-hidden flex-shrink-0 rounded-t-[20px]" style={{ background: '#0c1018' }}>
-        <div className="h-[180px] flex items-center justify-center">
+        <div className="h-[140px] flex items-center justify-center">
           <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
             <MapPin className="w-[20px] h-[20px] opacity-30" />
             <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
@@ -172,46 +172,46 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </button>
         </div>
       </div>
-      <div className="p-[0px_13px_10px] flex flex-col gap-[5px]">
+      <div className="p-[0px_13px_7px] flex flex-col gap-[3px]">
 
         <div className="flex gap-[7px]">
-          <div className="flex-1 flex flex-col gap-[5px] min-w-0">
-            <div className="flex items-center gap-[7px] py-[3px]">
-              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
-                <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
+          <div className="flex-1 flex flex-col gap-[3px] min-w-0">
+            <div className="flex items-center gap-[7px] py-[2px]">
+              <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
+                <MapPin className="w-[10px] h-[10px]" stroke="#22C55E" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[12px] text-white truncate">{trip.from}</div>
-                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+                <div className="font-semibold text-[11px] text-white truncate">{trip.from}</div>
+                <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
               </div>
             </div>
-            <div className="flex items-center gap-[7px] py-[3px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-              <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[11px] h-[11px]" stroke="#F5C400" />
+            <div className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+              <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
+                <MapPin className="w-[10px] h-[10px]" stroke="#F5C400" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[12px] text-white truncate">{trip.to}</div>
-                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
+                <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
               </div>
             </div>
           </div>
-          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[12px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>km</div>
-            <div className="font-data text-[9px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
+          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
+            <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>km</div>
+            <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-[5px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+        <div className="flex items-center gap-[5px] py-[1px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
           <span className="font-data text-[7px] uppercase tracking-[.09em]" style={{ color: 'var(--wc-t3)' }}>Odo</span>
-          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oStart).toLocaleString('en-AU')} km</span>
-          <span className="font-heading text-[11px]" style={{ color: 'var(--wc-t3)' }}>&rarr;</span>
-          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oEnd).toLocaleString('en-AU')} km</span>
+          <span className="font-heading font-bold text-[11px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oStart).toLocaleString('en-AU')} km</span>
+          <span className="font-heading text-[10px]" style={{ color: 'var(--wc-t3)' }}>&rarr;</span>
+          <span className="font-heading font-bold text-[11px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oEnd).toLocaleString('en-AU')} km</span>
         </div>
 
-        <div className="flex gap-[6px]" onPointerDown={e => e.stopPropagation()} onPointerUp={e => e.stopPropagation()} onPointerMove={e => e.stopPropagation()}>
+        <div className="flex gap-[5px]" onPointerDown={e => e.stopPropagation()} onPointerUp={e => e.stopPropagation()} onPointerMove={e => e.stopPropagation()}>
           <button
-            className="flex-1 py-[9px] rounded-[10px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all"
+            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all"
             style={{ background: 'transparent', border: '1.5px solid rgba(239,68,68,.3)', color: 'rgba(239,68,68,.65)' }}
             onClick={() => flyOut('left')}
             data-testid="button-personal"
@@ -219,7 +219,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
             Personal
           </button>
           <button
-            className="flex-1 py-[9px] rounded-[10px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all active:scale-95"
+            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all active:scale-95"
             style={{
               background: 'var(--wc-yd)',
               border: '1.5px solid rgba(245,196,0,.45)',
@@ -233,14 +233,14 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
         </div>
 
         <div className="flex items-center justify-between px-[2px] mt-[-2px]">
-          <div className="flex items-center gap-[3px] font-heading font-bold text-[11px] tracking-[.04em] uppercase" style={{ color: 'rgba(239,68,68,.55)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(239,68,68,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
+          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(239,68,68,.55)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(239,68,68,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
             Swipe left
           </div>
-          <div className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
-          <div className="flex items-center gap-[3px] font-heading font-bold text-[11px] tracking-[.04em] uppercase" style={{ color: 'rgba(245,196,0,.65)' }}>
+          <div className="font-data text-[7px]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
+          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(245,196,0,.65)' }}>
             Swipe right
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(245,196,0,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(245,196,0,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
           </div>
         </div>
       </div>
