@@ -398,7 +398,7 @@ export function SummaryModal() {
             <Gauge className="w-[18px] h-[18px]" style={{ color: 'var(--wc-am)' }} />
             <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white">Odometer</span>
             {state.lastOdoVerifiedAt && (
-              <span className="ml-auto font-data text-[8px] uppercase tracking-[.08em] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>
+              <span className="ml-auto font-data uppercase tracking-[.08em] text-[#ffffff] text-[12px]" style={{ color: 'var(--wc-t3)' }}>
                 verified {state.lastOdoVerifiedAt}
               </span>
             )}
