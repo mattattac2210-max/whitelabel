@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
@@ -10,9 +10,11 @@ import {
 } from 'lucide-react';
 
 const SESSION_LABELS: Record<string, string> = {
-  batch1: 'Week 1 — 24\u201327 Feb',
-  batch2: 'Week 2 — 28 Feb\u20132 Mar',
+  batch1: 'Week 1 — 24–27 Feb',
+  batch2: 'Week 2 — 28 Feb–2 Mar',
 };
+
+// ─── Vehicle details type ─────────────────────────────────────────────────────
 
 interface VehicleDetails {
   make: string;
@@ -21,6 +23,8 @@ interface VehicleDetails {
   engineCapacity: string;
   year: string;
 }
+
+// ─── jsPDF dynamic loader ─────────────────────────────────────────────────────
 
 let jsPDFLib: any = null;
 
@@ -37,6 +41,8 @@ async function loadJsPDF(): Promise<any> {
     document.head.appendChild(script);
   });
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function InfoBlock({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
   const borderColor = color === 'y' ? 'rgba(245,196,0,.2)' : color === 'gr' ? 'rgba(34,197,94,.15)' : color === 'am' ? 'rgba(245,158,11,.2)' : color === 're' ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.07)';
@@ -58,6 +64,8 @@ function TableRow({ label, val, highlight }: { label: string; val: string; highl
   );
 }
 
+// ─── Real PDF generator (jsPDF — non-editable binary PDF) ────────────────────
+
 async function generatePDF(report: any, vehicle: VehicleDetails) {
   const JsPDF = await loadJsPDF();
   if (!JsPDF) { alert('Failed to load PDF library. Check your connection.'); return; }
@@ -65,14 +73,14 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const PW = 210, PH = 297;
   const ML = 14, MR = 14, MT = 14;
-  const CW = PW - ML - MR;
+  const CW = PW - ML - MR; // content width
   let y = MT;
 
-  const Y: [number, number, number] = [245, 196, 0];
-  const GR: [number, number, number] = [26, 107, 58];
-  const GY: [number, number, number] = [160, 120, 10];
-  const BK: [number, number, number] = [17, 17, 17];
-  const GG: [number, number, number] = [120, 120, 120];
+  const Y = [245/255, 196/255, 0];       // #F5C400
+  const GR = [26/255, 107/255, 58/255];  // dark green
+  const GY = [160/255, 120/255, 10/255]; // gold text
+  const BK: [number,number,number] = [17/255, 17/255, 17/255];
+  const GG: [number,number,number] = [120/255, 120/255, 120/255];
 
   const allTrips = report.trips || [];
   const bizTrips = allTrips.filter((t: any) => t.type === 'business');
@@ -95,7 +103,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   function addFooter() {
     doc.setFontSize(7);
     doc.setTextColor(...GG);
-    doc.text(`WorkCar \u00B7 workcar.com.au \u00B7 ATO FY 2024\u20132025 \u00B7 Rev ${report.revision} \u00B7 Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
+    doc.text(`WorkCar · workcar.com.au · ATO FY 2024–2025 · Rev ${report.revision} · Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
     doc.setDrawColor(230, 230, 230);
     doc.line(ML, PH - 11, PW - MR, PH - 11);
   }
@@ -103,7 +111,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   function sectionTitle(title: string) {
     checkY(10);
     y += 3;
-    doc.setFillColor(...Y);
+    doc.setFillColor(...Y as [number,number,number]);
     doc.rect(ML, y, CW, 0.7, 'F');
     y += 3;
     doc.setFontSize(9);
@@ -113,28 +121,34 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     y += 5;
   }
 
-  doc.setFillColor(...Y);
+  // ── Header ──
+  // Yellow accent bar
+  doc.setFillColor(...Y as [number,number,number]);
   doc.rect(ML, y, CW, 1.2, 'F');
   y += 4;
 
+  // Logo
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...BK);
   doc.text('Work', ML, y + 6);
   const workW = doc.getTextWidth('Work');
-  doc.setTextColor(...GY);
+  doc.setTextColor(...GY as [number,number,number]);
   doc.text('Car', ML + workW, y + 6);
 
+  // Subtitle
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GG);
-  doc.text('workcar.com.au  \u00B7  ATO Compliant Vehicle Logbook', ML, y + 11);
+  doc.text('workcar.com.au  ·  ATO Compliant Vehicle Logbook', ML, y + 11);
 
+  // Active badge
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...GR);
-  doc.text(`ACTIVE REPORT \u00B7 REV ${report.revision}`, ML, y + 16);
+  doc.setTextColor(...GR as [number,number,number]);
+  doc.text(`ACTIVE REPORT · REV ${report.revision}`, ML, y + 16);
 
+  // Right side meta
   const rightX = PW - MR;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
@@ -144,8 +158,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GG);
   doc.text(`Generated: ${generatedAt}`, rightX, y + 10, { align: 'right' });
-  doc.text('Financial Year: 2024\u20132025', rightX, y + 14.5, { align: 'right' });
-  doc.setTextColor(...GY);
+  doc.text('Financial Year: 2024–2025', rightX, y + 14.5, { align: 'right' });
+  doc.setTextColor(...GY as [number,number,number]);
   doc.setFont('helvetica', 'bold');
   doc.text(`Audit Score: ${report.auditScore}%`, rightX, y + 19, { align: 'right' });
 
@@ -154,13 +168,14 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.line(ML, y, PW - MR, y);
   y += 6;
 
+  // ── Vehicle & Logbook Details ──
   sectionTitle('Vehicle & Logbook Details');
 
   const grid = [
     ['Car make and model', vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
     ['Engine capacity', vehicle.engineCapacity || '_______________', 'Year of manufacture', vehicle.year || '_______________'],
-    ['Logbook start date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end date', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
-    ['Odometer start (km)', report.odoRangeStart != null ? report.odoRangeStart.toLocaleString('en-AU') : '\u2014', 'Odometer end (km)', report.odoRangeEnd != null ? report.odoRangeEnd.toLocaleString('en-AU') : '\u2014'],
+    ['Logbook start date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '—', 'Logbook end date', allTrips.length > 0 ? allTrips[0].date : '—'],
+    ['Odometer start (km)', report.odoRangeStart != null ? report.odoRangeStart.toLocaleString('en-AU') : '—', 'Odometer end (km)', report.odoRangeEnd != null ? report.odoRangeEnd.toLocaleString('en-AU') : '—'],
     ['Total kilometres', `${totalKm.toFixed(1)} km`, 'Percentage business km', `${bizPct}%`],
   ];
 
@@ -169,46 +184,52 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   grid.forEach((row, ri) => {
     const rowY = y + ri * cellH;
     checkY(cellH);
+    // borders
     doc.setFillColor(ri % 2 === 0 ? 252 : 248, ri % 2 === 0 ? 252 : 250, ri % 2 === 0 ? 252 : 248);
     doc.rect(ML, rowY, col1W, cellH, 'F');
     doc.rect(ML + col1W, rowY, col1W, cellH, 'F');
     doc.setDrawColor(225, 225, 225);
     doc.rect(ML, rowY, col1W, cellH, 'S');
     doc.rect(ML + col1W, rowY, col1W, cellH, 'S');
+    // label
     doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
     doc.text(row[0], ML + 2, rowY + 3.5);
     doc.text(row[2], ML + col1W + 2, rowY + 3.5);
+    // value
     doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
-    if (ri === 4) { doc.setTextColor(...GY); } else { doc.setTextColor(...BK); }
+    if (ri === 4) { doc.setTextColor(...GY as [number,number,number]); } else { doc.setTextColor(...BK); }
     doc.text(row[1], ML + 2, rowY + 7.5);
-    if (ri === 4) { doc.setTextColor(...GY); } else { doc.setTextColor(...BK); }
+    if (ri === 4) { doc.setTextColor(...GY as [number,number,number]); } else { doc.setTextColor(...BK); }
     doc.text(row[3], ML + col1W + 2, rowY + 7.5);
   });
   y += grid.length * cellH + 4;
 
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
-  doc.text(`ATO cents per kilometre rate 2024\u20132025: $${RATE.toFixed(2)}    \u00B7    Total estimated deduction (c/km): $${totalEst.toFixed(2)}`, ML, y);
+  doc.text(`ATO cents per kilometre rate 2024–2025: $${RATE.toFixed(2)}    ·    Total estimated deduction (c/km): $${totalEst.toFixed(2)}`, ML, y);
   y += 7;
 
+  // ── Journey List ──
   sectionTitle('Journey List');
 
   const cols = ['Start date','End date','ODO start','ODO end','Type','km','Biz km','Reimburse'];
   const colW = [22, 22, 22, 22, 18, 14, 14, 22];
   const hdrH = 6.5;
 
+  // Header row
   doc.setFillColor(250, 246, 220);
   doc.rect(ML, y, CW, hdrH, 'F');
   doc.setDrawColor(210, 190, 80);
   doc.rect(ML, y, CW, hdrH, 'S');
   let cx = ML;
   cols.forEach((h, i) => {
-    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
+    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY as [number,number,number]);
     doc.text(h, cx + 1.5, y + 4.5);
     cx += colW[i];
   });
   y += hdrH;
 
-  allTrips.forEach((t: any) => {
+  // Data rows
+  allTrips.forEach((t: any, idx: number) => {
     checkY(6);
     const isBiz = t.type === 'business';
     doc.setFillColor(isBiz ? 255 : 255, isBiz ? 253 : 255, isBiz ? 240 : 255);
@@ -218,8 +239,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
     const cells = [
       t.date, t.date,
-      t.odoStart?.toLocaleString('en-AU') ?? '\u2014',
-      t.odoEnd?.toLocaleString('en-AU') ?? '\u2014',
+      t.odoStart?.toLocaleString('en-AU') ?? '—',
+      t.odoEnd?.toLocaleString('en-AU') ?? '—',
       isBiz ? 'Business' : 'Personal',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '',
@@ -229,20 +250,16 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     let cx2 = ML;
     cells.forEach((cell, ci) => {
       doc.setFontSize(7.5); doc.setFont('helvetica', ci === 4 && isBiz ? 'bold' : 'normal');
-      if (ci === 4) {
-        if (isBiz) doc.setTextColor(...GY);
-        else doc.setTextColor(...GG);
-      } else if (ci === 7 && isBiz) {
-        doc.setTextColor(...GR);
-      } else {
-        doc.setTextColor(...BK);
-      }
+      if (ci === 4) doc.setTextColor(isBiz ? ...GY as [number,number,number] : ...GG);
+      else if (ci === 7 && isBiz) doc.setTextColor(...GR as [number,number,number]);
+      else doc.setTextColor(...BK);
       doc.text(String(cell), cx2 + 1.5, y + 4);
       cx2 += colW[ci];
     });
     y += 5.8;
   });
 
+  // Totals row
   checkY(7);
   doc.setFillColor(250, 246, 220);
   doc.rect(ML, y, CW, 6.5, 'F');
@@ -252,55 +269,53 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.text('Totals', ML + 1.5, y + 4.5);
   const totStart = colW.slice(0, 5).reduce((a, b) => a + b, 0);
   doc.text(totalKm.toFixed(1), ML + totStart + 1.5, y + 4.5);
-  doc.setTextColor(...GY);
+  doc.setTextColor(...GY as [number,number,number]);
   doc.text(bizKm.toFixed(1), ML + totStart + colW[5] + 1.5, y + 4.5);
-  doc.setTextColor(...GR);
+  doc.setTextColor(...GR as [number,number,number]);
   doc.text(`$${totalEst.toFixed(2)}`, ML + totStart + colW[5] + colW[6] + 1.5, y + 4.5);
   y += 10;
 
+  // ── Compliance & Audit ──
   sectionTitle('WorkCar Audit Score & Compliance Notes');
   checkY(30);
 
-  doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
+  doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY as [number,number,number]);
   doc.text(`${report.auditScore}%`, ML, y + 7);
   const scoreW = doc.getTextWidth(`${report.auditScore}%`);
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
   doc.text('WorkCar Pre-Audit Score', ML + scoreW + 3, y + 6);
 
   y += 10;
-  (report.areasToCheck || ['All clear \u2014 looking good for ATO compliance']).forEach((a: string) => {
+  (report.areasToCheck || ['All clear — looking good for ATO compliance']).forEach((a: string) => {
     checkY(5);
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-    if (a.startsWith('All clear')) {
-      doc.setTextColor(...GR);
-    } else {
-      doc.setTextColor(160, 88, 0);
-    }
-    doc.text(`${a.startsWith('All clear') ? '\u2713' : '\u2022'}  ${a}`, ML + 2, y);
+    doc.setTextColor(a.startsWith('All clear') ? ...GR as [number,number,number] : 160, a.startsWith('All clear') ? undefined : 88, a.startsWith('All clear') ? undefined : 0);
+    doc.text(`${a.startsWith('All clear') ? '✓' : '•'}  ${a}`, ML + 2, y);
     y += 5;
   });
 
   y += 3;
   doc.setFontSize(7.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
-  const whyNot = 'Why isn\'t the score 100%? The WorkCar audit score measures automatically verifiable data only \u2014 odometer confirmation, photo evidence, and classification completeness. It cannot verify actual business purposes, vehicle engine capacity, pro-rata holding periods, or your individual tax situation. 100% is intentionally unachievable to reflect real-world compliance nuance.';
+  const whyNot = 'Why isn\'t the score 100%? The WorkCar audit score measures automatically verifiable data only — odometer confirmation, photo evidence, and classification completeness. It cannot verify actual business purposes, vehicle engine capacity, pro-rata holding periods, or your individual tax situation. 100% is intentionally unachievable to reflect real-world compliance nuance.';
   const lines = doc.splitTextToSize(whyNot, CW - 4);
   checkY(lines.length * 4 + 2);
   doc.text(lines, ML + 2, y);
   y += lines.length * 4 + 4;
 
-  sectionTitle('Tax Information \u2014 Claiming Motor Vehicle Deductions');
+  // ── Tax Info ──
+  sectionTitle('Tax Information — Claiming Motor Vehicle Deductions');
   checkY(50);
 
   const taxBlocks = [
     ['Logbook Method', 'Claim the business-use % of all car expenses (fuel, rego, insurance, depreciation, loan interest, servicing). No km cap. Requires 12-week continuous logbook renewed every 5 years. Record odometer at start and end of every income year.'],
-    ['Cents per Kilometre Method', `Claim $${RATE.toFixed(2)}/km (2024\u201325) up to 5,000 km/year without receipts. Cannot also claim fuel/depreciation separately.`],
-    ['Pro-rata (partial year)', `If you didn't hold the vehicle for the full income year, deductions are pro-rated by days held. Example: purchased 1 Jan 2025 (181 of 365 days), $8,000 expenses, 65% business use = $8,000 \u00D7 65% \u00D7 (181\u00F7365) = $2,579 deductible.`],
-    ['Key ATO References', 'TR 2021/1 \u2014 Car expenses  \u00B7  PCG 2021/3 \u2014 Logbook record-keeping  \u00B7  s.25-10 ITAA 1997. Seek advice from a registered tax agent (RTA) or licensed accountant for edge cases.'],
+    ['Cents per Kilometre Method', `Claim $${RATE.toFixed(2)}/km (2024–25) up to 5,000 km/year without receipts. Cannot also claim fuel/depreciation separately.`],
+    ['Pro-rata (partial year)', `If you didn't hold the vehicle for the full income year, deductions are pro-rated by days held. Example: purchased 1 Jan 2025 (181 of 365 days), $8,000 expenses, 65% business use = $8,000 × 65% × (181÷365) = $2,579 deductible.`],
+    ['Key ATO References', 'TR 2021/1 — Car expenses  ·  PCG 2021/3 — Logbook record-keeping  ·  s.25-10 ITAA 1997. Seek advice from a registered tax agent (RTA) or licensed accountant for edge cases.'],
   ];
 
   taxBlocks.forEach(([title, body]) => {
     checkY(18);
-    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
+    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY as [number,number,number]);
     doc.text(title, ML, y);
     y += 4;
     doc.setFont('helvetica', 'normal'); doc.setTextColor(...BK);
@@ -309,12 +324,13 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     y += bodyLines.length * 4 + 3;
   });
 
+  // ── Disclaimer ──
   checkY(30);
   sectionTitle('Legal Disclaimer');
 
   doc.setFillColor(255, 248, 248);
   doc.setDrawColor(220, 180, 180);
-  const discText = 'This report is produced by WorkCar (workcar.com.au) as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. For advice specific to your circumstances \u2014 including pro-rata adjustments, depreciation schedules, and edge cases \u2014 consult a registered tax agent (RTA) or licensed accountant. False or inflated deduction claims are a serious offence under the Income Tax Assessment Act 1997 and may result in penalties, interest charges, or prosecution. WorkCar does not warrant that this report satisfies all ATO record-keeping obligations. All data is user-provided.';
+  const discText = 'This report is produced by WorkCar (workcar.com.au) as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. For advice specific to your circumstances — including pro-rata adjustments, depreciation schedules, and edge cases — consult a registered tax agent (RTA) or licensed accountant. False or inflated deduction claims are a serious offence under the Income Tax Assessment Act 1997 and may result in penalties, interest charges, or prosecution. WorkCar does not warrant that this report satisfies all ATO record-keeping obligations. All data is user-provided.';
   const discLines = doc.splitTextToSize(discText, CW - 8);
   checkY(discLines.length * 4 + 10);
   doc.rect(ML, y - 2, CW, discLines.length * 4 + 8, 'FD');
@@ -327,6 +343,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const filename = `workcar-logbook-rev${report.revision}-${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
 }
+
+// ─── CSV export ───────────────────────────────────────────────────────────────
 
 function exportCSV(report: any) {
   const allTrips = report.trips || [];
@@ -361,6 +379,8 @@ function exportCSV(report: any) {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ─── 12-Week Timeline ─────────────────────────────────────────────────────────
 
 function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
   const today = new Date();
@@ -408,6 +428,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>Active reports only</span>
       </div>
 
+      {/* Month labels */}
       <div className="flex gap-[2px] mb-[2px]">
         {weeks.map((_, i) => (
           <div key={i} className="flex-1 font-data text-[7px] text-center" style={{ color: 'var(--wc-t3)' }}>
@@ -416,6 +437,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         ))}
       </div>
 
+      {/* Bars */}
       <div className="flex gap-[2px] mb-[3px]">
         {weeks.map((w, i) => {
           const covered = weekHasCoverage(w.start, w.end);
@@ -433,12 +455,14 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         })}
       </div>
 
+      {/* Week numbers */}
       <div className="flex gap-[2px] mb-[8px]">
         {weeks.map((_, i) => (
           <div key={i} className="flex-1 font-data text-[6px] text-center" style={{ color: 'rgba(255,255,255,.18)' }}>W{i+1}</div>
         ))}
       </div>
 
+      {/* Legend */}
       <div className="flex gap-[12px]">
         {[
           { bg: 'var(--wc-y)', label: 'Covered' },
@@ -452,6 +476,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         ))}
       </div>
 
+      {/* Summary stat */}
       {activeReports.length > 0 && (
         <div className="mt-[10px] pt-[8px] flex gap-[10px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
           <div>
@@ -473,6 +498,8 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
     </div>
   );
 }
+
+// ─── Vehicle Details Modal ────────────────────────────────────────────────────
 
 function VehicleDetailsModal({
   initial,
@@ -522,7 +549,6 @@ function VehicleDetailsModal({
                 placeholder={f.placeholder}
                 value={form[f.key]}
                 onChange={update(f.key)}
-                data-testid={`input-vehicle-${f.key}`}
               />
             </div>
           ))}
@@ -530,14 +556,12 @@ function VehicleDetailsModal({
           <div className="flex gap-[8px] mt-[4px]">
             <button className="flex-1 rounded-[10px] py-[11px] font-heading font-extrabold text-[13px] uppercase tracking-[.05em] cursor-pointer text-black"
               style={{ background: 'var(--wc-y)' }}
-              onClick={() => onConfirm(form)}
-              data-testid="button-generate-pdf">
+              onClick={() => onConfirm(form)}>
               Generate PDF
             </button>
             <button className="rounded-[10px] px-[14px] py-[11px] font-heading font-bold text-[12px] uppercase cursor-pointer"
               style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-              onClick={onClose}
-              data-testid="button-cancel-vehicle">
+              onClick={onClose}>
               Cancel
             </button>
           </div>
@@ -551,6 +575,8 @@ function VehicleDetailsModal({
   );
 }
 
+// ─── Calendar View ────────────────────────────────────────────────────────────
+
 function CalendarView({ savedReports, exportLog }: { savedReports: any[]; exportLog: { ts: string; type: string; rev: number; dateStr?: string }[] }) {
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -562,12 +588,14 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
   const off = first === 0 ? 6 : first - 1;
   const dim = new Date(viewYear, viewMonth + 1, 0).getDate();
 
+  // Parse AU date string to Date
   function parseAU(s: string): Date | null {
     const p = s?.split('/');
     if (!p || p.length !== 3) return null;
     return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
   }
 
+  // For each active report, compute its coverage range (first trip date to last trip date)
   const activeReports = savedReports.filter(r => !r.supersedes);
   const coverageRanges = activeReports.map((r, ri) => {
     const dates = (r.trips || []).map((t: any) => parseAU(t.date)).filter(Boolean) as Date[];
@@ -588,9 +616,9 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
     const dateStr = toDateStr(day);
     const d = new Date(viewYear, viewMonth, day);
     let biz = 0, per = 0;
-    const inCoverage = coverageRanges.find(r => r && d >= r.start && d <= r.end);
-    const isRangeStart = coverageRanges.find(r => r && d.toDateString() === r.start.toDateString());
-    const isRangeEnd = coverageRanges.find(r => r && d.toDateString() === r.end.toDateString());
+    let inCoverage = coverageRanges.find(r => r && d >= r.start && d <= r.end);
+    let isRangeStart = coverageRanges.find(r => r && d.toDateString() === r.start.toDateString());
+    let isRangeEnd = coverageRanges.find(r => r && d.toDateString() === r.end.toDateString());
 
     activeReports.forEach(r => {
       (r.trips || []).forEach((t: any) => {
@@ -601,6 +629,7 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
       });
     });
 
+    // Was a PDF/CSV exported on this calendar date?
     const hasExport = exportLog.some(e => e.dateStr === dateStr);
 
     return { biz, per, inCoverage, isRangeStart, isRangeEnd, hasExport };
@@ -613,22 +642,24 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
   return (
     <div className="rounded-[12px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
       <div className="flex items-center justify-between px-[14px] py-[10px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
-        <button onClick={prevMonth} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-cal-prev">
+        <button onClick={prevMonth} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }}>
           <ArrowLeft className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
         <span className="font-heading font-bold text-[14px] text-white">{fullMonths[viewMonth]} {viewYear}</span>
-        <button onClick={nextMonth} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-cal-next">
+        <button onClick={nextMonth} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }}>
           <ChevronRight className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
       </div>
 
       <div className="px-[8px] pt-[8px]">
+        {/* Day headers */}
         <div className="grid grid-cols-7 mb-[2px]">
           {days.map((d, i) => (
             <div key={i} className="font-data text-[9px] text-center py-[1px]" style={{ color: 'var(--wc-t3)' }}>{d}</div>
           ))}
         </div>
 
+        {/* Day grid */}
         <div className="grid grid-cols-7">
           {Array.from({ length: off }).map((_, i) => <div key={`e${i}`} className="h-[36px]" />)}
           {Array.from({ length: dim }).map((_, i) => {
@@ -637,6 +668,7 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
             const tod = isToday(day);
             const hasTrips = biz > 0 || per > 0;
 
+            // Coverage band styling
             let cellBg = 'transparent';
             let borderRadius = '5px';
             let cellBorder = 'none';
@@ -660,6 +692,7 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
                 className="flex flex-col items-center pt-[3px] pb-[4px] relative"
                 style={{ background: cellBg, borderRadius, border: cellBorder, minHeight: '36px' }}>
 
+                {/* Export icon */}
                 {hasExport && (
                   <div className="absolute top-[2px] right-[2px] w-[7px] h-[7px] rounded-full flex items-center justify-center"
                     style={{ background: 'var(--wc-gr)' }}>
@@ -684,6 +717,7 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
         </div>
       </div>
 
+      {/* Legend */}
       <div className="px-[12px] py-[8px] mt-[4px] flex flex-wrap gap-x-[10px] gap-y-[4px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
         {[
           { el: <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-y)', boxShadow: '0 0 3px rgba(245,196,0,.5)' }} />, label: 'Business trip' },
@@ -701,6 +735,8 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
     </div>
   );
 }
+
+// ─── Pre-Audit Checklist ──────────────────────────────────────────────────────
 
 function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => void }) {
   const allTrips = report.trips || [];
@@ -732,13 +768,14 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             <Shield className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
             <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em] text-white">Pre-Audit Checklist</span>
           </div>
-          <button onClick={onClose} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-close-audit">
+          <button onClick={onClose} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }}>
             <XCircle className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
           </button>
         </div>
 
         <div className="overflow-y-auto p-[12px_16px] flex flex-col gap-[8px]" style={{ maxHeight: 'calc(88vh - 58px)' }}>
 
+          {/* Score bar */}
           <div className="rounded-[10px] p-[10px_12px]" style={{ background: requiredFails > 0 ? 'rgba(245,158,11,.06)' : 'rgba(34,197,94,.05)', border: `1px solid ${requiredFails > 0 ? 'rgba(245,158,11,.25)' : 'rgba(34,197,94,.2)'}` }}>
             <div className="flex items-center justify-between mb-[5px]">
               <span className="font-heading font-bold text-[13px] text-white">{passCount}/{checks.length} checks passed</span>
@@ -752,6 +789,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             </div>
           </div>
 
+          {/* Checks */}
           {checks.map((c, i) => (
             <div key={i} className="flex items-start gap-[10px] rounded-[10px] p-[9px_12px]"
               style={{ background: c.pass ? 'rgba(34,197,94,.03)' : 'rgba(255,255,255,.02)', border: `1px solid ${c.pass ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)'}` }}>
@@ -773,6 +811,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             </div>
           ))}
 
+          {/* Why not 100% */}
           <div className="rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
             <div className="flex items-center gap-[5px] mb-[5px]">
               <HelpCircle className="w-[11px] h-[11px]" style={{ color: 'var(--wc-t3)' }} />
@@ -783,6 +822,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             </p>
           </div>
 
+          {/* Disclaimer */}
           <div className="rounded-[10px] p-[10px_12px] mb-[4px]" style={{ background: 'rgba(239,68,68,.04)', border: '1px solid rgba(239,68,68,.1)' }}>
             <div className="flex items-start gap-[5px]">
               <AlertTriangle className="w-[11px] h-[11px] flex-shrink-0 mt-[1px]" style={{ color: 'rgba(239,68,68,.6)' }} />
@@ -797,6 +837,8 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
   );
 }
 
+// ─── Tax Info Modal ───────────────────────────────────────────────────────────
+
 function TaxInfoModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<'rules' | 'prorata' | 'methods'>('rules');
   return (
@@ -808,7 +850,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
             <Info className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
             <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em] text-white">Tax Information</span>
           </div>
-          <button onClick={onClose} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-close-tax-info">
+          <button onClick={onClose} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }}>
             <XCircle className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
           </button>
         </div>
@@ -817,8 +859,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
           {(['rules','prorata','methods'] as const).map(t => (
             <button key={t} className="flex-1 py-[8px] font-heading font-bold text-[10px] uppercase tracking-[.05em]"
               style={{ borderBottom: tab === t ? '2px solid var(--wc-y)' : '2px solid transparent', color: tab === t ? 'var(--wc-y)' : 'var(--wc-t3)', marginBottom: '-1px' }}
-              onClick={() => setTab(t)}
-              data-testid={`tab-${t}`}>
+              onClick={() => setTab(t)}>
               {t === 'rules' ? 'Rules' : t === 'prorata' ? 'Pro-rata' : 'Methods'}
             </button>
           ))}
@@ -835,11 +876,11 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
                   '12-week continuous logbook (renewed every 5 years)',
                   'Each entry: date, destination, km, business purpose',
                   'Odometer readings at start + end of every income year',
-                  'Business use % = Business km \u00F7 Total km \u00D7 100',
+                  'Business use % = Business km ÷ Total km × 100',
                   'Claim that % of ALL actual car expenses',
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-[5px]">
-                    <span style={{ color: 'var(--wc-gr)' }}>\u00B7</span><span>{item}</span>
+                    <span style={{ color: 'var(--wc-gr)' }}>·</span><span>{item}</span>
                   </div>
                 ))}
               </div>
@@ -868,8 +909,8 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
                 <TableRow label="Days owned in FY2025" val="181 of 365 days" />
                 <TableRow label="Total car expenses" val="$8,000" />
                 <TableRow label="Business use %" val="65%" highlight />
-                <TableRow label="Pro-rata factor" val="181 \u00F7 365 = 0.496" />
-                <TableRow label="Deductible amount" val="$8,000 \u00D7 65% \u00D7 0.496 = $2,579" highlight />
+                <TableRow label="Pro-rata factor" val="181 ÷ 365 = 0.496" />
+                <TableRow label="Deductible amount" val="$8,000 × 65% × 0.496 = $2,579" highlight />
                 <p className="text-[8.5px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>* Simplified. Depreciation, fuel, insurance each have separate treatment. Consult a registered tax agent.</p>
               </div>
             </div>
@@ -883,7 +924,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
                 <TableRow label="Business km (from logbook)" val="11,440 km" />
                 <TableRow label="Business use %" val="52%" highlight />
                 <TableRow label="Total car expenses" val="$12,000" />
-                <TableRow label="Deductible amount" val="$12,000 \u00D7 52% = $6,240" highlight />
+                <TableRow label="Deductible amount" val="$12,000 × 52% = $6,240" highlight />
               </div>
             </div>
           </>)}
@@ -928,6 +969,8 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── Export Log ───────────────────────────────────────────────────────────────
+
 function ExportLogPanel({ log }: { log: { ts: string; type: string; rev: number }[] }) {
   if (!log.length) return (
     <div className="rounded-[10px] p-[10px_12px] text-center" style={{ background: 'rgba(255,255,255,.02)', border: '1px dashed rgba(255,255,255,.08)' }}>
@@ -941,12 +984,14 @@ function ExportLogPanel({ log }: { log: { ts: string; type: string; rev: number 
         <div key={i} className="flex items-center gap-[7px] py-[4px]" style={{ borderBottom: i < log.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
           <Download className="w-[9px] h-[9px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
           <span className="font-data text-[8px] flex-1" style={{ color: 'var(--wc-t3)' }}>{e.ts}</span>
-          <span className="font-heading font-bold text-[9px]" style={{ color: e.type === 'PDF' ? 'var(--wc-y)' : 'var(--wc-gr)' }}>{e.type} \u00B7 Rev {e.rev}</span>
+          <span className="font-heading font-bold text-[9px]" style={{ color: e.type === 'PDF' ? 'var(--wc-y)' : 'var(--wc-gr)' }}>{e.type} · Rev {e.rev}</span>
         </div>
       ))}
     </div>
   );
 }
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
@@ -992,6 +1037,7 @@ export function ReportsScreen() {
   return (
     <div className="flex flex-col h-full" data-testid="reports-screen">
 
+      {/* Header */}
       <div className="flex items-center gap-[8px] px-4 pt-2 pb-[5px] flex-shrink-0">
         {!locked && (
           <button className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
@@ -1004,15 +1050,15 @@ export function ReportsScreen() {
         <div className="ml-auto flex items-center gap-[6px]">
           <button className="flex items-center gap-[4px] rounded-[7px] px-[8px] py-[4px]"
             style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}
-            onClick={() => setTaxInfoOpen(true)}
-            data-testid="button-tax-info">
+            onClick={() => setTaxInfoOpen(true)}>
             <Info className="w-[10px] h-[10px]" style={{ color: 'var(--wc-t3)' }} />
             <span className="font-heading font-bold text-[9px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Tax Info</span>
           </button>
-          <span className="text-[11px] text-white">{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
+          <span className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
+      {/* View toggle */}
       <div className="flex gap-[4px] px-[14px] pb-[6px] flex-shrink-0">
         {([
           { id: 'list', label: 'List', Icon: List },
@@ -1026,14 +1072,14 @@ export function ReportsScreen() {
               border: `1px solid ${view === id ? 'rgba(245,196,0,.35)' : 'var(--wc-border)'}`,
               color: view === id ? 'var(--wc-y)' : 'var(--wc-t3)',
             }}
-            onClick={() => setView(id)}
-            data-testid={`view-${id}`}>
+            onClick={() => setView(id)}>
             <Icon className="w-[10px] h-[10px]" />
             {label}
           </button>
         ))}
       </div>
 
+      {/* Content */}
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
 
         {view === 'timeline' && (
@@ -1047,7 +1093,7 @@ export function ReportsScreen() {
 
         {view === 'list' && (
           state.savedReports.length === 0 ? (
-            <div className="py-[30px] text-center text-[13px] text-white">
+            <div className="py-[30px] text-center text-[13px]" style={{ color: 'var(--wc-t3)' }}>
               No sessions saved yet.<br />Complete your first sort session to see reports here.
             </div>
           ) : (
@@ -1067,7 +1113,7 @@ export function ReportsScreen() {
                       <div className="flex items-center gap-[6px]">
                         <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
                         <span className="font-heading font-bold text-[9px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>Linked Reports</span>
-                        <span className="font-data text-[8px] text-white">{label}</span>
+                        <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>{label}</span>
                       </div>
                       <button
                         className="flex items-center gap-[6px] rounded-[8px] p-[5px_8px] cursor-pointer text-left"
@@ -1075,7 +1121,7 @@ export function ReportsScreen() {
                         onClick={() => setConflictSessionId(group.sessionId)}
                         data-testid={`button-resolve-${group.sessionId}`}>
                         {hasActive
-                          ? <><Check className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} /><span className="flex-1 text-[9px] text-white"><span style={{ color: 'var(--wc-gr)' }}>Resolved</span> — tap to change active report</span></>
+                          ? <><Check className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} /><span className="flex-1 text-[9px]" style={{ color: 'var(--wc-t2)' }}><span style={{ color: 'var(--wc-gr)' }}>Resolved</span> — tap to change active report</span></>
                           : <><ShieldAlert className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} /><span className="flex-1 text-[9px]" style={{ color: 'var(--wc-am)' }}>Tap to select active report</span></>
                         }
                       </button>
@@ -1103,15 +1149,16 @@ export function ReportsScreen() {
                         }}
                         data-testid={`report-${i}`}>
 
+                        {/* Card header */}
                         <button className="w-full p-[12px_14px] text-left cursor-pointer" style={{ background: 'transparent' }}
                           onClick={() => setExpandedIdx(isOpen ? null : i)} data-testid={`report-toggle-${i}`}>
                           <div className="flex items-start justify-between mb-[2px]">
                             <div className="flex items-center gap-[6px] flex-wrap">
-                              <div className="font-data text-[9px] uppercase tracking-[.08em] text-white">{r.timestamp}</div>
+                              <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
                               {!r.supersedes && (
                                 <span className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px]"
                                   style={{ background: 'rgba(34,197,94,.12)', border: '1.5px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}>
-                                  <Check className="w-[11px] h-[11px]" />Active \u00B7 Rev {r.revision}
+                                  <Check className="w-[11px] h-[11px]" />Active · Rev {r.revision}
                                 </span>
                               )}
                               {r.supersedes && isLinked && (
@@ -1124,13 +1171,13 @@ export function ReportsScreen() {
                               )}
                               {r.supersedes && !isLinked && (
                                 <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]"
-                                  style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: '#fff' }}>
+                                  style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}>
                                   <Archive className="w-[8px] h-[8px]" />Archived
                                 </span>
                               )}
                             </div>
-                            {isOpen ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0 text-white" />
-                              : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0 text-white" />}
+                            {isOpen ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                              : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />}
                           </div>
                           <div className="font-heading font-bold text-[15px] text-white mb-[5px]">
                             {r.supersedes ? 'Archived' : 'Active'} Report — {r.bizCount + r.perCount} trips
@@ -1138,50 +1185,50 @@ export function ReportsScreen() {
                           <div className="flex gap-[8px] flex-wrap">
                             {[
                               { val: `${r.bizCount}`, label: 'biz', color: 'var(--wc-y)' },
-                              { val: `${r.perCount}`, label: 'personal', color: 'white' },
+                              { val: `${r.perCount}`, label: 'personal', color: 'var(--wc-t2)' },
                               { val: r.est, label: 'est.', color: 'var(--wc-y)' },
                               { val: `${r.totalKm} km`, label: '', color: 'var(--wc-y)' },
                               { val: `${r.auditScore}%`, label: 'audit', color: 'var(--wc-y)' },
                             ].map((item, idx) => (
-                              <span key={idx} className="text-[11px] text-white">
+                              <span key={idx} className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
                                 <strong style={{ color: item.color }}>{item.val}</strong>{item.label ? ` ${item.label}` : ''}
                               </span>
                             ))}
                           </div>
                           {r.lastOdoVerifiedAt && (
-                            <div className="mt-[4px] text-[11px] text-white">
+                            <div className="mt-[4px] text-[11px]" style={{ color: 'var(--wc-t2)' }}>
                               Odo: <strong style={{ color: 'var(--wc-am)' }}>{r.lastOdoReading?.toLocaleString('en-AU')} km</strong>
-                              <span className="text-white"> \u00B7 verified {r.lastOdoVerifiedAt}</span>
+                              <span style={{ color: 'var(--wc-t3)' }}> · verified {r.lastOdoVerifiedAt}</span>
                             </div>
                           )}
                         </button>
 
+                        {/* Expanded */}
                         {isOpen && (
                           <div className="px-[14px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
 
+                            {/* Export row — active reports only */}
                             {!r.supersedes && (
                               <div className="flex gap-[5px] mt-[10px] mb-[8px]">
                                 <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
                                   style={{ background: 'rgba(245,196,0,.1)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-                                  onClick={() => handleExportPDF(r)}
-                                  data-testid={`button-export-pdf-${i}`}>
+                                  onClick={() => handleExportPDF(r)}>
                                   <FileText className="w-[12px] h-[12px]" />PDF
                                 </button>
                                 <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
                                   style={{ background: 'rgba(34,197,94,.07)', border: '1.5px solid rgba(34,197,94,.22)', color: 'var(--wc-gr)' }}
-                                  onClick={() => handleExportCSV(r)}
-                                  data-testid={`button-export-csv-${i}`}>
+                                  onClick={() => handleExportCSV(r)}>
                                   <Download className="w-[12px] h-[12px]" />CSV
                                 </button>
                                 <button className="flex items-center justify-center gap-[4px] rounded-[9px] px-[10px] py-[9px] font-heading font-bold text-[10px] uppercase tracking-[.04em] cursor-pointer"
                                   style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-                                  onClick={() => setAuditReport(r)}
-                                  data-testid={`button-audit-check-${i}`}>
+                                  onClick={() => setAuditReport(r)}>
                                   <Shield className="w-[11px] h-[11px]" />Check
                                 </button>
                               </div>
                             )}
 
+                            {/* Read-only notice */}
                             <div className="flex items-center gap-[5px] mb-[8px] rounded-[7px] p-[6px_10px]"
                               style={{ background: state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-y)' : 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.08)' }}>
                               <Archive className="w-[11px] h-[11px] flex-shrink-0" style={{ color: state.sessionId === r.sessionId && state.trips.length > 0 ? '#000' : 'var(--wc-t3)' }} />
@@ -1190,29 +1237,29 @@ export function ReportsScreen() {
                               </span>
                             </div>
 
+                            {/* Summary table */}
                             <div className="rounded-[8px] overflow-hidden mb-[10px]" style={{ border: '1px solid var(--wc-border)' }}>
                               <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
                                 <tbody>
                                   {[
-                                    ['Logbook start', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
-                                    ['Odo start', r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') + ' km' : '\u2014', 'Odo end', r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') + ' km' : '\u2014'],
+                                    ['Logbook start', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '—', 'Logbook end', allTrips.length > 0 ? allTrips[0].date : '—'],
+                                    ['Odo start', r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') + ' km' : '—', 'Odo end', r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') + ' km' : '—'],
                                     ['Total km', totalKm.toFixed(1), 'Business %', bizPct + '%'],
-                                  ].map(([l1,v1,l2,v2], ri) => (
-                                    <Fragment key={ri}>
-                                      <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
-                                        <td className="p-[4px_8px] text-white" style={{ width: '50%' }}>{l1}</td>
-                                        <td className="p-[4px_8px] text-white">{l2}</td>
-                                      </tr>
-                                      <tr style={{ borderBottom: ri < 2 ? '1px solid var(--wc-border)' : 'none' }}>
-                                        <td className="p-[2px_8px_6px] font-bold text-white">{v1}</td>
-                                        <td className="p-[2px_8px_6px] font-bold" style={{ color: ri === 2 ? 'var(--wc-y)' : 'white' }}>{v2}</td>
-                                      </tr>
-                                    </Fragment>
-                                  ))}
+                                  ].map(([l1,v1,l2,v2], ri) => (<>
+                                    <tr key={`l${ri}`} style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                      <td className="p-[4px_8px]" style={{ color: 'var(--wc-t3)', width: '50%' }}>{l1}</td>
+                                      <td className="p-[4px_8px]" style={{ color: 'var(--wc-t3)' }}>{l2}</td>
+                                    </tr>
+                                    <tr key={`v${ri}`} style={{ borderBottom: ri < 2 ? '1px solid var(--wc-border)' : 'none' }}>
+                                      <td className="p-[2px_8px_6px] font-bold text-white">{v1}</td>
+                                      <td className="p-[2px_8px_6px] font-bold" style={{ color: ri === 2 ? 'var(--wc-y)' : 'var(--wc-t2)' }}>{v2}</td>
+                                    </tr>
+                                  </>))}
                                 </tbody>
                               </table>
                             </div>
 
+                            {/* Journey list */}
                             <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[5px]" style={{ color: 'var(--wc-y)' }}>Journey List</div>
                             <div className="rounded-[8px] overflow-x-auto mb-[10px]" style={{ border: '1px solid var(--wc-border)' }}>
                               <table className="w-full font-data text-[8px]" style={{ borderCollapse: 'collapse', minWidth: '420px' }}>
@@ -1228,13 +1275,13 @@ export function ReportsScreen() {
                                     const isBiz = t.type === 'business';
                                     return (
                                       <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', background: isBiz ? 'rgba(245,196,0,.025)' : 'transparent' }}>
-                                        <td className="p-[3px_6px] text-white">{t.date}</td>
-                                        <td className="p-[3px_6px] text-white">{t.odoStart?.toLocaleString('en-AU') ?? '\u2014'}</td>
-                                        <td className="p-[3px_6px] text-white">{t.odoEnd?.toLocaleString('en-AU') ?? '\u2014'}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? 'Biz' : 'Per'}</td>
+                                        <td className="p-[3px_6px]" style={{ color: 'var(--wc-t2)' }}>{t.date}</td>
+                                        <td className="p-[3px_6px] text-white">{t.odoStart?.toLocaleString('en-AU') ?? '—'}</td>
+                                        <td className="p-[3px_6px] text-white">{t.odoEnd?.toLocaleString('en-AU') ?? '—'}</td>
+                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{isBiz ? 'Biz' : 'Per'}</td>
                                         <td className="p-[3px_6px] text-white">{t.km.toFixed(1)}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00'}</td>
+                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
+                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00'}</td>
                                       </tr>
                                     );
                                   })}
@@ -1248,6 +1295,7 @@ export function ReportsScreen() {
                               </table>
                             </div>
 
+                            {/* Compliance notes */}
                             {r.areasToCheck && r.areasToCheck.length > 0 && (
                               <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.14)' }}>
                                 <div className="flex items-center gap-[5px] mb-[5px]">
@@ -1257,30 +1305,32 @@ export function ReportsScreen() {
                                 {r.areasToCheck.map((a: string, ai: number) => (
                                   <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
                                     <span style={{ color: a.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
-                                      {a.startsWith('All clear') ? '\u2713' : '\u00B7'}
+                                      {a.startsWith('All clear') ? '✓' : '·'}
                                     </span>
-                                    <span className="text-[10px] text-white">{a}</span>
+                                    <span className="text-[10px]" style={{ color: 'var(--wc-t2)' }}>{a}</span>
                                   </div>
                                 ))}
                               </div>
                             )}
 
+                            {/* Audit log */}
                             {r.auditLog && r.auditLog.length > 0 && (
                               <div className="mb-[8px]">
-                                <div className="font-heading font-bold text-[9px] uppercase tracking-[.05em] mb-[4px] text-white">Audit Log</div>
+                                <div className="font-heading font-bold text-[9px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Audit Log</div>
                                 <div className="rounded-[8px] p-[6px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
                                   {r.auditLog.slice(0, 8).map((e: any, ei: number) => (
                                     <div key={ei} className="flex items-start gap-[5px] py-[2px]" style={{ borderBottom: ei < 7 && ei < r.auditLog.length - 1 ? '1px solid rgba(255,255,255,.03)' : 'none' }}>
-                                      <Clock className="w-[9px] h-[9px] flex-shrink-0 mt-[2px] text-white" />
-                                      <span className="font-data text-[8px] flex-shrink-0 text-white">{e.time}</span>
-                                      <span className="text-[9px] flex-1 text-white">{e.desc}</span>
+                                      <Clock className="w-[9px] h-[9px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-t3)' }} />
+                                      <span className="font-data text-[8px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }}>{e.time}</span>
+                                      <span className="text-[9px] flex-1" style={{ color: 'var(--wc-t2)' }}>{e.desc}</span>
                                     </div>
                                   ))}
-                                  {r.auditLog.length > 8 && <div className="text-[8px] mt-[3px] text-white">+{r.auditLog.length - 8} more entries</div>}
+                                  {r.auditLog.length > 8 && <div className="text-[8px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>+{r.auditLog.length - 8} more entries</div>}
                                 </div>
                               </div>
                             )}
 
+                            {/* Promote */}
                             {isLinked && r.supersedes && (
                               <button className="w-full rounded-[8px] py-[7px] mb-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-[5px]"
                                 style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.28)', color: 'var(--wc-y)' }}
@@ -1291,6 +1341,7 @@ export function ReportsScreen() {
                               </button>
                             )}
 
+                            {/* Expenses placeholder */}
                             <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.015)', border: '1px dashed rgba(255,255,255,.07)' }}>
                               <div className="flex items-center gap-[5px]">
                                 <Plus className="w-[10px] h-[10px]" style={{ color: 'rgba(255,255,255,.2)' }} />
@@ -1310,9 +1361,10 @@ export function ReportsScreen() {
         )}
       </div>
 
+      {/* Bottom CTA */}
       {locked ? (
         <div className="flex-shrink-0 px-[14px] py-[10px] flex flex-col gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px] text-white">Session Actions</div>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px]" style={{ color: 'var(--wc-t3)' }}>Session Actions</div>
           <div className="relative">
             <button
               className="w-full rounded-[12px] py-[14px] px-[16px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all flex items-center justify-between animate-flash-yellow"
@@ -1328,23 +1380,23 @@ export function ReportsScreen() {
                 data-testid="action-menu-dropdown">
                 {[
                   { Icon: Plus, label: 'Create Another Report', desc: 'Re-sort trips and save a new revision', color: 'var(--wc-y)', bg: 'rgba(245,196,0,.1)', action: () => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'review' }); } },
-                  { Icon: Pause, label: 'Come Back Later', desc: 'Session stays active. No other cards sortable until finalised.', color: 'white', bg: 'rgba(255,255,255,.04)', action: () => { setActionMenuOpen(false); dispatch({ type: 'COME_BACK_LATER' }); } },
-                  { Icon: Trash2, label: 'Done — Delete Sort Cards', desc: 'Locks reports. No further revisions. Reports are kept.', color: 'white', bg: '#fff', action: () => { setActionMenuOpen(false); setConfirmDelete(true); } },
+                  { Icon: Pause, label: 'Come Back Later', desc: 'Session stays active. No other cards sortable until finalised.', color: 'var(--wc-t2)', bg: 'rgba(255,255,255,.04)', action: () => { setActionMenuOpen(false); dispatch({ type: 'COME_BACK_LATER' }); } },
+                  { Icon: Trash2, label: 'Done — Delete Sort Cards', desc: 'Locks reports. No further revisions. Reports are kept.', color: 'var(--wc-t3)', bg: 'rgba(255,255,255,.04)', action: () => { setActionMenuOpen(false); setConfirmDelete(true); } },
                 ].map(({ Icon, label, desc, color, bg, action }) => (
                   <button key={label} className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
                     style={{ background: bg, borderBottom: '1px solid var(--wc-border)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = label === 'Done — Delete Sort Cards' ? '#f0f0f0' : 'rgba(255,255,255,.09)')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.09)')}
                     onMouseLeave={e => (e.currentTarget.style.background = bg)}
-                    onClick={action}
-                    data-testid={`action-${label.toLowerCase().replace(/[^a-z]/g, '-')}`}>
-                    <Icon className="w-[15px] h-[15px] flex-shrink-0" style={{ color: label === 'Done — Delete Sort Cards' ? '#222' : color }} />
+                    onClick={action}>
+                    <Icon className="w-[15px] h-[15px] flex-shrink-0" style={{ color }} />
                     <div>
-                      <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: label === 'Done — Delete Sort Cards' ? '#111' : color }}>{label}</div>
-                      <div className="text-[10px] mt-[1px]" style={{ color: label === 'Done — Delete Sort Cards' ? '#444' : 'white' }}>{desc}</div>
+                      <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color }}>{label}</div>
+                      <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{desc}</div>
                     </div>
                   </button>
                 ))}
 
+                {/* Per-session delete */}
                 <div className="p-[10px_14px_8px]">
                   <div className="flex items-center gap-[5px] mb-[5px]">
                     <Trash2 className="w-[11px] h-[11px]" style={{ color: '#EF4444' }} />
@@ -1361,7 +1413,7 @@ export function ReportsScreen() {
                   ))}
                   <div className="flex items-start gap-[4px]">
                     <AlertTriangle className="w-[9px] h-[9px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
-                    <span className="text-[8.5px] leading-[1.4] text-white">Not recommended. Create a new revision and set it as active instead.</span>
+                    <span className="text-[8.5px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>Not recommended. Create a new revision and set it as active instead.</span>
                   </div>
                 </div>
               </div>
@@ -1372,6 +1424,7 @@ export function ReportsScreen() {
         <BottomNav activeOverride="reports" />
       )}
 
+      {/* ── Modals ── */}
       {auditReport && <PreAuditChecklist report={auditReport} onClose={() => setAuditReport(null)} />}
       {taxInfoOpen && <TaxInfoModal onClose={() => setTaxInfoOpen(false)} />}
       {vehicleModal && (
@@ -1382,6 +1435,7 @@ export function ReportsScreen() {
         />
       )}
 
+      {/* Conflict picker */}
       {conflictSessionId && (() => {
         const groupReports = state.savedReports.map((r, i) => ({ ...r, globalIdx: i })).filter(r => r.sessionId === conflictSessionId);
         if (groupReports.length < 2) return null;
@@ -1391,7 +1445,7 @@ export function ReportsScreen() {
               <div className="flex flex-col items-center gap-[8px] mb-[14px]">
                 <ShieldAlert className="w-[26px] h-[26px]" style={{ color: 'var(--wc-am)' }} />
                 <div className="font-heading font-black text-[18px] uppercase text-white text-center">Select Active Report</div>
-                <div className="text-[11px] text-center text-white">Only one report can be active for your ATO submission.</div>
+                <div className="text-[11px] text-center" style={{ color: 'var(--wc-t2)' }}>Only one report can be active for your ATO submission.</div>
               </div>
               <div className="flex flex-col gap-[8px] mb-[12px]">
                 {groupReports.map(r => (
@@ -1404,7 +1458,7 @@ export function ReportsScreen() {
                       <span className="font-heading font-bold text-[13px] text-white">Rev {r.revision}</span>
                       {!r.supersedes && <span className="font-heading font-bold text-[8px] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(34,197,94,.15)', color: 'var(--wc-gr)' }}>Active</span>}
                     </div>
-                    <div className="flex gap-[8px] flex-wrap text-[10px] text-white">
+                    <div className="flex gap-[8px] flex-wrap text-[10px]" style={{ color: 'var(--wc-t2)' }}>
                       <span><strong style={{ color: 'var(--wc-y)' }}>{r.bizCount}</strong> biz</span>
                       <span>Est. <strong style={{ color: 'var(--wc-y)' }}>{r.est}</strong></span>
                       <span><strong style={{ color: 'var(--wc-y)' }}>{r.totalKm}</strong> km</span>
@@ -1418,6 +1472,7 @@ export function ReportsScreen() {
         );
       })()}
 
+      {/* Delete all sort cards */}
       {confirmDelete && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }} onClick={() => setConfirmDelete(false)}>
           <div className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-delete-confirm">
@@ -1442,13 +1497,14 @@ export function ReportsScreen() {
         </div>
       )}
 
+      {/* Delete session */}
       {confirmDeleteSession && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }} onClick={() => setConfirmDeleteSession(null)}>
           <div className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-delete-session">
             <div className="font-heading font-black text-[18px] uppercase text-white text-center mb-[10px]">Delete {SESSION_LABELS[confirmDeleteSession] || confirmDeleteSession}?</div>
             <div className="flex items-start gap-[8px] rounded-[10px] p-[9px_12px] mb-[14px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
               <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
-              <span className="text-[11px] leading-[1.5] text-white">This deletes all saved reports for this session. Trip data reloads so you can re-sort anytime. <br /><br /><span style={{ color: 'var(--wc-t3)' }}>Recommended: create a new revision and set it as active instead.</span></span>
+              <span className="text-[11px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>This deletes all saved reports for this session. Trip data reloads so you can re-sort anytime. <br /><br /><span style={{ color: 'var(--wc-t3)' }}>Recommended: create a new revision and set it as active instead.</span></span>
             </div>
             <div className="flex flex-col gap-[8px]">
               <button className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] uppercase cursor-pointer"
