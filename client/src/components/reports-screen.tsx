@@ -88,9 +88,12 @@ export function ReportsScreen() {
                 className="rounded-[13px] overflow-hidden"
                 style={{
                   background: 'var(--wc-card)',
-                  border: `1px solid ${!r.supersedes ? 'rgba(245,196,0,.25)' : isOpen ? 'rgba(255,255,255,.12)' : 'var(--wc-border)'}`,
+                  border: hasMultiple
+                    ? `2px solid ${!r.supersedes ? 'rgba(34,197,94,.4)' : 'rgba(245,196,0,.45)'}`
+                    : `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`,
                   transition: 'border-color .2s',
-                  opacity: r.supersedes ? 0.55 : 1,
+                  opacity: r.supersedes ? 0.6 : 1,
+                  boxShadow: hasMultiple && !r.supersedes ? '0 0 12px rgba(34,197,94,.1)' : hasMultiple && r.supersedes ? '0 0 12px rgba(245,196,0,.08)' : 'none',
                 }}
                 data-testid={`report-${i}`}
               >
