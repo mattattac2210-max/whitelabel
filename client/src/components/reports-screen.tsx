@@ -1012,12 +1012,12 @@ export function ReportsScreen() {
         )}
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Reports</span>
         <div className="ml-auto flex items-center gap-[6px]">
-          <button className="flex items-center gap-[4px] rounded-[7px] px-[8px] py-[4px]"
-            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}
+          <button className="flex items-center gap-[5px] rounded-[8px] px-[10px] py-[6px]"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
             onClick={() => setTaxInfoOpen(true)}
             data-testid="button-tax-info">
-            <Info className="w-[10px] h-[10px]" style={{ color: 'var(--wc-t3)' }} />
-            <span className="font-heading font-bold text-[9px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Tax Info</span>
+            <Info className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
+            <span className="font-heading font-bold text-[12px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Tax Info</span>
           </button>
           <span className="text-[11px] text-white">{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
         </div>
