@@ -71,7 +71,7 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
 
   return (
     <div className="w-full h-full relative overflow-hidden" data-testid="classify-mini-map">
-      <img src={url} alt="route" className="absolute inset-0 w-full h-full object-cover pt-[0px] pb-[0px] pl-[2px] pr-[2px]" draggable={false} />
+      <img src={url} alt="route" className="absolute inset-0 w-full h-full object-cover pt-[0px] pb-[0px] pl-[4px] pr-[4px]" draggable={false} />
     </div>
   );
 }
