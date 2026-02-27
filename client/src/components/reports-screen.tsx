@@ -381,15 +381,15 @@ export function ReportsScreen() {
               >
                 <button
                   className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
-                  style={{ borderBottom: '1px solid var(--wc-border)' }}
+                  style={{ background: 'rgba(245,196,0,.1)', borderBottom: '1px solid var(--wc-border)' }}
                   onClick={() => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'review' }); }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,196,0,.06)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,196,0,.18)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(245,196,0,.1)')}
                   data-testid="action-create-report"
                 >
                   <Plus className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
                   <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Create Another Report</div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Create Another Report</div>
                     <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Re-sort trips and save a new revision</div>
                   </div>
                 </button>
