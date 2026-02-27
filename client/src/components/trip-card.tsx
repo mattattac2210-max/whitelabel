@@ -129,7 +129,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
   );
 }
 
-function InteractiveMap({ from, to }: { from: string; to: string }) {
+function InteractiveMap({ from, to, interactive = true }: { from: string; to: string; interactive?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
 
@@ -144,8 +144,8 @@ function InteractiveMap({ from, to }: { from: string; to: string }) {
         zoom: 12,
         center: { lat: -33.8688, lng: 151.2093 },
         disableDefaultUI: true,
-        zoomControl: true,
-        gestureHandling: 'greedy',
+        zoomControl: interactive,
+        gestureHandling: interactive ? 'greedy' : 'none',
         styles: [
           { featureType: 'all', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
           { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
@@ -173,7 +173,7 @@ function InteractiveMap({ from, to }: { from: string; to: string }) {
       }).then((result: any) => {
         if (cancelled) return;
         const bounds = result.routes?.[0]?.bounds;
-        if (bounds) map.fitBounds(bounds, 40);
+        if (bounds) map.fitBounds(bounds, 20);
 
         const path = result.routes?.[0]?.overview_path;
         if (!path || path.length < 2) return;
@@ -457,10 +457,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
         <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}>
-          <div className="absolute inset-[-30%_0_0_0]" style={{ transform: 'rotateX(30deg) scale(1.1)', transformOrigin: '50% 55%' }}>
-            <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+          <div className="absolute inset-[-20%_0_0_0]" style={{ transform: 'rotateX(28deg) scale(1.15)', transformOrigin: '50% 55%' }}>
+            <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} interactive={false} />
           </div>
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.2) 100%)' }} />
+          <div className="absolute inset-0 pointer-events-none z-[1]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.15) 100%)' }} />
           {isTop && tutorialPhase !== 'done' && (
             <div
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
