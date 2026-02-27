@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WorkCar — Sort it at Smoko</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --y:#F5C400;--yd:rgba(245,196,0,.10);--yg:rgba(245,196,0,.28);
+  --bg:#0A0A0A;--card:#141414;--border:rgba(255,255,255,.07);
+  --text:#FFF;--t2:#AAA;--t3:#555;
+  --gr:#22C55E;--grd:rgba(34,197,94,.12);
+  --re:#EF4444;--red:rgba(239,68,68,.12);
+  --am:#F59E0B;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+body{background:#050505;font-family:'Barlow',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;}
+
+/* ── PHONE ── */
+.phone{width:390px;height:844px;background:var(--bg);border-radius:50px;border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 0 0 6px #0A0A0A,0 0 0 7px rgba(255,255,255,.07),0 50px 130px rgba(0,0,0,.95);
+  overflow:hidden;position:relative;display:flex;flex-direction:column;}
+
+/* ── STATUS BAR ── */
+.sbar{position:absolute;top:0;left:0;right:0;z-index:90;display:flex;justify-content:space-between;
+  align-items:center;padding:14px 26px 0;pointer-events:none;}
+.sbar-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding-top:40px;
+  transition:opacity .3s,transform .3s;overflow:hidden;}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateX(24px);}
+
+/* ── SHARED HDR ── */
+.shdr{display:flex;align-items:center;gap:10px;padding:8px 16px 5px;flex-shrink:0;}
+.back-btn{width:30px;height:30px;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.back-btn svg{width:15px;height:15px;color:var(--t2);}
+.stitle{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;
+  text-transform:uppercase;letter-spacing:.04em;color:#fff;}
+.ssub{margin-left:auto;font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);}
+
+/* ── BOTTOM NAV ── */
+.bnav{display:flex;justify-content:space-around;align-items:center;padding:9px 18px 20px;
+  background:rgba(10,10,10,.97);border-top:1px solid var(--border);flex-shrink:0;}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:.34;transition:opacity .2s;}
+.ni.act{opacity:1;}
+.ni svg{width:20px;height:20px;}
+.ni-l{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:10px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--t2);}
+.ni.act .ni-l{color:var(--y);}
+
+/* scrollbar util */
+.scroll-y{overflow-y:auto;}
+.scroll-y::-webkit-scrollbar{width:2px;}
+.scroll-y::-webkit-scrollbar-thumb{background:var(--border);border-radius:1px;}
+/* display:none for tab panels etc — NOT screens (they use opacity transition) */
+.hidden:not(.screen){display:none!important;}
+
+/* ════════════════════════════════════
+   SCREEN 1 — SORT
+════════════════════════════════════ */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 16px 3px;flex-shrink:0;gap:8px;}
+/* Undo button — top left, always visible */
+.undo-top{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);
+  border:1px solid var(--border);border-radius:10px;padding:6px 11px;cursor:pointer;
+  transition:all .2s;opacity:0;pointer-events:none;}
+.undo-top.visible{opacity:1;pointer-events:all;}
+.undo-top:hover{background:rgba(245,196,0,.1);border-color:rgba(245,196,0,.3);}
+.undo-top svg{width:14px;height:14px;color:var(--y);}
+.undo-top-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+  color:var(--y);letter-spacing:.04em;text-transform:uppercase;}
+.undo-top-desc{font-family:'Barlow',sans-serif;font-size:10px;color:var(--t2);
+  white-space:nowrap;overflow:hidden;max-width:140px;text-overflow:ellipsis;}
+.topbar-right{display:flex;align-items:center;gap:7px;margin-left:auto;}
+.trip-pill{display:flex;align-items:center;gap:4px;background:var(--yd);
+  border:1px solid rgba(245,196,0,.2);border-radius:20px;padding:4px 10px;}
+.trip-pill-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:var(--y);}
+.trip-pill-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:11px;
+  color:rgba(245,196,0,.6);text-transform:uppercase;letter-spacing:.04em;}
+.gps-pill{display:flex;align-items:center;gap:5px;background:var(--grd);
+  border:1px solid rgba(34,197,94,.2);border-radius:20px;padding:4px 10px;}
+.gps-dot{width:6px;height:6px;background:var(--gr);border-radius:50%;animation:pgps 2s ease-in-out infinite;}
+@keyframes pgps{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5);}50%{box-shadow:0 0 0 4px rgba(34,197,94,0);}}
+.gps-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gr);letter-spacing:.08em;}
+
+/* Sort progress bar */
+.sort-progress{padding:0 16px 5px;flex-shrink:0;}
+.sp-track{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.sp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--y),#ffe066);
+  transition:width .4s cubic-bezier(.34,1.3,.64,1);}
+
+/* Odo inline row — sits under Edit button in card body */
+.odo-inline{display:flex;align-items:center;gap:5px;padding:2px 0 1px;border-top:1px solid var(--border);}
+.odo-inline-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.09em;}
+.odo-inline-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--am);}
+.odo-inline-arrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--t3);}
+
+/* Deck — fills middle space, cards stack from top, max prevents gap below card */
+.deck-wrap{flex:1;position:relative;margin:0 14px;min-height:180px;max-height:310px;}
+
+.card{position:absolute;top:0;left:0;right:0;background:var(--card);border-radius:20px;border:1px solid var(--border);
+  overflow:hidden;cursor:grab;transform-origin:center 62%;will-change:transform;
+  box-shadow:0 16px 50px rgba(0,0,0,.7);}
+.card:active{cursor:grabbing;}
+.card[data-pos="1"]{transform:scale(.955) translateY(10px);opacity:.55;z-index:1;pointer-events:none;}
+.card[data-pos="2"]{transform:scale(.91) translateY(19px);opacity:.28;z-index:0;pointer-events:none;}
+.card.top{z-index:10;transform:scale(1) translateY(0);opacity:1;}
+
+/* Swipe overlays */
+.ov{position:absolute;inset:0;border-radius:20px;opacity:0;pointer-events:none;z-index:20;
+  display:flex;align-items:flex-start;padding:12px;}
+.ov-b{background:linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22));justify-content:flex-end;}
+.ov-p{background:linear-gradient(225deg,rgba(239,68,68,0),rgba(239,68,68,.22));}
+.stamp{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:.05em;
+  padding:5px 12px;border-radius:9px;border:3px solid;opacity:0;}
+.stamp-b{color:var(--y);border-color:var(--y);transform:rotate(10deg);}
+.stamp-p{color:var(--re);border-color:var(--re);transform:rotate(-10deg);}
+
+/* Map */
+.cmap{width:100%;height:158px;position:relative;overflow:hidden;background:#0c1018;flex-shrink:0;}
+.cmap::after{content:'';position:absolute;bottom:0;left:0;right:0;height:44px;
+  background:linear-gradient(180deg,transparent,var(--card));pointer-events:none;z-index:5;}
+.map-svg{width:100%;height:100%;position:absolute;inset:0;}
+.mchip{position:absolute;bottom:10px;right:10px;background:rgba(8,8,8,.9);backdrop-filter:blur(8px);
+  border:1px solid var(--y);border-radius:10px;padding:5px 11px;z-index:10;text-align:right;}
+.mchip-km{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;color:var(--y);line-height:1;}
+.mchip-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;}
+.mchip-time{font-family:'Barlow',sans-serif;font-size:10px;color:var(--t2);margin-top:1px;}
+
+/* Odo chip on map */
+.odo-chip{position:absolute;bottom:10px;left:10px;background:rgba(8,8,8,.88);backdrop-filter:blur(8px);
+  border:1px solid rgba(245,196,0,.35);border-radius:10px;padding:5px 10px;z-index:10;}
+.odo-chip-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;}
+.odo-chip-val{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;color:var(--am);line-height:1.2;}
+
+/* Card body */
+.cbody{padding:7px 13px 10px;display:flex;flex-direction:column;gap:5px;}
+/* Card must not stretch to fill deck — hug content */
+.card.top{height:auto;}
+.meta-row{display:flex;align-items:center;gap:5px;}
+.trip-date{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
+  color:var(--t2);text-transform:uppercase;letter-spacing:.06em;}
+.tdot{width:3px;height:3px;background:var(--t3);border-radius:50%;}
+.trip-dur{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3);}
+.edit-btn{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:6px;padding:3px 8px;font-family:'Barlow Condensed',sans-serif;font-weight:600;
+  font-size:11px;color:var(--t2);cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:all .2s;}
+.edit-btn:hover{background:var(--yd);border-color:rgba(245,196,0,.4);color:var(--y);}
+
+.addr-row{display:flex;align-items:center;gap:7px;padding:3px 0;}
+.addr-row+.addr-row{border-top:1px solid var(--border);}
+.aico{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aico-a{background:rgba(34,197,94,.14);}
+.aico-b{background:var(--yd);}
+.aico svg{width:11px;height:11px;}
+.astreet{font-family:'Barlow',sans-serif;font-weight:600;font-size:12px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.asuburb{font-family:'Barlow',sans-serif;font-size:10px;color:var(--t3);}
+
+/* (purpose selection moved to classify screen) */
+
+/* Classify buttons */
+.cls-row{display:flex;gap:6px;}
+.cls-btn{flex:1;padding:9px 0;border-radius:10px;border:1.5px solid;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:4px;}
+.cls-btn svg{width:13px;height:13px;}
+.btn-per{background:transparent;border-color:rgba(239,68,68,.3);color:rgba(239,68,68,.65);}
+.btn-per:hover{background:var(--red);border-color:var(--re);color:var(--re);}
+.btn-biz{background:var(--yd);border-color:rgba(245,196,0,.45);color:var(--y);}
+.btn-biz:hover{background:rgba(245,196,0,.18);border-color:var(--y);box-shadow:0 0 16px var(--yg);}
+/* Armed state — second tap confirms */
+.btn-biz.armed{background:var(--y);color:#000;border-color:var(--y);
+  box-shadow:0 0 20px var(--yg);animation:bizpulse .5s ease;}
+@keyframes bizpulse{0%{transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);}}
+
+/* Swipe direction guide under classify buttons */
+.swipe-guide{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;}
+.sg-item{display:flex;align-items:center;gap:3px;font-family:'Barlow',sans-serif;
+  font-size:9px;color:var(--t3);letter-spacing:.03em;}
+.sg-icon{font-size:12px;}
+.sg-div{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);opacity:.5;}
+
+/* Centred deduction flash — overlays the deck */
+.ded-flash-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:30;}
+.ded-flash-amt{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:58px;
+  color:var(--gr);opacity:0;text-shadow:0 0 40px rgba(34,197,94,.5);letter-spacing:-.01em;
+  line-height:1;}
+.ded-flash-amt.pop{animation:bigpop 1.1s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes bigpop{
+  0%{opacity:0;transform:scale(.6) translateY(10px);}
+  18%{opacity:1;transform:scale(1.08) translateY(0);}
+  45%{opacity:1;transform:scale(1) translateY(0);}
+  100%{opacity:0;transform:scale(1) translateY(-20px);}
+}
+
+/* ════════════════════════════════════
+   SCREEN 4 — CLASSIFY (purpose triage)
+════════════════════════════════════ */
+#classifyScreen{}
+.cls-progress{padding:0 16px 5px;flex-shrink:0;}
+.cls-prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.cls-prog-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;}
+.cls-prog-count{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--y);}
+.cls-prog-track{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.cls-prog-fill{height:100%;background:var(--y);border-radius:2px;transition:width .4s ease;}
+
+/* Micro trip card — collapsed by default */
+.cls-micro{margin:0 14px 8px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;flex-shrink:0;cursor:pointer;transition:border-color .2s;}
+.cls-micro:hover{border-color:rgba(245,196,0,.3);}
+.cls-micro-row{display:flex;align-items:center;gap:8px;padding:9px 12px;}
+.cls-micro-route{flex:1;min-width:0;}
+.cls-micro-from{font-family:'Barlow',sans-serif;font-weight:600;font-size:12px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cls-micro-to{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cls-micro-ded{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;
+  color:var(--gr);flex-shrink:0;}
+.cls-micro-chevron{font-size:14px;color:var(--t3);flex-shrink:0;transition:transform .25s;}
+.cls-micro.open .cls-micro-chevron{transform:rotate(180deg);}
+/* Expanded edit area */
+.cls-micro-expand{display:none;padding:0 12px 12px;border-top:1px solid var(--border);}
+.cls-micro.open .cls-micro-expand{display:block;}
+.cls-micro-expand-row{display:flex;gap:7px;margin-bottom:6px;}
+.cls-me-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.09em;display:block;margin-bottom:3px;}
+.cls-me-in{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;padding:6px 9px;font-family:'Barlow',sans-serif;font-size:12px;
+  color:#fff;outline:none;transition:border-color .2s;}
+.cls-me-in:focus{border-color:rgba(245,196,0,.5);}
+.cls-micro-save{width:100%;margin-top:6px;background:rgba(245,196,0,.1);border:1px solid rgba(245,196,0,.3);
+  border-radius:8px;padding:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--y);cursor:pointer;transition:all .2s;}
+.cls-micro-save:hover{background:rgba(245,196,0,.2);}
+
+/* Grid */
+.cls-grid{flex:1;padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:7px;
+  align-content:start;overflow-y:auto;padding-bottom:4px;}
+.cls-grid::-webkit-scrollbar{display:none;}
+.cls-cat{background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:13px;
+  padding:12px 10px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;
+  align-items:center;gap:5px;text-align:center;}
+.cls-cat:hover{background:rgba(245,196,0,.07);border-color:rgba(245,196,0,.3);}
+.cls-cat.armed{background:var(--y);border-color:var(--y);transform:scale(1.03);
+  box-shadow:0 0 22px rgba(245,196,0,.3);}
+.cls-cat-ico{font-size:24px;line-height:1;transition:all .15s;}
+.cls-cat-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+  color:var(--t2);text-transform:uppercase;letter-spacing:.03em;line-height:1.2;transition:color .15s;}
+.cls-cat.armed .cls-cat-lbl{color:#000;}
+.cls-cat.armed .cls-cat-ico{filter:grayscale(1) brightness(0);}
+
+/* Custom add row — docked inside grid at the bottom */
+.cls-custom-wrap{grid-column:1 / -1;display:flex;gap:7px;align-items:center;
+  background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.1);
+  border-radius:13px;padding:10px 12px;margin-top:2px;}
+.cls-custom-in{flex:1;background:transparent;border:none;outline:none;
+  font-family:'Barlow',sans-serif;font-size:13px;color:#fff;caret-color:var(--y);}
+.cls-custom-in::placeholder{color:var(--t3);}
+.cls-custom-add{background:rgba(245,196,0,.1);border:1px solid rgba(245,196,0,.3);border-radius:8px;
+  padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
+  color:var(--y);cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;}
+.cls-custom-add:hover{background:rgba(245,196,0,.2);}
+
+/* (confirm handled by tile state) */
+
+/* Bottom panel */
+.bpanel{flex-shrink:0;padding:4px 14px 2px;display:flex;flex-direction:column;gap:4px;}
+
+/* Deduction bar with money progress */
+.ded-bar{background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:8px 13px;position:relative;overflow:hidden;}
+.ded-bar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--y);border-radius:11px 0 0 11px;}
+.ded-top{display:flex;align-items:baseline;justify-content:space-between;}
+.ded-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;}
+.ded-amt{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;
+  color:var(--y);line-height:1;}
+.ded-amt.pop{animation:apop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes apop{0%{transform:scale(1);}40%{transform:scale(1.13);color:#fff;}100%{transform:scale(1);}}
+.ded-asterisk{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);letter-spacing:.05em;margin-top:2px;}
+.ded-asterisk a{color:rgba(245,196,0,.55);text-decoration:none;border-bottom:1px solid rgba(245,196,0,.22);}
+.ded-asterisk a:hover{color:var(--y);}
+/* Money progress track */
+.ded-progress{margin-top:6px;}
+.ded-prog-track{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;position:relative;}
+.ded-prog-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(34,197,94,.8),var(--y),#ffe066);
+  transition:width .6s cubic-bezier(.34,1.3,.64,1);width:0%;}
+.ded-prog-labels{display:flex;justify-content:space-between;margin-top:3px;}
+.ded-prog-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);letter-spacing:.05em;}
+.ded-prog-upgrade{font-family:'Barlow',sans-serif;font-size:9px;color:rgba(245,196,0,.55);font-weight:600;cursor:pointer;}
+.ded-prog-upgrade:hover{color:var(--y);}
+.ded-flash{position:absolute;top:50%;right:14px;transform:translateY(-50%);
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--gr);
+  opacity:0;pointer-events:none;}
+.ded-flash.show{animation:fup 1.3s ease-out forwards;}
+@keyframes fup{0%{opacity:0;transform:translateY(0);}20%{opacity:1;transform:translateY(-10px);}80%{opacity:.8;transform:translateY(-20px);}100%{opacity:0;transform:translateY(-28px);}}
+
+/* Stats row: dial + calendar */
+.stats-row{display:flex;gap:5px;}
+.dial-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:7px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.dial-title{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;align-self:flex-start;}
+.dial-svg-wrap{position:relative;width:70px;height:42px;}
+.dial-pct{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;color:var(--y);line-height:1;}
+.range-bar{width:100%;height:4px;background:rgba(255,255,255,.08);border-radius:2px;position:relative;}
+.range-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gr),var(--y));transition:width .8s ease;}
+.range-marker{position:absolute;top:-4px;width:2px;height:12px;background:var(--y);border-radius:1px;transition:left .8s ease;}
+.range-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:6px;color:var(--t3);width:100%;}
+.ind-lbl{font-family:'Barlow',sans-serif;font-size:8px;color:var(--t3);text-align:center;}
+.ind-range{color:rgba(245,196,0,.65);font-weight:600;}
+
+.cal-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:7px 9px;}
+.cal-title{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;}
+.cal-month{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+  color:var(--t2);text-transform:uppercase;margin-bottom:2px;text-align:center;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+.chdr{font-family:'JetBrains Mono',monospace;font-size:6px;color:var(--t3);text-align:center;}
+.cday{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:10px;
+  color:var(--t3);text-align:center;padding:2px 1px;border-radius:3px;line-height:1;}
+.cday.has{color:var(--t2);}
+.cday.act{background:var(--y);color:#000;font-weight:900;border-radius:4px;box-shadow:0 0 5px var(--yg);}
+.cday.emp{color:transparent;}
+
+/* Swipe hint */
+.swipe-hint{display:flex;align-items:center;justify-content:space-between;padding:5px 18px 3px;flex-shrink:0;}
+.sh-p{display:flex;align-items:center;gap:4px;font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(239,68,68,.6);}
+.sh-m{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3);}
+.sh-b{display:flex;align-items:center;gap:4px;font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(245,196,0,.65);}
+
+/* Footer */
+.footer{padding:2px 14px 4px;flex-shrink:0;}
+.fd{font-family:'Barlow',sans-serif;font-size:9px;color:var(--t3);line-height:1.4;text-align:center;}
+.fd .warn{color:rgba(239,68,68,.55);}
+
+/* Complete overlay */
+.complete{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:9px;opacity:0;pointer-events:none;transition:opacity .5s;padding:28px;z-index:50;}
+.complete.show{opacity:1;pointer-events:all;}
+.complete-icon{width:60px;height:60px;background:var(--yd);border:2px solid var(--y);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;}
+.complete-icon svg{width:28px;height:28px;color:var(--y);}
+.ch{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;text-transform:uppercase;color:#fff;text-align:center;line-height:1;}
+.cs{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);text-align:center;line-height:1.5;}
+.ct{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:44px;color:var(--y);line-height:1;}
+.c-actions{display:flex;flex-direction:column;gap:7px;width:100%;margin-top:4px;}
+.btn-y{background:var(--y);border:none;border-radius:11px;padding:12px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;
+  letter-spacing:.06em;text-transform:uppercase;color:#000;cursor:pointer;width:100%;transition:all .2s;}
+.btn-y:hover{background:#fff;}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);border-radius:11px;padding:10px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--t2);cursor:pointer;width:100%;transition:all .2s;}
+.btn-ghost:hover{border-color:var(--y);color:var(--y);}
+.btn-txt{background:transparent;border:none;font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);cursor:pointer;padding:3px;}
+
+/* ════════════════════════════════════
+   SCREEN 2 — REVIEW
+════════════════════════════════════ */
+.rev-tabs{display:flex;padding:0 14px 5px;flex-shrink:0;gap:0;}
+.rev-tab{flex:1;padding:6px 0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:13px;letter-spacing:.05em;text-transform:uppercase;text-align:center;cursor:pointer;
+  border-bottom:2px solid var(--border);color:var(--t3);transition:all .2s;}
+.rev-tab.act{color:var(--y);border-bottom-color:var(--y);}
+.rev-sum{display:flex;gap:5px;padding:0 14px 5px;flex-shrink:0;}
+.rsc{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px 10px;}
+.rsc-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;}
+.rsc-v{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;line-height:1.2;}
+.cv-biz{color:var(--y);}
+.cv-per{color:var(--t2);}
+.cv-est{color:var(--gr);}
+
+/* Trip list */
+.trip-list{flex:1;padding:0 14px 4px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.titem{background:var(--card);border:1px solid var(--border);border-radius:13px;
+  cursor:pointer;transition:border-color .2s;}
+.titem:hover{border-color:rgba(245,196,0,.2);}
+.titem-main{display:flex;align-items:center;gap:10px;padding:12px 14px;}
+.titem.biz{border-left:3px solid rgba(245,196,0,.6);}
+.titem.per{border-left:3px solid rgba(239,68,68,.4);}
+.titem.unsorted{border-left:3px solid rgba(255,255,255,.15);}
+.titem-info{flex:1;min-width:0;}
+.titem-route{font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.titem.open .titem-route{white-space:normal;overflow:visible;}
+.titem-meta{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);}
+.tbadge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+  padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;}
+.tbadge-b{background:var(--yd);color:var(--y);border:1px solid rgba(245,196,0,.22);}
+.tbadge-p{background:var(--red);color:var(--re);border:1px solid rgba(239,68,68,.18);}
+.tbadge-u{background:rgba(255,255,255,.06);color:var(--t3);border:1px solid var(--border);}
+.titem-km{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--t2);flex-shrink:0;}
+.titem-chevron{font-size:14px;color:var(--t3);flex-shrink:0;transition:transform .2s;}
+.titem.open .titem-chevron{transform:rotate(180deg);}
+/* Expanded detail */
+.titem-expand{display:none;padding:10px 14px 13px;flex-direction:column;gap:8px;
+  border-top:1px solid var(--border);}
+.titem.open .titem-expand{display:flex;}
+.titem-detail{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);line-height:1.8;}
+.titem-detail strong{color:#fff;}
+.titem-purpose{font-family:'Barlow',sans-serif;font-size:12px;color:var(--gr);font-style:italic;}
+.titem-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.rcls-btn{flex:1;min-width:80px;padding:8px 0;border-radius:9px;border:1.5px solid;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+  letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.rcls-per{border-color:rgba(239,68,68,.3);color:rgba(239,68,68,.7);background:transparent;}
+.rcls-per:hover{background:var(--red);border-color:var(--re);color:var(--re);}
+.rcls-biz{border-color:rgba(245,196,0,.4);color:var(--y);background:var(--yd);}
+.rcls-biz:hover{background:rgba(245,196,0,.18);border-color:var(--y);}
+.rcls-edit{flex:0 0 auto;padding:8px 12px;border-radius:9px;border:1px solid var(--border);
+  background:rgba(255,255,255,.04);color:var(--t2);font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.rcls-edit:hover{border-color:rgba(245,196,0,.4);color:var(--y);}
+
+/* Unclassified warning banner */
+.rev-warn{margin:0 14px 6px;background:rgba(245,196,0,.07);border:1px solid rgba(245,196,0,.25);
+  border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.rev-warn svg{flex-shrink:0;}
+.rev-warn-txt{font-family:'Barlow',sans-serif;font-size:11px;color:rgba(245,196,0,.85);line-height:1.4;}
+.rev-warn-txt strong{color:var(--y);}
+
+/* Step stepper */
+.step-bar{display:flex;align-items:center;gap:0;padding:0 14px 8px;flex-shrink:0;}
+.step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+.step-item:not(:last-child)::after{content:'';position:absolute;top:8px;left:50%;right:-50%;
+  height:1px;background:var(--border);z-index:0;}
+.step-item.done::after{background:rgba(245,196,0,.4);}
+.step-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:var(--t3);
+  position:relative;z-index:1;transition:all .3s;}
+.step-item.done .step-dot{background:rgba(245,196,0,.15);border-color:rgba(245,196,0,.5);color:var(--y);}
+.step-item.active .step-dot{background:var(--y);border-color:var(--y);color:#000;}
+.step-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.07em;margin-top:3px;text-align:center;}
+.step-item.active .step-lbl{color:var(--y);}
+.step-item.done .step-lbl{color:rgba(245,196,0,.55);}
+
+/* Session reports */
+.rep-list{flex:1;padding:0 14px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.rep-item{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 14px;}
+.rep-item-date{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.rep-item-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;}
+.rep-item-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.rep-stat{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t2);}
+.rep-stat strong{color:var(--y);}
+.rep-empty{padding:30px 14px;text-align:center;font-family:'Barlow',sans-serif;font-size:13px;color:var(--t3);}
+.btn-odo-cta{width:100%;background:transparent;border:1.5px solid rgba(245,196,0,.3);border-radius:10px;
+  padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--y);cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-odo-cta:hover{background:var(--yd);border-color:var(--y);}
+
+/* Calendar view */
+.cal-view{flex:1;padding:0 14px;display:flex;flex-direction:column;gap:6px;}
+.cal-full-month{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;
+  color:#fff;text-transform:uppercase;letter-spacing:.06em;text-align:center;}
+.cal-full-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cfd-h{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);text-align:center;padding:2px 0;}
+.cfd{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;
+  color:var(--t3);text-align:center;padding:5px 2px;border-radius:6px;cursor:default;line-height:1;position:relative;}
+.cfd.emp{color:transparent;}
+.cfd.has-d{color:var(--t2);}
+.cfd-dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:1px;left:50%;transform:translateX(-50%);}
+.dot-b{background:var(--y);}.dot-p{background:var(--t3);}.dot-u{background:var(--re);}
+.cal-legend{display:flex;gap:10px;justify-content:center;flex-shrink:0;}
+.leg{display:flex;align-items:center;gap:4px;font-family:'Barlow',sans-serif;font-size:9px;color:var(--t2);}
+.leg-dot{width:6px;height:6px;border-radius:50%;}
+
+/* Done CTA */
+.rev-done{padding:6px 14px 3px;flex-shrink:0;}
+.btn-done{width:100%;background:var(--y);border:none;border-radius:13px;padding:13px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;
+  letter-spacing:.07em;text-transform:uppercase;color:#000;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;
+  box-shadow:0 4px 20px rgba(245,196,0,.25);}
+.btn-done:hover{background:#fff;box-shadow:0 4px 28px rgba(245,196,0,.4);}
+.btn-done svg{flex-shrink:0;}
+.rev-cta{padding:3px 14px 3px;flex-shrink:0;}
+.audit-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.22);border-radius:18px;padding:3px 9px;
+  font-family:'Barlow',sans-serif;font-size:10px;color:var(--gr);margin-bottom:4px;}
+
+/* ════════════════════════════════════
+   SCREEN 3 — ODOMETER (reworked)
+════════════════════════════════════ */
+/* Hero instruction card — collapsible */
+.odo-hero-card{margin:0 14px 8px;background:var(--card);border:1px solid rgba(245,196,0,.2);
+  border-radius:12px;overflow:hidden;flex-shrink:0;cursor:pointer;transition:border-color .2s;}
+.odo-hero-card:hover{border-color:rgba(245,196,0,.35);}
+
+/* Collapsed bar — one tight line */
+.odo-hero-bar{display:flex;align-items:center;gap:8px;padding:10px 13px;}
+.odo-hero-icon-sm{font-size:16px;flex-shrink:0;}
+.odo-hero-title-sm{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;
+  color:#fff;flex:1;letter-spacing:.01em;}
+.odo-hero-score-inline{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.odo-hero-score-pct{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--gr);}
+.odo-hero-expand-ico{font-size:16px;color:var(--t3);transition:transform .25s;line-height:1;}
+
+/* Expanded body */
+.odo-hero-expand-body{padding:0 13px 12px;border-top:1px solid rgba(255,255,255,.06);
+  max-height:0;overflow:hidden;transition:max-height .3s ease, padding .3s ease;padding-top:0;}
+.odo-hero-card:not(.collapsed) .odo-hero-expand-body{max-height:200px;padding-top:10px;}
+.odo-hero-card:not(.collapsed) .odo-hero-expand-ico{transform:rotate(90deg);}
+.odo-hero-body{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);line-height:1.55;margin-bottom:10px;}
+.odo-hero-score-row{}
+.odo-hero-score-label{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;}
+.odo-hero-score-label span:first-child{font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.1em;}
+.odo-audit-track{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.odo-audit-fill{height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--am),var(--gr));transition:width .6s ease;}
+.odo-hero-score-hint{font-family:'Barlow',sans-serif;font-size:10px;color:var(--t3);margin-top:5px;}
+
+/* Trip verify cards — big and readable */
+.odo-list{flex:1;padding:0 14px;display:flex;flex-direction:column;gap:10px;}
+.oi{background:var(--card);border:1.5px solid var(--border);border-radius:14px;transition:border-color .2s;}
+.oi.ver{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.03);}
+.oi:not(.ver):hover{border-color:rgba(245,196,0,.2);}
+.oi-top{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer;}
+.oi-status{width:34px;height:34px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;
+  color:var(--t3);transition:all .3s;}
+.oi.ver .oi-status{background:rgba(34,197,94,.18);border-color:var(--gr);color:var(--gr);font-size:18px;}
+.oi-info{flex:1;min-width:0;}
+.oi-route{font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.oi.open-i .oi-route{white-space:normal;}
+.oi-meta{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t3);}
+.oi-odo-badge{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;
+  color:var(--am);flex-shrink:0;text-align:right;line-height:1.2;}
+.oi-odo-badge small{display:block;font-family:'JetBrains Mono',monospace;font-size:7px;
+  color:var(--t3);text-align:right;margin-top:2px;}
+.oi-chevron{font-size:16px;color:var(--t3);flex-shrink:0;transition:transform .2s;margin-left:2px;}
+.oi.open-i .oi-chevron{transform:rotate(180deg);}
+
+/* Expand panel */
+.oi-expand{display:none;padding:14px 16px 16px;flex-direction:column;gap:12px;
+  border-top:1px solid var(--border);}
+.oi.open-i .oi-expand{display:flex;}
+.oi-exp-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.09em;margin-bottom:3px;}
+.oi-in-row{display:flex;align-items:stretch;gap:8px;}
+.oi-in{flex:1;background:rgba(255,255,255,.07);border:1.5px solid var(--border);border-radius:11px;
+  padding:13px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;
+  color:#fff;outline:none;transition:border-color .2s;letter-spacing:.02em;}
+.oi-in:focus{border-color:rgba(245,196,0,.6);}
+.oi-in::placeholder{color:var(--t3);font-weight:400;font-size:15px;}
+.photo-btn{background:rgba(245,196,0,.07);border:1.5px solid rgba(245,196,0,.25);border-radius:11px;
+  padding:13px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+  color:var(--y);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;flex-shrink:0;}
+.photo-btn:hover{background:rgba(245,196,0,.15);}
+.photo-btn svg{width:15px;height:15px;}
+.photo-prev{width:100%;padding:12px;background:rgba(245,196,0,.04);border:1px dashed rgba(245,196,0,.2);
+  border-radius:10px;text-align:center;
+  font-family:'Barlow',sans-serif;font-size:12px;color:rgba(245,196,0,.5);}
+.photo-prev.has{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.3);color:var(--gr);font-weight:600;}
+.oi-confirm{width:100%;background:var(--y);border:none;border-radius:11px;padding:14px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;
+  letter-spacing:.06em;text-transform:uppercase;color:#000;cursor:pointer;transition:all .2s;}
+.oi-confirm:hover{background:#fff;}
+
+/* Odo log view */
+.odo-log{flex:1;padding:0 14px;display:flex;flex-direction:column;gap:4px;}
+.log-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
+.log-time{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--am);letter-spacing:.06em;margin-bottom:3px;}
+.log-desc{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t2);line-height:1.4;}
+.log-photo{display:inline-flex;align-items:center;gap:3px;font-family:'Barlow',sans-serif;
+  font-size:9px;color:var(--gr);margin-top:3px;}
+
+.odo-cta{padding:6px 14px 5px;flex-shrink:0;}
+
+/* ════════════════════════════════════
+   MODALS (top-sliding for edit, bottom for ATO)
+════════════════════════════════════ */
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);
+  z-index:100;display:flex;opacity:0;pointer-events:none;transition:opacity .3s;overflow-y:auto;}
+.modal-bg.open{opacity:1;pointer-events:all;}
+
+/* Edit — slides from top */
+#editModal{align-items:flex-start;}
+#editModal .msheet{width:100%;background:#181818;border-radius:0 0 22px 22px;
+  border-bottom:1px solid rgba(255,255,255,.1);border-left:1px solid rgba(255,255,255,.08);
+  border-right:1px solid rgba(255,255,255,.08);
+  transform:translateY(-100%);flex-shrink:0;
+  transition:transform .4s cubic-bezier(.34,1.1,.64,1);}
+#editModal.open .msheet{transform:translateY(0);}
+
+/* ATO — slides from bottom */
+#atoModal{align-items:flex-end;}
+#atoModal .msheet{width:100%;background:#181818;border-radius:22px 22px 0 0;
+  border-top:1px solid rgba(255,255,255,.1);border-left:1px solid rgba(255,255,255,.08);
+  border-right:1px solid rgba(255,255,255,.08);
+  transform:translateY(100%);flex-shrink:0;
+  transition:transform .4s cubic-bezier(.34,1.1,.64,1);}
+#atoModal.open .msheet{transform:translateY(0);}
+
+/* Session summary — full overlay slides up */
+#summaryModal{align-items:flex-end;}
+#summaryModal .msheet{width:100%;max-height:92%;background:#111;border-radius:22px 22px 0 0;
+  border-top:1px solid rgba(245,196,0,.25);border-left:1px solid rgba(255,255,255,.06);
+  border-right:1px solid rgba(255,255,255,.06);
+  transform:translateY(100%);flex-shrink:0;overflow-y:auto;
+  transition:transform .45s cubic-bezier(.34,1.1,.64,1);}
+#summaryModal.open .msheet{transform:translateY(0);}
+.sum-hero{padding:24px 18px 10px;text-align:center;}
+.sum-fireworks{font-size:32px;line-height:1;margin-bottom:8px;display:block;
+  animation:popIn .6s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes popIn{0%{transform:scale(0);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.sum-score-ring{width:80px;height:80px;border-radius:50%;background:rgba(34,197,94,.08);
+  border:3px solid var(--gr);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;margin:0 auto 14px;
+  animation:ringIn .7s .2s cubic-bezier(.34,1.4,.64,1) both;}
+@keyframes ringIn{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.sum-score-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--gr);line-height:1;}
+.sum-score-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--gr);letter-spacing:.08em;}
+.sum-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:#fff;
+  letter-spacing:.03em;margin-bottom:4px;}
+.sum-sub{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);line-height:1.5;}
+
+/* Game-style level-complete stat row */
+.sum-level-row{display:flex;align-items:center;margin:10px 18px 16px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;
+  padding:14px 10px;}
+.sum-level-stat{flex:1;text-align:center;}
+.sum-level-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;
+  color:var(--y);line-height:1;margin-bottom:4px;}
+.sum-level-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.07em;line-height:1.3;}
+.sum-level-divider{width:1px;background:var(--border);align-self:stretch;margin:0 4px;}
+
+/* 12-week logbook card */
+.sum-logbook-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;}
+.sum-lb-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+.sum-lb-weeks{font-family:'Barlow',sans-serif;font-size:13px;color:var(--t2);}
+.sum-lb-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:#fff;margin-right:2px;}
+.sum-lb-of{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);}
+.sum-lb-pct{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--y);}
+.sum-lb-track{height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.sum-lb-fill{height:100%;border-radius:4px;
+  background:linear-gradient(90deg,var(--am),var(--y));transition:width .8s ease;}
+.sum-lb-hint{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);}
+
+/* Trip breakdown */
+.sum-stats{display:flex;gap:6px;padding:0 18px 14px;}
+.sum-stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 8px;text-align:center;}
+.sum-stat-v{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:#fff;line-height:1;}
+.sum-stat-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;}
+.sum-section{padding:0 18px 14px;}
+.sum-section-title{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.sum-trip-row{display:flex;align-items:center;gap:8px;padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);}
+.sum-trip-row:last-child{border-bottom:none;}
+.sum-trip-icon{font-size:14px;flex-shrink:0;}
+.sum-trip-info{flex:1;min-width:0;}
+.sum-trip-route{font-family:'Barlow',sans-serif;font-size:12px;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum-trip-meta{font-family:'Barlow',sans-serif;font-size:10px;color:var(--t3);margin-top:1px;}
+.sum-trip-badge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+  padding:2px 7px;border-radius:5px;flex-shrink:0;}
+.stb-photo{background:rgba(34,197,94,.12);color:var(--gr);border:1px solid rgba(34,197,94,.25);}
+.stb-ts{background:rgba(245,196,0,.1);color:var(--am);border:1px solid rgba(245,196,0,.2);}
+.stb-none{background:rgba(255,255,255,.05);color:var(--t3);border:1px solid var(--border);}
+
+/* Odo gap warning */
+.sum-gap-warn{background:rgba(245,196,0,.06);border:1px solid rgba(245,196,0,.2);
+  border-radius:11px;padding:11px 13px;display:flex;gap:9px;align-items:flex-start;margin-bottom:10px;}
+.sum-gap-ico{font-size:18px;flex-shrink:0;}
+.sum-gap-txt{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);line-height:1.55;}
+.sum-gap-txt strong{color:var(--y);}
+/* Notification toggle */
+.sum-notif-row{display:flex;align-items:center;gap:10px;padding:12px 13px;
+  background:var(--card);border:1px solid var(--border);border-radius:11px;margin-bottom:8px;}
+.sum-notif-ico{font-size:20px;flex-shrink:0;}
+.sum-notif-txt{flex:1;}
+.sum-notif-title{font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;color:#fff;margin-bottom:2px;}
+.sum-notif-sub{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);}
+.sum-toggle{width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,.1);
+  border:none;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;}
+.sum-toggle.on{background:var(--y);}
+.sum-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.sum-toggle.on::after{transform:translateX(18px);}
+/* Evidence now */
+.sum-evidence-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 13px;margin-bottom:8px;}
+.sum-ev-title{font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;color:#fff;margin-bottom:3px;}
+.sum-ev-sub{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.4;}
+.sum-ev-btns{display:flex;gap:6px;}
+.sum-ev-btn{flex:1;padding:9px 6px;border-radius:9px;border:1.5px solid;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
+  text-transform:uppercase;letter-spacing:.04em;transition:all .2s;text-align:center;}
+.sum-ev-btn-est{border-color:rgba(245,196,0,.3);color:var(--y);background:rgba(245,196,0,.07);}
+.sum-ev-btn-est:hover{background:rgba(245,196,0,.15);}
+.sum-ev-btn-photo{border-color:rgba(34,197,94,.3);color:var(--gr);background:rgba(34,197,94,.07);}
+.sum-ev-btn-photo:hover{background:rgba(34,197,94,.15);}
+.sum-ev-est-panel{display:none;margin-top:10px;}
+.sum-ev-est-panel.show{display:block;}
+.sum-ev-est-row{display:flex;gap:7px;align-items:center;}
+.sum-ev-est-in{flex:1;background:rgba(255,255,255,.07);border:1.5px solid var(--border);border-radius:9px;
+  padding:10px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;
+  color:#fff;outline:none;transition:border-color .2s;}
+.sum-ev-est-in:focus{border-color:rgba(245,196,0,.5);}
+.sum-ev-est-save{background:var(--y);border:none;border-radius:9px;padding:10px 14px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;
+  letter-spacing:.05em;text-transform:uppercase;color:#000;cursor:pointer;}
+/* Motivational closer */
+.sum-closer{margin:0 18px 14px;background:rgba(245,196,0,.05);border:1px solid rgba(245,196,0,.15);
+  border-radius:12px;padding:13px 14px;display:flex;gap:10px;align-items:center;}
+.sum-closer-icon{font-size:22px;flex-shrink:0;}
+.sum-closer-txt{font-family:'Barlow',sans-serif;font-size:12px;color:var(--t2);line-height:1.55;}
+.sum-closer-txt strong{color:var(--y);}
+/* Summary CTAs */
+.sum-ctas{padding:4px 18px 28px;display:flex;flex-direction:column;gap:7px;}
+.btn-sum-done{width:100%;background:var(--y);border:none;border-radius:13px;padding:14px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;
+  letter-spacing:.07em;text-transform:uppercase;color:#000;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(245,196,0,.2);}
+.btn-sum-done:hover{background:#fff;}
+.btn-sum-ignore{width:100%;background:transparent;border:1.5px solid var(--border);border-radius:13px;
+  padding:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--t3);cursor:pointer;transition:all .2s;}
+.btn-sum-ignore:hover{border-color:var(--t2);color:var(--t2);}
+.oi-evidence-badge{font-size:12px;flex-shrink:0;margin-left:2px;}
+
+.mhandle{width:36px;height:4px;background:var(--t3);border-radius:2px;margin:12px auto 8px;}
+.minner{padding:0 18px 32px;}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:0 18px 10px;}
+.mtitle{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;
+  text-transform:uppercase;letter-spacing:.04em;color:#fff;}
+.mclose{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:7px;
+  padding:4px 11px;font-family:'Barlow Condensed',sans-serif;font-size:12px;
+  color:var(--t2);cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:all .2s;}
+.mclose:hover{background:rgba(255,255,255,.13);}
+
+/* Edit warn */
+.ewarn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28);border-radius:9px;
+  padding:9px 11px;margin-bottom:12px;display:flex;align-items:flex-start;gap:7px;}
+.ewarn svg{width:13px;height:13px;color:var(--re);flex-shrink:0;margin-top:1px;}
+.ewarn-t{font-family:'Barlow',sans-serif;font-size:10px;color:rgba(239,68,68,.9);line-height:1.45;}
+.ewarn-t strong{color:var(--re);}
+
+/* Evidence */
+.evi-row{display:flex;gap:5px;margin-bottom:12px;}
+.evi-btn{flex:1;background:rgba(245,196,0,.05);border:1px solid rgba(245,196,0,.2);border-radius:8px;
+  padding:7px 5px;cursor:pointer;transition:all .2s;text-align:center;}
+.evi-btn:hover{background:rgba(245,196,0,.12);}
+.evi-btn svg{width:15px;height:15px;color:var(--y);display:block;margin:0 auto 2px;}
+.evi-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--y);
+  text-transform:uppercase;letter-spacing:.04em;}
+
+/* Form */
+.ef{margin-bottom:10px;}
+.ef label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:4px;}
+.ef input,.ef select,.ef textarea{width:100%;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:8px;padding:8px 11px;
+  font-family:'Barlow',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.ef input:focus,.ef select:focus,.ef textarea:focus{border-color:rgba(245,196,0,.5);}
+.ef textarea{resize:none;height:50px;font-size:11px;}
+.ef-row{display:flex;gap:7px;}
+.ef-row .ef{flex:1;}
+.mlink{display:flex;align-items:center;gap:4px;font-family:'Barlow',sans-serif;font-size:10px;
+  color:rgba(245,196,0,.65);cursor:pointer;margin-top:2px;text-decoration:none;}
+.mlink:hover{color:var(--y);}
+.mlink svg{width:10px;height:10px;}
+
+/* Stops */
+.stops-sec{margin-bottom:10px;}
+.stops-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:5px;}
+.stop-item{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.stop-in{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;
+  padding:6px 9px;font-family:'Barlow',sans-serif;font-size:12px;color:#fff;outline:none;}
+.stop-in:focus{border-color:rgba(245,196,0,.4);}
+.stop-rm{background:var(--red);border:1px solid rgba(239,68,68,.2);border-radius:6px;
+  padding:5px 7px;cursor:pointer;color:var(--re);font-size:11px;transition:all .2s;}
+.add-stop{background:rgba(255,255,255,.03);border:1px dashed var(--border);border-radius:7px;
+  padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:11px;
+  color:var(--t2);cursor:pointer;width:100%;transition:all .2s;text-transform:uppercase;letter-spacing:.04em;}
+.add-stop:hover{background:var(--yd);border-color:rgba(245,196,0,.3);color:var(--y);}
+
+/* Live calc */
+.lcalc{background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.14);border-radius:8px;
+  padding:9px 12px;margin-bottom:10px;}
+.lc-row{display:flex;justify-content:space-between;align-items:center;}
+.lc-l{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;}
+.lc-v{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--y);}
+.lc-div{height:1px;background:rgba(255,255,255,.05);margin:5px 0;}
+.lc-sub{font-family:'Barlow',sans-serif;font-size:9px;color:var(--t3);margin-top:2px;}
+.msave{width:100%;background:var(--y);border:none;border-radius:10px;padding:11px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;
+  letter-spacing:.06em;text-transform:uppercase;color:#000;cursor:pointer;transition:all .2s;}
+.msave:hover{background:#fff;}
+
+/* ATO content */
+.ato-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--y);margin-bottom:2px;}
+.ato-sub{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:13px;}
+.ato-body{font-family:'Barlow',sans-serif;font-size:11px;color:var(--t2);
+  line-height:1.6;display:flex;flex-direction:column;gap:8px;}
+.ato-body strong{color:#fff;}
+.ato-warn{color:var(--re);font-weight:600;}
+.mcancel{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:9px;padding:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);
+  cursor:pointer;margin-top:12px;transition:all .2s;}
+.mcancel:hover{background:rgba(255,255,255,.09);}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- Status Bar -->
+<div class="sbar">
+  <span class="sbar-time">9:41</span>
+  <div style="display:flex;gap:5px;align-items:center;">
+    <svg width="15" height="11" viewBox="0 0 24 18" fill="none">
+      <path d="M1 4C7-1 17-1 23 4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M4 8c4-4 12-4 16 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M8 12c2-2 6-2 8 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="16" r="1.5" fill="white"/>
+    </svg>
+    <svg width="22" height="12" viewBox="0 0 22 12">
+      <rect x="0" y="1" width="18" height="10" rx="2" stroke="white" stroke-width="1.5" fill="none"/>
+      <rect x="2" y="3" width="10" height="6" rx="1" fill="white"/>
+      <path d="M20 4v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCREEN 1: SORT
+═══════════════════════════════ -->
+<div class="screen" id="sortScreen">
+  <div class="topbar">
+    <!-- Undo: top left, fades in after first sort -->
+    <div class="undo-top" id="undoTop" onclick="undoLast()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      <div>
+        <div class="undo-top-lbl">Undo</div>
+        <div class="undo-top-desc" id="undoTopDesc">—</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="trip-pill"><span class="trip-pill-num" id="tripCountBadge">8</span><span class="trip-pill-lbl">left</span></div>
+      <div class="gps-pill"><div class="gps-dot"></div><span class="gps-lbl">GPS</span></div>
+    </div>
+  </div>
+
+  <!-- Sort progress -->
+  <div class="sort-progress">
+    <div class="sp-track"><div class="sp-fill" id="spFill" style="width:0%;"></div></div>
+  </div>
+
+  <!-- CARD DECK -->
+  <div class="deck-wrap" id="deckWrap">
+    <!-- Centred deduction flash — sits above cards -->
+    <div class="ded-flash-overlay" id="flashOverlay">
+      <div class="ded-flash-amt" id="dedFlashBig"></div>
+    </div>
+    <!-- bg stack -->
+    <div class="card" data-pos="2" style="top:0;">
+      <div class="cmap" style="background:#0c1018;"><svg class="map-svg" viewBox="0 0 350 158"><rect width="350" height="158" fill="#0c1018"/><line x1="0" y1="79" x2="350" y2="79" stroke="#1a2535" stroke-width="10"/><line x1="87" y1="0" x2="87" y2="158" stroke="#1a2535" stroke-width="10"/><line x1="263" y1="0" x2="263" y2="158" stroke="#1a2535" stroke-width="10"/></svg></div>
+      <div class="cbody"><div style="height:58px;"></div></div>
+    </div>
+    <div class="card" data-pos="1" style="top:0;">
+      <div class="cmap" style="background:#0c1018;"><svg class="map-svg" viewBox="0 0 350 158"><rect width="350" height="158" fill="#0c1018"/><line x1="0" y1="79" x2="350" y2="79" stroke="#1a2535" stroke-width="10"/><line x1="87" y1="0" x2="87" y2="158" stroke="#1a2535" stroke-width="10"/><line x1="263" y1="0" x2="263" y2="158" stroke="#1a2535" stroke-width="10"/></svg></div>
+      <div class="cbody"><div style="height:58px;"></div></div>
+    </div>
+
+    <!-- TOP CARD -->
+    <div class="card top" id="topCard" style="top:0;">
+      <div class="ov ov-b" id="ovBiz"><div class="stamp stamp-b" id="stampBiz">SORT: BUSINESS</div></div>
+      <div class="ov ov-p" id="ovPer"><div class="stamp stamp-p" id="stampPer">SORT: PERSONAL</div></div>
+      <div class="cmap">
+        <svg class="map-svg" viewBox="0 0 350 158">
+          <defs><filter id="yg"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <rect width="350" height="158" fill="#0c1018"/>
+          <ellipse cx="38" cy="134" rx="50" ry="38" fill="#0d1f35" opacity=".7"/>
+          <line x1="0" y1="79" x2="350" y2="79" stroke="#1a2535" stroke-width="10"/>
+          <line x1="0" y1="36" x2="350" y2="36" stroke="#1a2535" stroke-width="6"/>
+          <line x1="0" y1="128" x2="350" y2="128" stroke="#1a2535" stroke-width="6"/>
+          <line x1="70" y1="0" x2="70" y2="158" stroke="#1a2535" stroke-width="10"/>
+          <line x1="175" y1="0" x2="175" y2="158" stroke="#1a2535" stroke-width="6"/>
+          <line x1="280" y1="0" x2="280" y2="158" stroke="#1a2535" stroke-width="10"/>
+          <rect x="78" y="42" width="36" height="30" rx="3" fill="#141c28" opacity=".8"/>
+          <rect x="120" y="42" width="48" height="30" rx="3" fill="#111824" opacity=".8"/>
+          <rect x="183" y="85" width="40" height="38" rx="3" fill="#141c28" opacity=".8"/>
+          <rect x="183" y="42" width="88" height="34" rx="3" fill="#0f1520" opacity=".8"/>
+          <rect x="288" y="42" width="55" height="30" rx="3" fill="#141c28" opacity=".8"/>
+          <rect x="78" y="85" width="88" height="38" rx="4" fill="#0f1e14" opacity=".65"/>
+          <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#F5C400" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".18" filter="url(#yg)"/>
+          <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#F5C400" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 62 134 L 62 79 L 175 79 L 175 36 L 282 36" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="5 11" opacity=".3">
+            <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="1.4s" repeatCount="indefinite"/>
+          </path>
+          <!-- Pin A -->
+          <g transform="translate(47,106)"><path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 34 15 34s15-25.7 15-34C30 6.7 23.3 0 15 0z" fill="#22C55E"/><circle cx="15" cy="15" r="7" fill="rgba(0,0,0,.4)"/><text x="15" y="19.5" text-anchor="middle" fill="white" font-size="10" font-family="Arial" font-weight="900">A</text></g>
+          <!-- Pin B -->
+          <g transform="translate(267,8)"><path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 34 15 34s15-25.7 15-34C30 6.7 23.3 0 15 0z" fill="#F5C400"/><circle cx="15" cy="15" r="7" fill="rgba(0,0,0,.4)"/><text x="15" y="19.5" text-anchor="middle" fill="black" font-size="10" font-family="Arial" font-weight="900">B</text></g>
+        </svg>
+        <!-- Distance chip right -->
+        <div class="mchip">
+          <div class="mchip-lbl">Distance</div>
+          <div class="mchip-km" id="chipKm">16.2 km</div>
+          <div class="mchip-time" id="chipTime">9:02–9:50 AM</div>
+        </div>
+        <!-- Odometer chip left -->
+        </div>
+
+      <div class="cbody">
+        <div class="meta-row">
+          <span class="trip-date" id="tripDate">Thu, 27 Feb</span>
+          <span class="tdot"></span>
+          <span class="trip-dur" id="tripDur">48 min</span>
+          <button class="edit-btn" onclick="openEdit()">Edit ›</button>
+        </div>
+        <!-- Odometer inline row -->
+        <div class="odo-inline">
+          <span class="odo-inline-lbl">Odo</span>
+          <span class="odo-inline-val" id="chipOdoStart">84,280 km</span>
+          <span class="odo-inline-arrow">→</span>
+          <span class="odo-inline-val" id="chipOdoEnd">84,296 km</span>
+        </div>
+        <div class="addr-row">
+          <div class="aico aico-a"><svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 13 8 13s8-7.75 8-13a8 8 0 0 0-8-8z"/></svg></div>
+          <div style="flex:1;min-width:0;"><div class="astreet" id="addrA">15 Smith St</div><div class="asuburb" id="subA">Fitzroy VIC 3065</div></div>
+        </div>
+        <div class="addr-row">
+          <div class="aico aico-b"><svg viewBox="0 0 24 24" fill="none" stroke="#F5C400" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 13 8 13s8-7.75 8-13a8 8 0 0 0-8-8z"/></svg></div>
+          <div style="flex:1;min-width:0;"><div class="astreet" id="addrB">Bunnings Warehouse</div><div class="asuburb" id="subB">123 King Rd, Sunshine VIC</div></div>
+        </div>
+        <!-- Classify buttons -->
+        <div class="cls-row">
+          <button class="cls-btn btn-per" onclick="classifyTrip('personal')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Personal
+          </button>
+          <button class="cls-btn btn-biz" id="bizBtn" onclick="armBiz()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            <span id="bizBtnLabel">Business</span>
+          </button>
+        </div>
+        <!-- Swipe hint — permanent, inside card -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1px 2px 0;margin-top:-2px;">
+          <div style="display:flex;align-items:center;gap:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:rgba(239,68,68,.55);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(239,68,68,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+            Swipe left · Personal
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--t3);">or tap</div>
+          <div style="display:flex;align-items:center;gap:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:rgba(245,196,0,.65);">
+            Business · Swipe right
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(245,196,0,0.65)"><path d="M5 12h14M14 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complete overlay -->
+    <div class="complete" id="completeState">
+      <div class="complete-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="ch">All Sorted! 🎉</div>
+      <div class="cs">Total estimated deduction*</div>
+      <div class="ct" id="completeTotal">$0</div>
+      <div class="c-actions">
+        <button class="btn-y" onclick="goClassify()">Classify Business Trips →</button>
+        <button class="btn-ghost" onclick="goReview()">Review All Trips</button>
+        <button class="btn-txt" onclick="restartDemo()">← Reset demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom panel -->
+  <div class="bpanel">
+    <div class="ded-bar">
+      <div class="ded-top">
+        <div><div class="ded-lbl">Logbook Claim Est.*</div><div class="ded-amt" id="dedAmt">$0</div></div>
+        <div style="text-align:right;"><div class="ded-lbl">Business</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--t2);" id="bizCount">0 trips</div></div>
+      </div>
+      <div class="ded-asterisk">*<a href="#" onclick="openATO(event)">ATO rates TR 2021/1</a> · Estimates only · Not tax advice</div>
+      <div class="ded-progress">
+        <div class="ded-prog-track">
+          <div class="ded-prog-fill" id="dedProgFill"></div>
+        </div>
+        <div class="ded-prog-labels">
+          <span class="ded-prog-lbl">Logbook coverage: <span id="dedProgPct">0%</span></span>
+          <span class="ded-prog-upgrade" onclick="openATO(event)">No cap with logbook method ↗</span>
+        </div>
+      </div>
+      <div class="ded-flash" id="dedFlash">+$0</div>
+    </div>
+    <div class="stats-row">
+      <!-- Dial -->
+      <div class="dial-card">
+        <div class="dial-title">Business Use %</div>
+        <div class="dial-svg-wrap">
+          <svg viewBox="0 0 70 42" width="70" height="42">
+            <path d="M 7 38 A 27 27 0 0 1 63 38" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5.5" stroke-linecap="round"/>
+            <path id="dialArc" d="M 7 38 A 27 27 0 0 1 63 38" fill="none" stroke="#F5C400" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="84.82" stroke-dashoffset="25.4" style="transition:stroke-dashoffset .9s ease;"/>
+          </svg>
+          <div class="dial-pct" id="dialPct">70%</div>
+        </div>
+        <div class="range-bar"><div class="range-fill" id="rangeFill" style="width:70%;"></div><div class="range-marker" id="rangeMarker" style="left:calc(70% - 1px);"></div></div>
+        <div class="range-labels"><span>0%</span><span>100%</span></div>
+        <div class="ind-lbl">Avg: <span class="ind-range">55–75%</span></div>
+      </div>
+      <!-- Mini Calendar -->
+      <div class="cal-card">
+        <div class="cal-title">Trip Day</div>
+        <div class="cal-month" id="calMonth">Feb 2026</div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="fd"><span class="warn">⚠️ False or inflated claims are a serious offence.</span> WorkCar logs all classifications with timestamps to an immutable audit trail.</div>
+  </div>
+
+  <div class="bnav">
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="ni-l">Dashboard</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="ni-l">Logbook</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="#F5C400" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="ni-l" style="color:var(--y);">Sort</span></div>
+    <div class="ni" onclick="goReports()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="ni-l">Reports</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="ni-l">Account</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCREEN 2: REVIEW
+═══════════════════════════════ -->
+<div class="screen hidden" id="reviewScreen">
+  <div class="shdr">
+    <div class="back-btn" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <span class="stitle">Review</span>
+    <span class="ssub" id="reviewSub">8 trips</span>
+  </div>
+  <!-- Step bar -->
+  <div class="step-bar">
+    <div class="step-item done" id="step1">
+      <div class="step-dot">✓</div><div class="step-lbl">Sort</div>
+    </div>
+    <div class="step-item done" id="step2">
+      <div class="step-dot">✓</div><div class="step-lbl">Classify</div>
+    </div>
+    <div class="step-item active" id="step3">
+      <div class="step-dot">3</div><div class="step-lbl">Review</div>
+    </div>
+    <div class="step-item" id="step4">
+      <div class="step-dot">4</div><div class="step-lbl">Odometer</div>
+    </div>
+  </div>
+  <!-- Unclassified business warning (shown dynamically) -->
+  <div class="rev-warn hidden" id="revWarn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(245,196,0,.9)" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="rev-warn-txt"><strong id="revWarnCount">2 business trips</strong> have no purpose set — tap to expand and classify.</div>
+  </div>
+  <div class="rev-sum">
+    <div class="rsc"><div class="rsc-l">Business</div><div class="rsc-v cv-biz" id="rsBiz">—</div></div>
+    <div class="rsc"><div class="rsc-l">Personal</div><div class="rsc-v cv-per" id="rsPer">—</div></div>
+    <div class="rsc"><div class="rsc-l">Deduction*</div><div class="rsc-v cv-est" id="rsEst">—</div></div>
+  </div>
+  <div class="rev-tabs">
+    <div class="rev-tab act" id="tabList" onclick="switchTab('list')">List View</div>
+    <div class="rev-tab" id="tabCal" onclick="switchTab('cal')">Calendar</div>
+  </div>
+  <div class="trip-list scroll-y" id="tripListEl"></div>
+  <div class="cal-view scroll-y hidden" id="calViewEl">
+    <div class="cal-full-month" id="calFullMonth">February 2026</div>
+    <div class="cal-full-grid" id="calFullGrid"></div>
+    <div class="cal-legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--y);"></div>Business</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--t3);"></div>Personal</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--re);"></div>Unsorted</div>
+    </div>
+  </div>
+  <!-- Done CTA -->
+  <div class="rev-done">
+    <button class="btn-done" onclick="goOdo()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Next: Verify Odometer →
+    </button>
+  </div>
+  <div class="rev-cta">
+    <div class="audit-pill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Audit Score: <strong id="auditPctRev" style="margin-left:2px;">72%</strong></div>
+  </div>
+  <div class="bnav">
+    <div class="ni" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="ni-l">Sort</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="#F5C400" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="ni-l" style="color:var(--y);">Review</span></div>
+    <div class="ni" onclick="goOdo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><span class="ni-l">Odometer</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCREEN 3: ODOMETER
+═══════════════════════════════ -->
+<div class="screen hidden" id="odoScreen">
+  <div class="shdr">
+    <div class="back-btn" onclick="goScreen('reviewScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <span class="stitle">Odometer</span>
+    <span class="ssub" id="odoVerifiedSub">0 of 8 verified</span>
+  </div>
+
+  <!-- Step bar -->
+  <div class="step-bar">
+    <div class="step-item done"><div class="step-dot">✓</div><div class="step-lbl">Sort</div></div>
+    <div class="step-item done"><div class="step-dot">✓</div><div class="step-lbl">Classify</div></div>
+    <div class="step-item done"><div class="step-dot">✓</div><div class="step-lbl">Review</div></div>
+    <div class="step-item active"><div class="step-dot">4</div><div class="step-lbl">Odometer</div></div>
+  </div>
+
+  <!-- Collapsible instruction hero -->
+  <div class="odo-hero-card collapsed" id="odoHeroCard" onclick="toggleOdoHero()">
+    <!-- Collapsed bar — always visible -->
+    <div class="odo-hero-bar">
+      <span class="odo-hero-icon-sm">🚗</span>
+      <span class="odo-hero-title-sm">Confirm each trip's odometer</span>
+      <div class="odo-hero-score-inline">
+        <span class="odo-hero-score-pct" id="odoAuditPct">72%</span>
+        <span class="odo-hero-expand-ico">›</span>
+      </div>
+    </div>
+    <!-- Expanded body — hidden when collapsed -->
+    <div class="odo-hero-expand-body" onclick="event.stopPropagation()">
+      <div class="odo-hero-body">The ATO requires a physical odometer reading for every business trip. Tap a trip below, enter the reading from your dashboard, and attach a photo to strengthen your claim.</div>
+      <div class="odo-hero-score-row">
+        <div class="odo-hero-score-label">
+          <span>Audit Score</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--gr)" id="odoAuditPctExpanded">72%</span>
+        </div>
+        <div class="odo-audit-track"><div class="odo-audit-fill" id="odoAuditFill" style="width:72%;"></div></div>
+        <div class="odo-hero-score-hint"><span id="verifiedCount">0</span> of <span id="totalCount">8</span> trips verified · +2 pts photo · +1 pt timestamp</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trip cards to verify -->
+  <div class="odo-list scroll-y" id="odoListEl"></div>
+
+  <!-- Done CTA -->
+  <div class="odo-cta">
+    <button class="btn-done" onclick="saveDone()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Done for Today — Save & Return
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     MODAL: SESSION SUMMARY (end of level)
+═══════════════════════════════ -->
+<div class="modal-bg" id="summaryModal">
+  <div class="msheet">
+    <div class="mhandle"></div>
+
+    <!-- ── HERO ── -->
+    <div class="sum-hero">
+      <div class="sum-fireworks" id="sumFireworks">🎉</div>
+      <div class="sum-score-ring" id="sumScoreRing">
+        <div class="sum-score-num" id="sumScoreNum">86%</div>
+        <div class="sum-score-lbl">AUDIT</div>
+      </div>
+      <div class="sum-title" id="sumTitle">Session Complete</div>
+      <div class="sum-sub" id="sumSubTxt">You sorted 8 trips in 4 min 22 sec</div>
+    </div>
+
+    <!-- ── SESSION STATS (big numbers, game-style) ── -->
+    <div class="sum-level-row">
+      <div class="sum-level-stat">
+        <div class="sum-level-num" id="sumSessionKm">—</div>
+        <div class="sum-level-lbl">km this session</div>
+      </div>
+      <div class="sum-level-divider"></div>
+      <div class="sum-level-stat">
+        <div class="sum-level-num cv-est" id="sumSessionDed">—</div>
+        <div class="sum-level-lbl">added this session</div>
+      </div>
+      <div class="sum-level-divider"></div>
+      <div class="sum-level-stat">
+        <div class="sum-level-num" style="color:var(--gr)" id="sumTotalDed">—</div>
+        <div class="sum-level-lbl">total so far</div>
+      </div>
+    </div>
+
+    <!-- ── TRIP EVIDENCE BREAKDOWN ── -->
+    <div class="sum-section">
+      <div class="sum-section-title">Trips reviewed this session</div>
+      <div id="sumTripList"></div>
+    </div>
+
+    <!-- ── 12-WEEK LOGBOOK PROGRESS ── -->
+    <div class="sum-section">
+      <div class="sum-section-title">12-week logbook progress</div>
+      <div class="sum-logbook-card">
+        <div class="sum-lb-top">
+          <div class="sum-lb-weeks">
+            <span class="sum-lb-num" id="sumLbWeeks">—</span>
+            <span class="sum-lb-of">/ 12 weeks</span>
+          </div>
+          <div class="sum-lb-pct" id="sumLbPct">—%</div>
+        </div>
+        <div class="sum-lb-track">
+          <div class="sum-lb-fill" id="sumLbFill" style="width:0%"></div>
+        </div>
+        <div class="sum-lb-hint" id="sumLbHint">Started 27 Feb 2026 · <span id="sumLbDueDate">—</span></div>
+      </div>
+    </div>
+
+    <!-- ── ODO GAP / EVIDENCE ── -->
+    <div class="sum-section">
+      <div class="sum-gap-warn" id="sumGapWarn">
+        <div class="sum-gap-ico">⚠️</div>
+        <div class="sum-gap-txt" id="sumGapTxt">No photo evidence recorded this session. Timestamps were logged — good — but a photo would score higher with the ATO.</div>
+      </div>
+      <div class="sum-evidence-card" id="sumEvidenceCard">
+        <div class="sum-ev-title">Create evidence now</div>
+        <div class="sum-ev-sub">Enter an estimated reading or upload a photo — both go to your audit log and are better than nothing.</div>
+        <div class="sum-ev-btns">
+          <button class="sum-ev-btn sum-ev-btn-est" onclick="toggleEstPanel()">📐 Use estimate</button>
+          <button class="sum-ev-btn sum-ev-btn-photo" onclick="addCurrentOdoPhoto()">📷 Upload photo<small style="display:block;font-size:9px;font-weight:400;margin-top:1px;">+3 pts</small></button>
+        </div>
+        <div class="sum-ev-est-panel" id="sumEstPanel">
+          <div style="font-family:'Barlow',sans-serif;font-size:11px;color:var(--t3);margin-bottom:6px;">Enter your current odometer reading:</div>
+          <div class="sum-ev-est-row">
+            <input class="sum-ev-est-in" type="number" id="sumEstIn" placeholder="e.g. 84,296">
+            <button class="sum-ev-est-save" onclick="saveEstReading()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification toggle -->
+      <div class="sum-notif-row">
+        <div class="sum-notif-ico">🔔</div>
+        <div class="sum-notif-txt">
+          <div class="sum-notif-title">Remind me next trip</div>
+          <div class="sum-notif-sub">Push notification when a new trip starts — never forget your odometer photo again.</div>
+        </div>
+        <button class="sum-toggle" id="sumNotifToggle" onclick="toggleNotif()"></button>
+      </div>
+    </div>
+
+    <!-- ── MOTIVATIONAL CLOSER ── -->
+    <div class="sum-closer">
+      <div class="sum-closer-icon">🏁</div>
+      <div class="sum-closer-txt" id="sumCloserTxt">Check back soon — every trip sorted now means a bigger, faster claim at tax time.</div>
+    </div>
+
+    <!-- ── CTAs ── -->
+    <div class="sum-ctas">
+      <button class="btn-sum-done" onclick="finishSummary()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Save & Return to Dashboard
+      </button>
+      <button class="btn-sum-ignore" onclick="closeSummary()">Ignore &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCREEN 4: CLASSIFY (purpose triage)
+═══════════════════════════════ -->
+<div class="screen hidden" id="classifyScreen">
+  <div class="shdr">
+    <div class="back-btn" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <span class="stitle">What was this for?</span>
+    <span class="ssub" id="clsSub">1 of 5</span>
+  </div>
+  <div class="cls-progress">
+    <div class="cls-prog-row">
+      <span class="cls-prog-lbl">Business trips</span>
+      <span class="cls-prog-count" id="clsProgCount">1 / 5</span>
+    </div>
+    <div class="cls-prog-track"><div class="cls-prog-fill" id="clsProgFill" style="width:20%;"></div></div>
+  </div>
+
+  <!-- Micro trip card — tap to expand and edit -->
+  <div class="cls-micro" id="clsMicro" onclick="toggleClsMicro()">
+    <div class="cls-micro-row">
+      <div class="cls-micro-route">
+        <div class="cls-micro-from" id="clsMicroFrom">—</div>
+        <div class="cls-micro-to" id="clsMicroTo">— · — · —</div>
+      </div>
+      <div class="cls-micro-ded" id="clsMicroDed">$0.00</div>
+      <div class="cls-micro-chevron">⌄</div>
+    </div>
+    <div class="cls-micro-expand" onclick="event.stopPropagation()">
+      <div class="cls-micro-expand-row">
+        <div style="flex:1;">
+          <span class="cls-me-lbl">From</span>
+          <input class="cls-me-in" id="clsMeFrom" type="text" placeholder="From address">
+        </div>
+        <div style="flex:1;">
+          <span class="cls-me-lbl">To</span>
+          <input class="cls-me-in" id="clsMeTo" type="text" placeholder="To address">
+        </div>
+      </div>
+      <div class="cls-micro-expand-row">
+        <div style="flex:1;">
+          <span class="cls-me-lbl">Distance (km)</span>
+          <input class="cls-me-in" id="clsMeKm" type="number" step="0.1" placeholder="km">
+        </div>
+        <div style="flex:1;">
+          <span class="cls-me-lbl">Duration</span>
+          <input class="cls-me-in" id="clsMeDur" type="text" placeholder="e.g. 42 min">
+        </div>
+      </div>
+      <button class="cls-micro-save" onclick="saveClsMicro()">Save Trip Details ✓</button>
+    </div>
+  </div>
+
+  <!-- Purpose grid -->
+  <div class="cls-grid" id="clsGrid"></div>
+
+  <div class="bnav">
+    <div class="ni" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="ni-l">Sort</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="#F5C400" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span class="ni-l" style="color:var(--y);">Classify</span></div>
+    <div class="ni" onclick="goReview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="ni-l">Review</span></div>
+  </div>
+</div>
+
+<!-- ═══ EDIT MODAL ═══ -->
+<div class="modal-bg" id="editModal">
+  <div class="msheet">
+    <div style="height:42px;"></div>
+    <div class="mhdr">
+      <div class="mtitle">Edit Trip</div>
+      <button class="mclose" onclick="closeModal('editModal')">Close ✕</button>
+    </div>
+    <div class="minner">
+      <div class="ewarn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div class="ewarn-t"><strong>All edits are timestamped and logged.</strong> Evidence is strongly recommended. Attach an odometer photo to strengthen your claim.</div>
+      </div>
+      <div class="evi-row">
+        <div class="evi-btn" onclick="addEvidence('odo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div class="evi-lbl">Odo Photo</div></div>
+        <div class="evi-btn" onclick="addEvidence('receipt')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="evi-lbl">Receipt</div></div>
+        <div class="evi-btn" onclick="addEvidence('note')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="evi-lbl">Notes</div></div>
+      </div>
+      <div class="ef">
+        <label>From Address</label>
+        <input type="text" id="editFrom" oninput="recalcEdit()">
+        <a class="mlink" href="#" onclick="openMaps('from',event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>View in Google Maps</a>
+      </div>
+      <div class="stops-sec">
+        <span class="stops-lbl">Additional Stops</span>
+        <div id="stopsContainer"></div>
+        <button class="add-stop" onclick="addStop()">+ Add Stop</button>
+      </div>
+      <div class="ef">
+        <label>To Address</label>
+        <input type="text" id="editTo" oninput="recalcEdit()">
+        <a class="mlink" href="#" onclick="openMaps('to',event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>View in Google Maps</a>
+      </div>
+      <div class="ef-row">
+        <div class="ef"><label>Distance (km)</label><input type="number" id="editKm" step="0.1" oninput="recalcEdit()"></div>
+        <div class="ef"><label>Duration</label><input type="text" id="editDur"></div>
+      </div>
+      <div class="ef"><label>Purpose / Notes</label><textarea id="editPurpose" placeholder="e.g. Tool pickup for client job at Sunshine site"></textarea></div>
+      <div class="lcalc">
+        <div class="lc-row"><span class="lc-l">Total Distance</span><span class="lc-v" id="lcKm">0 km</span></div>
+        <div class="lc-div"></div>
+        <div class="lc-row"><span class="lc-l">Cents/km ($0.88)</span><span class="lc-v" id="lcCpm">$0.00</span></div>
+        <div class="lc-row"><span class="lc-l">Logbook (70% biz)</span><span class="lc-v" id="lcLog">$0.00</span></div>
+        <div class="lc-sub">💡 Figures update in real time as you edit distance or add stops</div>
+      </div>
+      <button class="msave" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ATO MODAL ═══ -->
+<div class="modal-bg" id="atoModal">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="minner">
+      <div class="ato-title">ATO Compliance Notice</div>
+      <div class="ato-sub">Tax Ruling TR 2021/1 · FY2024–25</div>
+      <div class="ato-body">
+        <p><strong>Cents per km:</strong> $0.88/km (FY2024–25). No receipts needed, but capped at 5,000 km ($4,400 max). Simple — but leaves money on the table.</p>
+        <p><strong>Logbook method:</strong> Business use % × actual vehicle expenses (fuel, rego, insurance, depreciation, etc). <em>No kilometre cap.</em> Requires a 12-week logbook — which WorkCar helps you build. For most tradies, this method returns a significantly larger deduction.</p>
+        <p><strong>Estimates only.</strong> Final amounts depend on your individual tax circumstances. Confirm with a registered tax agent before lodging.</p>
+        <p class="ato-warn">⚠️ False claims are a serious offence under the Income Tax Assessment Act 1997. WorkCar maintains an immutable, timestamped audit trail of all classifications and edits.</p>
+      </div>
+      <button class="mcancel" onclick="closeModal('atoModal')">Understood</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     SCREEN 5: REPORTS
+═══════════════════════════════ -->
+<div class="screen hidden" id="reportsScreen">
+  <div class="shdr">
+    <div class="back-btn" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <span class="stitle">Session Reports</span>
+    <span class="ssub" id="repsSub">0 sessions</span>
+  </div>
+  <div class="rep-list" id="repListEl">
+    <div class="rep-empty">No sessions saved yet.<br>Complete your first sort session to see reports here.</div>
+  </div>
+  <div class="bnav">
+    <div class="ni" onclick="goScreen('sortScreen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="ni-l">Sort</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="#F5C400" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="ni-l" style="color:var(--y);">Reports</span></div>
+  </div>
+</div>
+
+</div><!-- /phone -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const RATE = 0.88;
+const BIZ_PCT = 0.70;
+const ODO_START = 84280;
+
+const ALL_PURPOSES = [
+  'Client Job','Supplier Run','Tool Pickup','Site Visit','Quote / Estimate',
+  'Material Delivery','Parts Pickup','Warranty / Repair','Training / Course',
+  'Business Meeting','Inspection','Subcontractor Visit','Council / Permit',
+  'Equipment Hire','Safety Check','Emergency Callout','Tender / Bid',
+  'Office Supply Run','Bank / Accountant','Trade Show'
+];
+
+const trips = [
+  {date:'Thu, 27 Feb',day:27,m:1,yr:2026,time:'9:02–9:50 AM',dur:'48 min',km:16.2,from:'15 Smith St',fromSub:'Fitzroy VIC 3065',to:'Bunnings Warehouse',toSub:'123 King Rd, Sunshine VIC',purposes:['Client Job','Supplier Run','Tool Pickup','Site Visit'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Thu, 27 Feb',day:27,m:1,yr:2026,time:'11:15–12:02 PM',dur:'47 min',km:14.8,from:'Bunnings Warehouse',fromSub:'Sunshine VIC 3020',to:'44 Acacia Ave',toSub:'Williamstown VIC 3016',purposes:['Client Job','Site Visit','Quote / Estimate'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Wed, 26 Feb',day:26,m:1,yr:2026,time:'7:45–8:30 AM',dur:'45 min',km:12.4,from:'Home',fromSub:'Spotswood VIC 3015',to:'Job Site — Altona',toSub:'15 Industry Rd, Altona VIC',purposes:['Site Visit','Client Job','Inspection'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Wed, 26 Feb',day:26,m:1,yr:2026,time:'3:30–4:10 PM',dur:'40 min',km:18.6,from:'Job Site — Altona',fromSub:'Altona VIC 3018',to:'Reece Plumbing',toSub:'45 Parker St, Footscray VIC',purposes:['Supplier Run','Parts Pickup','Tool Pickup'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Tue, 25 Feb',day:25,m:1,yr:2026,time:'8:10–9:05 AM',dur:'55 min',km:22.1,from:'Home',fromSub:'Spotswood VIC 3015',to:'Newport Client',toSub:'77 Bay Rd, Newport VIC',purposes:['Client Job','Quote / Estimate','Business Meeting'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Tue, 25 Feb',day:25,m:1,yr:2026,time:'2:00–2:35 PM',dur:'35 min',km:9.8,from:'Newport Client',fromSub:'Newport VIC 3015',to:'Trade Depot',toSub:'88 Williamstown Rd, VIC',purposes:['Supplier Run','Parts Pickup','Material Delivery'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Mon, 24 Feb',day:24,m:1,yr:2026,time:'7:30–8:22 AM',dur:'52 min',km:19.4,from:'Home',fromSub:'Spotswood VIC 3015',to:'Commercial Job — CBD',toSub:'123 Collins St, Melbourne VIC',purposes:['Client Job','Site Visit','Emergency Callout'],type:null,verified:false,photo:false,odoReading:null},
+  {date:'Mon, 24 Feb',day:24,m:1,yr:2026,time:'4:45–5:30 PM',dur:'45 min',km:21.2,from:'Commercial Job — CBD',fromSub:'Melbourne VIC 3000',to:'Home',toSub:'Spotswood VIC 3015',purposes:['Personal','Commute'],type:null,verified:false,photo:false,odoReading:null},
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let curIdx = 0;
+let dedTotal = 0;
+let bizCt = 0;
+let perCt = 0;
+let cumulativeDedTotal = 0; // persists across sessions
+let sessionStartTime = Date.now();
+const LOGBOOK_START = new Date('2026-01-09'); // 12-week cycle start (a Friday)
+let isDragging = false, startX = 0, curX = 0, animating = false;
+let lastAction = null; // {idx, type, ded} for undo
+let odoVal = ODO_START; // tracks current displayed reading
+let verifiedSet = new Set();
+let activeOdoItem = -1;
+let odoTab = 'trips';
+let auditLog = []; // [{time, desc, photo}]
+
+// Compute cumulative odo readings for each trip
+function getTripOdoStart(idx) {
+  let o = ODO_START;
+  for (let i = 0; i < idx; i++) o += trips[i].km;
+  return o;
+}
+function getTripOdoEnd(idx) {
+  return getTripOdoStart(idx) + trips[idx].km;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SORT SCREEN
+// ═══════════════════════════════════════════════════════════
+const topCard = document.getElementById('topCard');
+const ovBiz = document.getElementById('ovBiz'), ovPer = document.getElementById('ovPer');
+const stampBiz = document.getElementById('stampBiz'), stampPer = document.getElementById('stampPer');
+const dedEl = document.getElementById('dedAmt');
+
+function loadTrip(idx) {
+  if (idx >= trips.length) { showComplete(); return; }
+  const t = trips[idx];
+  document.getElementById('tripDate').textContent = t.date;
+  document.getElementById('tripDur').textContent = t.dur;
+  document.getElementById('chipKm').textContent = t.km + ' km';
+  document.getElementById('chipTime').textContent = t.time;
+  document.getElementById('addrA').textContent = t.from;
+  document.getElementById('subA').textContent = t.fromSub;
+  document.getElementById('addrB').textContent = t.to;
+  document.getElementById('subB').textContent = t.toSub;
+  // Odo chips
+  const oStart = getTripOdoStart(idx);
+  const oEnd = getTripOdoEnd(idx);
+  document.getElementById('chipOdoStart').textContent = Math.round(oStart).toLocaleString('en-AU') + ' km';
+  document.getElementById('chipOdoEnd').textContent = Math.round(oEnd).toLocaleString('en-AU') + ' km';
+  buildMiniCal(t.day, t.m, t.yr);
+  updateDial();
+}
+
+function buildMiniCal(day, m, yr) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('calMonth').textContent = months[m] + ' ' + yr;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['M','T','W','T','F','S','S'].forEach(d => {
+    const h = document.createElement('div'); h.className = 'chdr'; h.textContent = d; grid.appendChild(h);
+  });
+  const first = new Date(yr, m, 1).getDay();
+  const off = first === 0 ? 6 : first - 1;
+  const dim = new Date(yr, m + 1, 0).getDate();
+  for (let i = 0; i < off; i++) { const e = document.createElement('div'); e.className = 'cday emp'; e.textContent = '·'; grid.appendChild(e); }
+  for (let d = 1; d <= dim; d++) {
+    const el = document.createElement('div');
+    el.className = 'cday' + (d === day ? ' act' : d < day ? ' has' : '');
+    el.textContent = d;
+    grid.appendChild(el);
+  }
+}
+
+function updateDial() {
+  const bizKm = trips.slice(0, curIdx).filter(x => x.type === 'business').reduce((a, x) => a + x.km, 0);
+  const totKm = trips.slice(0, curIdx).reduce((a, x) => a + x.km, 0);
+  const pct = totKm > 0 ? (bizKm / totKm * 100) : 0;
+  const display = totKm > 0 ? Math.round(pct) : 0;
+  document.getElementById('dialPct').textContent = display + '%';
+  const arcLen = 84.82;
+  const offset = arcLen - (arcLen * pct / 100);
+  const arc = document.getElementById('dialArc');
+  arc.style.strokeDashoffset = offset;
+  arc.setAttribute('stroke', pct >= 55 && pct <= 75 ? '#22C55E' : pct > 85 ? '#EF4444' : '#F5C400');
+  document.getElementById('rangeFill').style.width = pct + '%';
+  document.getElementById('rangeMarker').style.left = 'calc(' + pct + '% - 1px)';
+}
+
+// Swipe
+function onStart(e) {
+  if (animating) return;
+  isDragging = true;
+  const p = e.touches ? e.touches[0] : e;
+  startX = p.clientX; curX = 0;
+  topCard.style.transition = 'none';
+}
+function onMove(e) {
+  if (!isDragging || animating) return;
+  e.preventDefault && e.preventDefault();
+  const p = e.touches ? e.touches[0] : e;
+  curX = p.clientX - startX;
+  const r = Math.min(Math.abs(curX) / 120, 1);
+  topCard.style.transform = `translateX(${curX}px) rotate(${curX * 0.065}deg)`;
+  if (curX > 0) { ovBiz.style.opacity = r * 0.8; ovPer.style.opacity = 0; stampBiz.style.opacity = r; stampPer.style.opacity = 0; }
+  else if (curX < 0) { ovPer.style.opacity = r * 0.8; ovBiz.style.opacity = 0; stampPer.style.opacity = r; stampBiz.style.opacity = 0; }
+  else { ovBiz.style.opacity = 0; ovPer.style.opacity = 0; }
+}
+function onEnd() {
+  if (!isDragging || animating) return;
+  isDragging = false;
+  if (curX > 80) flyOut('right');
+  else if (curX < -80) flyOut('left');
+  else {
+    topCard.style.transition = 'transform .4s cubic-bezier(.34,1.3,.64,1)';
+    topCard.style.transform = 'translateX(0) rotate(0deg)';
+    ovBiz.style.opacity = 0; ovPer.style.opacity = 0;
+    stampBiz.style.opacity = 0; stampPer.style.opacity = 0;
+  }
+}
+
+function flyOut(dir) {
+  if (animating) return;
+  animating = true;
+  resetBizBtn();
+  const isBiz = dir === 'right';
+  const t = trips[curIdx];
+  t.type = isBiz ? 'business' : 'personal';
+  const earned = isBiz ? t.km * RATE : 0;
+  lastAction = { idx: curIdx, type: t.type, ded: earned };
+
+  topCard.style.transition = 'transform .32s cubic-bezier(.4,0,.6,1),opacity .28s';
+  topCard.style.transform = `translateX(${dir === 'right' ? 500 : -500}px) rotate(${dir === 'right' ? 14 : -14}deg)`;
+  topCard.style.opacity = '0';
+
+  if (isBiz) { dedTotal += earned; bizCt++; flashDed(earned); }
+  else { perCt++; }
+
+  setTimeout(() => {
+    topCard.style.transition = 'none';
+    topCard.style.transform = 'translateX(0) rotate(0deg)';
+    topCard.style.opacity = '1';
+    ovBiz.style.opacity = 0; ovPer.style.opacity = 0;
+    stampBiz.style.opacity = 0; stampPer.style.opacity = 0;
+    animating = false;
+    curIdx++;
+    document.getElementById('undoTop').classList.remove('visible'); // hide previous undo
+    updateSortProgress();
+    showUndoTop(); // show new undo for the card just sorted
+    loadTrip(curIdx);
+  }, 340);
+}
+
+let bizArmed = false, bizArmTimer = null;
+function armBiz() {
+  if (bizArmed) {
+    // Second tap — confirm
+    clearTimeout(bizArmTimer);
+    resetBizBtn();
+    classifyTrip('business');
+  } else {
+    // First tap — arm
+    bizArmed = true;
+    const btn = document.getElementById('bizBtn');
+    btn.classList.add('armed');
+    document.getElementById('bizBtnLabel').textContent = 'Confirm →';
+    bizArmTimer = setTimeout(() => resetBizBtn(), 2500);
+  }
+}
+function resetBizBtn() {
+  bizArmed = false;
+  const btn = document.getElementById('bizBtn');
+  btn.classList.remove('armed');
+  document.getElementById('bizBtnLabel').textContent = 'Business';
+}
+function classifyTrip(type) {
+  resetBizBtn();
+  flyOut(type === 'business' ? 'right' : 'left');
+}
+
+function flashDed(amt) {
+  // Update running total
+  dedEl.textContent = '$' + Math.round(dedTotal).toLocaleString('en-AU');
+  dedEl.classList.remove('pop'); void dedEl.offsetWidth; dedEl.classList.add('pop');
+  document.getElementById('bizCount').textContent = bizCt + (bizCt === 1 ? ' trip' : ' trips');
+  // Logbook coverage bar = % of all trips sorted (not a dollar cap)
+  updateLogbookBar();
+  // Big centred flash
+  const big = document.getElementById('dedFlashBig');
+  big.textContent = '+$' + amt.toFixed(2);
+  big.classList.remove('pop'); void big.offsetWidth; big.classList.add('pop');
+}
+
+function updateLogbookBar() {
+  const sorted = trips.filter(t => t.type !== null).length;
+  const pct = Math.round((sorted / trips.length) * 100);
+  document.getElementById('dedProgFill').style.width = pct + '%';
+  document.getElementById('dedProgPct').textContent = pct + '%';
+}
+
+function updateSortProgress() {
+  const sorted = curIdx;
+  const total = trips.length;
+  const pct = (sorted / total) * 100;
+  document.getElementById('spFill').style.width = pct + '%';
+  document.getElementById('tripCountBadge').textContent = Math.max(0, total - sorted);
+}
+
+// Undo — top left, stays until next card is sorted
+function showUndoTop() {
+  if (!lastAction) return;
+  const t = trips[lastAction.idx];
+  document.getElementById('undoTopDesc').textContent = t.from + ' → ' + t.to;
+  document.getElementById('undoTop').classList.add('visible');
+}
+
+function undoLast() {
+  if (!lastAction || curIdx === 0) return;
+  document.getElementById('undoTop').classList.remove('visible');
+  curIdx--;
+  const t = trips[curIdx];
+  if (t.type === 'business') { dedTotal -= lastAction.ded; bizCt--; }
+  else { perCt--; }
+  t.type = null;
+  lastAction = null;
+  dedEl.textContent = dedTotal > 0 ? '$' + Math.round(dedTotal).toLocaleString('en-AU') : '$0';
+  document.getElementById('bizCount').textContent = bizCt + (bizCt === 1 ? ' trip' : ' trips');
+  updateLogbookBar();
+  topCard.style.display = '';
+  document.getElementById('completeState').classList.remove('show');
+  updateSortProgress();
+  loadTrip(curIdx);
+}
+
+function showComplete() {
+  topCard.style.display = 'none';
+  document.getElementById('undoTop').classList.remove('visible');
+  document.getElementById('completeState').classList.add('show');
+  document.getElementById('completeTotal').textContent = '$' + Math.round(dedTotal).toLocaleString('en-AU');
+  updateDial();
+}
+
+function restartDemo() {
+  trips.forEach(t => { t.type = null; t.verified = false; t.photo = false; t.odoReading = null; t.purpose = null; });
+  curIdx = 0; dedTotal = 0; bizCt = 0; perCt = 0; lastAction = null;
+  verifiedSet.clear(); auditLog = [];
+  odoVal = ODO_START;
+  document.getElementById('tripCountBadge').textContent = trips.length;
+  dedEl.textContent = '$0';
+  document.getElementById('bizCount').textContent = '0 trips';
+  document.getElementById('dedProgFill').style.width = '0%';
+  document.getElementById('dedProgPct').textContent = '0%';
+  document.getElementById('undoTop').classList.remove('visible');
+  topCard.style.display = '';
+  document.getElementById('completeState').classList.remove('show');
+  updateSortProgress();
+  updateDial();
+  loadTrip(0);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN NAV
+// ═══════════════════════════════════════════════════════════
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if (id === 'sortScreen') sessionStartTime = Date.now();
+}
+function goReview() { buildReview(); goScreen('reviewScreen'); }
+function goOdo() { buildOdoScreen(); goScreen('odoScreen'); }
+function goClassify() { buildClassify(); goScreen('classifyScreen'); }
+
+// ═══════════════════════════════════════════════════════════
+// CLASSIFY SCREEN — purpose triage for business trips
+// ═══════════════════════════════════════════════════════════
+const CATEGORIES = [
+  { emoji:'🔧', label:'Tool Run' },
+  { emoji:'🏗️', label:'Job Site' },
+  { emoji:'📦', label:'Pickup / Delivery' },
+  { emoji:'📋', label:'Quote / Inspect' },
+  { emoji:'🤝', label:'Client Meeting' },
+  { emoji:'🏪', label:'Supplier / Trade' },
+  { emoji:'⚡', label:'Emergency Call' },
+  { emoji:'📝', label:'Admin / Office' },
+  { emoji:'🎓', label:'Training' },
+  { emoji:'🏛️', label:'Council / Permit' },
+];
+
+let clsBizTrips = [];
+let clsStep = 0;
+let clsSelected = null;        // armed category index (or 'custom')
+let clsCustomText = '';        // text from custom input
+let clsMicroOpen = false;
+
+function buildClassify() {
+  clsBizTrips = trips.map((t, i) => i).filter(i => trips[i].type === 'business');
+  clsStep = 0;
+  clsSelected = null;
+  clsMicroOpen = false;
+  renderClsStep();
+}
+
+function renderClsStep() {
+  if (clsStep >= clsBizTrips.length) { goReview(); return; }
+  const t = trips[clsBizTrips[clsStep]];
+  const total = clsBizTrips.length;
+  const fillPct = ((clsStep + 0.5) / total) * 100;
+
+  document.getElementById('clsSub').textContent = (clsStep + 1) + ' of ' + total;
+  document.getElementById('clsProgCount').textContent = (clsStep + 1) + ' / ' + total;
+  document.getElementById('clsProgFill').style.width = fillPct + '%';
+
+  // Micro card
+  document.getElementById('clsMicroFrom').textContent = t.from + ' → ' + t.to;
+  document.getElementById('clsMicroTo').textContent = t.date + ' · ' + t.km + ' km · ' + t.dur;
+  document.getElementById('clsMicroDed').textContent = '+$' + (t.km * RATE).toFixed(2);
+  document.getElementById('clsMeFrom').value = t.from + ', ' + t.fromSub;
+  document.getElementById('clsMeTo').value = t.to + ', ' + t.toSub;
+  document.getElementById('clsMeKm').value = t.km;
+  document.getElementById('clsMeDur').value = t.dur;
+
+  // Collapse micro card
+  clsMicroOpen = false;
+  document.getElementById('clsMicro').classList.remove('open');
+
+  // Reset selection
+  clsSelected = t.purpose !== undefined && t.purpose !== null ? t.purpose : null;
+  clsCustomText = t.purposeLabel && typeof t.purpose === 'string' ? t.purposeLabel : '';
+  clsDeselect(true); // hide confirm bar, silent
+
+  // Build grid
+  const grid = document.getElementById('clsGrid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach((cat, i) => {
+    const el = document.createElement('div');
+    el.className = 'cls-cat' + (clsSelected === i ? ' armed' : '');
+    el.id = 'clsCat' + i;
+    el.innerHTML = `<div class="cls-cat-ico">${clsSelected === i ? '✓' : cat.emoji}</div><div class="cls-cat-lbl">${clsSelected === i ? 'Confirm' : cat.label}</div>`;
+    el.onclick = () => clsArm(i, cat.label, cat.emoji);
+    grid.appendChild(el);
+  });
+
+  // Custom input row
+  const custom = document.createElement('div');
+  custom.className = 'cls-custom-wrap';
+  custom.innerHTML = `
+    <input class="cls-custom-in" id="clsCustomIn" type="text" placeholder="+ Add your own…" value="${clsCustomText}">
+    <button class="cls-custom-add" onclick="clsArmCustom()">Use</button>`;
+  grid.appendChild(custom);
+}
+
+function toggleClsMicro() {
+  clsMicroOpen = !clsMicroOpen;
+  document.getElementById('clsMicro').classList.toggle('open', clsMicroOpen);
+}
+
+function saveClsMicro() {
+  const t = trips[clsBizTrips[clsStep]];
+  const from = document.getElementById('clsMeFrom').value.split(',');
+  const to = document.getElementById('clsMeTo').value.split(',');
+  t.from = from[0].trim(); t.fromSub = from.slice(1).join(',').trim();
+  t.to = to[0].trim(); t.toSub = to.slice(1).join(',').trim();
+  t.km = parseFloat(document.getElementById('clsMeKm').value) || t.km;
+  t.dur = document.getElementById('clsMeDur').value || t.dur;
+  // Update micro display
+  document.getElementById('clsMicroFrom').textContent = t.from + ' → ' + t.to;
+  document.getElementById('clsMicroTo').textContent = t.date + ' · ' + t.km + ' km · ' + t.dur;
+  document.getElementById('clsMicroDed').textContent = '+$' + (t.km * RATE).toFixed(2);
+  // Collapse
+  clsMicroOpen = false;
+  document.getElementById('clsMicro').classList.remove('open');
+  addLog('✏️ Trip details updated: ' + t.from + ' → ' + t.to, false);
+}
+
+function clsArm(idx, label, emoji) {
+  if (clsSelected === idx) {
+    // Second tap on same tile — confirm
+    clsNext(false);
+    return;
+  }
+  // First tap — arm this tile, reset any previous
+  clsSelected = idx;
+  document.querySelectorAll('.cls-cat').forEach((el, i) => {
+    if (i === idx) {
+      el.classList.add('armed');
+      el.querySelector('.cls-cat-ico').textContent = '✓';
+      el.querySelector('.cls-cat-lbl').textContent = 'Confirm';
+    } else {
+      el.classList.remove('armed');
+      el.querySelector('.cls-cat-ico').textContent = CATEGORIES[i]?.emoji || el.querySelector('.cls-cat-ico').textContent;
+      el.querySelector('.cls-cat-lbl').textContent = CATEGORIES[i]?.label || el.querySelector('.cls-cat-lbl').textContent;
+    }
+  });
+}
+
+function clsArmCustom() {
+  const val = document.getElementById('clsCustomIn')?.value.trim();
+  if (!val) return;
+  if (clsSelected === 'custom' && clsCustomText === val) {
+    // Second tap — confirm
+    clsNext(false);
+    return;
+  }
+  clsSelected = 'custom';
+  clsCustomText = val;
+  document.querySelectorAll('.cls-cat').forEach(el => {
+    el.classList.remove('armed');
+    const i = parseInt(el.id.replace('clsCat',''));
+    if (!isNaN(i)) {
+      el.querySelector('.cls-cat-ico').textContent = CATEGORIES[i].emoji;
+      el.querySelector('.cls-cat-lbl').textContent = CATEGORIES[i].label;
+    }
+  });
+  // Change the Use button to Confirm
+  const addBtn = document.querySelector('.cls-custom-add');
+  if (addBtn) { addBtn.textContent = '✓ Confirm'; addBtn.onclick = () => clsNext(false); }
+}
+
+function clsDeselect(silent) {
+  clsSelected = null;
+  document.querySelectorAll('.cls-cat').forEach((el, i) => {
+    el.classList.remove('armed');
+    if (CATEGORIES[i]) {
+      el.querySelector('.cls-cat-ico').textContent = CATEGORIES[i].emoji;
+      el.querySelector('.cls-cat-lbl').textContent = CATEGORIES[i].label;
+    }
+  });
+  const addBtn = document.querySelector('.cls-custom-add');
+  if (addBtn) { addBtn.textContent = 'Use'; addBtn.onclick = clsArmCustom; }
+}
+
+function showConfirmBar() {} // no-op, kept for compat
+
+function clsNext(skip) {
+  const t = trips[clsBizTrips[clsStep]];
+  if (!skip) {
+    if (clsSelected === null) return; // nothing armed
+    if (clsSelected === 'custom') {
+      t.purpose = 'custom';
+      t.purposeLabel = clsCustomText;
+    } else {
+      t.purpose = clsSelected;
+      t.purposeLabel = CATEGORIES[clsSelected].label;
+    }
+  }
+  clsSelected = null;
+  clsStep++;
+  if (clsStep >= clsBizTrips.length) {
+    document.getElementById('clsProgFill').style.width = '100%';
+    setTimeout(() => goReview(), 380);
+  } else {
+    renderClsStep();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REVIEW SCREEN
+// ═══════════════════════════════════════════════════════════
+let revTab = 'list';
+function buildReview() {
+  const biz = trips.filter(t => t.type === 'business');
+  const per = trips.filter(t => t.type === 'personal');
+  document.getElementById('rsBiz').textContent = biz.length + ' trips';
+  document.getElementById('rsPer').textContent = per.length + ' trips';
+  document.getElementById('rsEst').textContent = '$' + dedTotal.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&,');
+  document.getElementById('reviewSub').textContent = trips.length + ' trips';
+  // Unclassified business warning
+  const unclassified = biz.filter(t => !t.purposeLabel).length;
+  const warn = document.getElementById('revWarn');
+  if (unclassified > 0) {
+    warn.classList.remove('hidden');
+    document.getElementById('revWarnCount').textContent = unclassified + ' business trip' + (unclassified > 1 ? 's' : '');
+  } else {
+    warn.classList.add('hidden');
+  }
+  buildListView(); buildCalView(); updateAuditScore();
+}
+
+function buildListView() {
+  const el = document.getElementById('tripListEl'); el.innerHTML = '';
+  trips.forEach((t, i) => {
+    const oStart = Math.round(getTripOdoStart(i));
+    const oEnd = Math.round(getTripOdoEnd(i));
+    const ded = t.type === 'business' ? '$' + (t.km * RATE).toFixed(2) : '—';
+    const typeClass = t.type === 'business' ? 'biz' : t.type === 'personal' ? 'per' : 'unsorted';
+    const badgeClass = t.type === 'business' ? 'tbadge-b' : t.type === 'personal' ? 'tbadge-p' : 'tbadge-u';
+    const badgeLabel = t.type || 'Unsorted';
+    const purposeLine = t.purposeLabel ? `<div class="titem-purpose">📋 ${t.purposeLabel}</div>` : '';
+    const div = document.createElement('div');
+    div.className = 'titem ' + typeClass;
+    div.innerHTML = `
+      <div class="titem-main">
+        <div class="titem-info">
+          <div class="titem-route">${t.from} → ${t.to}</div>
+          <div class="titem-meta">${t.date} · ${t.km} km · ${t.dur}</div>
+        </div>
+        <div class="titem-km">${t.km} km</div>
+        <div class="tbadge ${badgeClass}">${badgeLabel}</div>
+        <div class="titem-chevron">⌄</div>
+      </div>
+      <div class="titem-expand">
+        <div class="titem-detail">
+          <strong>From:</strong> ${t.from}, ${t.fromSub}<br>
+          <strong>To:</strong> ${t.to}, ${t.toSub}<br>
+          <strong>Time:</strong> ${t.time} &nbsp;·&nbsp; <strong>Duration:</strong> ${t.dur}<br>
+          <strong>Odometer:</strong> ${oStart.toLocaleString('en-AU')} → ${oEnd.toLocaleString('en-AU')} km<br>
+          <strong>Deduction est.:</strong> ${ded}
+        </div>
+        ${purposeLine}
+        <div class="titem-actions">
+          <button class="rcls-btn rcls-per ${t.type === 'personal' ? 'rcls-active-per' : ''}" onclick="reclassify(${i},'personal',event)">← Personal</button>
+          <button class="rcls-btn rcls-biz ${t.type === 'business' ? 'rcls-active-biz' : ''}" onclick="reclassify(${i},'business',event)">Business →</button>
+          <button class="rcls-edit" onclick="openEditReview(${i},event)">Edit ›</button>
+        </div>
+      </div>`;
+    div.querySelector('.titem-main').addEventListener('click', () => div.classList.toggle('open'));
+    el.appendChild(div);
+  });
+}
+
+function reclassify(i, type, e) {
+  if (e) e.stopPropagation();
+  const t = trips[i];
+  const old = t.type;
+  if (old === 'business') { dedTotal -= t.km * RATE; bizCt--; } else if (old === 'personal') { perCt--; }
+  t.type = type;
+  if (type === 'business') { dedTotal += t.km * RATE; bizCt++; } else { perCt++; }
+  dedEl.textContent = '$' + Math.round(dedTotal).toLocaleString('en-AU');
+  document.getElementById('bizCount').textContent = bizCt + ' trips';
+  updateLogbookBar();
+  buildReview();
+}
+
+function openEditReview(i, e) {
+  if (e) e.stopPropagation();
+  const t = trips[i];
+  // Temporarily point curIdx to this trip so openEdit/saveEdit work
+  const prev = curIdx;
+  curIdx = i;
+  document.getElementById('editFrom').value = t.from + ', ' + t.fromSub;
+  document.getElementById('editTo').value = t.to + ', ' + t.toSub;
+  document.getElementById('editKm').value = t.km;
+  document.getElementById('editDur').value = t.dur;
+  document.getElementById('editPurpose').value = t.purposeLabel || '';
+  stops = []; renderStops(); recalcEdit();
+  openModal('editModal');
+}
+
+let savedReports = [];
+
+function saveDone() {
+  cumulativeDedTotal += dedTotal;
+  const now = new Date();
+  const ts = now.toLocaleDateString('en-AU', {weekday:'short',day:'2-digit',month:'short',year:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+  const biz = trips.filter(t => t.type === 'business');
+  const per = trips.filter(t => t.type === 'personal');
+  const classified = biz.filter(t => t.purposeLabel).length;
+  const unclassified = biz.length - classified;
+  const est = '$' + Math.round(dedTotal).toLocaleString('en-AU');
+  const totalKm = biz.reduce((s, t) => s + t.km, 0).toFixed(1);
+  const report = {
+    ts, date: now,
+    bizCount: biz.length, perCount: per.length,
+    classified, unclassified,
+    est, totalKm,
+    auditScore: Math.min(100, 50 + verifiedSet.size * 2 + Array.from(verifiedSet).filter(i => trips[i]?.photo).length),
+    tripSnapshot: trips.map(t => ({from:t.from, to:t.to, type:t.type, km:t.km, purpose:t.purposeLabel||null}))
+  };
+  savedReports.unshift(report);
+  addLog('✅ Session saved: ' + biz.length + ' business, ' + per.length + ' personal · ' + est, false);
+  goScreen('sortScreen');
+  setTimeout(() => {
+    const f = document.getElementById('dedFlashBig');
+    f.textContent = '✓ Saved';
+    f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
+  }, 350);
+}
+
+function goReports() {
+  const el = document.getElementById('repListEl');
+  document.getElementById('repsSub').textContent = savedReports.length + ' session' + (savedReports.length !== 1 ? 's' : '');
+  if (savedReports.length === 0) {
+    el.innerHTML = '<div class="rep-empty">No sessions saved yet.<br>Complete your first sort session to see reports here.</div>';
+  } else {
+    el.innerHTML = '';
+    savedReports.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'rep-item';
+      const warnLine = r.unclassified > 0
+        ? `<div style="margin-top:4px;font-family:'Barlow',sans-serif;font-size:11px;color:rgba(245,196,0,.7);">⚠️ ${r.unclassified} trip${r.unclassified>1?'s':''} unclassified</div>` : '';
+      div.innerHTML = `
+        <div class="rep-item-date">${r.ts}</div>
+        <div class="rep-item-title">Sort Session — ${r.bizCount + r.perCount} trips</div>
+        <div class="rep-item-stats">
+          <span class="rep-stat">🟡 <strong>${r.bizCount}</strong> business</span>
+          <span class="rep-stat">🔴 <strong>${r.perCount}</strong> personal</span>
+          <span class="rep-stat">💰 Est. <strong>${r.est}</strong></span>
+          <span class="rep-stat">📍 <strong>${r.totalKm} km</strong></span>
+          <span class="rep-stat">🛡️ Audit <strong>${r.auditScore}%</strong></span>
+        </div>
+        ${warnLine}`;
+      el.appendChild(div);
+    });
+  }
+  goScreen('reportsScreen');
+}
+
+function buildCalView() {
+  const grid = document.getElementById('calFullGrid'); grid.innerHTML = '';
+  const MONTH = 1, YR = 2026;
+  document.getElementById('calFullMonth').textContent = 'February 2026';
+  ['M','T','W','T','F','S','S'].forEach(d => { const h = document.createElement('div'); h.className = 'cfd-h'; h.textContent = d; grid.appendChild(h); });
+  const first = new Date(YR, MONTH, 1).getDay(), off = first === 0 ? 6 : first - 1;
+  const dim = new Date(YR, MONTH + 1, 0).getDate();
+  for (let i = 0; i < off; i++) { const e = document.createElement('div'); e.className = 'cfd emp'; e.textContent = '·'; grid.appendChild(e); }
+  for (let d = 1; d <= dim; d++) {
+    const el = document.createElement('div'); el.className = 'cfd'; el.textContent = d;
+    const dayTrips = trips.filter(t => t.day === d && t.m === MONTH && t.yr === YR);
+    if (dayTrips.length) {
+      el.classList.add('has-d');
+      const dot = document.createElement('div'); dot.className = 'cfd-dot';
+      const hasB = dayTrips.some(t => t.type === 'business');
+      const hasP = dayTrips.some(t => t.type === 'personal');
+      const hasU = dayTrips.some(t => !t.type);
+      dot.classList.add(hasU ? 'dot-u' : hasB ? 'dot-b' : 'dot-p');
+      el.style.position = 'relative'; el.appendChild(dot);
+    }
+    grid.appendChild(el);
+  }
+}
+
+function switchTab(tab) {
+  revTab = tab;
+  document.getElementById('tabList').classList.toggle('act', tab === 'list');
+  document.getElementById('tabCal').classList.toggle('act', tab === 'cal');
+  document.getElementById('tripListEl').classList.toggle('hidden', tab === 'cal');
+  document.getElementById('calViewEl').classList.toggle('hidden', tab === 'list');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ODOMETER SCREEN — intelligently derived from trip data
+// ═══════════════════════════════════════════════════════════
+function buildOdoScreen() {
+  // Start collapsed so trips are immediately visible
+  const hero = document.getElementById('odoHeroCard');
+  if (hero) hero.classList.add('collapsed');
+  buildOdoList();
+  updateAuditScore();
+  const verified = verifiedSet.size;
+  document.getElementById('odoVerifiedSub').textContent = verified + ' of ' + trips.length + ' verified';
+}
+
+function toggleOdoHero() {
+  const hero = document.getElementById('odoHeroCard');
+  hero.classList.toggle('collapsed');
+}
+
+function buildOdoList() {
+  const el = document.getElementById('odoListEl'); el.innerHTML = '';
+  document.getElementById('totalCount').textContent = trips.length;
+  document.getElementById('verifiedCount').textContent = verifiedSet.size;
+  document.getElementById('odoVerifiedSub').textContent = verifiedSet.size + ' of ' + trips.length + ' verified';
+
+  trips.forEach((t, i) => {
+    const oStart = Math.round(getTripOdoStart(i));
+    const oEnd = Math.round(getTripOdoEnd(i));
+    const verified = verifiedSet.has(i);
+    const evidenceBadge = !verified ? '' :
+      t.photo ? '<span class="oi-evidence-badge" title="Photo evidence attached">📷</span>' :
+                '<span class="oi-evidence-badge" title="Timestamp recorded">🕐</span>';
+    const div = document.createElement('div');
+    div.className = 'oi' + (verified ? ' ver' : '');
+    div.id = 'oi' + i;
+    const statusIcon = verified ? '✓' : (i + 1);
+    div.innerHTML = `
+      <div class="oi-top" onclick="toggleOdoItem(${i})">
+        <div class="oi-status">${statusIcon}</div>
+        <div class="oi-info">
+          <div class="oi-route">${t.from} → ${t.to}</div>
+          <div class="oi-meta">${t.date} · ${t.km} km · ${t.dur}</div>
+        </div>
+        ${evidenceBadge}
+        <div class="oi-odo-badge">
+          ${oEnd.toLocaleString('en-AU')} km
+          <small>est. end odo</small>
+        </div>
+        <div class="oi-chevron">⌄</div>
+      </div>
+      <div class="oi-expand">
+        <div class="oi-exp-lbl">Actual odometer reading at end of trip</div>
+        <div class="oi-in-row">
+          <input class="oi-in" type="number" id="oi-in-${i}"
+            placeholder="${oEnd.toLocaleString('en-AU')}"
+            value="${t.odoReading || ''}"
+            oninput="onOdoInputChange(${i},this.value)">
+          <button class="photo-btn" onclick="addTripPhoto(${i},event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 11v5M9 13l3-3 3 3"/><path d="M3 8l2-4h14l2 4"/></svg>
+            📷 Photo +2pts
+          </button>
+        </div>
+        <div class="photo-prev ${t.photo ? 'has' : ''}" id="pp-${i}">
+          ${t.photo ? '✓ Photo attached — +2 audit pts' : 'No photo yet — timestamp only (+1 pt) · Add photo for +2 pts'}
+        </div>
+        <button class="oi-confirm" onclick="confirmVerify(${i},event)">✓ Confirm Reading</button>
+      </div>`;
+    el.appendChild(div);
+    if (activeOdoItem === i) div.classList.add('open-i');
+  });
+}
+
+function toggleOdoItem(i) {
+  activeOdoItem = (activeOdoItem === i) ? -1 : i;
+  buildOdoList();
+}
+
+function onOdoInputChange(i, val) {
+  const v = parseFloat(val);
+  if (!isNaN(v)) trips[i].odoReading = v;
+}
+
+function addTripPhoto(i, e) {
+  if (e) e.stopPropagation();
+  trips[i].photo = true;
+  const pp = document.getElementById('pp-' + i);
+  if (pp) { pp.textContent = '✓ Photo attached — +2 audit pts'; pp.classList.add('has'); }
+  updateAuditScore();
+  addLog('📷 Photo added: ' + trips[i].from + ' → ' + trips[i].to, true);
+}
+
+function confirmVerify(i, e) {
+  if (e) e.stopPropagation();
+  const inp = document.getElementById('oi-in-' + i);
+  const readingVal = inp && inp.value ? parseFloat(inp.value) : getTripOdoEnd(i);
+  trips[i].odoReading = readingVal;
+  verifiedSet.add(i);
+  trips[i].verified = true;
+  activeOdoItem = -1;
+  buildOdoList();
+  updateAuditScore();
+  const evType = trips[i].photo ? 'photo' : 'timestamp';
+  addLog((trips[i].photo ? '📷' : '🕐') + ' Trip verified (' + evType + '): ' + trips[i].from + ' → ' + trips[i].to + ' | ' + Math.round(readingVal).toLocaleString('en-AU') + ' km', trips[i].photo);
+  // Check if all trips verified
+  if (verifiedSet.size >= trips.length) {
+    setTimeout(showSessionSummary, 500);
+  }
+}
+
+let notifEnabled = false;
+
+function fmtDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  if (m === 0) return sec + ' sec';
+  return m + ' min ' + (sec > 0 ? sec + ' sec' : '');
+}
+
+function showSessionSummary() {
+  const sessionMs = Date.now() - sessionStartTime;
+  const photoCount = trips.filter(t => t.photo).length;
+  const tsCount = verifiedSet.size - photoCount;
+  const score = parseInt(document.getElementById('odoAuditPct').textContent) || 72;
+
+  // --- Scores & colours ---
+  const scoreCol = score > 85 ? 'var(--gr)' : score > 70 ? 'var(--am)' : 'var(--re)';
+  const ringEl = document.getElementById('sumScoreRing');
+  ringEl.style.borderColor = scoreCol;
+  ringEl.style.background = score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)';
+  const scoreNumEl = document.getElementById('sumScoreNum');
+  scoreNumEl.textContent = score + '%';
+  scoreNumEl.style.color = scoreCol;
+  document.querySelector('#summaryModal .sum-score-lbl').style.color = scoreCol;
+
+  // --- Hero title + sub ---
+  const bizTrips = trips.filter(t => t.type === 'business');
+  const sessionKm = bizTrips.reduce((s, t) => s + t.km, 0);
+  const sessionDed = Math.round(dedTotal);
+
+  const titles = score > 85 ? ['Logbook nailed 🏆', 'Brilliant session 🎯', 'Clean run ✨'] :
+                 score > 70 ? ['Good work 👍', 'Session complete ✓', 'Getting there 💪'] :
+                              ['Session saved', 'Done for now', 'Keep it up'];
+  document.getElementById('sumTitle').textContent = titles[Math.floor(Math.random() * titles.length)];
+  document.getElementById('sumSubTxt').textContent =
+    'You sorted ' + trips.length + ' trip' + (trips.length !== 1 ? 's' : '') +
+    ' in ' + fmtDuration(sessionMs) + '.';
+
+  // --- 3 big level-complete numbers ---
+  document.getElementById('sumSessionKm').textContent = sessionKm.toFixed(1) + ' km';
+  document.getElementById('sumSessionDed').textContent = '$' + sessionDed.toLocaleString('en-AU');
+  // cumulative includes this session only after finishSummary — show a preview
+  const previewCumulative = cumulativeDedTotal + sessionDed;
+  document.getElementById('sumTotalDed').textContent = '$' + Math.round(previewCumulative).toLocaleString('en-AU');
+
+  // --- Trip breakdown list ---
+  const list = document.getElementById('sumTripList'); list.innerHTML = '';
+  trips.forEach(t => {
+    const row = document.createElement('div'); row.className = 'sum-trip-row';
+    const ded = t.type === 'business' ? ' · $' + (t.km * RATE).toFixed(2) : '';
+    const badge = t.photo ? '<span class="sum-trip-badge stb-photo">📷 Photo</span>' :
+                  t.verified ? '<span class="sum-trip-badge stb-ts">🕐 Timestamp</span>' :
+                  '<span class="sum-trip-badge stb-none">No evidence</span>';
+    row.innerHTML = `
+      <div class="sum-trip-icon">${t.type === 'business' ? '🟡' : '⬜'}</div>
+      <div class="sum-trip-info">
+        <div class="sum-trip-route">${t.from} → ${t.to}</div>
+        <div class="sum-trip-meta">${t.date} · ${t.km} km${ded}</div>
+      </div>
+      ${badge}`;
+    list.appendChild(row);
+  });
+
+  // --- 12-week logbook progress ---
+  const now = new Date();
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const weeksElapsed = Math.min(12, Math.max(0, (now - LOGBOOK_START) / msPerWeek));
+  const weeksDone = Math.floor(weeksElapsed);
+  const pct = Math.round((weeksElapsed / 12) * 100);
+  const dueDate = new Date(LOGBOOK_START.getTime() + 12 * msPerWeek);
+  const dueFmt = dueDate.toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'});
+  const startFmt = LOGBOOK_START.toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'});
+  const weeksLeft = 12 - weeksDone;
+
+  document.getElementById('sumLbWeeks').textContent = weeksDone;
+  document.getElementById('sumLbPct').textContent = pct + '%';
+  document.getElementById('sumLbFill').style.width = pct + '%';
+  document.getElementById('sumLbHint').innerHTML =
+    'Started ' + startFmt + ' · Due <strong>' + dueFmt + '</strong> · ' +
+    (weeksLeft > 0 ? weeksLeft + ' week' + (weeksLeft !== 1 ? 's' : '') + ' to go' : 'Logbook complete ✓');
+
+  // --- Gap / evidence warning ---
+  const gapWarn = document.getElementById('sumGapWarn');
+  const gapTxt = document.getElementById('sumGapTxt');
+  if (photoCount === 0) {
+    gapWarn.style.borderColor = 'rgba(245,196,0,.2)';
+    gapWarn.style.background = 'rgba(245,196,0,.06)';
+    document.querySelector('#sumGapWarn .sum-gap-ico').textContent = '⚠️';
+    gapTxt.innerHTML = 'No photo evidence this session. <strong>Timestamps were logged</strong> for all trips — good — but an odometer photo scores higher with the ATO.';
+  } else {
+    gapWarn.style.borderColor = 'rgba(34,197,94,.3)';
+    gapWarn.style.background = 'rgba(34,197,94,.05)';
+    document.querySelector('#sumGapWarn .sum-gap-ico').textContent = '✅';
+    gapTxt.innerHTML = '<strong>' + photoCount + ' photo' + (photoCount > 1 ? 's' : '') + ' recorded.</strong> Excellent — this is the strongest evidence for ATO audit purposes.';
+    document.getElementById('sumEvidenceCard').style.display = 'none';
+  }
+
+  // Pre-fill estimated reading
+  const lastOdo = Math.round(getTripOdoEnd(trips.length - 1));
+  document.getElementById('sumEstIn').value = lastOdo;
+
+  // --- Motivational closer ---
+  const closers = [
+    'Every trip sorted now means a <strong>bigger, faster claim</strong> at tax time. Check back soon — more trips may be waiting.',
+    'WorkCar is building your ATO-ready logbook in the background. <strong>Check in regularly</strong> to keep it up to date and maximise your claim.',
+    'The more often you sort, the less you have to do at tax time. <strong>Come back soon</strong> — your next batch of trips will be ready to sort.',
+    'Consistent check-ins like this are what separates a strong claim from a guessed one. <strong>See you next time.</strong>',
+  ];
+  document.getElementById('sumCloserTxt').innerHTML = closers[Math.floor(Math.random() * closers.length)];
+
+  openModal('summaryModal');
+}
+
+function toggleEstPanel() {
+  const p = document.getElementById('sumEstPanel');
+  p.classList.toggle('show');
+}
+
+function addCurrentOdoPhoto() {
+  // Simulate photo upload for current odo reading
+  const lastOdo = Math.round(getTripOdoEnd(trips.length - 1));
+  addLog('📷 Current odometer photo uploaded: ' + lastOdo.toLocaleString('en-AU') + ' km', true);
+  // Update the evidence card
+  const card = document.querySelector('.sum-evidence-card');
+  card.innerHTML = `<div class="sum-ev-title" style="color:var(--gr)">✓ Photo evidence added</div>
+    <div class="sum-ev-sub">Your current odometer photo (est. ${lastOdo.toLocaleString('en-AU')} km) has been added to your audit log. This boosts your score by 3 points.</div>`;
+  updateAuditScore();
+  document.getElementById('sumScoreNum').textContent = (parseInt(document.getElementById('sumScoreNum').textContent) + 3) + '%';
+}
+
+function saveEstReading() {
+  const val = document.getElementById('sumEstIn').value;
+  const v = parseFloat(val);
+  if (!v) return;
+  addLog('📐 Estimated odometer reading entered: ' + Math.round(v).toLocaleString('en-AU') + ' km', false);
+  const panel = document.getElementById('sumEstPanel');
+  panel.innerHTML = `<div style="font-family:'Barlow',sans-serif;font-size:12px;color:var(--gr);padding-top:6px;">✓ Estimate logged: ${Math.round(v).toLocaleString('en-AU')} km</div>`;
+}
+
+function toggleNotif() {
+  notifEnabled = !notifEnabled;
+  document.getElementById('sumNotifToggle').classList.toggle('on', notifEnabled);
+  if (notifEnabled) addLog('🔔 Trip-start notifications enabled', false);
+}
+
+function finishSummary() {
+  closeModal('summaryModal');
+  saveDone();
+}
+
+function closeSummary() {
+  closeModal('summaryModal');
+  goScreen('sortScreen');
+}
+
+// Odo log
+function addLog(desc, hasPhoto) {
+  auditLog.unshift({ time: nowStr(), desc, hasPhoto });
+}
+
+function buildOdoLog() {
+  const el = document.getElementById('odoLogEl'); el.innerHTML = '';
+  if (auditLog.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;font-family:\'Barlow\',sans-serif;font-size:12px;color:var(--t3);">No log entries yet.<br>Verify trips to build your audit trail.</div>';
+    return;
+  }
+  auditLog.forEach(entry => {
+    const div = document.createElement('div'); div.className = 'log-item';
+    div.innerHTML = `<div class="log-time">${entry.time}</div>
+      <div class="log-desc">${entry.desc}</div>
+      ${entry.hasPhoto ? '<div class="log-photo">📷 Photo evidence attached</div>' : ''}`;
+    el.appendChild(div);
+  });
+}
+
+function switchOdoTab() {} // tabs removed
+
+function updateAuditScore() {
+  const base = 50;
+  const photoBonus = trips.filter(t => t.photo).length * 2;
+  const tsBonus = trips.filter(t => t.verified && !t.photo).length;
+  const score = Math.min(99, base + photoBonus + tsBonus + Math.min(verifiedSet.size * 1, 20));
+  ['odoAuditPct','odoAuditPctExpanded','auditPctRev'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.textContent = score + '%';
+  });
+  const fill = document.getElementById('odoAuditFill');
+  if (fill) {
+    fill.style.width = score + '%';
+    fill.style.background = score > 80 ? 'linear-gradient(90deg,var(--gr),#22ff88)' :
+      score > 65 ? 'linear-gradient(90deg,var(--am),var(--gr))' : 'linear-gradient(90deg,var(--re),var(--am))';
+  }
+}
+
+function saveOdo() {
+  addLog('💾 Odometer records saved · ' + verifiedSet.size + '/' + trips.length + ' trips verified', false);
+}
+
+function nowStr() {
+  const n = new Date();
+  return n.toLocaleDateString('en-AU', {day:'2-digit',month:'short'}) + ' ' + n.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══════════════════════════════════════════════════════════
+// EDIT MODAL
+// ═══════════════════════════════════════════════════════════
+let stops = [];
+function openEdit() {
+  const t = trips[curIdx] || trips[0];
+  document.getElementById('editFrom').value = t.from + ', ' + t.fromSub;
+  document.getElementById('editTo').value = t.to + ', ' + t.toSub;
+  document.getElementById('editKm').value = t.km;
+  document.getElementById('editDur').value = t.dur;
+  document.getElementById('editPurpose').value = '';
+  stops = []; renderStops(); recalcEdit();
+  openModal('editModal');
+}
+function renderStops() {
+  const c = document.getElementById('stopsContainer'); c.innerHTML = '';
+  stops.forEach((s, i) => {
+    const div = document.createElement('div'); div.className = 'stop-item';
+    div.innerHTML = `<input class="stop-in" type="text" placeholder="Stop ${i+1} address" value="${s}" oninput="stops[${i}]=this.value;recalcEdit()"><button class="stop-rm" onclick="removeStop(${i})">✕</button>`;
+    c.appendChild(div);
+  });
+}
+function addStop() { stops.push(''); renderStops(); }
+function removeStop(i) { stops.splice(i, 1); renderStops(); recalcEdit(); }
+function recalcEdit() {
+  const km = parseFloat(document.getElementById('editKm')?.value) || 0;
+  const stopEst = stops.filter(s => s.length > 3).length * 2.5;
+  const total = km + stopEst;
+  const cpm = total * RATE;
+  const log = total * RATE * BIZ_PCT;
+  const lcKm = document.getElementById('lcKm');
+  const lcCpm = document.getElementById('lcCpm');
+  const lcLog = document.getElementById('lcLog');
+  if (lcKm) lcKm.textContent = total.toFixed(1) + ' km';
+  if (lcCpm) lcCpm.textContent = '$' + cpm.toFixed(2);
+  if (lcLog) lcLog.textContent = '$' + log.toFixed(2);
+}
+function saveEdit() {
+  const t = trips[curIdx] || trips[0];
+  const from = document.getElementById('editFrom').value.split(',');
+  const to = document.getElementById('editTo').value.split(',');
+  t.from = from[0].trim(); t.fromSub = from.slice(1).join(',').trim();
+  t.to = to[0].trim(); t.toSub = to.slice(1).join(',').trim();
+  t.km = parseFloat(document.getElementById('editKm').value) || t.km;
+  t.dur = document.getElementById('editDur').value || t.dur;
+  document.getElementById('addrA').textContent = t.from;
+  document.getElementById('subA').textContent = t.fromSub;
+  document.getElementById('addrB').textContent = t.to;
+  document.getElementById('subB').textContent = t.toSub;
+  document.getElementById('chipKm').textContent = t.km + ' km';
+  // Update odo chips
+  const oStart = getTripOdoStart(curIdx);
+  document.getElementById('chipOdoStart').textContent = Math.round(oStart).toLocaleString('en-AU') + ' km';
+  document.getElementById('chipOdoEnd').textContent = Math.round(oStart + t.km).toLocaleString('en-AU') + ' km';
+  addLog('✏️ Trip edited: ' + t.from + ' → ' + t.to + ' | ' + t.km + ' km', false);
+  closeModal('editModal');
+}
+function addEvidence(type) {
+  addLog('📎 Evidence added (' + type + ') to trip: ' + (trips[curIdx]?.from || ''), type === 'odo');
+  alert('In production: ' + type + ' capture would open here.\nEvidence logged to audit trail at ' + nowStr());
+}
+function openMaps(which, e) {
+  if (e) e.preventDefault();
+  const val = document.getElementById(which === 'from' ? 'editFrom' : 'editTo').value;
+  window.open('https://maps.google.com/?q=' + encodeURIComponent(val), '_blank');
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════
+function openATO(e) { if (e) e.preventDefault(); openModal('atoModal'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+// ═══════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════
+topCard.addEventListener('mousedown', onStart);
+topCard.addEventListener('touchstart', onStart, { passive: true });
+document.addEventListener('mousemove', onMove);
+document.addEventListener('touchmove', onMove, { passive: false });
+document.addEventListener('mouseup', onEnd);
+document.addEventListener('touchend', onEnd);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'b') classifyTrip('business');
+  if (e.key === 'ArrowLeft' || e.key === 'p') classifyTrip('personal');
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey)) undoLast();
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+loadTrip(0);
+updateDial();
+updateSortProgress();
+</script>
+</body>
+</html>
