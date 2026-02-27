@@ -38,12 +38,22 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const mapStyles = 'style=feature:all|element:geometry|color:0xffffff&style=feature:all|element:labels|visibility:off&style=feature:administrative.locality|element:labels.text|visibility:on&style=feature:administrative.locality|element:labels.text.fill|color:0x999999&style=feature:administrative.locality|element:labels.text.stroke|color:0xffffff&style=feature:administrative.neighborhood|element:labels.text|visibility:on&style=feature:administrative.neighborhood|element:labels.text.fill|color:0xbbbbbb&style=feature:administrative.neighborhood|element:labels.text.stroke|color:0xffffff&style=feature:road|element:geometry.fill|color:0x222222&style=feature:road|element:geometry.stroke|color:0xdddddd&style=feature:road.highway|element:geometry.fill|color:0x111111&style=feature:road.highway|element:geometry.stroke|color:0xcccccc&style=feature:water|element:geometry|color:0xe0e8ef&style=feature:poi|visibility:off&style=feature:transit|visibility:off&style=feature:landscape.man_made|element:geometry|color:0xf4f4f4&style=feature:landscape.natural|element:geometry|color:0xeef2e8';
     const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
 
-    const buildUrl = (polyPart?: string) => {
+    const buildUrl = (polyPart?: string, bounds?: {n:number,s:number,e:number,w:number}) => {
+      let visibleParam = `&visible=${fromEnc}%7C${toEnc}`;
+      if (bounds) {
+        const latPad = (bounds.n - bounds.s) * 0.6;
+        const lngPad = (bounds.e - bounds.w) * 0.6;
+        const padN = (bounds.n + latPad).toFixed(6);
+        const padS = (bounds.s - latPad).toFixed(6);
+        const padE = (bounds.e + lngPad).toFixed(6);
+        const padW = (bounds.w - lngPad).toFixed(6);
+        visibleParam = `&visible=${padS},${padW}%7C${padN},${padE}`;
+      }
       if (polyPart) {
         const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
-        return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}&visible=${fromEnc}%7C${toEnc}&key=${MAPS_KEY}`;
+        return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}${visibleParam}&key=${MAPS_KEY}`;
       }
-      return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&visible=${fromEnc}%7C${toEnc}&key=${MAPS_KEY}`;
+      return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}${visibleParam}&key=${MAPS_KEY}`;
     };
 
     const cached = polylineCache.get(cacheKey);
@@ -65,16 +75,23 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
         if (cancelled) return;
         const route = result?.routes?.[0];
         const poly = route?.overview_polyline;
+        let bounds: {n:number,s:number,e:number,w:number} | undefined;
+        const b = route?.bounds;
+        if (b) {
+          const ne = b.getNorthEast();
+          const sw = b.getSouthWest();
+          bounds = { n: ne.lat(), s: sw.lat(), e: ne.lng(), w: sw.lng() };
+        }
         if (poly) {
           const encoded = typeof poly === 'string' ? poly : (poly.points ? poly.points : (typeof poly.toJSON === 'function' ? poly.toJSON() : ''));
           if (encoded) {
             polylineCache.set(cacheKey, encoded);
-            setImgUrl(buildUrl(encoded));
+            setImgUrl(buildUrl(encoded, bounds));
           } else {
-            setImgUrl(buildUrl());
+            setImgUrl(buildUrl(undefined, bounds));
           }
         } else {
-          setImgUrl(buildUrl());
+          setImgUrl(buildUrl(undefined, bounds));
         }
         setError(false);
       }).catch(() => {
