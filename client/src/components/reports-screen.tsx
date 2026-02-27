@@ -132,12 +132,12 @@ export function ReportsScreen() {
                             )}
                             {r.supersedes && isLinked && (
                               <span
-                                className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px] cursor-pointer"
-                                style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                                className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px] cursor-pointer"
+                                style={{ background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.4)', color: 'var(--wc-y)' }}
                                 onClick={(e) => { e.stopPropagation(); dispatch({ type: 'PROMOTE_REPORT', reportIndex: i }); }}
                                 data-testid={`badge-make-active-${i}`}
                               >
-                                <ArrowUpCircle className="w-[8px] h-[8px]" />
+                                <ArrowUpCircle className="w-[11px] h-[11px]" />
                                 Make Active
                               </span>
                             )}
