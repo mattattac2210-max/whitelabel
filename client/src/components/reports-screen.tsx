@@ -77,7 +77,17 @@ export function ReportsScreen() {
             No sessions saved yet.<br />Complete your first sort session to see reports here.
           </div>
         ) : (
-          state.savedReports.map((r, i) => {
+          <div className={hasMultiple ? 'rounded-[16px] p-[8px] flex flex-col gap-[6px]' : 'flex flex-col gap-[6px]'}
+            style={hasMultiple ? { border: '2px solid rgba(245,196,0,.4)', background: 'rgba(245,196,0,.03)' } : {}}
+            data-testid="linked-reports-group"
+          >
+            {hasMultiple && (
+              <div className="flex items-center gap-[6px] px-[6px] pt-[2px] pb-[2px]">
+                <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
+                <span className="font-heading font-bold text-[9px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>Linked Reports</span>
+              </div>
+            )}
+          {state.savedReports.map((r, i) => {
             const isOpen = expandedIdx === i;
             const bizTrips = r.trips?.filter(t => t.type === 'business') || [];
             const perTrips = r.trips?.filter(t => t.type === 'personal') || [];
@@ -89,11 +99,10 @@ export function ReportsScreen() {
                 style={{
                   background: 'var(--wc-card)',
                   border: hasMultiple
-                    ? `2px solid ${!r.supersedes ? 'rgba(34,197,94,.4)' : 'rgba(245,196,0,.45)'}`
+                    ? `1.5px solid ${!r.supersedes ? 'rgba(34,197,94,.35)' : 'var(--wc-border)'}`
                     : `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`,
                   transition: 'border-color .2s',
                   opacity: r.supersedes ? 0.6 : 1,
-                  boxShadow: hasMultiple && !r.supersedes ? '0 0 12px rgba(34,197,94,.1)' : hasMultiple && r.supersedes ? '0 0 12px rgba(245,196,0,.08)' : 'none',
                 }}
                 data-testid={`report-${i}`}
               >
@@ -263,7 +272,8 @@ export function ReportsScreen() {
                 )}
               </div>
             );
-          })
+          })}
+          </div>
         )}
       </div>
 
