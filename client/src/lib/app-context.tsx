@@ -12,6 +12,8 @@ interface SavedReport {
   est: string;
   totalKm: string;
   auditScore: number;
+  lastOdoReading: number | null;
+  lastOdoVerifiedAt: string | null;
 }
 
 interface AppState {
@@ -25,6 +27,8 @@ interface AppState {
   verifiedSet: Set<number>;
   auditLog: { time: string; desc: string; hasPhoto: boolean }[];
   savedReports: SavedReport[];
+  lastOdoReading: number | null;
+  lastOdoVerifiedAt: string | null;
   classifyStep: number;
   classifyBizTrips: number[];
   sessionStartTime: number;
@@ -53,6 +57,7 @@ type Action =
   | { type: 'CLOSE_SUMMARY' }
   | { type: 'SAVE_SESSION' }
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
+  | { type: 'SET_MANUAL_ODO'; reading: number }
   | { type: 'RESET_DEMO' };
 
 function nowStr(): string {
@@ -71,6 +76,8 @@ const initialState: AppState = {
   verifiedSet: new Set(),
   auditLog: [],
   savedReports: [],
+  lastOdoReading: null,
+  lastOdoVerifiedAt: null,
   classifyStep: 0,
   classifyBizTrips: [],
   sessionStartTime: Date.now(),
@@ -165,6 +172,8 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         trips: newTrips,
         verifiedSet: newVerified,
+        lastOdoReading: action.reading,
+        lastOdoVerifiedAt: nowStr(),
         auditLog: [{ time: nowStr(), desc: `Trip verified: ${newTrips[action.tripIndex].from} \u2192 ${newTrips[action.tripIndex].to}`, hasPhoto: action.photo }, ...state.auditLog],
       };
     }
@@ -210,6 +219,8 @@ function reducer(state: AppState, action: Action): AppState {
         est: '$' + Math.round(state.dedTotal).toLocaleString('en-AU'),
         totalKm: biz.reduce((s, t) => s + t.km, 0).toFixed(1),
         auditScore: Math.min(100, 50 + state.verifiedSet.size * 2),
+        lastOdoReading: state.lastOdoReading,
+        lastOdoVerifiedAt: state.lastOdoVerifiedAt,
       };
       return {
         ...state,
@@ -218,6 +229,13 @@ function reducer(state: AppState, action: Action): AppState {
         currentScreen: 'sort',
       };
     }
+    case 'SET_MANUAL_ODO':
+      return {
+        ...state,
+        lastOdoReading: action.reading,
+        lastOdoVerifiedAt: nowStr(),
+        auditLog: [{ time: nowStr(), desc: `Odometer manually set to ${action.reading.toLocaleString('en-AU')} km`, hasPhoto: false }, ...state.auditLog],
+      };
     case 'ADD_LOG':
       return {
         ...state,

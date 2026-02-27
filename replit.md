@@ -59,7 +59,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 | `client/src/components/review-screen.tsx` | Trip review with list/calendar tabs |
 | `client/src/components/odometer-screen.tsx` | Odometer verification with controlled inputs |
 | `client/src/components/reports-screen.tsx` | Session reports list |
-| `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal |
+| `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal (includes odometer manual update UI) |
 | `client/src/components/bottom-nav.tsx` | Bottom navigation bar |
 | `client/src/index.css` | Theme CSS variables, custom animations |
 

@@ -52,6 +52,12 @@ export function ReportsScreen() {
                   {r.unclassified} trip{r.unclassified > 1 ? 's' : ''} unclassified
                 </div>
               )}
+              {r.lastOdoVerifiedAt && (
+                <div className="mt-1 text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                  Odo: <strong style={{ color: 'var(--wc-am)' }}>{r.lastOdoReading?.toLocaleString('en-AU')} km</strong>
+                  <span style={{ color: 'var(--wc-t3)' }}> &middot; verified {r.lastOdoVerifiedAt}</span>
+                </div>
+              )}
             </div>
           ))
         )}

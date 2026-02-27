@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE, getTripOdoEnd } from '@/lib/trip-data';
-import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target } from 'lucide-react';
+import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge } from 'lucide-react';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   if (!open) return null;
@@ -224,6 +224,8 @@ export function ATOModal() {
 export function SummaryModal() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
+  const [manualOdo, setManualOdo] = useState('');
+  const [showOdoInput, setShowOdoInput] = useState(false);
 
   if (!state.summaryModalOpen) return null;
 
@@ -271,6 +273,74 @@ export function SummaryModal() {
             <div className="font-data text-[7px] uppercase tracking-[.1em] mb-1" style={{ color: 'var(--wc-t3)' }}>Photos</div>
             <div className="font-heading font-black text-[18px]" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
           </div>
+        </div>
+
+        <div className="mx-[18px] mb-4 rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[8px] mb-[8px]">
+            <Gauge className="w-[16px] h-[16px]" style={{ color: 'var(--wc-am)' }} />
+            <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Odometer</span>
+          </div>
+          {state.lastOdoVerifiedAt ? (
+            <div className="flex items-baseline justify-between mb-[6px]">
+              <div className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                Last verified: <strong className="text-white">{state.lastOdoVerifiedAt}</strong>
+              </div>
+              <div className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-am)' }}>
+                {state.lastOdoReading?.toLocaleString('en-AU')} km
+              </div>
+            </div>
+          ) : (
+            <div className="text-[11px] mb-[6px]" style={{ color: 'var(--wc-t3)' }}>
+              No odometer verified yet this session
+            </div>
+          )}
+          {!showOdoInput ? (
+            <button
+              className="w-full rounded-[8px] py-[7px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all"
+              style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)', color: 'var(--wc-am)' }}
+              onClick={() => {
+                setManualOdo(state.lastOdoReading ? String(state.lastOdoReading) : '');
+                setShowOdoInput(true);
+              }}
+              data-testid="button-update-odo"
+            >
+              Update Current Odometer
+            </button>
+          ) : (
+            <div className="flex gap-[6px]">
+              <input
+                type="number"
+                className="flex-1 rounded-[8px] px-[10px] py-[6px] font-heading font-bold text-[14px] text-white outline-none"
+                style={{ background: 'rgba(255,255,255,.07)', border: '1px solid var(--wc-border)' }}
+                value={manualOdo}
+                onChange={e => setManualOdo(e.target.value)}
+                placeholder="e.g. 84500"
+                autoFocus
+                data-testid="input-manual-odo"
+              />
+              <button
+                className="rounded-[8px] px-[12px] py-[6px] font-heading font-bold text-[11px] uppercase tracking-[.05em] text-black cursor-pointer transition-all active:scale-95"
+                style={{ background: 'var(--wc-y)' }}
+                onClick={() => {
+                  const val = parseInt(manualOdo);
+                  if (val > 0) {
+                    dispatch({ type: 'SET_MANUAL_ODO', reading: val });
+                    setShowOdoInput(false);
+                  }
+                }}
+                data-testid="button-save-odo"
+              >
+                Save
+              </button>
+              <button
+                className="rounded-[8px] px-[8px] py-[6px] font-heading text-[11px] uppercase cursor-pointer"
+                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+                onClick={() => setShowOdoInput(false)}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mx-[18px] mb-4">
