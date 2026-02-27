@@ -8,6 +8,7 @@ export function OdometerScreen() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
   const [heroCollapsed, setHeroCollapsed] = useState(true);
+  const [showOdoWarning, setShowOdoWarning] = useState(true);
   const [odoInputs, setOdoInputs] = useState<Record<string, string>>({});
   const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -66,14 +67,51 @@ export function OdometerScreen() {
         )}
       </div>
 
-      <div className="mx-[14px] mb-1 rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.18)' }}>
-        <div className="flex items-start gap-[8px]">
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
-          <div className="text-[10px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-            <strong style={{ color: 'var(--wc-am)' }}>Accuracy required.</strong> Both personal and business trips must show accurate odometer readings. Total km must be correct with no missing distances between trips. Adjusting totals will alter claim estimate calculations. All adjustments are logged in your audit report.
+      {showOdoWarning && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.8)', backdropFilter: 'blur(6px)' }}
+        >
+          <div
+            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.4)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            data-testid="modal-odo-warning"
+          >
+            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+                <AlertTriangle className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center">Accuracy Required</div>
+            </div>
+            <div className="flex flex-col gap-[10px] mb-[16px]">
+              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
+                Both <strong className="text-white">personal and business</strong> trips must show accurate odometer readings.
+              </div>
+              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
+                Total km must be accurate with <strong className="text-white">no missing distances</strong> between trips.
+              </div>
+              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
+                Adjusting totals will <strong className="text-white">alter the calculations</strong> for claim estimates.
+              </div>
+              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
+                All adjustments will be <strong className="text-white">logged in your audit report</strong>.
+              </div>
+            </div>
+            <button
+              className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
+              style={{ background: 'var(--wc-y)' }}
+              onClick={() => setShowOdoWarning(false)}
+              data-testid="button-odo-warning-ok"
+            >
+              I Understand
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
         {sorted.map((t) => {
