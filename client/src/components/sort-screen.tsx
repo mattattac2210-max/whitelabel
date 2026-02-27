@@ -3,7 +3,7 @@ import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
-import { Undo2, ChevronRight } from 'lucide-react';
+import { Undo2, ChevronRight, AlertTriangle } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -250,13 +250,21 @@ export function SortScreen() {
               ${Math.round(state.dedTotal).toLocaleString('en-AU')}
             </div>
             <div className="flex flex-col gap-[7px] w-full mt-1">
+              {state.savedReports.length > 0 && (
+                <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)' }} data-testid="warning-existing-report">
+                  <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" stroke="var(--wc-am)" />
+                  <div className="text-[11px] leading-[1.5]" style={{ color: 'var(--wc-am)' }}>
+                    <strong style={{ color: '#F59E0B' }}>Report already exists.</strong> A report (Rev {state.savedReports[0].revision}) was saved on {state.savedReports[0].timestamp}. Continuing will create <strong>Rev {state.savedReports.length + 1}</strong> and mark the previous as superseded. View reports to check which is current.
+                  </div>
+                </div>
+              )}
               <button
                 className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
                 style={{ background: 'var(--wc-y)' }}
                 onClick={() => dispatch({ type: 'INIT_CLASSIFY' })}
                 data-testid="button-classify-trips"
               >
-                Classify Business Trips &rarr;
+                {state.savedReports.length > 0 ? 'Edit & Create Rev ' + (state.savedReports.length + 1) + ' \u2192' : 'Classify Business Trips \u2192'}
               </button>
               <button
                 className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
