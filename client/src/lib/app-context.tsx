@@ -385,8 +385,17 @@ export function useApp() {
 
 export function useComputedStats() {
   const { state } = useApp();
-  const bizKm = state.trips.slice(0, state.currentIndex).filter(x => x.type === 'business').reduce((a, x) => a + x.km, 0);
-  const totKm = state.trips.slice(0, state.currentIndex).reduce((a, x) => a + x.km, 0);
+  const currentBizKm = state.trips.slice(0, state.currentIndex).filter(x => x.type === 'business').reduce((a, x) => a + x.km, 0);
+  const currentTotKm = state.trips.slice(0, state.currentIndex).reduce((a, x) => a + x.km, 0);
+  const currentSessionHasReport = state.savedReports.some(r => r.sessionId === state.sessionId && !r.supersedes);
+  const savedBizKm = state.savedReports
+    .filter(r => !r.supersedes)
+    .reduce((a, r) => a + (r.trips || []).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0), 0);
+  const savedTotKm = state.savedReports
+    .filter(r => !r.supersedes)
+    .reduce((a, r) => a + (r.trips || []).reduce((s, t) => s + t.km, 0), 0);
+  const bizKm = savedBizKm + (currentSessionHasReport ? 0 : currentBizKm);
+  const totKm = savedTotKm + (currentSessionHasReport ? 0 : currentTotKm);
   const bizPct = totKm > 0 ? (bizKm / totKm * 100) : 0;
   const remaining = state.trips.length - state.currentIndex;
   const progress = state.trips.length > 0 ? (state.currentIndex / state.trips.length * 100) : 0;
