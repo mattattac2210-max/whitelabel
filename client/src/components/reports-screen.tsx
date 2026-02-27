@@ -395,15 +395,15 @@ export function ReportsScreen() {
                 </button>
                 <button
                   className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
-                  style={{ borderBottom: '1px solid var(--wc-border)' }}
+                  style={{ background: 'rgba(255,255,255,.04)', borderBottom: '1px solid var(--wc-border)' }}
                   onClick={() => { setActionMenuOpen(false); setConfirmDelete(true); }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(245,196,0,.06)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
                   data-testid="action-delete-cards"
                 >
-                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t2)' }} />
+                  <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                   <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>Delete Sort Cards Only</div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Delete Sort Cards Only</div>
                     <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Keep reports, remove original trip cards</div>
                   </div>
                 </button>
