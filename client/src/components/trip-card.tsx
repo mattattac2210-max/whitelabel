@@ -634,124 +634,46 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               background: 'var(--wc-card)',
               border: '1.5px solid #F5C400',
               boxShadow: '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
-              transform: detailDragX
-                ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg)`
-                : 'none',
-              transition: detailDragging ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
             }}
             onClick={e => e.stopPropagation()}
             onPointerDown={e => {
-              const target = e.target as HTMLElement;
-              if (target.closest('button') || target.tagName === 'BUTTON') return;
               activePointers.current.add(e.pointerId);
               pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
               if (activePointers.current.size > 1) {
-                detailMultitouch.current = true;
-                setDetailDragging(false);
-                setDetailDragX(0);
                 const pts = Array.from(pointerPositions.current.values());
                 if (pts.length >= 2) {
                   pinchStartDist.current = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                 }
-                return;
               }
-              if (pinchCooldown.current) return;
-              detailMultitouch.current = false;
-              detailLocked.current = false;
-              detailStartX.current = e.clientX;
-              detailStartY.current = e.clientY;
-              setDetailDragging(true);
-              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
             }}
             onPointerMove={e => {
               pointerPositions.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-              if (detailMultitouch.current && pointerPositions.current.size >= 2) {
+              if (activePointers.current.size >= 2 && pointerPositions.current.size >= 2) {
                 const pts = Array.from(pointerPositions.current.values());
                 const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                 if (pinchStartDist.current > 0) {
                   const ratio = dist / pinchStartDist.current;
                   setDetailScale(Math.min(1.35, Math.max(1, ratio)));
                 }
-                return;
               }
-              if (!detailDragging || detailMultitouch.current) return;
-              const dx = e.clientX - detailStartX.current;
-              const dy = e.clientY - detailStartY.current;
-              if (!detailLocked.current) {
-                if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
-                if (Math.abs(dy) > Math.abs(dx)) {
-                  setDetailDragging(false);
-                  return;
-                }
-                detailLocked.current = true;
-              }
-              setDetailDragX(dx);
             }}
             onPointerUp={e => {
               activePointers.current.delete(e.pointerId);
               pointerPositions.current.delete(e.pointerId);
-              if (detailMultitouch.current) {
-                if (activePointers.current.size === 0) {
-                  detailMultitouch.current = false;
-                  pinchStartDist.current = 0;
-                  setDetailScale(1);
-                  pinchCooldown.current = true;
-                  setTimeout(() => { pinchCooldown.current = false; }, 400);
-                }
-                setDetailDragging(false);
-                setDetailDragX(0);
-                return;
-              }
-              if (!detailDragging || pinchCooldown.current) {
-                setDetailDragging(false);
-                setDetailDragX(0);
-                return;
-              }
-              setDetailDragging(false);
-              if (detailDragX > 100) {
-                setShowDetail(false);
-                setDetailDragX(0);
-                flyOut('right');
-              } else if (detailDragX < -100) {
-                setShowDetail(false);
-                setDetailDragX(0);
-                flyOut('left');
-              } else {
-                setDetailDragX(0);
+              if (activePointers.current.size === 0) {
+                pinchStartDist.current = 0;
+                setDetailScale(1);
               }
             }}
             onPointerCancel={e => {
               activePointers.current.delete(e.pointerId);
               pointerPositions.current.delete(e.pointerId);
               if (activePointers.current.size === 0) {
-                detailMultitouch.current = false;
                 pinchStartDist.current = 0;
                 setDetailScale(1);
-                pinchCooldown.current = true;
-                setTimeout(() => { pinchCooldown.current = false; }, 400);
               }
-              setDetailDragging(false);
-              setDetailDragX(0);
             }}
           >
-            {detailDragX > 15 && (
-              <div className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
-                style={{ background: `rgba(245,196,0,${Math.min(Math.abs(detailDragX) / 200, 0.25)})` }}>
-                <div className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
-                  style={{ color: 'var(--wc-y)', border: '3px solid var(--wc-y)', opacity: Math.min(Math.abs(detailDragX) / 80, 1) }}>
-                  Business
-                </div>
-              </div>
-            )}
-            {detailDragX < -15 && (
-              <div className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
-                style={{ background: `rgba(160,160,160,${Math.min(Math.abs(detailDragX) / 200, 0.18)})` }}>
-                <div className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
-                  style={{ color: 'rgba(180,180,180,.9)', border: '3px solid rgba(180,180,180,.6)', opacity: Math.min(Math.abs(detailDragX) / 80, 1) }}>
-                  Personal
-                </div>
-              </div>
-            )}
             <button
               className="absolute top-[10px] right-[10px] z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center"
               style={{ background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.15)' }}
