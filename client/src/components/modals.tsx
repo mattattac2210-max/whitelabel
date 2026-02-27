@@ -126,8 +126,8 @@ export function EditModal() {
         {stops.map((s, i) => (
           <div key={i} className="flex items-center gap-[5px] mb-1">
             <AddressInput
-              className="flex-1 rounded-[7px] p-[6px_9px] text-[12px] text-white outline-none"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+              className="w-full rounded-[7px] p-[6px_9px] text-[12px] text-white outline-none"
+              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', flex: 1 }}
               placeholder={`Stop ${i + 1} address`}
               value={s}
               onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
