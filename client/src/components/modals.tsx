@@ -306,6 +306,7 @@ export function ATOModal() {
 export function SummaryModal() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
+  const [showAuditBreakdown, setShowAuditBreakdown] = useState(false);
   const NUM_DIGITS = 6;
   const toDigits = (n: number): number[] => {
     const s = String(Math.max(0, Math.floor(n))).padStart(NUM_DIGITS, '0');
@@ -546,7 +547,7 @@ export function SummaryModal() {
           <button
             className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[16px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-            onClick={() => {}}
+            onClick={() => setShowAuditBreakdown(true)}
             data-testid="button-understand-audit"
           >
             <ShieldCheck className="w-[18px] h-[18px]" style={{ color: scoreCol }} />
@@ -570,6 +571,88 @@ export function SummaryModal() {
           </button>
         </div>
       </div>
+      {showAuditBreakdown && (
+        <div
+          className="absolute inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowAuditBreakdown(false)}
+          data-testid="audit-breakdown-overlay"
+        >
+          <div
+            className="w-[350px] rounded-[20px] p-[20px] flex flex-col gap-[14px]"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-[8px]">
+                <ShieldCheck className="w-[22px] h-[22px]" style={{ color: scoreCol }} />
+                <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em] text-white">Audit Score</span>
+              </div>
+              <button
+                className="w-[30px] h-[30px] rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+                onClick={() => setShowAuditBreakdown(false)}
+                data-testid="button-close-audit"
+              >
+                <X className="w-[14px] h-[14px] text-white" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-[10px] py-[10px]">
+              <div className="font-heading font-black text-[56px] leading-none" style={{ color: scoreCol }}>{score}</div>
+              <div className="flex flex-col">
+                <span className="font-data text-[11px] uppercase tracking-[.08em] text-white">out of</span>
+                <span className="font-heading font-black text-[28px] leading-none text-white">99</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-[8px]">
+              {(() => {
+                const photoPoints = state.trips.filter(t => t.photo).length * 2;
+                const verifiedPoints = state.trips.filter(t => t.verified && !t.photo).length;
+                const odoPoints = Math.min(state.verifiedSet.size, 20);
+                const basePoints = 50;
+                const items = [
+                  { label: 'Base Score', points: basePoints, max: 50, desc: 'Starting score for all logbooks', icon: Target },
+                  { label: 'Photo Evidence', points: photoPoints, max: null, desc: `${state.trips.filter(t => t.photo).length} photos (+2 pts each)`, icon: Camera },
+                  { label: 'Verified Trips', points: verifiedPoints, max: null, desc: `${state.trips.filter(t => t.verified && !t.photo).length} verified (+1 pt each)`, icon: Check },
+                  { label: 'Odometer Checks', points: odoPoints, max: 20, desc: `${state.verifiedSet.size} readings (max 20 pts)`, icon: Gauge },
+                ];
+                return items.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="rounded-[10px] p-[10px_12px] flex items-center gap-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }} data-testid={`audit-item-${i}`}>
+                      <div className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.1)' }}>
+                        <Icon className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-heading font-bold text-[13px] text-white">{item.label}</div>
+                        <div className="font-data text-[10px] text-white/60">{item.desc}</div>
+                      </div>
+                      <div className="font-heading font-black text-[18px] flex-shrink-0" style={{ color: item.points > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>+{item.points}</div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            <div className="rounded-[10px] p-[10px_14px] flex items-center justify-between" style={{ background: score > 85 ? 'rgba(34,197,94,.08)' : score > 70 ? 'rgba(245,158,11,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${score > 85 ? 'rgba(34,197,94,.2)' : score > 70 ? 'rgba(245,158,11,.2)' : 'rgba(239,68,68,.2)'}` }}>
+              <span className="font-data text-[10px] uppercase tracking-[.08em] text-white">
+                {score > 85 ? 'Strong — ready for ATO review' : score > 70 ? 'Good — add more evidence to strengthen' : 'Needs work — add photos & verify odometers'}
+              </span>
+            </div>
+
+            <button
+              className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em]"
+              style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'white' }}
+              onClick={() => setShowAuditBreakdown(false)}
+              data-testid="button-close-audit-bottom"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
     </ModalOverlay>
   );
 }
