@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoStart, getTripOdoEnd, RATE } from '@/lib/trip-data';
-import { MapPin, Pointer } from 'lucide-react';
+import { MapPin, Pointer, X, Clock, Route, Gauge } from 'lucide-react';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
@@ -144,6 +145,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const startXRef = useRef(0);
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
@@ -320,6 +322,15 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
           <button
             className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
+            style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+            onPointerDown={e => e.stopPropagation()}
+            onClick={() => setShowDetail(true)}
+            data-testid="button-see-details"
+          >
+            Details
+          </button>
+          <button
+            className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
             style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={onEdit}
@@ -411,6 +422,93 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </div>
         </div>
       </div>
+      {showDetail && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowDetail(false)}
+          data-testid="detail-overlay"
+        >
+          <div
+            className="relative w-[370px] max-h-[800px] rounded-[20px] overflow-hidden flex flex-col"
+            style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-[10px] right-[10px] z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.15)' }}
+              onClick={() => setShowDetail(false)}
+              data-testid="button-close-detail"
+            >
+              <X className="w-[16px] h-[16px] text-white" />
+            </button>
+            <div className="relative w-full" style={{ height: '280px' }}>
+              <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+            </div>
+            <div className="p-[16px] flex flex-col gap-[12px]">
+              <div className="flex items-center gap-[6px]">
+                <span className="font-heading font-bold text-[14px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
+                <span className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
+                <span className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+              </div>
+              <div className="flex flex-col gap-[8px]">
+                <div className="flex items-start gap-[10px]">
+                  <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(34,197,94,.14)' }}>
+                    <MapPin className="w-[14px] h-[14px]" stroke="#22C55E" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-heading font-semibold text-[14px] text-white">{trip.from}</div>
+                    <div className="text-[11px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+                  </div>
+                </div>
+                <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
+                <div className="flex items-start gap-[10px]">
+                  <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>
+                    <MapPin className="w-[14px] h-[14px]" stroke="#F5C400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-heading font-semibold text-[14px] text-white">{trip.to}</div>
+                    <div className="text-[11px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-[8px] mt-[4px]">
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+                  <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
+                  <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
+                  <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>km</div>
+                </div>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}>
+                  <Clock className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }} />
+                  <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-t2)' }}>{trip.duration}</div>
+                  <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>duration</div>
+                </div>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+                  <Gauge className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-am)' }} />
+                  <div className="font-heading font-bold text-[13px] leading-tight text-center" style={{ color: 'var(--wc-am)' }}>
+                    {Math.round(oStart).toLocaleString('en-AU')}
+                    <span className="text-[9px] font-normal block" style={{ color: 'var(--wc-t3)' }}>&rarr; {Math.round(oEnd).toLocaleString('en-AU')}</span>
+                  </div>
+                  <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>odometer</div>
+                </div>
+              </div>
+              <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+                <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>ATO Deduction</span>
+                <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>${(trip.km * RATE).toFixed(2)}</span>
+              </div>
+              <button
+                className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em]"
+                style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                onClick={() => setShowDetail(false)}
+                data-testid="button-back-to-sorting"
+              >
+                Back to Sorting
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
