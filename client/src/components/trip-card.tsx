@@ -177,18 +177,17 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 transition: 'opacity .5s ease',
               }}
             >
-              <div className="flex flex-col items-center gap-[6px]">
-                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.8)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2" />
-                  <path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v6" />
-                  <path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8" />
-                  <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8V8" />
+              <div className="flex flex-col items-center gap-[10px]">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.75)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13.5V8a1.5 1.5 0 0 1 3 0v3" />
+                  <path d="M13 11.5v-1a1.5 1.5 0 0 1 3 0v1.5" />
+                  <path d="M16 12v-.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6V9a1.5 1.5 0 0 1 3 0v4.5" />
                 </svg>
-                <div className="flex items-center gap-[8px]">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="flex items-center gap-[10px]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M5 12l5-5M5 12l5 5" />
                   </svg>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M19 12l-5-5M19 12l-5 5" />
                   </svg>
                 </div>
