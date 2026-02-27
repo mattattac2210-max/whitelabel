@@ -56,6 +56,17 @@ export function ReportsScreen() {
         </button>
       )}
 
+      {hasMultiple && hasActiveReport && !unresolvedConflict && (
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[7px_12px] flex-shrink-0" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
+          <Check className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
+          <div className="flex-1">
+            <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Conflicting Reports</div>
+            <span className="text-[10px]" style={{ color: 'var(--wc-t2)' }}>
+              You have resolved all current issues.
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
