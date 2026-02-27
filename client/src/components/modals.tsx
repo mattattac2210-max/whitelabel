@@ -428,11 +428,19 @@ export function SummaryModal() {
           </button>
           <button
             className="w-full rounded-[13px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
-            style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+            style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => dispatch({ type: 'CLOSE_SUMMARY' })}
-            data-testid="button-ignore-summary"
+            data-testid="button-back-modify"
           >
-            Ignore &amp; Continue
+            &larr; Go Back &amp; Modify
+          </button>
+          <button
+            className="w-full rounded-[13px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            style={{ background: 'transparent', color: 'var(--wc-t3)' }}
+            onClick={() => { dispatch({ type: 'CLOSE_SUMMARY' }); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+            data-testid="button-exit-no-save"
+          >
+            Exit Without Saving
           </button>
         </div>
       </div>
