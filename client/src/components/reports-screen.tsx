@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle, Link2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock, Star, Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus } from 'lucide-react';
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const hasMultiple = state.savedReports.length > 1;
   const unresolvedConflict = hasMultiple && !state.conflictResolved;
+  const locked = !state.freshSession && state.savedReports.length > 0;
 
   useEffect(() => {
     if (unresolvedConflict) {
@@ -20,14 +22,16 @@ export function ReportsScreen() {
   return (
     <div className="flex flex-col h-full" data-testid="reports-screen">
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
-        <button
-          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
-          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
-          data-testid="button-back-reports"
-        >
-          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
-        </button>
+        {!locked && (
+          <button
+            className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
+            data-testid="button-back-reports"
+          >
+            <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          </button>
+        )}
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Session Reports</span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} session{state.savedReports.length !== 1 ? 's' : ''}</span>
       </div>
@@ -258,7 +262,76 @@ export function ReportsScreen() {
         )}
       </div>
 
-      <BottomNav activeOverride="reports" />
+      {locked ? (
+        <div className="flex-shrink-0 px-[14px] py-[10px] flex flex-col gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
+          <button
+            className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase text-black cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+            style={{ background: 'var(--wc-y)' }}
+            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'review' })}
+            data-testid="button-create-another-report"
+          >
+            <Plus className="w-[15px] h-[15px]" strokeWidth={2.5} />
+            Create Another Report
+          </button>
+          <button
+            className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+            style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
+            onClick={() => setConfirmDelete(true)}
+            data-testid="button-delete-trips-reports"
+          >
+            <Trash2 className="w-[13px] h-[13px]" />
+            Delete All Sort Cards
+          </button>
+        </div>
+      ) : (
+        <BottomNav activeOverride="reports" />
+      )}
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+            data-testid="modal-delete-confirm"
+          >
+            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center">Delete All Sort Cards?</div>
+            </div>
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
+                <strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.
+              </span>
+            </div>
+            <div className="flex flex-col gap-[8px]">
+              <button
+                className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
+                onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+                data-testid="button-confirm-delete-reports"
+              >
+                Yes, Delete All Cards
+              </button>
+              <button
+                className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                onClick={() => setConfirmDelete(false)}
+                data-testid="button-cancel-delete-reports"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showConflictModal && hasMultiple && (
         <div
