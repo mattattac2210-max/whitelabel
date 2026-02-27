@@ -10,7 +10,8 @@ export function ReportsScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const hasMultiple = state.savedReports.length > 1;
-  const unresolvedConflict = hasMultiple && !state.conflictResolved;
+  const hasActiveReport = state.savedReports.some(r => !r.supersedes);
+  const unresolvedConflict = hasMultiple && !state.conflictResolved && !hasActiveReport;
   const locked = !state.freshSession && state.savedReports.length > 0;
 
   useEffect(() => {
