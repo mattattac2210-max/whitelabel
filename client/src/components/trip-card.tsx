@@ -629,21 +629,15 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           data-testid="detail-overlay"
         >
           <div
-            className="relative w-[370px] max-h-[800px] rounded-[20px] flex flex-col touch-pan-y"
+            className="relative w-[370px] max-h-[800px] rounded-[20px] overflow-hidden flex flex-col touch-pan-y"
             style={{
               background: 'var(--wc-card)',
               border: '1.5px solid #F5C400',
-              overflow: detailScale > 1 ? 'visible' : 'hidden',
-              boxShadow: detailScale > 1
-                ? '0 0 30px rgba(245,196,0,.5), 0 0 60px rgba(245,196,0,.2), 0 20px 80px rgba(0,0,0,.9)'
-                : '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
+              boxShadow: '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
               transform: detailDragX
-                ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg) scale(${detailScale})`
-                : detailScale > 1
-                  ? `scale(${detailScale})`
-                  : 'none',
-              transition: detailDragging || detailScale > 1 ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1), box-shadow .3s ease, overflow .3s ease',
-              zIndex: detailScale > 1 ? 10000 : undefined,
+                ? `translateX(${detailDragX}px) rotate(${detailDragX * 0.04}deg)`
+                : 'none',
+              transition: detailDragging ? 'none' : 'transform .3s cubic-bezier(.34,1.3,.64,1)',
             }}
             onClick={e => e.stopPropagation()}
             onPointerDown={e => {
@@ -766,7 +760,19 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             >
               <X className="w-[16px] h-[16px] text-white" />
             </button>
-            <div className="relative w-full" style={{ height: '280px', background: '#f0f0f0' }}>
+            <div
+              className="relative w-full"
+              style={{
+                height: '280px',
+                background: '#f0f0f0',
+                transform: detailScale > 1 ? `scale(${detailScale})` : 'none',
+                transformOrigin: 'center center',
+                zIndex: detailScale > 1 ? 50 : 0,
+                borderRadius: detailScale > 1 ? '12px' : '0',
+                boxShadow: detailScale > 1 ? '0 8px 40px rgba(0,0,0,.8), 0 0 20px rgba(245,196,0,.3)' : 'none',
+                transition: detailScale > 1 ? 'none' : 'transform .3s ease, box-shadow .3s ease, border-radius .3s ease',
+              }}
+            >
               <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
             </div>
             <div className="p-[16px] flex flex-col gap-[12px]">
