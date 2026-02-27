@@ -215,13 +215,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
           </button>
         </div>
 
-        <div className="flex items-center gap-[5px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-          <span className="font-data text-[7px] uppercase tracking-[.09em]" style={{ color: 'var(--wc-t3)' }}>Odo</span>
-          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oStart).toLocaleString('en-AU')} km</span>
-          <span className="font-heading text-[11px]" style={{ color: 'var(--wc-t3)' }}>&rarr;</span>
-          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oEnd).toLocaleString('en-AU')} km</span>
-        </div>
-
         <div className="flex items-center gap-[7px] py-[3px]">
           <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,.14)' }}>
             <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
@@ -239,6 +232,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit 
             <div className="font-semibold text-[12px] text-white truncate">{trip.to}</div>
             <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-[5px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+          <span className="font-data text-[7px] uppercase tracking-[.09em]" style={{ color: 'var(--wc-t3)' }}>Odo</span>
+          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oStart).toLocaleString('en-AU')} km</span>
+          <span className="font-heading text-[11px]" style={{ color: 'var(--wc-t3)' }}>&rarr;</span>
+          <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-am)' }}>{Math.round(oEnd).toLocaleString('en-AU')} km</span>
         </div>
 
         <div className="flex gap-[6px]" onPointerDown={e => e.stopPropagation()} onPointerUp={e => e.stopPropagation()} onPointerMove={e => e.stopPropagation()}>
