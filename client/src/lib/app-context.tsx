@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, batch2Trips, RATE, getTripOdoStart, getTripOdoEnd } from './trip-data';
+import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd } from './trip-data';
 
 export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports';
 
@@ -61,6 +61,7 @@ interface AppState {
   conflictResolved: boolean;
   freshSession: boolean;
   sessionId: string;
+  baseOdo: number;
 }
 
 type Action =
@@ -116,6 +117,7 @@ const initialState: AppState = {
   conflictResolved: false,
   freshSession: true,
   sessionId: 'batch1',
+  baseOdo: ODO_START,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -256,8 +258,8 @@ function reducer(state: AppState, action: Action): AppState {
         return {
           from: t.from, to: t.to, km: t.km, date: t.date, time: t.time,
           type: t.type, purposeLabel: t.purposeLabel, verified: t.verified, photo: t.photo,
-          odoStart: getTripOdoStart(state.trips, origIdx),
-          odoEnd: getTripOdoEnd(state.trips, origIdx),
+          odoStart: getTripOdoStart(state.trips, origIdx, state.baseOdo),
+          odoEnd: getTripOdoEnd(state.trips, origIdx, state.baseOdo),
         };
       });
       const areas: string[] = [];
@@ -289,8 +291,8 @@ function reducer(state: AppState, action: Action): AppState {
         auditScore: Math.min(100, 50 + state.verifiedSet.size * 2),
         lastOdoReading: state.lastOdoReading,
         lastOdoVerifiedAt: state.lastOdoVerifiedAt,
-        odoRangeStart: getTripOdoStart(state.trips, 0),
-        odoRangeEnd: getTripOdoEnd(state.trips, state.trips.length - 1),
+        odoRangeStart: getTripOdoStart(state.trips, 0, state.baseOdo),
+        odoRangeEnd: getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo),
         trips: tripSummaries,
         auditLog: state.auditLog.map(e => ({ time: e.time, desc: e.desc })),
         areasToCheck: areas,
@@ -328,14 +330,20 @@ function reducer(state: AppState, action: Action): AppState {
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
       };
-    case 'LOAD_BATCH2':
+    case 'LOAD_BATCH2': {
+      const prevActive = state.savedReports.filter(r => !r.supersedes && r.sessionId !== 'batch2');
+      const prevOdoEnd = prevActive.length > 0
+        ? Math.max(...prevActive.map(r => r.odoRangeEnd ?? ODO_START))
+        : ODO_START;
       return {
         ...initialState,
         trips: batch2Trips.map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
         sessionId: 'batch2',
+        baseOdo: prevOdoEnd,
       };
+    }
     case 'DELETE_ALL_TRIPS':
       return {
         ...initialState,

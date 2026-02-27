@@ -22,8 +22,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const [isFlying, setIsFlying] = useState(false);
   const startXRef = useRef(0);
 
-  const lastSavedOdo = state.savedReports.find(r => r.lastOdoReading)?.lastOdoReading;
-  const baseOdo = state.lastOdoReading || lastSavedOdo;
+  const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
   const oEnd = getTripOdoEnd(state.trips, tripIndex, baseOdo);
 

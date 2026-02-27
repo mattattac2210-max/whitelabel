@@ -69,8 +69,8 @@ export function OdometerScreen() {
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
         {sorted.map((t) => {
           const i = state.trips.indexOf(t);
-          const oStart = Math.round(getTripOdoStart(state.trips, i));
-          const oEnd = Math.round(getTripOdoEnd(state.trips, i));
+          const oStart = Math.round(getTripOdoStart(state.trips, i, state.baseOdo));
+          const oEnd = Math.round(getTripOdoEnd(state.trips, i, state.baseOdo));
           const verified = state.verifiedSet.has(i);
 
           const startKey = `${i}-start`;
@@ -81,7 +81,7 @@ export function OdometerScreen() {
           const sortedIdx = sorted.indexOf(t);
           const prevTrip = sortedIdx > 0 ? sorted[sortedIdx - 1] : null;
           const prevOrigIdx = prevTrip ? state.trips.indexOf(prevTrip) : -1;
-          const prevEnd = prevTrip ? Math.round(getTripOdoEnd(state.trips, prevOrigIdx)) : null;
+          const prevEnd = prevTrip ? Math.round(getTripOdoEnd(state.trips, prevOrigIdx, state.baseOdo)) : null;
           const prevEndLocal = prevTrip ? parseInt(odoInputs[`${prevOrigIdx}-end`] ?? String(prevEnd)) || prevEnd : null;
           const hasMismatch = prevEndLocal != null && curStart !== prevEndLocal;
 
