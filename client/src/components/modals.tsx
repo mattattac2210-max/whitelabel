@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE, getTripOdoEnd } from '@/lib/trip-data';
-import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck } from 'lucide-react';
 import { AddressInput } from './address-input';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
@@ -13,7 +13,7 @@ function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () 
       onClick={onClose}
     >
       <div
-        className="w-full max-h-[90%] rounded-t-[28px] overflow-y-auto scrollbar-thin"
+        className="w-full max-h-[100%] rounded-t-[28px] overflow-y-auto scrollbar-thin"
         style={{ background: 'var(--wc-bg)', border: '1px solid var(--wc-border)', borderBottom: 'none' }}
         onClick={e => e.stopPropagation()}
       >
@@ -360,39 +360,39 @@ export function SummaryModal() {
 
   return (
     <ModalOverlay open={state.summaryModalOpen} onClose={() => dispatch({ type: 'CLOSE_SUMMARY' })}>
-      <div className="pt-3 pb-5 flex flex-col" style={{ maxHeight: '100%' }}>
-        <div className="flex items-center gap-[10px] px-[18px] mb-3">
+      <div className="pt-5 pb-6 flex flex-col" style={{ maxHeight: '100%' }}>
+        <div className="flex items-center gap-[14px] px-[20px] mb-4">
           <div
-            className="w-[44px] h-[44px] rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ border: `2.5px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)' }}
+            className="w-[56px] h-[56px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)' }}
           >
-            <span className="font-heading font-black text-[16px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
+            <span className="font-heading font-black text-[20px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
           </div>
           <div>
-            <div className="font-heading font-black text-[18px] uppercase text-white leading-none">Session Complete</div>
-            <div className="text-[11px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
+            <div className="font-heading font-black text-[22px] uppercase text-white leading-none">Session Complete</div>
+            <div className="text-[13px] mt-[3px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
           </div>
         </div>
 
-        <div className="flex gap-[6px] px-[18px] mb-3">
-          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
-            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
+        <div className="flex gap-[8px] px-[20px] mb-4">
+          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
+            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
           </div>
-          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
-            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
+          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
+            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
           </div>
-          <div className="flex-1 rounded-[10px] p-[7px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[6px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Photos</div>
-            <div className="font-heading font-black text-[15px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
+          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Photos</div>
+            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
           </div>
         </div>
 
-        <div className="mx-[18px] mb-3 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-center gap-[6px] mb-[8px]">
-            <Gauge className="w-[16px] h-[16px]" style={{ color: 'var(--wc-am)' }} />
-            <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Odometer</span>
+        <div className="mx-[20px] mb-4 rounded-[14px] p-[14px_16px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[8px] mb-[10px]">
+            <Gauge className="w-[18px] h-[18px]" style={{ color: 'var(--wc-am)' }} />
+            <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white">Odometer</span>
             {state.lastOdoVerifiedAt && (
               <span className="ml-auto font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>
                 verified {state.lastOdoVerifiedAt}
@@ -512,33 +512,42 @@ export function SummaryModal() {
           )}
         </div>
 
-        <div className="mx-[18px] mb-3 rounded-[10px] p-[8px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-baseline justify-between mb-[4px]">
-            <div className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-              <span className="font-heading font-black text-[16px] text-white">{weeksDone}</span> / 12 weeks
+        <div className="mx-[20px] mb-4 rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-baseline justify-between mb-[6px]">
+            <div className="text-[13px]" style={{ color: 'var(--wc-t2)' }}>
+              <span className="font-heading font-black text-[20px] text-white">{weeksDone}</span> / 12 weeks
             </div>
-            <span className="font-heading font-black text-[14px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
+            <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
           </div>
-          <div className="h-[4px] rounded-[2px] overflow-hidden mb-[4px]" style={{ background: 'rgba(255,255,255,.07)' }}>
-            <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }} />
+          <div className="h-[6px] rounded-[3px] overflow-hidden mb-[6px]" style={{ background: 'rgba(255,255,255,.07)' }}>
+            <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }} />
           </div>
-          <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+          <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
             Due <strong className="text-white">{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
           </div>
         </div>
 
-        <div className="px-[18px] flex flex-col gap-[5px]">
+        <div className="px-[20px] flex flex-col gap-[6px]">
           <button
-            className="w-full rounded-[11px] py-[12px] font-heading font-black text-[15px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[12px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+            style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            onClick={() => {}}
+            data-testid="button-understand-audit"
+          >
+            <ShieldCheck className="w-[16px] h-[16px]" style={{ color: scoreCol }} />
+            Understand Your Audit Score
+          </button>
+          <button
+            className="w-full rounded-[12px] py-[14px] font-heading font-black text-[16px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
-            <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
+            <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
             Save &amp; Generate Report
           </button>
           <button
-            className="w-full rounded-[11px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full rounded-[12px] py-[11px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => dispatch({ type: 'CLOSE_SUMMARY' })}
             data-testid="button-back-modify"
@@ -546,7 +555,7 @@ export function SummaryModal() {
             &larr; Go Back &amp; Modify
           </button>
           <button
-            className="w-full py-[6px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full py-[8px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', color: 'var(--wc-t3)' }}
             onClick={() => { dispatch({ type: 'CLOSE_SUMMARY' }); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
             data-testid="button-exit-no-save"
