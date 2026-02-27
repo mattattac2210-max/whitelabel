@@ -292,7 +292,13 @@ export function SortScreen() {
               <button
                 className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
                 style={{ background: 'var(--wc-y)' }}
-                onClick={() => dispatch({ type: 'INIT_CLASSIFY' })}
+                onClick={() => {
+                  if (state.savedReports.length > 0) {
+                    dispatch({ type: 'GO_SCREEN', screen: 'review' });
+                  } else {
+                    dispatch({ type: 'INIT_CLASSIFY' });
+                  }
+                }}
                 data-testid="button-classify-trips"
               >
                 {state.savedReports.length > 0 ? 'Edit & Create Rev ' + (state.savedReports.length + 1) + ' \u2192' : 'Classify Business Trips \u2192'}
