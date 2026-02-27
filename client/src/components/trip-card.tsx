@@ -275,12 +275,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.2) 100%)' }} />
-          <div className="absolute bottom-[6px] left-[8px] rounded-[7px] px-[8px] py-[3px] flex items-center gap-[4px] z-10" style={{ background: 'rgba(0,0,0,.7)', backdropFilter: 'blur(4px)', border: '1px solid rgba(245,196,0,.25)' }}>
-            <span className="font-heading font-extrabold text-[14px]" style={{ color: 'var(--wc-y)' }}>{trip.km}</span>
-            <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
-            <span className="w-[3px] h-[3px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
-            <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</span>
-          </div>
           {isTop && tutorialPhase !== 'done' && (
             <div
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
