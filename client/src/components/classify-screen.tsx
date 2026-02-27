@@ -14,6 +14,7 @@ export function ClassifyScreen() {
   const [customText, setCustomText] = useState('');
   const [customArmed, setCustomArmed] = useState(false);
   const [microOpen, setMicroOpen] = useState(false);
+  const [justAdvanced, setJustAdvanced] = useState(false);
 
   const { classifyStep, classifyBizTrips, trips } = state;
 
@@ -22,6 +23,14 @@ export function ClassifyScreen() {
       dispatch({ type: 'GO_SCREEN', screen: 'review' });
     }
   }, [classifyStep, classifyBizTrips.length, dispatch]);
+
+  useEffect(() => {
+    if (classifyStep > 0) {
+      setJustAdvanced(true);
+      const t = setTimeout(() => setJustAdvanced(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [classifyStep]);
 
   if (classifyStep >= classifyBizTrips.length) {
     return null;
@@ -83,7 +92,12 @@ export function ClassifyScreen() {
 
       <div
         className="mx-[14px] mb-2 rounded-[14px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
-        style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
+        style={{
+          background: 'var(--wc-card)',
+          border: justAdvanced ? '1.5px solid rgba(245,196,0,.85)' : '1.5px solid rgba(245,196,0,.5)',
+          boxShadow: justAdvanced ? '0 0 20px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.12)' : '0 0 14px rgba(245,196,0,.15), 0 0 30px rgba(245,196,0,.06)',
+          transition: 'border .6s ease, box-shadow .6s ease',
+        }}
         onClick={() => setMicroOpen(!microOpen)}
         data-testid="classify-trip-card"
       >
