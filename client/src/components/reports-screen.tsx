@@ -377,9 +377,8 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
   const earliestTrip = allDates.length > 0
     ? new Date(Math.min(...allDates.map(d => d.getTime())))
     : new Date();
-  const latestTrip = allDates.length > 0
-    ? new Date(Math.max(...allDates.map(d => d.getTime())))
-    : new Date();
+  const logbookEnd = new Date(earliestTrip);
+  logbookEnd.setDate(logbookEnd.getDate() + 12 * 7 - 1);
 
   function fmtDateShort(d: Date) {
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
@@ -503,7 +502,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
             </div>
             <div className="flex-1">
               <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">End date</div>
-              <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>{fmtDateShort(latestTrip)}</div>
+              <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>{fmtDateShort(logbookEnd)}</div>
             </div>
           </div>
           <div className="mt-[8px] flex gap-[16px]">
