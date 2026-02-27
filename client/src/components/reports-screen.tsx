@@ -41,12 +41,12 @@ export function ReportsScreen() {
           </button>
         )}
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Session Reports</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
+        <span className="ml-auto text-[11px] text-white">{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
-          <div className="py-[30px] px-[14px] text-center text-[13px]" style={{ color: 'var(--wc-t3)' }}>
+          <div className="py-[30px] px-[14px] text-center text-[13px] text-white">
             No sessions saved yet.<br />Complete your first sort session to see reports here.
           </div>
         ) : (
@@ -67,7 +67,7 @@ export function ReportsScreen() {
                     <div className="flex items-center gap-[6px]">
                       <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
                       <span className="font-heading font-bold text-[9px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>Linked Reports</span>
-                      <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>{label}</span>
+                      <span className="font-data text-[8px] tracking-[.04em] text-white">{label}</span>
                     </div>
                     {hasActive ? (
                       <button
@@ -77,7 +77,7 @@ export function ReportsScreen() {
                         data-testid={`button-edit-active-${group.sessionId}`}
                       >
                         <Check className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
-                        <span className="flex-1 text-[9px]" style={{ color: 'var(--wc-t2)' }}>
+                        <span className="flex-1 text-[9px] text-white">
                           <span style={{ color: 'var(--wc-gr)' }}>Resolved</span> — tap to change active report
                         </span>
                       </button>
@@ -125,7 +125,7 @@ export function ReportsScreen() {
                       >
                         <div className="flex items-start justify-between mb-[2px]">
                           <div className="flex items-center gap-[6px] flex-wrap">
-                            <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
+                            <div className="font-data text-[9px] uppercase tracking-[.08em] text-white">{r.timestamp}</div>
                             {!r.supersedes && (
                               <span className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px]" style={{ background: 'rgba(34,197,94,.12)', border: '1.5px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}>
                                 <Check className="w-[11px] h-[11px]" />
@@ -144,41 +144,41 @@ export function ReportsScreen() {
                               </span>
                             )}
                             {r.supersedes && !isLinked && (
-                              <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}>
+                              <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: '#fff' }}>
                                 <Archive className="w-[8px] h-[8px]" />
                                 Archived
                               </span>
                             )}
                           </div>
                           {isOpen
-                            ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
-                            : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                            ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0 text-white" />
+                            : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0 text-white" />
                           }
                         </div>
                         <div className="font-heading font-bold text-[15px] text-white mb-[6px]">
                           {r.supersedes ? 'Archived Report' : 'Active Report'} &mdash; {r.bizCount + r.perCount} trips
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                          <span className="text-[11px] text-white">
                             <strong style={{ color: 'var(--wc-y)' }}>{r.bizCount}</strong> business
                           </span>
-                          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                            <strong style={{ color: 'var(--wc-t2)' }}>{r.perCount}</strong> personal
+                          <span className="text-[11px] text-white">
+                            <strong className="text-white">{r.perCount}</strong> personal
                           </span>
-                          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                          <span className="text-[11px] text-white">
                             Est. <strong style={{ color: 'var(--wc-y)' }}>{r.est}</strong>
                           </span>
-                          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                          <span className="text-[11px] text-white">
                             <strong style={{ color: 'var(--wc-y)' }}>{r.totalKm} km</strong>
                           </span>
-                          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                          <span className="text-[11px] text-white">
                             Audit <strong style={{ color: 'var(--wc-y)' }}>{r.auditScore}%</strong>
                           </span>
                         </div>
                         {r.lastOdoVerifiedAt && (
-                          <div className="mt-1 text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                          <div className="mt-1 text-[11px] text-white">
                             Odo: <strong style={{ color: 'var(--wc-am)' }}>{r.lastOdoReading?.toLocaleString('en-AU')} km</strong>
-                            <span style={{ color: 'var(--wc-t3)' }}> &middot; verified {r.lastOdoVerifiedAt}</span>
+                            <span className="text-white"> &middot; verified {r.lastOdoVerifiedAt}</span>
                           </div>
                         )}
                       </button>
@@ -233,31 +233,31 @@ export function ReportsScreen() {
                                   <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
                                     <tbody>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)', width: '50%' }}>Logbook start date</td>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)', width: '50%' }}>Logbook end date</td>
+                                        <td className="p-[5px_8px] text-white" style={{ width: '50%' }}>Logbook start date</td>
+                                        <td className="p-[5px_8px] text-white" style={{ width: '50%' }}>Logbook end date</td>
                                       </tr>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
                                         <td className="p-[3px_8px_6px] font-bold text-white">{allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '—'}</td>
                                         <td className="p-[3px_8px_6px] font-bold text-white">{allTrips.length > 0 ? allTrips[0].date : '—'}</td>
                                       </tr>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Odometer start date</td>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Odometer end date</td>
+                                        <td className="p-[5px_8px] text-white">Odometer start date</td>
+                                        <td className="p-[5px_8px] text-white">Odometer end date</td>
                                       </tr>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
                                         <td className="p-[3px_8px_6px] font-bold text-white">{r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') : '—'}</td>
                                         <td className="p-[3px_8px_6px] font-bold text-white">{r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') : '—'}</td>
                                       </tr>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Total kilometres</td>
-                                        <td className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>Percentage business km</td>
+                                        <td className="p-[5px_8px] text-white">Total kilometres</td>
+                                        <td className="p-[5px_8px] text-white">Percentage business km</td>
                                       </tr>
                                       <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
                                         <td className="p-[3px_8px_6px] font-bold text-white">{totalKm.toFixed(1)}</td>
                                         <td className="p-[3px_8px_6px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</td>
                                       </tr>
                                       <tr>
-                                        <td colSpan={2} className="p-[5px_8px]" style={{ color: 'var(--wc-t3)' }}>
+                                        <td colSpan={2} className="p-[5px_8px] text-white">
                                           ATO cents per kilometre rate 2024–2025: <strong className="text-white">${RATE.toFixed(2)}</strong>
                                         </td>
                                       </tr>
@@ -276,7 +276,7 @@ export function ReportsScreen() {
                                         <span className="text-[10px] mt-[2px]" style={{ color: r.areasToCheck[0].startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
                                           {r.areasToCheck[0].startsWith('All clear') ? '\u2713' : '\u2022'}
                                         </span>
-                                        <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{a}</span>
+                                        <span className="text-[11px] text-white">{a}</span>
                                       </div>
                                     ))}
                                   </div>
@@ -304,13 +304,13 @@ export function ReportsScreen() {
                                           const reimburse = isBiz ? (t.km * RATE) : 0;
                                           return (
                                             <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', background: isBiz ? 'rgba(245,196,0,.03)' : 'transparent' }}>
-                                              <td className="p-[4px_6px]" style={{ color: 'var(--wc-t2)' }}>{t.date}</td>
+                                              <td className="p-[4px_6px] text-white">{t.date}</td>
                                               <td className="p-[4px_6px] text-white">{t.odoStart?.toLocaleString('en-AU')}</td>
                                               <td className="p-[4px_6px] text-white">{t.odoEnd?.toLocaleString('en-AU')}</td>
-                                              <td className="p-[4px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{isBiz ? 'Business' : 'Personal'}</td>
+                                              <td className="p-[4px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? 'Business' : 'Personal'}</td>
                                               <td className="p-[4px_6px] text-right text-white">{t.km.toFixed(1)}</td>
-                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{bizKm > 0 ? bizKm.toFixed(1) : ''}</td>
-                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{reimburse > 0 ? `$${reimburse.toFixed(2)}` : '$0.00'}</td>
+                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{bizKm > 0 ? bizKm.toFixed(1) : ''}</td>
+                                              <td className="p-[4px_6px] text-right" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{reimburse > 0 ? `$${reimburse.toFixed(2)}` : '$0.00'}</td>
                                             </tr>
                                           );
                                         })}
@@ -330,24 +330,24 @@ export function ReportsScreen() {
 
                           {r.auditLog && r.auditLog.length > 0 && (
                             <div className="mt-[12px]">
-                              <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>Audit Log</div>
+                              <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px] text-white">Audit Log</div>
                               <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.04)' }}>
                                 {r.auditLog.slice(0, 10).map((e, ei) => (
                                   <div key={ei} className="flex items-start gap-[6px] py-[3px]" style={{ borderBottom: ei < Math.min(r.auditLog.length, 10) - 1 ? '1px solid rgba(255,255,255,.03)' : 'none' }}>
-                                    <Clock className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-t3)' }} />
-                                    <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{e.time}</span>
-                                    <span className="text-[10px] flex-1" style={{ color: 'var(--wc-t2)' }}>{e.desc}</span>
+                                    <Clock className="w-[10px] h-[10px] flex-shrink-0 mt-[2px] text-white" />
+                                    <span className="font-data text-[9px] text-white">{e.time}</span>
+                                    <span className="text-[10px] flex-1 text-white">{e.desc}</span>
                                   </div>
                                 ))}
                                 {r.auditLog.length > 10 && (
-                                  <div className="text-[9px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>+{r.auditLog.length - 10} more entries</div>
+                                  <div className="text-[9px] mt-[4px] text-white">+{r.auditLog.length - 10} more entries</div>
                                 )}
                               </div>
                             </div>
                           )}
 
                           <div className="mt-[10px] text-center">
-                            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Last modified {r.timestamp}</span>
+                            <span className="font-data text-[8px] uppercase tracking-[.1em] text-white">Last modified {r.timestamp}</span>
                           </div>
                         </div>
                       )}
@@ -362,7 +362,7 @@ export function ReportsScreen() {
 
       {locked ? (
         <div className="flex-shrink-0 px-[14px] py-[10px] flex flex-col gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px]" style={{ color: 'var(--wc-t3)' }}>Session Actions</div>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[-2px] text-white">Session Actions</div>
           <div className="relative">
             <button
               className="w-full rounded-[12px] py-[14px] px-[16px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all flex items-center justify-between animate-flash-yellow"
@@ -390,7 +390,7 @@ export function ReportsScreen() {
                   <Plus className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
                   <div>
                     <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Create Another Report</div>
-                    <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Re-sort trips and save a new revision</div>
+                    <div className="text-[10px] mt-[1px] text-white">Re-sort trips and save a new revision</div>
                   </div>
                 </button>
                 <button
@@ -401,10 +401,10 @@ export function ReportsScreen() {
                   onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
                   data-testid="action-come-back-later"
                 >
-                  <Pause className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t2)' }} />
+                  <Pause className="w-[16px] h-[16px] flex-shrink-0 text-white" />
                   <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>Come Back Later</div>
-                    <div className="text-[10px] mt-[1px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>Your current session stays active. No other cards can be sorted until you finalise your report.</div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] text-white">Come Back Later</div>
+                    <div className="text-[10px] mt-[1px] leading-[1.4] text-white">Your current session stays active. No other cards can be sorted until you finalise your report.</div>
                   </div>
                 </button>
                 <button
@@ -444,7 +444,7 @@ export function ReportsScreen() {
                   </div>
                   <div className="flex items-start gap-[5px] mb-[8px]">
                     <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
-                    <span className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                    <span className="text-[9px] leading-[1.4] text-white">
                       <strong style={{ color: 'var(--wc-am)' }}>Not recommended.</strong> If you've made a mistake, create a new report and set it as active instead. All data is retained for ATO compliance.
                     </span>
                   </div>
