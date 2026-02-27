@@ -13,6 +13,7 @@ export function OdometerScreen() {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [expandedVerified, setExpandedVerified] = useState<Set<number>>(new Set());
 
+  const sorted = state.trips.filter(t => t.type !== null);
   const score = stats.auditScore;
   const scoreFill = score > 80 ? 'linear-gradient(90deg,var(--wc-gr),#22ff88)' : score > 65 ? 'linear-gradient(90deg,var(--wc-am),var(--wc-gr))' : 'linear-gradient(90deg,var(--wc-re),var(--wc-am))';
 
@@ -28,7 +29,7 @@ export function OdometerScreen() {
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Odometer</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.verifiedSet.size} of {state.trips.length} verified</span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.verifiedSet.size} of {sorted.length} verified</span>
       </div>
 
       <div
@@ -66,7 +67,8 @@ export function OdometerScreen() {
       </div>
 
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
-        {state.trips.map((t, i) => {
+        {sorted.map((t) => {
+          const i = state.trips.indexOf(t);
           const oStart = Math.round(getTripOdoStart(state.trips, i));
           const oEnd = Math.round(getTripOdoEnd(state.trips, i));
           const verified = state.verifiedSet.has(i);
@@ -76,8 +78,11 @@ export function OdometerScreen() {
           const curStart = parseInt(odoInputs[startKey] ?? String(oStart)) || oStart;
           const curEnd = parseInt(odoInputs[endKey] ?? String(oEnd)) || oEnd;
 
-          const prevEnd = i > 0 ? Math.round(getTripOdoEnd(state.trips, i - 1)) : null;
-          const prevEndLocal = i > 0 ? parseInt(odoInputs[`${i - 1}-end`] ?? String(prevEnd)) || prevEnd : null;
+          const sortedIdx = sorted.indexOf(t);
+          const prevTrip = sortedIdx > 0 ? sorted[sortedIdx - 1] : null;
+          const prevOrigIdx = prevTrip ? state.trips.indexOf(prevTrip) : -1;
+          const prevEnd = prevTrip ? Math.round(getTripOdoEnd(state.trips, prevOrigIdx)) : null;
+          const prevEndLocal = prevTrip ? parseInt(odoInputs[`${prevOrigIdx}-end`] ?? String(prevEnd)) || prevEnd : null;
           const hasMismatch = prevEndLocal != null && curStart !== prevEndLocal;
 
           return (
@@ -259,7 +264,7 @@ export function OdometerScreen() {
                     style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
                     onClick={() => {
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
-                      if (state.verifiedSet.size + 1 >= state.trips.length) {
+                      if (state.verifiedSet.size + 1 >= sorted.length) {
                         setTimeout(() => dispatch({ type: 'OPEN_SUMMARY' }), 500);
                       }
                     }}
@@ -273,6 +278,18 @@ export function OdometerScreen() {
             </div>
           );
         })}
+      </div>
+
+      <div className="px-[14px] py-[6px] flex-shrink-0">
+        <button
+          className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+          style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
+          onClick={() => dispatch({ type: 'OPEN_SUMMARY' })}
+          data-testid="button-save-finish"
+        >
+          <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+          Save &amp; Finish
+        </button>
       </div>
 
       <BottomNav />

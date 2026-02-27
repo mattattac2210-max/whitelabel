@@ -9,8 +9,9 @@ export function ReviewScreen() {
   const [tab, setTab] = useState<'list' | 'cal'>('list');
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
 
-  const biz = state.trips.filter(t => t.type === 'business');
-  const per = state.trips.filter(t => t.type === 'personal');
+  const sorted = state.trips.filter(t => t.type !== null);
+  const biz = sorted.filter(t => t.type === 'business');
+  const per = sorted.filter(t => t.type === 'personal');
   const unclassified = biz.filter(t => !t.purposeLabel).length;
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -32,7 +33,7 @@ export function ReviewScreen() {
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Review</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.trips.length} trips</span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{sorted.length} trips</span>
       </div>
 
       <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
@@ -110,25 +111,25 @@ export function ReviewScreen() {
 
       {tab === 'list' ? (
         <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
-          {state.trips.map((t, i) => {
-            const oStart = Math.round(getTripOdoStart(state.trips, i));
-            const oEnd = Math.round(getTripOdoEnd(state.trips, i));
+          {sorted.map((t) => {
+            const origIdx = state.trips.indexOf(t);
+            const oStart = Math.round(getTripOdoStart(state.trips, origIdx));
+            const oEnd = Math.round(getTripOdoEnd(state.trips, origIdx));
             const ded = t.type === 'business' ? '$' + (t.km * RATE).toFixed(2) : '\u2014';
-            const typeClass = t.type === 'business' ? 'biz' : t.type === 'personal' ? 'per' : 'unsorted';
-            const isExpanded = expandedTrip === i;
+            const isExpanded = expandedTrip === origIdx;
 
             return (
               <div
-                key={i}
+                key={origIdx}
                 className="rounded-[13px] cursor-pointer transition-all"
                 style={{
                   background: 'var(--wc-card)',
                   border: '1px solid var(--wc-border)',
-                  borderLeft: t.type === 'business' ? '3px solid rgba(245,196,0,.6)' : t.type === 'personal' ? '3px solid rgba(239,68,68,.4)' : '3px solid rgba(255,255,255,.15)',
+                  borderLeft: t.type === 'business' ? '3px solid rgba(245,196,0,.6)' : '3px solid rgba(180,180,180,.25)',
                 }}
-                data-testid={`review-trip-${i}`}
+                data-testid={`review-trip-${origIdx}`}
               >
-                <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : i)}>
+                <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
                   <div className="flex-1 min-w-0">
                     <div className={`font-semibold text-[13px] text-white mb-[3px] ${isExpanded ? '' : 'truncate'}`}>{t.from} &rarr; {t.to}</div>
                     <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km &middot; {t.duration}</div>
@@ -137,12 +138,12 @@ export function ReviewScreen() {
                   <span
                     className="font-heading font-bold text-[11px] px-2 py-[3px] rounded-[6px] uppercase tracking-[.04em] flex-shrink-0"
                     style={{
-                      background: t.type === 'business' ? 'var(--wc-yd)' : t.type === 'personal' ? 'var(--wc-red)' : 'rgba(255,255,255,.06)',
-                      color: t.type === 'business' ? 'var(--wc-y)' : t.type === 'personal' ? 'var(--wc-re)' : 'var(--wc-t3)',
-                      border: t.type === 'business' ? '1px solid rgba(245,196,0,.22)' : t.type === 'personal' ? '1px solid rgba(239,68,68,.18)' : '1px solid var(--wc-border)',
+                      background: t.type === 'business' ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
+                      color: t.type === 'business' ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
+                      border: t.type === 'business' ? '1px solid rgba(245,196,0,.22)' : '1px solid rgba(180,180,180,.15)',
                     }}
                   >
-                    {t.type || 'Unsorted'}
+                    {t.type === 'business' ? 'Business' : 'Personal'}
                   </span>
                   <div className="text-[14px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>&or;</div>
                 </div>
@@ -161,25 +162,25 @@ export function ReviewScreen() {
                     <div className="flex gap-[6px] flex-wrap">
                       <button
                         className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                        style={{ borderColor: 'rgba(239,68,68,.3)', color: 'rgba(239,68,68,.7)', background: t.type === 'personal' ? 'var(--wc-red)' : 'transparent', border: '1.5px solid rgba(239,68,68,.3)' }}
-                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: i, tripType: 'personal' }); }}
-                        data-testid={`reclassify-personal-${i}`}
+                        style={{ color: 'rgba(180,180,180,.7)', background: t.type === 'personal' ? 'rgba(180,180,180,.1)' : 'transparent', border: '1.5px solid rgba(180,180,180,.25)' }}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'personal' }); }}
+                        data-testid={`reclassify-personal-${origIdx}`}
                       >
                         &larr; Personal
                       </button>
                       <button
                         className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
                         style={{ borderColor: 'rgba(245,196,0,.4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgba(245,196,0,.4)' }}
-                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: i, tripType: 'business' }); }}
-                        data-testid={`reclassify-business-${i}`}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
+                        data-testid={`reclassify-business-${origIdx}`}
                       >
                         Business &rarr;
                       </button>
                       <button
                         className="py-2 px-3 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
                         style={{ border: '1px solid var(--wc-border)', background: 'rgba(255,255,255,.04)', color: 'var(--wc-t2)' }}
-                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: i }); }}
-                        data-testid={`edit-trip-${i}`}
+                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: origIdx }); }}
+                        data-testid={`edit-trip-${origIdx}`}
                       >
                         Edit &rsaquo;
                       </button>
@@ -202,7 +203,7 @@ export function ReviewScreen() {
             ))}
             {Array.from({ length: dim }).map((_, i) => {
               const d = i + 1;
-              const dayTrips = state.trips.filter(t => t.day === d && t.month === MONTH && t.year === YEAR);
+              const dayTrips = sorted.filter(t => t.day === d && t.month === MONTH && t.year === YEAR);
               const hasBiz = dayTrips.some(t => t.type === 'business');
               const hasPer = dayTrips.some(t => t.type === 'personal');
 

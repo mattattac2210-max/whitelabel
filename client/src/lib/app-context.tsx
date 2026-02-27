@@ -235,7 +235,8 @@ function reducer(state: AppState, action: Action): AppState {
       const now = new Date();
       const ts = now.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) +
         ' \u00B7 ' + now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
-      const tripSummaries: SavedTripSummary[] = state.trips.map(t => ({
+      const sortedTrips = state.trips.filter(t => t.type !== null);
+      const tripSummaries: SavedTripSummary[] = sortedTrips.map(t => ({
         from: t.from, to: t.to, km: t.km, date: t.date, time: t.time,
         type: t.type, purposeLabel: t.purposeLabel, verified: t.verified, photo: t.photo,
       }));
