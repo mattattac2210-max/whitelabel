@@ -66,6 +66,15 @@ export function OdometerScreen() {
         )}
       </div>
 
+      <div className="mx-[14px] mb-1 rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.18)' }}>
+        <div className="flex items-start gap-[8px]">
+          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+          <div className="text-[10px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+            <strong style={{ color: 'var(--wc-am)' }}>Accuracy required.</strong> Both personal and business trips must show accurate odometer readings. Total km must be correct with no missing distances between trips. Adjusting totals will alter claim estimate calculations. All adjustments are logged in your audit report.
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
         {sorted.map((t) => {
           const i = state.trips.indexOf(t);
