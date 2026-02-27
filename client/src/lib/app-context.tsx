@@ -60,6 +60,7 @@ interface AppState {
   summaryModalOpen: boolean;
   conflictResolved: boolean;
   freshSession: boolean;
+  pendingFinalise: boolean;
   sessionId: string;
   baseOdo: number;
 }
@@ -88,7 +89,8 @@ type Action =
   | { type: 'LOAD_BATCH2' }
   | { type: 'DELETE_ALL_TRIPS' }
   | { type: 'DELETE_SESSION'; sessionId: string }
-  | { type: 'PROMOTE_REPORT'; reportIndex: number };
+  | { type: 'PROMOTE_REPORT'; reportIndex: number }
+  | { type: 'COME_BACK_LATER' };
 
 function nowStr(): string {
   const n = new Date();
@@ -117,6 +119,7 @@ const initialState: AppState = {
   summaryModalOpen: false,
   conflictResolved: false,
   freshSession: true,
+  pendingFinalise: false,
   sessionId: 'batch1',
   baseOdo: ODO_START,
 };
@@ -367,6 +370,13 @@ function reducer(state: AppState, action: Action): AppState {
         auditLog: [{ time: nowStr(), desc: `Session "${action.sessionId}" deleted — reports removed. Can be re-sorted anytime.`, hasPhoto: false }, ...state.auditLog],
       };
     }
+    case 'COME_BACK_LATER':
+      return {
+        ...state,
+        pendingFinalise: true,
+        currentScreen: 'sort' as Screen,
+        auditLog: [{ time: nowStr(), desc: 'User paused session — will return to finalise', hasPhoto: false }, ...state.auditLog],
+      };
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
       const targetSessionId = state.savedReports[idx].sessionId;

@@ -3,7 +3,7 @@ import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
-import { Undo2, ChevronRight, AlertTriangle, Trash2 } from 'lucide-react';
+import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -140,6 +140,36 @@ export function SortScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="sort-screen">
+      {state.pendingFinalise && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }}
+          data-testid="overlay-pending-finalise"
+        >
+          <div
+            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[24px_20px] animate-pop"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+          >
+            <div className="flex flex-col items-center gap-[10px] mb-[16px]">
+              <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+                <Lock className="w-[24px] h-[24px]" style={{ color: 'var(--wc-am)' }} />
+              </div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center leading-[1.2]">Finalise Your Report</div>
+              <div className="text-[12px] text-center leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
+                You need to finalise your current report before you can continue sorting. Head to <strong className="text-white">Reports</strong> and choose an action to proceed.
+              </div>
+            </div>
+            <button
+              className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all text-black"
+              style={{ background: 'var(--wc-y)' }}
+              onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'reports' })}
+              data-testid="button-go-finalise"
+            >
+              Go to Reports
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center px-[14px] pt-[5px] pb-[3px] flex-shrink-0 gap-[6px]">
         <button
           className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] transition-all"

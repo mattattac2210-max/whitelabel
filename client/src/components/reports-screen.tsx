@@ -396,7 +396,7 @@ export function ReportsScreen() {
                 <button
                   className="w-full p-[12px_14px] text-left cursor-pointer transition-all flex items-center gap-[10px]"
                   style={{ background: 'rgba(255,255,255,.04)', borderBottom: '1px solid var(--wc-border)' }}
-                  onClick={() => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+                  onClick={() => { setActionMenuOpen(false); dispatch({ type: 'COME_BACK_LATER' }); }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.08)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
                   data-testid="action-come-back-later"
