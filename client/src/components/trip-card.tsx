@@ -639,6 +639,24 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   </div>
                 </div>
               </div>
+              <div className="flex gap-[8px]">
+                <button
+                  className="flex-1 py-[10px] rounded-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
+                  style={{ background: 'rgba(180,180,180,.12)', border: '1.5px solid rgba(180,180,180,.35)', color: 'rgba(200,200,200,.9)' }}
+                  onClick={() => { setShowDetail(false); flyOut('left'); }}
+                  data-testid="button-detail-personal"
+                >
+                  Personal
+                </button>
+                <button
+                  className="flex-1 py-[10px] rounded-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
+                  style={{ background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.6)', color: 'var(--wc-y)' }}
+                  onClick={() => { setShowDetail(false); flyOut('right'); }}
+                  data-testid="button-detail-business"
+                >
+                  Business
+                </button>
+              </div>
               <div className="flex gap-[8px] mt-[4px]">
                 <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
                   <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
