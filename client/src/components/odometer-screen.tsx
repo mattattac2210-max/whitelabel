@@ -83,23 +83,11 @@ export function OdometerScreen() {
               </div>
               <div className="font-heading font-black text-[18px] uppercase text-white text-center">Accuracy Required</div>
             </div>
-            <div className="flex flex-col gap-[10px] mb-[16px]">
-              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
-                Both <strong className="text-white">personal and business</strong> trips must show accurate odometer readings.
-              </div>
-              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
-                Total km must be accurate with <strong className="text-white">no missing distances</strong> between trips.
-              </div>
-              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
-                Adjusting totals will <strong className="text-white">alter the calculations</strong> for claim estimates.
-              </div>
-              <div className="flex items-start gap-[8px] text-[12px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
-                <span style={{ color: 'var(--wc-am)' }}>{'\u2022'}</span>
-                All adjustments will be <strong className="text-white">logged in your audit report</strong>.
-              </div>
+            <div className="text-[12px] leading-[1.6] mb-[16px]" style={{ color: 'var(--wc-t2)' }}>
+              <p className="mb-[8px]">Both <strong className="text-white">personal and business</strong> trips must show accurate odometer readings.</p>
+              <p className="mb-[8px]">Total km must be accurate with <strong className="text-white">no missing distances</strong> between trips.</p>
+              <p className="mb-[8px]">Adjusting totals will <strong className="text-white">alter the calculations</strong> for claim estimates.</p>
+              <p>All adjustments will be <strong className="text-white">logged in your audit report</strong>.</p>
             </div>
             <button
               className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
