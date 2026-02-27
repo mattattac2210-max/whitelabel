@@ -1,15 +1,14 @@
 import { useState, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { getTripOdoEnd } from '@/lib/trip-data';
+import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Shield, Image, Clock } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
-  const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
   const [heroCollapsed, setHeroCollapsed] = useState(true);
-  const [odoInputs, setOdoInputs] = useState<Record<number, string>>({});
+  const [odoInputs, setOdoInputs] = useState<Record<string, string>>({});
   const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -67,9 +66,14 @@ export function OdometerScreen() {
 
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
         {state.trips.map((t, i) => {
+          const oStart = Math.round(getTripOdoStart(state.trips, i));
           const oEnd = Math.round(getTripOdoEnd(state.trips, i));
           const verified = state.verifiedSet.has(i);
-          const isExpanded = expandedTrip === i;
+
+          const startKey = `${i}-start`;
+          const endKey = `${i}-end`;
+          const curStart = parseInt(odoInputs[startKey] ?? String(oStart)) || oStart;
+          const curEnd = parseInt(odoInputs[endKey] ?? String(oEnd)) || oEnd;
 
           return (
             <div
@@ -81,114 +85,139 @@ export function OdometerScreen() {
               }}
               data-testid={`odo-trip-${i}`}
             >
-              <div className="flex items-center gap-3 p-[15px_16px] cursor-pointer" onClick={() => setExpandedTrip(isExpanded ? null : i)}>
+              <div className="flex items-center gap-3 p-[12px_14px]">
                 <div
-                  className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0 font-heading font-extrabold text-[13px] transition-all"
+                  className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 font-heading font-extrabold text-[12px] transition-all"
                   style={{
                     background: verified ? 'rgba(34,197,94,.18)' : 'transparent',
                     border: verified ? '2px solid var(--wc-gr)' : '2px solid var(--wc-border)',
                     color: verified ? 'var(--wc-gr)' : 'var(--wc-t3)',
-                    fontSize: verified ? '18px' : '13px',
+                    fontSize: verified ? '16px' : '12px',
                   }}
                 >
                   {verified ? <Check className="w-4 h-4" /> : i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`font-bold text-[14px] text-white mb-1 ${isExpanded ? '' : 'truncate'}`}>{t.from} &rarr; {t.to}</div>
-                  <div className="text-[12px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km &middot; {t.duration}</div>
+                  <div className="font-bold text-[13px] text-white truncate">{t.from} &rarr; {t.to}</div>
+                  <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km &middot; {t.duration}</div>
                 </div>
                 {t.photo && <Image className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />}
                 {!t.photo && verified && <Clock className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />}
-                <div className="font-heading font-extrabold text-[16px] flex-shrink-0 text-right leading-[1.2]" style={{ color: 'var(--wc-am)' }}>
-                  {oEnd.toLocaleString('en-AU')} km
-                  <small className="block font-data text-[7px] text-right mt-[2px]" style={{ color: 'var(--wc-t3)' }}>est. end odo</small>
-                </div>
-                <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform ml-[2px]" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(90deg)' : 'none' }} />
               </div>
-              <div className="p-[10px_12px_12px] flex flex-col gap-[8px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-                <div className="font-data text-[7px] uppercase tracking-[.09em]" style={{ color: 'var(--wc-t3)' }}>End odometer reading</div>
-                <div className="flex items-center gap-[6px]">
-                  <button
-                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center font-heading font-black text-[22px] cursor-pointer transition-all active:scale-90"
-                    style={{ background: 'rgba(239,68,68,.1)', border: '1.5px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
-                    onClick={() => {
-                      const cur = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
-                      setOdoInputs(prev => ({ ...prev, [i]: String(cur - 1) }));
-                    }}
-                    data-testid={`odo-minus-${i}`}
-                  >
-                    &minus;
-                  </button>
-                  <div
-                    className="flex-1 rounded-[10px] py-[8px] text-center font-heading font-black text-[24px] tracking-[.02em]"
-                    style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-am)' }}
-                    data-testid={`odo-input-${i}`}
-                  >
-                    {(parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd)).toLocaleString('en-AU')} <span className="font-data text-[10px] font-normal" style={{ color: 'var(--wc-t3)' }}>km</span>
+
+              <div className="px-[14px] pb-[10px] flex flex-col gap-[6px]">
+                <div className="flex gap-[8px]">
+                  <div className="flex-1">
+                    <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Odo</div>
+                    <div className="flex items-center gap-[4px]">
+                      <button
+                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
+                        style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
+                        onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart - 1) }))}
+                        data-testid={`odo-start-minus-${i}`}
+                      >
+                        &minus;
+                      </button>
+                      <div
+                        className="flex-1 rounded-[8px] py-[5px] text-center font-heading font-black text-[16px] tracking-[.02em]"
+                        style={{ background: 'rgba(255,255,255,.07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
+                        data-testid={`odo-start-${i}`}
+                      >
+                        {curStart.toLocaleString('en-AU')}
+                      </div>
+                      <button
+                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
+                        style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
+                        onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart + 1) }))}
+                        data-testid={`odo-start-plus-${i}`}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center font-heading font-black text-[22px] cursor-pointer transition-all active:scale-90"
-                    style={{ background: 'rgba(34,197,94,.1)', border: '1.5px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}
-                    onClick={() => {
-                      const cur = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
-                      setOdoInputs(prev => ({ ...prev, [i]: String(cur + 1) }));
-                    }}
-                    data-testid={`odo-plus-${i}`}
-                  >
-                    +
-                  </button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    ref={el => { fileInputRefs.current[i] = el; }}
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = ev => {
-                          setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
-                          dispatch({ type: 'ADD_PHOTO', tripIndex: i });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                      e.target.value = '';
-                    }}
-                    data-testid={`photo-file-${i}`}
-                  />
-                  <button
-                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
-                    style={{
-                      background: photoThumbs[i] ? 'transparent' : 'rgba(245,196,0,.07)',
-                      border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgba(245,196,0,.25)',
-                      color: 'var(--wc-y)',
-                    }}
-                    onClick={() => fileInputRefs.current[i]?.click()}
-                    data-testid={`photo-btn-${i}`}
-                  >
-                    {photoThumbs[i] ? (
-                      <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[9px]" />
-                    ) : (
-                      <Camera className="w-[18px] h-[18px]" />
-                    )}
-                  </button>
+                  <div className="flex-1">
+                    <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Odo</div>
+                    <div className="flex items-center gap-[4px]">
+                      <button
+                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
+                        style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
+                        onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd - 1) }))}
+                        data-testid={`odo-minus-${i}`}
+                      >
+                        &minus;
+                      </button>
+                      <div
+                        className="flex-1 rounded-[8px] py-[5px] text-center font-heading font-black text-[16px] tracking-[.02em]"
+                        style={{ background: 'rgba(255,255,255,.07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
+                        data-testid={`odo-input-${i}`}
+                      >
+                        {curEnd.toLocaleString('en-AU')}
+                      </div>
+                      <button
+                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
+                        style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
+                        onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd + 1) }))}
+                        data-testid={`odo-plus-${i}`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="font-data text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>
+                  Distance: <span style={{ color: 'var(--wc-y)' }}>{(curEnd - curStart).toLocaleString('en-AU')} km</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
-                    {t.photo ? (
-                      <><Check className="w-3 h-3 inline mr-1" /> Photo attached +2 pts</>
-                    ) : (
-                      'Tap camera to add photo +2 pts'
-                    )}
+                  <div className="flex items-center gap-[6px]">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      ref={el => { fileInputRefs.current[i] = el; }}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = ev => {
+                            setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
+                            dispatch({ type: 'ADD_PHOTO', tripIndex: i });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                        e.target.value = '';
+                      }}
+                      data-testid={`photo-file-${i}`}
+                    />
+                    <button
+                      className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
+                      style={{
+                        background: photoThumbs[i] ? 'transparent' : 'rgba(245,196,0,.07)',
+                        border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgba(245,196,0,.25)',
+                        color: 'var(--wc-y)',
+                      }}
+                      onClick={() => fileInputRefs.current[i]?.click()}
+                      data-testid={`photo-btn-${i}`}
+                    >
+                      {photoThumbs[i] ? (
+                        <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[7px]" />
+                      ) : (
+                        <Camera className="w-[14px] h-[14px]" />
+                      )}
+                    </button>
+                    <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
+                      {t.photo ? (
+                        <><Check className="w-3 h-3 inline mr-1" />Photo +2 pts</>
+                      ) : (
+                        'Add photo +2 pts'
+                      )}
+                    </div>
                   </div>
                   <button
-                    className="rounded-[9px] px-[14px] py-[6px] font-heading font-extrabold text-[12px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[5px] transition-all active:scale-95"
+                    className="rounded-[9px] px-[12px] py-[5px] font-heading font-extrabold text-[11px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[4px] transition-all active:scale-95"
                     style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
                     onClick={() => {
-                      const reading = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
-                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, reading, photo: t.photo });
-                      setExpandedTrip(null);
+                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, reading: curEnd, photo: t.photo });
                       if (state.verifiedSet.size + 1 >= state.trips.length) {
                         setTimeout(() => dispatch({ type: 'OPEN_SUMMARY' }), 500);
                       }
