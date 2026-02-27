@@ -163,9 +163,9 @@ export function SortScreen() {
           ))}
         </div>
       </div>
-      <div className="flex justify-between items-center px-4 pt-[3px] pb-[3px] flex-shrink-0 gap-2">
+      <div className="flex items-center px-4 pt-[3px] pb-[3px] flex-shrink-0 gap-[6px]">
         <button
-          className="flex items-center gap-[6px] rounded-[10px] px-[11px] py-[6px] transition-all"
+          className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[5px] transition-all"
           style={{
             background: 'rgba(255,255,255,.06)',
             border: '1px solid var(--wc-border)',
@@ -175,24 +175,17 @@ export function SortScreen() {
           onClick={() => dispatch({ type: 'UNDO_LAST' })}
           data-testid="button-undo"
         >
-          <Undo2 className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
-          <div>
-            <div className="font-heading font-bold text-[13px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</div>
-            {state.lastAction && (
-              <div className="text-[10px] truncate max-w-[140px]" style={{ color: 'var(--wc-t2)' }}>
-                {state.trips[state.lastAction.idx]?.from}
-              </div>
-            )}
-          </div>
+          <Undo2 className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[11px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</span>
         </button>
-        <div className="flex items-center gap-[7px] ml-auto">
-          <div className="flex items-center gap-1 rounded-[20px] px-[10px] py-1" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <span className="font-heading font-black text-[15px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
-            <span className="font-heading font-semibold text-[11px] uppercase tracking-[.04em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
+        <div className="flex items-center gap-[6px] ml-auto">
+          <div className="flex items-center gap-1 rounded-[20px] px-[8px] py-[3px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <span className="font-heading font-black text-[14px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
+            <span className="font-heading font-semibold text-[10px] uppercase tracking-[.04em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
           </div>
-          <div className="flex items-center gap-[5px] rounded-[20px] px-[10px] py-1" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
-            <div className="w-[6px] h-[6px] rounded-full animate-gps" style={{ background: 'var(--wc-gr)' }} />
-            <span className="font-data text-[9px] tracking-[.08em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
+          <div className="flex items-center gap-[4px] rounded-[20px] px-[8px] py-[3px]" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
+            <div className="w-[5px] h-[5px] rounded-full animate-gps" style={{ background: 'var(--wc-gr)' }} />
+            <span className="font-data text-[8px] tracking-[.08em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
           </div>
         </div>
       </div>
