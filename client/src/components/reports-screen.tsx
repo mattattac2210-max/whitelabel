@@ -125,8 +125,8 @@ export function ReportsScreen() {
                           <div className="flex items-center gap-[6px] flex-wrap">
                             <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
                             {!r.supersedes && (
-                              <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]" style={{ background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}>
-                                <Check className="w-[8px] h-[8px]" />
+                              <span className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px]" style={{ background: 'rgba(34,197,94,.12)', border: '1.5px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}>
+                                <Check className="w-[11px] h-[11px]" />
                                 Active — Rev {r.revision}
                               </span>
                             )}
