@@ -32,6 +32,10 @@ export function EditModal() {
   const [editDur, setEditDur] = useState('');
   const [editPurpose, setEditPurpose] = useState('');
   const [stops, setStops] = useState<string[]>([]);
+  const [routeKm, setRouteKm] = useState<number | null>(null);
+  const [routeDur, setRouteDur] = useState<string | null>(null);
+  const [calcStatus, setCalcStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const prevTripRef = useRef<number | null>(null);
 
@@ -44,14 +48,61 @@ export function EditModal() {
       setEditDur(trip.duration);
       setEditPurpose(trip.purposeLabel || '');
       setStops([]);
+      setRouteKm(null);
+      setRouteDur(null);
+      setCalcStatus('idle');
     }
   }, [state.editModalOpen, state.editTripIndex, trip]);
+
+  const calcRoute = useCallback(() => {
+    if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
+    routeTimerRef.current = setTimeout(() => {
+      if (!window._gmapsLoaded || !editFrom || !editTo) return;
+      const validStops = stops.filter(s => s.length > 3);
+      const waypoints = validStops.map(s => ({ location: s, stopover: true }));
+      setCalcStatus('loading');
+      const ds = new window.google.maps.DirectionsService();
+      ds.route({
+        origin: editFrom,
+        destination: editTo,
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        region: 'au',
+      }, (result: any, status: string) => {
+        if (status === 'OK' && result?.routes?.[0]) {
+          const route = result.routes[0];
+          let totalM = 0;
+          let totalSec = 0;
+          route.legs.forEach((leg: any) => {
+            totalM += leg.distance?.value || 0;
+            totalSec += leg.duration?.value || 0;
+          });
+          const km = totalM / 1000;
+          const mins = Math.round(totalSec / 60);
+          const durStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
+          setRouteKm(km);
+          setRouteDur(durStr);
+          setEditKm(km.toFixed(1));
+          setEditDur(durStr);
+          setCalcStatus('done');
+        } else {
+          setCalcStatus('error');
+        }
+      });
+    }, 600);
+  }, [editFrom, editTo, stops]);
+
+  useEffect(() => {
+    const validStops = stops.filter(s => s.length > 3);
+    if (editFrom.length > 5 && editTo.length > 5 && validStops.length > 0) {
+      calcRoute();
+    }
+  }, [stops, calcRoute]);
 
   if (!state.editModalOpen || !trip) return null;
 
   const km = parseFloat(editKm) || 0;
-  const stopEst = stops.filter(s => s.length > 3).length * 2.5;
-  const totalKm = km + stopEst;
+  const totalKm = km;
   const cpm = totalKm * RATE;
   const log = totalKm * RATE * 0.7;
 
@@ -66,12 +117,12 @@ export function EditModal() {
         fromSub: fromParts.slice(1).join(',').trim(),
         to: toParts[0].trim(),
         toSub: toParts.slice(1).join(',').trim(),
-        km: parseFloat(editKm) || trip.km,
+        km: totalKm,
         duration: editDur || trip.duration,
         purposeLabel: editPurpose || trip.purposeLabel,
       },
     });
-    dispatch({ type: 'ADD_LOG', desc: `Trip edited: ${fromParts[0].trim()} \u2192 ${toParts[0].trim()}`, hasPhoto: false });
+    dispatch({ type: 'ADD_LOG', desc: `Trip edited: ${fromParts[0].trim()} \u2192 ${toParts[0].trim()}${stops.filter(s => s.length > 3).length > 0 ? ` (${stops.filter(s => s.length > 3).length} stop${stops.filter(s => s.length > 3).length > 1 ? 's' : ''})` : ''}`, hasPhoto: false });
     setEditFrom('');
     setEditTo('');
     dispatch({ type: 'CLOSE_EDIT' });
@@ -135,7 +186,20 @@ export function EditModal() {
             <button className="rounded-[6px] p-[5px_7px] text-[11px] cursor-pointer" style={{ background: 'var(--wc-red)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }} onClick={() => { const n = [...stops]; n.splice(i, 1); setStops(n); }}>X</button>
           </div>
         ))}
-        <button className="w-full rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer mb-[10px] transition-all" style={{ background: 'rgba(255,255,255,.03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }} onClick={() => setStops([...stops, ''])} data-testid="button-add-stop">+ Add Stop</button>
+        <div className="flex gap-[5px] mb-[10px]">
+          <button className="flex-1 rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all" style={{ background: 'rgba(255,255,255,.03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }} onClick={() => setStops([...stops, ''])} data-testid="button-add-stop">+ Add Stop</button>
+          {(stops.filter(s => s.length > 3).length > 0 || editFrom !== `${trip.from}, ${trip.fromSub}` || editTo !== `${trip.to}, ${trip.toSub}`) && (
+            <button
+              className="rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
+              style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+              onClick={calcRoute}
+              data-testid="button-calc-route"
+            >
+              <MapPin className="w-[11px] h-[11px]" />
+              {calcStatus === 'loading' ? 'Calculating...' : 'Calc Route'}
+            </button>
+          )}
+        </div>
 
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>To Address</label>
@@ -178,7 +242,24 @@ export function EditModal() {
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook (70% biz)</span>
             <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>${log.toFixed(2)}</span>
           </div>
-          <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Figures update in real time as you edit distance or add stops</div>
+          {calcStatus === 'loading' && (
+            <div className="text-[9px] mt-[3px] flex items-center gap-[4px]" style={{ color: 'var(--wc-y)' }}>
+              <div className="w-[8px] h-[8px] rounded-full border-[1.5px] border-transparent animate-spin" style={{ borderTopColor: 'var(--wc-y)' }} />
+              Calculating route via Google Maps...
+            </div>
+          )}
+          {calcStatus === 'done' && routeKm !== null && (
+            <div className="text-[9px] mt-[3px] flex items-center gap-[4px]" style={{ color: 'var(--wc-gr)' }}>
+              <Check className="w-[9px] h-[9px]" />
+              Route calculated: {routeKm.toFixed(1)} km{routeDur ? `, ${routeDur}` : ''}
+            </div>
+          )}
+          {calcStatus === 'error' && (
+            <div className="text-[9px] mt-[3px]" style={{ color: 'var(--wc-re)' }}>Could not calculate route. Check addresses and try again.</div>
+          )}
+          {calcStatus === 'idle' && (
+            <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Add a stop or change addresses, then press Calc Route</div>
+          )}
         </div>
 
         <button
