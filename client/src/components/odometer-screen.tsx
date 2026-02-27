@@ -11,6 +11,7 @@ export function OdometerScreen() {
   const [odoInputs, setOdoInputs] = useState<Record<string, string>>({});
   const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [expandedVerified, setExpandedVerified] = useState<Set<number>>(new Set());
 
   const score = stats.auditScore;
   const scoreFill = score > 80 ? 'linear-gradient(90deg,var(--wc-gr),#22ff88)' : score > 65 ? 'linear-gradient(90deg,var(--wc-am),var(--wc-gr))' : 'linear-gradient(90deg,var(--wc-re),var(--wc-am))';
@@ -89,7 +90,18 @@ export function OdometerScreen() {
               }}
               data-testid={`odo-trip-${i}`}
             >
-              <div className="flex items-center gap-3 p-[12px_14px]">
+              <div
+                className="flex items-center gap-3 p-[12px_14px]"
+                style={{ cursor: verified ? 'pointer' : 'default' }}
+                onClick={() => {
+                  if (!verified) return;
+                  setExpandedVerified(prev => {
+                    const next = new Set(prev);
+                    if (next.has(i)) next.delete(i); else next.add(i);
+                    return next;
+                  });
+                }}
+              >
                 <div
                   className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 font-heading font-extrabold text-[12px] transition-all"
                   style={{
@@ -103,13 +115,22 @@ export function OdometerScreen() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-[13px] text-white truncate">{t.from} &rarr; {t.to}</div>
-                  <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km &middot; {t.duration}</div>
+                  <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+                    {t.date} &middot; {t.km} km &middot; {t.duration}
+                    {verified && <span style={{ color: 'var(--wc-am)' }}> &middot; {curStart.toLocaleString('en-AU')}→{curEnd.toLocaleString('en-AU')}</span>}
+                  </div>
                 </div>
                 {t.photo && <Image className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />}
                 {!t.photo && verified && <Clock className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />}
+                {verified && (
+                  <ChevronRight
+                    className="w-4 h-4 flex-shrink-0 transition-transform"
+                    style={{ color: 'var(--wc-t3)', transform: expandedVerified.has(i) ? 'rotate(90deg)' : 'none' }}
+                  />
+                )}
               </div>
 
-              <div className="px-[14px] pb-[10px] flex flex-col gap-[6px]">
+              {(!verified || expandedVerified.has(i)) && <div className="px-[14px] pb-[10px] flex flex-col gap-[6px]">
                 <div className="flex gap-[8px]">
                   <div className="flex-1">
                     <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Odo</div>
@@ -248,7 +269,7 @@ export function OdometerScreen() {
                     Confirm
                   </button>
                 </div>
-              </div>
+              </div>}
             </div>
           );
         })}
