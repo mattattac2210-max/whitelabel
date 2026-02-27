@@ -529,7 +529,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
-                <div className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                <div className="text-[#ffffff] text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
               </div>
             </div>
           </div>
