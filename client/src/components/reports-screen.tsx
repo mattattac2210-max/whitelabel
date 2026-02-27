@@ -237,6 +237,11 @@ export function ReportsScreen() {
                                       <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
                                       {t.purposeLabel && <span className="font-data text-[8px] px-[4px] py-[1px] rounded-[4px]" style={{ background: 'rgba(245,196,0,.1)', color: 'var(--wc-y)' }}>{t.purposeLabel}</span>}
                                     </div>
+                                    {t.odoStart != null && t.odoEnd != null && (
+                                      <div className="font-data text-[8px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>
+                                        ODO {t.odoStart.toLocaleString('en-AU')} &rarr; {t.odoEnd.toLocaleString('en-AU')} km
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="flex gap-[3px] flex-shrink-0">
                                     {t.verified && <Check className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />}
@@ -257,6 +262,11 @@ export function ReportsScreen() {
                                   <div className="flex-1 min-w-0">
                                     <div className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{t.from} &rarr; {t.to}</div>
                                     <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
+                                    {t.odoStart != null && t.odoEnd != null && (
+                                      <div className="font-data text-[8px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>
+                                        ODO {t.odoStart.toLocaleString('en-AU')} &rarr; {t.odoEnd.toLocaleString('en-AU')} km
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ))}

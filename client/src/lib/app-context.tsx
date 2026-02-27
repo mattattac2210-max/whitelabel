@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, batch2Trips, RATE } from './trip-data';
+import { type Trip, initialTrips, batch2Trips, RATE, getTripOdoStart, getTripOdoEnd } from './trip-data';
 
 export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports';
 
@@ -13,6 +13,8 @@ interface SavedTripSummary {
   purposeLabel: string | null;
   verified: boolean;
   photo: boolean;
+  odoStart: number;
+  odoEnd: number;
 }
 
 interface SavedReport {
@@ -247,10 +249,15 @@ function reducer(state: AppState, action: Action): AppState {
       const ts = now.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) +
         ' \u00B7 ' + now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
       const sortedTrips = state.trips.filter(t => t.type !== null);
-      const tripSummaries: SavedTripSummary[] = sortedTrips.map(t => ({
-        from: t.from, to: t.to, km: t.km, date: t.date, time: t.time,
-        type: t.type, purposeLabel: t.purposeLabel, verified: t.verified, photo: t.photo,
-      }));
+      const tripSummaries: SavedTripSummary[] = sortedTrips.map(t => {
+        const origIdx = state.trips.indexOf(t);
+        return {
+          from: t.from, to: t.to, km: t.km, date: t.date, time: t.time,
+          type: t.type, purposeLabel: t.purposeLabel, verified: t.verified, photo: t.photo,
+          odoStart: getTripOdoStart(state.trips, origIdx),
+          odoEnd: getTripOdoEnd(state.trips, origIdx),
+        };
+      });
       const areas: string[] = [];
       const unverifiedBiz = biz.filter(t => !t.verified);
       if (unverifiedBiz.length > 0) areas.push(`${unverifiedBiz.length} business trip${unverifiedBiz.length > 1 ? 's' : ''} not odometer-verified`);
