@@ -299,9 +299,6 @@ export function OdometerScreen() {
                     style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
                     onClick={() => {
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
-                      if (state.verifiedSet.size + 1 >= sorted.length) {
-                        setTimeout(() => dispatch({ type: 'OPEN_SUMMARY' }), 500);
-                      }
                     }}
                     data-testid={`confirm-odo-${i}`}
                   >
