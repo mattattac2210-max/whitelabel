@@ -930,11 +930,11 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               Pro-rata applies when you didn't hold the vehicle for the full income year (1 Jul – 30 Jun): purchased mid-year, sold mid-year, car written off, or used only part of the year.
             </InfoBlock>
 
-            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.2)' }}>
-              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(245,196,0,.07)', borderBottom: '1px solid rgba(245,196,0,.2)' }}>
+            <div className="rounded-[12px]" style={{ border: '1px solid rgba(245,196,0,.2)' }}>
+              <div className="px-[14px] py-[10px] rounded-t-[12px]" style={{ background: 'rgba(245,196,0,.07)', borderBottom: '1px solid rgba(245,196,0,.2)' }}>
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Example — Mid-Year Purchase</span>
               </div>
-              <div className="p-[14px_16px] flex flex-col gap-[3px]">
+              <div className="p-[14px_16px] flex flex-col gap-[3px] overflow-y-auto" style={{ maxHeight: '320px' }}>
                 <TableRow label="Purchased" val="1 Jan 2025" tip="The date you bought or started using the car for work. This determines how many days you held the vehicle in the financial year." />
                 <TableRow label="Days owned in FY2025" val="181 of 365 days" tip="The financial year runs 1 Jul to 30 Jun (365 days). You only owned the car from 1 Jan, so 181 days out of 365." />
                 <TableRow label="Total car expenses" val="$8,000" tip="All your car running costs added up: fuel, rego, insurance, servicing, depreciation, loan interest, etc." />
@@ -945,11 +945,11 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid rgba(34,197,94,.15)' }}>
-              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(34,197,94,.05)', borderBottom: '1px solid rgba(34,197,94,.15)' }}>
+            <div className="rounded-[12px]" style={{ border: '1px solid rgba(34,197,94,.15)' }}>
+              <div className="px-[14px] py-[10px] rounded-t-[12px]" style={{ background: 'rgba(34,197,94,.05)', borderBottom: '1px solid rgba(34,197,94,.15)' }}>
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-gr)' }}>Example — Full Year Logbook Method</span>
               </div>
-              <div className="p-[14px_16px] flex flex-col gap-[3px]">
+              <div className="p-[14px_16px] flex flex-col gap-[3px] overflow-y-auto" style={{ maxHeight: '320px' }}>
                 <TableRow label="Total km driven (FY)" val="22,000 km" tip="The total kilometres you drove the car during the full financial year (1 Jul to 30 Jun), for all purposes combined." />
                 <TableRow label="Business km (from logbook)" val="11,440 km" tip="The kilometres your 12-week logbook recorded as work-related trips. This sets your business use percentage." />
                 <TableRow label="Business use %" val="52%" highlight tip="Business km divided by total km: 11,440 / 22,000 = 52%. This percentage applies to all your car expenses for the year." />
@@ -966,8 +966,8 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
             <InfoBlock title="Cents Per Kilometre" color="gr">
               No logbook needed. Claim $0.88/km (2024–25) up to 5,000 km/year. You must be able to explain how you estimated work-related km. Cannot also claim fuel, depreciation etc. separately.
             </InfoBlock>
-            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
-              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(255,255,255,.03)', borderBottom: '1px solid var(--wc-border)' }}>
+            <div className="rounded-[12px]" style={{ border: '1px solid var(--wc-border)' }}>
+              <div className="px-[14px] py-[10px] rounded-t-[12px]" style={{ background: 'rgba(255,255,255,.03)', borderBottom: '1px solid var(--wc-border)' }}>
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em] text-white">Quick Comparison</span>
               </div>
               <table className="w-full font-data text-[12px]" style={{ borderCollapse: 'collapse' }}>
