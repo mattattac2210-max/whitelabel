@@ -80,6 +80,7 @@ function BusinessDial({ pct }: { pct: number }) {
         <span>0%</span><span>100%</span>
       </div>
       <div className="text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>Avg: <span className="font-semibold" style={{ color: 'rgba(245,196,0,.65)' }}>55&ndash;75%</span></div>
+      <div className="text-[6px] text-center mt-[-1px]" style={{ color: 'var(--wc-t3)', opacity: 0.6 }}>Based on ATO statistics</div>
     </div>
   );
 }
