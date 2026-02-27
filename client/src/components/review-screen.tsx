@@ -113,8 +113,10 @@ export function ReviewScreen() {
         <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
           {sorted.map((t) => {
             const origIdx = state.trips.indexOf(t);
-            const oStart = Math.round(getTripOdoStart(state.trips, origIdx));
-            const oEnd = Math.round(getTripOdoEnd(state.trips, origIdx));
+            const lastSavedOdo = state.savedReports.find(r => r.lastOdoReading)?.lastOdoReading;
+            const baseOdo = state.lastOdoReading || lastSavedOdo;
+            const oStart = Math.round(getTripOdoStart(state.trips, origIdx, baseOdo));
+            const oEnd = Math.round(getTripOdoEnd(state.trips, origIdx, baseOdo));
             const ded = t.type === 'business' ? '$' + (t.km * RATE).toFixed(2) : '\u2014';
             const isExpanded = expandedTrip === origIdx;
 

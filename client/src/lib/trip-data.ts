@@ -48,7 +48,7 @@ export const initialTrips: Trip[] = [
   { id: 7, date: 'Mon, 24 Feb', day: 24, month: 1, year: 2026, time: '4:45\u20135:30 PM', duration: '45 min', km: 21.2, from: 'Commercial Job \u2014 CBD', fromSub: 'Melbourne VIC 3000', to: 'Home', toSub: 'Spotswood VIC 3015', type: null, verified: false, photo: false, odoReading: null, odoStartReading: null, purposeLabel: null, purposeIndex: null },
 ];
 
-export function getTripOdoStart(trips: Trip[], idx: number): number {
+export function getTripOdoStart(trips: Trip[], idx: number, baseOdo?: number | null): number {
   if (trips[idx].odoStartReading != null) return trips[idx].odoStartReading!;
   for (let i = idx - 1; i >= 0; i--) {
     if (trips[i].odoReading != null) {
@@ -57,12 +57,13 @@ export function getTripOdoStart(trips: Trip[], idx: number): number {
       return o;
     }
   }
-  let o = ODO_START;
+  const base = baseOdo ?? ODO_START;
+  let o = base;
   for (let i = 0; i < idx; i++) o += trips[i].km;
   return o;
 }
 
-export function getTripOdoEnd(trips: Trip[], idx: number): number {
+export function getTripOdoEnd(trips: Trip[], idx: number, baseOdo?: number | null): number {
   if (trips[idx].odoReading != null) return trips[idx].odoReading!;
-  return getTripOdoStart(trips, idx) + trips[idx].km;
+  return getTripOdoStart(trips, idx, baseOdo) + trips[idx].km;
 }

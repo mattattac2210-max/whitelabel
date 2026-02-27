@@ -22,8 +22,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const [isFlying, setIsFlying] = useState(false);
   const startXRef = useRef(0);
 
-  const oStart = getTripOdoStart(state.trips, tripIndex);
-  const oEnd = getTripOdoEnd(state.trips, tripIndex);
+  const lastSavedOdo = state.savedReports.find(r => r.lastOdoReading)?.lastOdoReading;
+  const baseOdo = state.lastOdoReading || lastSavedOdo;
+  const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
+  const oEnd = getTripOdoEnd(state.trips, tripIndex, baseOdo);
 
   const swipeRatio = Math.min(Math.abs(dragX) / 120, 1);
   const isBizSwipe = dragX > 0;
