@@ -363,15 +363,6 @@ function exportCSV(report: any) {
 }
 
 function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
-  const today = new Date();
-  const weeks = Array.from({ length: 12 }, (_, i) => {
-    const start = new Date(today);
-    start.setDate(today.getDate() - (11 - i) * 7);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return { start, end };
-  });
-
   const activeReports = savedReports.filter(r => !r.supersedes);
 
   function parseAUDate(dateStr: string): Date | null {
@@ -379,6 +370,26 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
     if (!parts || parts.length !== 3) return null;
     return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
   }
+
+  const allDates = activeReports.flatMap(r =>
+    (r.trips || []).map((t: any) => parseAUDate(t.date)).filter(Boolean) as Date[]
+  );
+  const earliestTrip = allDates.length > 0
+    ? new Date(Math.min(...allDates.map(d => d.getTime())))
+    : new Date();
+
+  const weekStart = new Date(earliestTrip);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+
+  const weeks = Array.from({ length: 12 }, (_, i) => {
+    const start = new Date(weekStart);
+    start.setDate(weekStart.getDate() + i * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end };
+  });
+
+  const today = new Date();
 
   function weekHasCoverage(wStart: Date, wEnd: Date) {
     return activeReports.some(r => {
@@ -419,7 +430,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
       <div className="flex gap-[2px] mb-[3px]">
         {weeks.map((w, i) => {
           const covered = weekHasCoverage(w.start, w.end);
-          const isCurrent = i === 11;
+          const isCurrent = today >= w.start && today <= w.end;
           return (
             <div key={i} className="flex-1 rounded-[3px]"
               style={{
