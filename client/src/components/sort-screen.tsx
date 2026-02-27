@@ -3,7 +3,7 @@ import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
-import { Undo2, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Undo2, ChevronRight, AlertTriangle, Trash2 } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -90,6 +90,7 @@ export function SortScreen() {
   const [flashAmt, setFlashAmt] = useState<string | null>(null);
   const [dedPop, setDedPop] = useState(false);
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [tutorialPhase, setTutorialPhase] = useState<'idle' | 'left' | 'right' | 'done'>('idle');
   const tutorialRan = useRef(false);
   const tutorialTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -239,6 +240,36 @@ export function SortScreen() {
               />
             ))}
           </>
+        ) : state.trips.length === 0 ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-[12px] p-7 z-50">
+            <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)' }}>
+              <Trash2 className="w-7 h-7" style={{ color: 'var(--wc-t3)' }} />
+            </div>
+            <div className="font-heading font-black text-[22px] uppercase text-white text-center leading-none" data-testid="text-no-trips">No Sort Cards</div>
+            <div className="text-[12px] text-center leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>
+              All sort cards have been deleted. Use Reset Demo to load sample trips, or connect your GPS to import new trips.
+            </div>
+            <div className="flex flex-col gap-[7px] w-full mt-1">
+              <button
+                className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
+                style={{ background: 'var(--wc-y)' }}
+                onClick={() => dispatch({ type: 'RESET_DEMO' })}
+                data-testid="button-reload-demo"
+              >
+                Load Sample Trips
+              </button>
+              {state.savedReports.length > 0 && (
+                <button
+                  className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
+                  style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                  onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'reports' })}
+                  data-testid="button-view-reports-empty"
+                >
+                  View Saved Reports
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-[9px] p-7 z-50">
             <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center" style={{ background: 'var(--wc-yd)', border: '2px solid var(--wc-y)' }}>
@@ -282,6 +313,45 @@ export function SortScreen() {
               >
                 &larr; Reset demo
               </button>
+
+              {!confirmDelete ? (
+                <button
+                  className="w-full rounded-[11px] py-[9px] mt-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+                  style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
+                  onClick={() => setConfirmDelete(true)}
+                  data-testid="button-delete-trips"
+                >
+                  <Trash2 className="w-[13px] h-[13px]" />
+                  Delete All Sort Cards
+                </button>
+              ) : (
+                <div className="w-full mt-[6px] rounded-[11px] p-[10px_12px]" style={{ background: 'rgba(239,68,68,.06)', border: '1.5px solid rgba(239,68,68,.3)' }}>
+                  <div className="flex items-start gap-[6px] mb-[8px]">
+                    <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
+                    <span className="text-[11px] leading-[1.4]" style={{ color: 'rgba(239,68,68,.85)' }}>
+                      <strong>This cannot be undone.</strong> Check your reports are accurate for this session before deleting your sort cards.
+                    </span>
+                  </div>
+                  <div className="flex gap-[6px]">
+                    <button
+                      className="flex-1 rounded-[8px] py-[7px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', color: '#EF4444' }}
+                      onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}
+                      data-testid="button-confirm-delete"
+                    >
+                      Yes, Delete All
+                    </button>
+                    <button
+                      className="flex-1 rounded-[8px] py-[7px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      style={{ background: 'transparent', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                      onClick={() => setConfirmDelete(false)}
+                      data-testid="button-cancel-delete"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

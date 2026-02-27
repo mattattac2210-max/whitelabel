@@ -75,7 +75,8 @@ type Action =
   | { type: 'SAVE_SESSION' }
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
   | { type: 'SET_MANUAL_ODO'; reading: number }
-  | { type: 'RESET_DEMO' };
+  | { type: 'RESET_DEMO' }
+  | { type: 'DELETE_ALL_TRIPS' };
 
 function nowStr(): string {
   const n = new Date();
@@ -299,6 +300,14 @@ function reducer(state: AppState, action: Action): AppState {
         trips: initialTrips.map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
+      };
+    case 'DELETE_ALL_TRIPS':
+      return {
+        ...initialState,
+        trips: [],
+        savedReports: state.savedReports,
+        sessionStartTime: Date.now(),
+        auditLog: [{ time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false }, ...state.auditLog],
       };
     default:
       return state;
