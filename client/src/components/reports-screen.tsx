@@ -429,12 +429,12 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
           <BarChart2 className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
           <span className="font-heading font-bold text-[15px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-y)' }}>12-Week Coverage</span>
         </div>
-        <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>Active reports only</span>
+        <span className="font-data text-[11px] text-white">Active reports only</span>
       </div>
 
       <div className="flex gap-[3px] mb-[4px]">
         {weeks.map((_, i) => (
-          <div key={i} className="flex-1 font-data text-[10px] text-center" style={{ color: 'var(--wc-t3)' }}>
+          <div key={i} className="flex-1 font-data text-[10px] text-center text-white">
             {monthLabels[i]}
           </div>
         ))}
@@ -469,7 +469,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
 
       <div className="flex gap-[3px] mb-[10px]">
         {weeks.map((_, i) => (
-          <div key={i} className="flex-1 font-data text-[9px] text-center" style={{ color: 'rgba(255,255,255,.25)' }}>W{i+1}</div>
+          <div key={i} className="flex-1 font-data text-[9px] text-center text-white">W{i+1}</div>
         ))}
       </div>
 
@@ -482,7 +482,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         ].map((l, i) => (
           <div key={i} className="flex items-center gap-[6px]">
             {l.custom}
-            <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>{l.label}</span>
+            <span className="font-data text-[11px] text-white">{l.label}</span>
           </div>
         ))}
       </div>
@@ -490,15 +490,15 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
       {activeReports.length > 0 && (
         <div className="mt-[14px] pt-[12px] flex gap-[16px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
           <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sessions saved</div>
+            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Sessions saved</div>
             <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{activeReports.length}</div>
           </div>
           <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Weeks covered</div>
+            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Weeks covered</div>
             <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{weeks.filter(w => weekHasCoverage(w.start, w.end)).length}</div>
           </div>
           <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Total biz km</div>
+            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Total biz km</div>
             <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>
               {activeReports.reduce((s, r) => s + (r.trips || []).filter((t: any) => t.type === 'business').reduce((ss: number, t: any) => ss + t.km, 0), 0).toFixed(0)}
             </div>
