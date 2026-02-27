@@ -41,8 +41,8 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const buildUrl = (polyPart?: string, bounds?: {n:number,s:number,e:number,w:number}) => {
       let visibleParam = `&visible=${fromEnc}%7C${toEnc}`;
       if (bounds) {
-        const latPad = (bounds.n - bounds.s) * 0.6;
-        const lngPad = (bounds.e - bounds.w) * 0.6;
+        const latPad = (bounds.n - bounds.s) * 0.4;
+        const lngPad = (bounds.e - bounds.w) * 0.4;
         const padN = (bounds.n + latPad).toFixed(6);
         const padS = (bounds.s - latPad).toFixed(6);
         const padE = (bounds.e + lngPad).toFixed(6);
