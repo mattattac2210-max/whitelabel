@@ -403,8 +403,8 @@ export function ReportsScreen() {
                 >
                   <Trash2 className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                   <div>
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Delete Sort Cards Only</div>
-                    <div className="text-[10px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>Keep reports, remove original trip cards</div>
+                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>Done — Delete Sort Cards</div>
+                    <div className="text-[10px] mt-[1px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>This exits the sorting page. Ensure your records are correct before selecting this option. Reports are kept, original trip cards are removed.</div>
                   </div>
                 </button>
                 <div className="p-[10px_14px_4px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
