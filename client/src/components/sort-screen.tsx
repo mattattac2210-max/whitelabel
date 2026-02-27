@@ -3,7 +3,7 @@ import { useApp, useComputedStats } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
-import { Undo2 } from 'lucide-react';
+import { Undo2, ChevronRight } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -131,6 +131,10 @@ export function SortScreen() {
   const logbookPct = Math.min(100, Math.round((state.dedTotal / 5000) * 100));
 
   const sortDone = isComplete;
+  const classifyDone = state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length;
+  const odoDone = state.lastOdoReading != null;
+
+  const nextScreen = !sortDone ? null : !classifyDone ? 'classify' as const : 'review' as const;
 
   return (
     <div className="flex flex-col h-full" data-testid="sort-screen">
@@ -152,11 +156,11 @@ export function SortScreen() {
 
         <div className="flex items-center gap-[6px]">
           {([
-            { id: 'step1', label: 'Sort', active: true, done: sortDone },
-            { id: 'step2', label: 'Classify', active: false, done: false },
-            { id: 'step3', label: 'Review', active: false, done: false },
-            { id: 'step4', label: 'Odo', active: false, done: false },
-          ] as { id: string; label: string; active: boolean; done: boolean }[]).map((step, i, arr) => (
+            { id: 'step1', label: 'Sort', active: !sortDone, done: sortDone, screen: 'sort' as const },
+            { id: 'step2', label: 'Classify', active: sortDone && !classifyDone, done: classifyDone, screen: 'classify' as const },
+            { id: 'step3', label: 'Review', active: sortDone && classifyDone && !odoDone, done: sortDone && classifyDone && odoDone, screen: 'review' as const },
+            { id: 'step4', label: 'Odo', active: false, done: odoDone, screen: 'odometer' as const },
+          ]).map((step, i, arr) => (
             <div key={step.id} className="flex items-center gap-[3px]">
               <div
                 className="w-[14px] h-[14px] rounded-full flex items-center justify-center font-heading text-[7px] font-bold transition-all"
@@ -183,6 +187,17 @@ export function SortScreen() {
             <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
             <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
           </div>
+          {nextScreen && (
+            <button
+              className="flex items-center gap-[2px] rounded-[20px] px-[7px] py-[2px] cursor-pointer transition-all"
+              style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.35)' }}
+              onClick={() => nextScreen === 'classify' ? dispatch({ type: 'INIT_CLASSIFY' }) : dispatch({ type: 'GO_SCREEN', screen: nextScreen })}
+              data-testid="button-next-step"
+            >
+              <span className="font-heading font-bold text-[9px] uppercase tracking-[.03em]" style={{ color: 'var(--wc-y)' }}>Next</span>
+              <ChevronRight className="w-[10px] h-[10px]" style={{ color: 'var(--wc-y)' }} />
+            </button>
+          )}
           <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
             <div className="w-[5px] h-[5px] rounded-full animate-gps" style={{ background: 'var(--wc-gr)' }} />
             <span className="font-data text-[7px] tracking-[.06em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
