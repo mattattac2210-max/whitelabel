@@ -5,21 +5,61 @@ import { MapPin, Pointer } from 'lucide-react';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
+const polylineCache = new Map<string, string>();
+
 function StaticRouteMap({ from, to }: { from: string; to: string }) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const fetchedRef = useRef('');
 
   useEffect(() => {
-    const key = `${from}|${to}`;
-    if (!MAPS_KEY || fetchedRef.current === key) return;
-    fetchedRef.current = key;
+    const cacheKey = `${from}|${to}`;
+    if (!MAPS_KEY || fetchedRef.current === cacheKey) return;
+    fetchedRef.current = cacheKey;
 
     const fromEnc = encodeURIComponent(from);
     const toEnc = encodeURIComponent(to);
-    const url = `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&style=feature:all|element:geometry|color:0x1a1a2e&style=feature:all|element:labels.text.fill|color:0x8a8a8a&style=feature:all|element:labels.text.stroke|color:0x0a0a14&style=feature:road|element:geometry|color:0x2a2a3e&style=feature:road.highway|element:geometry|color:0x3a3a50&style=feature:water|element:geometry|color:0x0d1b2a&style=feature:poi|visibility:off&markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}&path=color:0xF5C400CC|weight:4|${fromEnc}|${toEnc}&key=${MAPS_KEY}`;
-    setImgUrl(url);
-    setError(false);
+    const darkStyles = 'style=feature:all|element:geometry|color:0x1a1a2e&style=feature:all|element:labels.text.fill|color:0x8a8a8a&style=feature:all|element:labels.text.stroke|color:0x0a0a14&style=feature:road|element:geometry|color:0x2a2a3e&style=feature:road.highway|element:geometry|color:0x3a3a50&style=feature:water|element:geometry|color:0x0d1b2a&style=feature:poi|visibility:off';
+    const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
+
+    const buildUrl = (polyPart?: string) => {
+      const pathParam = polyPart ? `&path=color:0xF5C400CC|weight:4|enc:${polyPart}` : '';
+      return `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&maptype=roadmap&${darkStyles}&${markers}${pathParam}&key=${MAPS_KEY}`;
+    };
+
+    const cached = polylineCache.get(cacheKey);
+    if (cached) {
+      setImgUrl(buildUrl(cached));
+      setError(false);
+      return;
+    }
+
+    if (window._gmapsLoaded && window.google?.maps) {
+      const ds = new window.google.maps.DirectionsService();
+      ds.route({
+        origin: from,
+        destination: to,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        region: 'au',
+      }, (result: any, status: string) => {
+        if (status === 'OK' && result?.routes?.[0]?.overview_polyline) {
+          const poly = result.routes[0].overview_polyline;
+          const encoded = typeof poly === 'string' ? poly : poly.toJSON?.() || '';
+          if (encoded) {
+            polylineCache.set(cacheKey, encoded);
+            setImgUrl(buildUrl(encoded));
+          } else {
+            setImgUrl(buildUrl());
+          }
+        } else {
+          setImgUrl(buildUrl());
+        }
+        setError(false);
+      });
+    } else {
+      setImgUrl(buildUrl());
+      setError(false);
+    }
   }, [from, to]);
 
   if (error || !imgUrl) {
