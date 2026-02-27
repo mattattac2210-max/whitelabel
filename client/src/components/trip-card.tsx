@@ -319,6 +319,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const [detailDragX, setDetailDragX] = useState(0);
   const [detailDragging, setDetailDragging] = useState(false);
   const detailStartX = useRef(0);
+  const detailStartY = useRef(0);
+  const detailLocked = useRef(false);
+  const detailMultitouch = useRef(false);
+  const activePointers = useRef(new Set<number>());
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
@@ -633,28 +637,59 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             onPointerDown={e => {
               const target = e.target as HTMLElement;
               if (target.closest('button') || target.tagName === 'BUTTON') return;
-              setDetailDragging(true);
+              activePointers.current.add(e.pointerId);
+              if (activePointers.current.size > 1) {
+                detailMultitouch.current = true;
+                setDetailDragging(false);
+                setDetailDragX(0);
+                return;
+              }
+              detailMultitouch.current = false;
+              detailLocked.current = false;
               detailStartX.current = e.clientX;
+              detailStartY.current = e.clientY;
+              setDetailDragging(true);
               (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
             }}
             onPointerMove={e => {
-              if (!detailDragging) return;
-              setDetailDragX(e.clientX - detailStartX.current);
+              if (!detailDragging || detailMultitouch.current) return;
+              const dx = e.clientX - detailStartX.current;
+              const dy = e.clientY - detailStartY.current;
+              if (!detailLocked.current) {
+                if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
+                if (Math.abs(dy) > Math.abs(dx)) {
+                  setDetailDragging(false);
+                  return;
+                }
+                detailLocked.current = true;
+              }
+              setDetailDragX(dx);
             }}
-            onPointerUp={() => {
-              if (!detailDragging) return;
+            onPointerUp={e => {
+              activePointers.current.delete(e.pointerId);
+              if (!detailDragging || detailMultitouch.current) {
+                if (activePointers.current.size === 0) detailMultitouch.current = false;
+                setDetailDragging(false);
+                setDetailDragX(0);
+                return;
+              }
               setDetailDragging(false);
-              if (detailDragX > 60) {
+              if (detailDragX > 100) {
                 setShowDetail(false);
                 setDetailDragX(0);
                 flyOut('right');
-              } else if (detailDragX < -60) {
+              } else if (detailDragX < -100) {
                 setShowDetail(false);
                 setDetailDragX(0);
                 flyOut('left');
               } else {
                 setDetailDragX(0);
               }
+            }}
+            onPointerCancel={e => {
+              activePointers.current.delete(e.pointerId);
+              setDetailDragging(false);
+              setDetailDragX(0);
             }}
           >
             {detailDragX > 15 && (
