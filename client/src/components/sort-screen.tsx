@@ -355,15 +355,6 @@ export function SortScreen() {
                 &larr; Reset demo
               </button>
 
-              <button
-                className="w-full rounded-[11px] py-[9px] mt-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
-                style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.25)', color: 'rgba(239,68,68,.7)' }}
-                onClick={() => setConfirmDelete(true)}
-                data-testid="button-delete-trips"
-              >
-                <Trash2 className="w-[13px] h-[13px]" />
-                Delete All Sort Cards
-              </button>
             </div>
           </div>
         )}
@@ -414,9 +405,21 @@ export function SortScreen() {
 
           <div className="flex gap-[5px]">
             <BusinessDial pct={stats.bizPct} />
-            {currentTrip && <MiniCalendar day={currentTrip.day} month={currentTrip.month} year={currentTrip.year} />}
-            {!currentTrip && state.trips.length > 0 && <MiniCalendar day={state.trips[state.trips.length - 1].day} month={state.trips[state.trips.length - 1].month} year={state.trips[state.trips.length - 1].year} />}
+            {!isComplete && currentTrip && <MiniCalendar day={currentTrip.day} month={currentTrip.month} year={currentTrip.year} />}
+            {!isComplete && !currentTrip && state.trips.length > 0 && <MiniCalendar day={state.trips[state.trips.length - 1].day} month={state.trips[state.trips.length - 1].month} year={state.trips[state.trips.length - 1].year} />}
           </div>
+
+          {isComplete && state.trips.length > 0 && (
+            <button
+              className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[5px]"
+              style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }}
+              onClick={() => setConfirmDelete(true)}
+              data-testid="button-delete-trips"
+            >
+              <Trash2 className="w-[11px] h-[11px]" />
+              Delete All Sort Cards
+            </button>
+          )}
 
           <div className="py-[2px]">
             <div className="text-[9px] text-center leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
