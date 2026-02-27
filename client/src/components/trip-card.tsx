@@ -71,6 +71,9 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
     flyOut('right');
   }, [flyOut]);
 
+  const isTutorialActive = tutorialPhase === 'left' || tutorialPhase === 'right';
+  const showFingerGesture = isTutorialActive || tutorialPhase === 'idle';
+
   const getTransform = () => {
     if (isFlying) return `translateX(${dragX}px) rotate(${dragX > 0 ? 14 : -14}deg)`;
     if (isDragging) return `translateX(${dragX}px) rotate(${dragX * 0.065}deg)`;
@@ -90,6 +93,9 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
     return 1;
   };
 
+  const perBtnHighlight = tutorialPhase === 'left';
+  const bizBtnHighlight = tutorialPhase === 'right';
+
   return (
     <div
       ref={cardRef}
@@ -100,7 +106,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         boxShadow: '0 0 18px rgba(245,196,0,.25), 0 0 40px rgba(245,196,0,.1), 0 16px 50px rgba(0,0,0,.7)',
         transform: getTransform(),
         opacity: getOpacity(),
-        transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : (tutorialPhase === 'left' || tutorialPhase === 'right') ? 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
+        transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : isTutorialActive ? 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
         zIndex: isTop ? 10 : position === 1 ? 1 : 0,
         pointerEvents: isTop ? 'auto' : 'none',
         transformOrigin: 'center 62%',
@@ -118,47 +124,77 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             style={{
               background: 'linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22))',
               opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 0.6 : 0,
+              transition: 'opacity .4s',
             }}
           >
             <div
-              className="font-heading font-black text-[26px] tracking-[.05em] p-[5px_12px] rounded-[9px]"
+              className="font-heading font-black text-[22px] tracking-[.05em] p-[5px_14px] rounded-[9px]"
               style={{
                 color: 'var(--wc-y)',
-                border: '3px solid var(--wc-y)',
+                border: '2.5px solid var(--wc-y)',
                 transform: 'rotate(10deg)',
                 opacity: isBizSwipe ? swipeRatio : tutorialPhase === 'right' ? 0.85 : 0,
+                transition: 'opacity .4s',
               }}
             >
-              SORT: BUSINESS
+              Business
             </div>
           </div>
           <div
             className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-start p-3"
             style={{
-              background: 'linear-gradient(225deg,rgba(239,68,68,0),rgba(239,68,68,.22))',
+              background: 'linear-gradient(225deg,rgba(160,160,160,0),rgba(160,160,160,.15))',
               opacity: isPerSwipe ? swipeRatio * 0.8 : tutorialPhase === 'left' ? 0.6 : 0,
+              transition: 'opacity .4s',
             }}
           >
             <div
-              className="font-heading font-black text-[26px] tracking-[.05em] p-[5px_12px] rounded-[9px]"
+              className="font-heading font-black text-[22px] tracking-[.05em] p-[5px_14px] rounded-[9px]"
               style={{
-                color: 'var(--wc-re)',
-                border: '3px solid var(--wc-re)',
+                color: 'rgba(180,180,180,.9)',
+                border: '2.5px solid rgba(180,180,180,.6)',
                 transform: 'rotate(-10deg)',
                 opacity: isPerSwipe ? swipeRatio : tutorialPhase === 'left' ? 0.85 : 0,
+                transition: 'opacity .4s',
               }}
             >
-              SORT: PERSONAL
+              Personal
             </div>
           </div>
         </>
       )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#0c1018' }}>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center relative">
           <div className="flex flex-col items-center gap-[6px]" style={{ color: 'var(--wc-t3)' }}>
             <MapPin className="w-[20px] h-[20px] opacity-30" />
             <span className="font-data text-[9px] uppercase tracking-[.1em] opacity-40">Map</span>
           </div>
+          {isTop && tutorialPhase !== 'done' && (
+            <div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
+              style={{
+                opacity: isTutorialActive ? 0.45 : tutorialPhase === 'idle' ? 0.3 : 0,
+                transition: 'opacity .5s ease',
+              }}
+            >
+              <div className="flex flex-col items-center gap-[6px]">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.8)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2" />
+                  <path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v6" />
+                  <path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8" />
+                  <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8V8" />
+                </svg>
+                <div className="flex items-center gap-[8px]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M5 12l5-5M5 12l5 5" />
+                  </svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(200,200,200,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M19 12l-5-5M19 12l-5 5" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-[5px] px-[13px] py-[5px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
           <span className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
@@ -214,19 +250,29 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
 
         <div className="flex gap-[5px]" onPointerDown={e => e.stopPropagation()} onPointerUp={e => e.stopPropagation()} onPointerMove={e => e.stopPropagation()}>
           <button
-            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all"
-            style={{ background: 'transparent', border: '1.5px solid rgba(239,68,68,.3)', color: 'rgba(239,68,68,.65)' }}
+            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
+            style={{
+              background: perBtnHighlight ? 'rgba(180,180,180,.15)' : 'transparent',
+              border: perBtnHighlight ? '1.5px solid rgba(180,180,180,.5)' : '1.5px solid rgba(180,180,180,.2)',
+              color: perBtnHighlight ? 'rgba(200,200,200,.9)' : 'rgba(180,180,180,.5)',
+              transition: 'all .4s ease',
+              transform: perBtnHighlight ? 'scale(1.04)' : 'scale(1)',
+              boxShadow: perBtnHighlight ? '0 0 12px rgba(180,180,180,.2)' : 'none',
+            }}
             onClick={() => flyOut('left')}
             data-testid="button-personal"
           >
             Personal
           </button>
           <button
-            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 transition-all active:scale-95"
+            className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 active:scale-95"
             style={{
-              background: 'var(--wc-yd)',
-              border: '1.5px solid rgba(245,196,0,.45)',
+              background: bizBtnHighlight ? 'rgba(245,196,0,.2)' : 'var(--wc-yd)',
+              border: bizBtnHighlight ? '1.5px solid rgba(245,196,0,.7)' : '1.5px solid rgba(245,196,0,.45)',
               color: 'var(--wc-y)',
+              transition: 'all .4s ease',
+              transform: bizBtnHighlight ? 'scale(1.04)' : 'scale(1)',
+              boxShadow: bizBtnHighlight ? '0 0 12px rgba(245,196,0,.3)' : 'none',
             }}
             onClick={handleBusiness}
             data-testid="button-business"
@@ -236,8 +282,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         </div>
 
         <div className="flex items-center justify-between px-[2px] mt-[-2px]">
-          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(239,68,68,.55)' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(239,68,68,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
+          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(160,160,160,.55)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(160,160,160,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
             Swipe left
           </div>
           <div className="font-data text-[7px]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
