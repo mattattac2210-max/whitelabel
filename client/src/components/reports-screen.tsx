@@ -65,6 +65,14 @@ export function ReportsScreen() {
               You have resolved all current issues.
             </span>
           </div>
+          <button
+            className="font-heading font-bold text-[9px] uppercase tracking-[.05em] px-[6px] py-[3px] rounded-[5px] cursor-pointer"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            onClick={() => setShowConflictModal(true)}
+            data-testid="button-edit-active-report"
+          >
+            Edit
+          </button>
         </div>
       )}
 
