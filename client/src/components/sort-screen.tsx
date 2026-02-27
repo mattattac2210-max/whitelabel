@@ -140,29 +140,6 @@ export function SortScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="sort-screen">
-      {state.pendingFinalise && (
-        <div
-          className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-[12px] p-8"
-          style={{ background: 'rgba(10,10,10,.92)', backdropFilter: 'blur(4px)' }}
-          data-testid="overlay-pending-finalise"
-        >
-          <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
-            <Lock className="w-[24px] h-[24px]" style={{ color: 'var(--wc-am)' }} />
-          </div>
-          <div className="font-heading font-black text-[18px] uppercase text-white text-center leading-[1.2]">Sorting Paused</div>
-          <div className="text-[12px] text-center leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
-            You need to finalise your current report before you can continue sorting. Head to <strong className="text-white">Reports</strong> to finish up.
-          </div>
-          <button
-            className="w-full max-w-[260px] rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all text-black"
-            style={{ background: 'var(--wc-y)' }}
-            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'reports' })}
-            data-testid="button-go-finalise"
-          >
-            Go to Reports
-          </button>
-        </div>
-      )}
       <div className="flex items-center px-[14px] pt-[5px] pb-[3px] flex-shrink-0 gap-[6px]">
         <button
           className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] transition-all"
@@ -241,6 +218,39 @@ export function SortScreen() {
       </div>
 
       <div className="flex-1 relative mx-[14px]">
+        {state.pendingFinalise && (
+          <div
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-[10px] p-7 rounded-[14px]"
+            style={{ background: 'rgba(10,10,10,.94)', backdropFilter: 'blur(4px)' }}
+            data-testid="overlay-pending-finalise"
+          >
+            <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+              <Lock className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
+            </div>
+            <div className="font-heading font-black text-[17px] uppercase text-white text-center leading-[1.2]">Sorting Paused</div>
+            <div className="text-[11px] text-center leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
+              Finalise your current report before sorting new cards. Head to <strong className="text-white">Reports</strong> to finish up.
+            </div>
+            <div className="flex flex-col gap-[6px] w-full max-w-[240px] mt-[4px]">
+              <button
+                className="w-full rounded-[10px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all text-black"
+                style={{ background: 'var(--wc-y)' }}
+                onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'reports' })}
+                data-testid="button-go-finalise"
+              >
+                Go to Reports
+              </button>
+              <button
+                className="w-full rounded-[10px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                onClick={() => dispatch({ type: 'RESUME_SORTING' })}
+                data-testid="button-resume-sorting"
+              >
+                Return to Sorting
+              </button>
+            </div>
+          </div>
+        )}
         {flashAmt && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
             <div className="font-heading font-black text-[58px] leading-none animate-big-pop" style={{ color: 'var(--wc-gr)', textShadow: '0 0 40px rgba(34,197,94,.5)' }}>

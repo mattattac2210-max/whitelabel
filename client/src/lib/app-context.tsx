@@ -90,7 +90,8 @@ type Action =
   | { type: 'DELETE_ALL_TRIPS' }
   | { type: 'DELETE_SESSION'; sessionId: string }
   | { type: 'PROMOTE_REPORT'; reportIndex: number }
-  | { type: 'COME_BACK_LATER' };
+  | { type: 'COME_BACK_LATER' }
+  | { type: 'RESUME_SORTING' };
 
 function nowStr(): string {
   const n = new Date();
@@ -376,6 +377,12 @@ function reducer(state: AppState, action: Action): AppState {
         pendingFinalise: true,
         currentScreen: 'sort' as Screen,
         auditLog: [{ time: nowStr(), desc: 'User paused session — will return to finalise', hasPhoto: false }, ...state.auditLog],
+      };
+    case 'RESUME_SORTING':
+      return {
+        ...state,
+        pendingFinalise: false,
+        auditLog: [{ time: nowStr(), desc: 'User resumed sorting session', hasPhoto: false }, ...state.auditLog],
       };
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
