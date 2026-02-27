@@ -98,8 +98,8 @@ export function SortScreen() {
     if (tutorialRan.current || state.currentIndex > 0) return;
     tutorialRan.current = true;
     const t1 = setTimeout(() => setTutorialPhase('left'), 600);
-    const t2 = setTimeout(() => setTutorialPhase('right'), 1400);
-    const t3 = setTimeout(() => setTutorialPhase('done'), 2200);
+    const t2 = setTimeout(() => setTutorialPhase('right'), 2000);
+    const t3 = setTimeout(() => setTutorialPhase('done'), 3400);
     tutorialTimers.current = [t1, t2, t3];
     return () => { t1 && clearTimeout(t1); t2 && clearTimeout(t2); t3 && clearTimeout(t3); };
   }, [state.currentIndex]);

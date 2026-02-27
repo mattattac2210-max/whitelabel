@@ -121,42 +121,40 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       {isTop && (
         <>
           <div
-            className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-start justify-end p-3"
+            className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
             style={{
-              background: 'linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22))',
-              opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 0.6 : 0,
-              transition: 'opacity .4s',
+              background: isBizSwipe ? 'linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22))' : tutorialPhase === 'right' ? 'rgba(245,196,0,.08)' : 'transparent',
+              opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 1 : 0,
+              transition: 'opacity .5s, background .5s',
             }}
           >
             <div
-              className="font-heading font-black text-[22px] tracking-[.05em] p-[5px_14px] rounded-[9px]"
+              className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
               style={{
                 color: 'var(--wc-y)',
-                border: '2.5px solid var(--wc-y)',
-                transform: 'rotate(10deg)',
-                opacity: isBizSwipe ? swipeRatio : tutorialPhase === 'right' ? 0.85 : 0,
-                transition: 'opacity .4s',
+                border: '3px solid var(--wc-y)',
+                opacity: isBizSwipe ? swipeRatio : tutorialPhase === 'right' ? 0.9 : 0,
+                transition: 'opacity .5s',
               }}
             >
               Business
             </div>
           </div>
           <div
-            className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-start p-3"
+            className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
             style={{
-              background: 'linear-gradient(225deg,rgba(160,160,160,0),rgba(160,160,160,.15))',
-              opacity: isPerSwipe ? swipeRatio * 0.8 : tutorialPhase === 'left' ? 0.6 : 0,
-              transition: 'opacity .4s',
+              background: isPerSwipe ? 'linear-gradient(225deg,rgba(160,160,160,0),rgba(160,160,160,.15))' : tutorialPhase === 'left' ? 'rgba(160,160,160,.06)' : 'transparent',
+              opacity: isPerSwipe ? swipeRatio * 0.8 : tutorialPhase === 'left' ? 1 : 0,
+              transition: 'opacity .5s, background .5s',
             }}
           >
             <div
-              className="font-heading font-black text-[22px] tracking-[.05em] p-[5px_14px] rounded-[9px]"
+              className="font-heading font-black text-[28px] tracking-[.05em] p-[8px_20px] rounded-[12px]"
               style={{
                 color: 'rgba(180,180,180,.9)',
-                border: '2.5px solid rgba(180,180,180,.6)',
-                transform: 'rotate(-10deg)',
-                opacity: isPerSwipe ? swipeRatio : tutorialPhase === 'left' ? 0.85 : 0,
-                transition: 'opacity .4s',
+                border: '3px solid rgba(180,180,180,.6)',
+                opacity: isPerSwipe ? swipeRatio : tutorialPhase === 'left' ? 0.9 : 0,
+                transition: 'opacity .5s',
               }}
             >
               Personal
