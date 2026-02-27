@@ -103,41 +103,60 @@ export function OdometerScreen() {
                 </div>
                 <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform ml-[2px]" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(90deg)' : 'none' }} />
               </div>
-              {isExpanded && (
-                <div className="p-[14px_16px_16px] flex flex-col gap-3 border-t" style={{ borderColor: 'var(--wc-border)' }}>
-                  <div className="font-data text-[8px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Actual odometer reading at end of trip</div>
-                  <div className="flex items-stretch gap-2">
-                    <input
-                      className="flex-1 rounded-[11px] p-[13px_14px] font-heading font-extrabold text-[22px] text-white outline-none tracking-[.02em]"
-                      type="number"
-                      placeholder={String(Math.round(oEnd))}
-                      value={odoInputs[i] ?? String(Math.round(oEnd))}
-                      onChange={e => setOdoInputs(prev => ({ ...prev, [i]: e.target.value }))}
-                      style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid var(--wc-border)' }}
-                      data-testid={`odo-input-${i}`}
-                    />
-                    <button
-                      className="rounded-[11px] p-[13px_14px] font-heading font-bold text-[13px] uppercase tracking-[.04em] cursor-pointer flex flex-col items-center gap-1 transition-all"
-                      style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
-                      onClick={() => dispatch({ type: 'ADD_PHOTO', tripIndex: i })}
-                      data-testid={`photo-btn-${i}`}
-                    >
-                      <Camera className="w-4 h-4" />
-                      Photo +2pts
-                    </button>
+              <div className="p-[10px_12px_12px] flex flex-col gap-[8px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+                <div className="font-data text-[7px] uppercase tracking-[.09em]" style={{ color: 'var(--wc-t3)' }}>End odometer reading</div>
+                <div className="flex items-center gap-[6px]">
+                  <button
+                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center font-heading font-black text-[22px] cursor-pointer transition-all active:scale-90"
+                    style={{ background: 'rgba(239,68,68,.1)', border: '1.5px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
+                    onClick={() => {
+                      const cur = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
+                      setOdoInputs(prev => ({ ...prev, [i]: String(cur - 1) }));
+                    }}
+                    data-testid={`odo-minus-${i}`}
+                  >
+                    &minus;
+                  </button>
+                  <div
+                    className="flex-1 rounded-[10px] py-[8px] text-center font-heading font-black text-[24px] tracking-[.02em]"
+                    style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-am)' }}
+                    data-testid={`odo-input-${i}`}
+                  >
+                    {(parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd)).toLocaleString('en-AU')} <span className="font-data text-[10px] font-normal" style={{ color: 'var(--wc-t3)' }}>km</span>
                   </div>
-                  <div className="text-[10px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
+                  <button
+                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center font-heading font-black text-[22px] cursor-pointer transition-all active:scale-90"
+                    style={{ background: 'rgba(34,197,94,.1)', border: '1.5px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}
+                    onClick={() => {
+                      const cur = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
+                      setOdoInputs(prev => ({ ...prev, [i]: String(cur + 1) }));
+                    }}
+                    data-testid={`odo-plus-${i}`}
+                  >
+                    +
+                  </button>
+                  <button
+                    className="w-[40px] h-[40px] rounded-[10px] flex items-center justify-center cursor-pointer transition-all"
+                    style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+                    onClick={() => dispatch({ type: 'ADD_PHOTO', tripIndex: i })}
+                    data-testid={`photo-btn-${i}`}
+                  >
+                    <Camera className="w-[18px] h-[18px]" />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
                     {t.photo ? (
-                      <><Check className="w-3 h-3 inline mr-1" /> Photo attached - +2 audit pts</>
+                      <><Check className="w-3 h-3 inline mr-1" /> Photo attached</>
                     ) : (
-                      'No photo yet - timestamp only (+1 pt) - Add photo for +2 pts'
+                      'No photo - add for +2 pts'
                     )}
                   </div>
                   <button
-                    className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[14px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
-                    style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(245,196,0,.2)' }}
+                    className="rounded-[9px] px-[14px] py-[6px] font-heading font-extrabold text-[12px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[5px] transition-all active:scale-95"
+                    style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
                     onClick={() => {
-                      const reading = odoInputs[i] ? parseFloat(odoInputs[i]) : oEnd;
+                      const reading = parseInt(odoInputs[i] ?? String(Math.round(oEnd))) || Math.round(oEnd);
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, reading, photo: t.photo });
                       setExpandedTrip(null);
                       if (state.verifiedSet.size + 1 >= state.trips.length) {
@@ -146,11 +165,11 @@ export function OdometerScreen() {
                     }}
                     data-testid={`confirm-odo-${i}`}
                   >
-                    <Check className="w-4 h-4" strokeWidth={2.5} />
-                    Confirm Reading
+                    <Check className="w-3 h-3" strokeWidth={2.5} />
+                    Confirm
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
