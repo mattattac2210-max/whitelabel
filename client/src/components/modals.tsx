@@ -532,7 +532,7 @@ export function SummaryModal() {
 
         <div className="px-[20px] flex flex-col gap-[6px]">
           <button
-            className="w-full rounded-[12px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[15px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => {}}
             data-testid="button-understand-audit"
@@ -541,7 +541,7 @@ export function SummaryModal() {
             Understand Your Audit Score
           </button>
           <button
-            className="w-full rounded-[12px] py-[14px] font-heading font-black text-[16px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[12px] py-[14px] font-heading font-black text-[18px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
@@ -550,7 +550,7 @@ export function SummaryModal() {
             Save &amp; Generate Report
           </button>
           <button
-            className="w-full rounded-[12px] py-[11px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[15px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => dispatch({ type: 'CLOSE_SUMMARY' })}
             data-testid="button-back-modify"
@@ -558,7 +558,7 @@ export function SummaryModal() {
             &larr; Go Back &amp; Modify
           </button>
           <button
-            className="w-full py-[8px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full py-[10px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', color: 'var(--wc-t3)' }}
             onClick={() => { dispatch({ type: 'CLOSE_SUMMARY' }); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
             data-testid="button-exit-no-save"
