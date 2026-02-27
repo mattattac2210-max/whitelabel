@@ -377,6 +377,13 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
   const earliestTrip = allDates.length > 0
     ? new Date(Math.min(...allDates.map(d => d.getTime())))
     : new Date();
+  const latestTrip = allDates.length > 0
+    ? new Date(Math.max(...allDates.map(d => d.getTime())))
+    : new Date();
+
+  function fmtDateShort(d: Date) {
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
 
   const weekStart = new Date(earliestTrip);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
@@ -488,22 +495,34 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
       </div>
 
       {activeReports.length > 0 && (
-        <div className="mt-[14px] pt-[12px] flex gap-[16px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
-          <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Sessions saved</div>
-            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{activeReports.length}</div>
-          </div>
-          <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Weeks covered</div>
-            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{weeks.filter(w => weekHasCoverage(w.start, w.end)).length}</div>
-          </div>
-          <div>
-            <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Total biz km</div>
-            <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>
-              {activeReports.reduce((s, r) => s + (r.trips || []).filter((t: any) => t.type === 'business').reduce((ss: number, t: any) => ss + t.km, 0), 0).toFixed(0)}
+        <>
+          <div className="mt-[14px] pt-[12px] flex gap-[16px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
+            <div className="flex-1">
+              <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Start date</div>
+              <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>{fmtDateShort(earliestTrip)}</div>
+            </div>
+            <div className="flex-1">
+              <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">End date</div>
+              <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>{fmtDateShort(latestTrip)}</div>
             </div>
           </div>
-        </div>
+          <div className="mt-[8px] flex gap-[16px]">
+            <div>
+              <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Sessions saved</div>
+              <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{activeReports.length}</div>
+            </div>
+            <div>
+              <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Weeks covered</div>
+              <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>{weeks.filter(w => weekHasCoverage(w.start, w.end)).length}</div>
+            </div>
+            <div>
+              <div className="font-data text-[10px] uppercase tracking-[.08em] text-white">Total biz km</div>
+              <div className="font-heading font-bold text-[22px]" style={{ color: 'var(--wc-y)' }}>
+                {activeReports.reduce((s, r) => s + (r.trips || []).filter((t: any) => t.type === 'business').reduce((ss: number, t: any) => ss + t.km, 0), 0).toFixed(0)}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
