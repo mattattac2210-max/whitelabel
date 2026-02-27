@@ -3,6 +3,18 @@ import { type Trip, initialTrips, RATE } from './trip-data';
 
 export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports';
 
+interface SavedTripSummary {
+  from: string;
+  to: string;
+  km: number;
+  date: string;
+  time: string;
+  type: 'business' | 'personal' | null;
+  purposeLabel: string | null;
+  verified: boolean;
+  photo: boolean;
+}
+
 interface SavedReport {
   timestamp: string;
   bizCount: number;
@@ -14,6 +26,9 @@ interface SavedReport {
   auditScore: number;
   lastOdoReading: number | null;
   lastOdoVerifiedAt: string | null;
+  trips: SavedTripSummary[];
+  auditLog: { time: string; desc: string }[];
+  areasToCheck: string[];
 }
 
 interface AppState {
@@ -210,6 +225,21 @@ function reducer(state: AppState, action: Action): AppState {
       const now = new Date();
       const ts = now.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) +
         ' \u00B7 ' + now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+      const tripSummaries: SavedTripSummary[] = state.trips.map(t => ({
+        from: t.from, to: t.to, km: t.km, date: t.date, time: t.time,
+        type: t.type, purposeLabel: t.purposeLabel, verified: t.verified, photo: t.photo,
+      }));
+      const areas: string[] = [];
+      const unverifiedBiz = biz.filter(t => !t.verified);
+      if (unverifiedBiz.length > 0) areas.push(`${unverifiedBiz.length} business trip${unverifiedBiz.length > 1 ? 's' : ''} not odometer-verified`);
+      const noPurpose = biz.filter(t => !t.purposeLabel);
+      if (noPurpose.length > 0) areas.push(`${noPurpose.length} business trip${noPurpose.length > 1 ? 's' : ''} missing purpose category`);
+      const noPhoto = biz.filter(t => !t.photo);
+      if (noPhoto.length > 0) areas.push(`${noPhoto.length} business trip${noPhoto.length > 1 ? 's' : ''} without photo evidence`);
+      if (!state.lastOdoReading) areas.push('No odometer reading recorded for this session');
+      const unsorted = state.trips.filter(t => t.type === null);
+      if (unsorted.length > 0) areas.push(`${unsorted.length} trip${unsorted.length > 1 ? 's' : ''} not sorted yet`);
+      if (areas.length === 0) areas.push('All clear \u2014 looking good for ATO compliance');
       const report: SavedReport = {
         timestamp: ts,
         bizCount: biz.length,
@@ -221,6 +251,9 @@ function reducer(state: AppState, action: Action): AppState {
         auditScore: Math.min(100, 50 + state.verifiedSet.size * 2),
         lastOdoReading: state.lastOdoReading,
         lastOdoVerifiedAt: state.lastOdoVerifiedAt,
+        trips: tripSummaries,
+        auditLog: state.auditLog.map(e => ({ time: e.time, desc: e.desc })),
+        areasToCheck: areas,
       };
       return {
         ...state,

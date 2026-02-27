@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check, Camera, MapPin, Clock } from 'lucide-react';
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   return (
     <div className="flex flex-col h-full" data-testid="reports-screen">
@@ -20,46 +22,144 @@ export function ReportsScreen() {
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.savedReports.length} session{state.savedReports.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[14px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin pb-2">
         {state.savedReports.length === 0 ? (
           <div className="py-[30px] px-[14px] text-center text-[13px]" style={{ color: 'var(--wc-t3)' }}>
             No sessions saved yet.<br />Complete your first sort session to see reports here.
           </div>
         ) : (
-          state.savedReports.map((r, i) => (
-            <div key={i} className="rounded-[13px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid={`report-${i}`}>
-              <div className="font-data text-[9px] uppercase tracking-[.08em] mb-1" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
-              <div className="font-heading font-bold text-[15px] text-white mb-[6px]">Sort Session &mdash; {r.bizCount + r.perCount} trips</div>
-              <div className="flex gap-2 flex-wrap">
-                <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  <strong style={{ color: 'var(--wc-y)' }}>{r.bizCount}</strong> business
-                </span>
-                <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  <strong style={{ color: 'var(--wc-re)' }}>{r.perCount}</strong> personal
-                </span>
-                <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  Est. <strong style={{ color: 'var(--wc-y)' }}>{r.est}</strong>
-                </span>
-                <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  <strong style={{ color: 'var(--wc-y)' }}>{r.totalKm} km</strong>
-                </span>
-                <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  Audit <strong style={{ color: 'var(--wc-y)' }}>{r.auditScore}%</strong>
-                </span>
+          state.savedReports.map((r, i) => {
+            const isOpen = expandedIdx === i;
+            const bizTrips = r.trips?.filter(t => t.type === 'business') || [];
+            const perTrips = r.trips?.filter(t => t.type === 'personal') || [];
+
+            return (
+              <div key={i} className="rounded-[13px] overflow-hidden" style={{ background: 'var(--wc-card)', border: `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`, transition: 'border-color .2s' }} data-testid={`report-${i}`}>
+                <button
+                  className="w-full p-[12px_14px] text-left cursor-pointer"
+                  style={{ background: 'transparent' }}
+                  onClick={() => setExpandedIdx(isOpen ? null : i)}
+                  data-testid={`report-toggle-${i}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-data text-[9px] uppercase tracking-[.08em] mb-1" style={{ color: 'var(--wc-t3)' }}>{r.timestamp}</div>
+                      <div className="font-heading font-bold text-[15px] text-white mb-[6px]">Sort Session &mdash; {r.bizCount + r.perCount} trips</div>
+                    </div>
+                    {isOpen
+                      ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                      : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                    }
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      <strong style={{ color: 'var(--wc-y)' }}>{r.bizCount}</strong> business
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      <strong style={{ color: 'var(--wc-t2)' }}>{r.perCount}</strong> personal
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      Est. <strong style={{ color: 'var(--wc-y)' }}>{r.est}</strong>
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      <strong style={{ color: 'var(--wc-y)' }}>{r.totalKm} km</strong>
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      Audit <strong style={{ color: 'var(--wc-y)' }}>{r.auditScore}%</strong>
+                    </span>
+                  </div>
+                  {r.lastOdoVerifiedAt && (
+                    <div className="mt-1 text-[11px]" style={{ color: 'var(--wc-t2)' }}>
+                      Odo: <strong style={{ color: 'var(--wc-am)' }}>{r.lastOdoReading?.toLocaleString('en-AU')} km</strong>
+                      <span style={{ color: 'var(--wc-t3)' }}> &middot; verified {r.lastOdoVerifiedAt}</span>
+                    </div>
+                  )}
+                </button>
+
+                {isOpen && (
+                  <div className="px-[14px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
+
+                    {r.areasToCheck && r.areasToCheck.length > 0 && (
+                      <div className="mt-[12px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                        <div className="flex items-center gap-[6px] mb-[6px]">
+                          <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+                          <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Areas to Check</span>
+                        </div>
+                        {r.areasToCheck.map((a, ai) => (
+                          <div key={ai} className="flex items-start gap-[6px] mb-[3px]">
+                            <span className="text-[10px] mt-[2px]" style={{ color: r.areasToCheck[0].startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                              {r.areasToCheck[0].startsWith('All clear') ? '\u2713' : '\u2022'}
+                            </span>
+                            <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{a}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {bizTrips.length > 0 && (
+                      <div className="mt-[12px]">
+                        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-y)' }}>Business Trips</div>
+                        {bizTrips.map((t, ti) => (
+                          <div key={ti} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: ti < bizTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+                            <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] text-white truncate">{t.from} &rarr; {t.to}</div>
+                              <div className="flex gap-[6px] items-center">
+                                <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
+                                {t.purposeLabel && <span className="font-data text-[8px] px-[4px] py-[1px] rounded-[4px]" style={{ background: 'rgba(245,196,0,.1)', color: 'var(--wc-y)' }}>{t.purposeLabel}</span>}
+                              </div>
+                            </div>
+                            <div className="flex gap-[3px] flex-shrink-0">
+                              {t.verified && <Check className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />}
+                              {t.photo && <Camera className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />}
+                              {!t.verified && <span className="w-[12px] h-[12px] rounded-full" style={{ background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.3)' }} />}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {perTrips.length > 0 && (
+                      <div className="mt-[10px]">
+                        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-t3)' }}>Personal Trips</div>
+                        {perTrips.map((t, ti) => (
+                          <div key={ti} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: ti < perTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+                            <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{t.from} &rarr; {t.to}</div>
+                              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{t.date} &middot; {t.km} km</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {r.auditLog && r.auditLog.length > 0 && (
+                      <div className="mt-[12px]">
+                        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>Audit Log</div>
+                        <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.04)' }}>
+                          {r.auditLog.slice(0, 10).map((e, ei) => (
+                            <div key={ei} className="flex items-start gap-[6px] py-[3px]" style={{ borderBottom: ei < Math.min(r.auditLog.length, 10) - 1 ? '1px solid rgba(255,255,255,.03)' : 'none' }}>
+                              <Clock className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-t3)' }} />
+                              <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>{e.time}</span>
+                              <span className="text-[10px] flex-1" style={{ color: 'var(--wc-t2)' }}>{e.desc}</span>
+                            </div>
+                          ))}
+                          {r.auditLog.length > 10 && (
+                            <div className="text-[9px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>+{r.auditLog.length - 10} more entries</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-[10px] text-center">
+                      <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Last modified {r.timestamp}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              {r.unclassified > 0 && (
-                <div className="mt-1 text-[11px]" style={{ color: 'rgba(245,196,0,.7)' }}>
-                  {r.unclassified} trip{r.unclassified > 1 ? 's' : ''} unclassified
-                </div>
-              )}
-              {r.lastOdoVerifiedAt && (
-                <div className="mt-1 text-[11px]" style={{ color: 'var(--wc-t2)' }}>
-                  Odo: <strong style={{ color: 'var(--wc-am)' }}>{r.lastOdoReading?.toLocaleString('en-AU')} km</strong>
-                  <span style={{ color: 'var(--wc-t3)' }}> &middot; verified {r.lastOdoVerifiedAt}</span>
-                </div>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
