@@ -93,8 +93,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
     return 1;
   };
 
-  const perBtnHighlight = tutorialPhase === 'left';
-  const bizBtnHighlight = tutorialPhase === 'right';
+  const perBtnHighlight = tutorialPhase === 'left' || (isPerSwipe && swipeRatio > 0.15);
+  const bizBtnHighlight = tutorialPhase === 'right' || (isBizSwipe && swipeRatio > 0.15);
 
   return (
     <div
