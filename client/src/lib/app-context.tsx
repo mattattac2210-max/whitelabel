@@ -29,6 +29,8 @@ interface SavedReport {
   auditScore: number;
   lastOdoReading: number | null;
   lastOdoVerifiedAt: string | null;
+  odoRangeStart: number;
+  odoRangeEnd: number;
   trips: SavedTripSummary[];
   auditLog: { time: string; desc: string }[];
   areasToCheck: string[];
@@ -287,6 +289,8 @@ function reducer(state: AppState, action: Action): AppState {
         auditScore: Math.min(100, 50 + state.verifiedSet.size * 2),
         lastOdoReading: state.lastOdoReading,
         lastOdoVerifiedAt: state.lastOdoVerifiedAt,
+        odoRangeStart: getTripOdoStart(state.trips, 0),
+        odoRangeEnd: getTripOdoEnd(state.trips, state.trips.length - 1),
         trips: tripSummaries,
         auditLog: state.auditLog.map(e => ({ time: e.time, desc: e.desc })),
         areasToCheck: areas,

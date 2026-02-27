@@ -208,6 +208,23 @@ export function ReportsScreen() {
                             </div>
                           )}
 
+                          {r.odoRangeStart != null && r.odoRangeEnd != null && (
+                            <div className="mt-[12px] rounded-[10px] p-[10px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+                              <div>
+                                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Odometer Range</div>
+                                <div className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>
+                                  {r.odoRangeStart.toLocaleString('en-AU')} &rarr; {r.odoRangeEnd.toLocaleString('en-AU')} km
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Total Distance</div>
+                                <div className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-t2)' }}>
+                                  {(r.odoRangeEnd - r.odoRangeStart).toLocaleString('en-AU')} km
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {r.areasToCheck && r.areasToCheck.length > 0 && (
                             <div className="mt-[12px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
                               <div className="flex items-center gap-[6px] mb-[6px]">
