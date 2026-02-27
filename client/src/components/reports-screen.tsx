@@ -40,20 +40,20 @@ async function loadJsPDF(): Promise<any> {
 
 function InfoBlock({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
   const borderColor = color === 'y' ? 'rgba(245,196,0,.2)' : color === 'gr' ? 'rgba(34,197,94,.15)' : color === 'am' ? 'rgba(245,158,11,.2)' : color === 're' ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.07)';
-  const titleColor = color === 'y' ? 'var(--wc-y)' : color === 'gr' ? 'var(--wc-gr)' : color === 'am' ? 'var(--wc-am)' : color === 're' ? '#EF4444' : 'var(--wc-t2)';
+  const titleColor = color === 'y' ? 'var(--wc-y)' : color === 'gr' ? 'var(--wc-gr)' : color === 'am' ? 'var(--wc-am)' : color === 're' ? '#EF4444' : 'white';
   return (
-    <div className="rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(255,255,255,.02)', border: `1px solid ${borderColor}` }}>
-      <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[5px]" style={{ color: titleColor }}>{title}</div>
-      <div className="text-[10px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>{children}</div>
+    <div className="rounded-[12px] p-[14px_16px]" style={{ background: 'rgba(255,255,255,.02)', border: `1px solid ${borderColor}` }}>
+      <div className="font-heading font-bold text-[14px] uppercase tracking-[.05em] mb-[6px]" style={{ color: titleColor }}>{title}</div>
+      <div className="text-[13px] leading-[1.6] text-white">{children}</div>
     </div>
   );
 }
 
 function TableRow({ label, val, highlight }: { label: string; val: string; highlight?: boolean }) {
   return (
-    <div className="flex justify-between items-center py-[3px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-      <span className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{label}</span>
-      <span className="text-[10px]" style={{ color: highlight ? 'var(--wc-y)' : 'var(--wc-t2)', fontWeight: highlight ? 700 : 400 }}>{val}</span>
+    <div className="flex justify-between items-center py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+      <span className="text-[13px] text-white">{label}</span>
+      <span className="text-[13px] text-white" style={{ color: highlight ? 'var(--wc-y)' : 'white', fontWeight: highlight ? 700 : 400 }}>{val}</span>
     </div>
   );
 }
@@ -853,23 +853,23 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
 function TaxInfoModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<'rules' | 'prorata' | 'methods'>('rules');
   return (
-    <div className="fixed inset-0 z-[300] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(6px)' }} onClick={onClose}>
-      <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.2)', maxHeight: '88vh' }} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[300] flex flex-col" style={{ background: 'var(--wc-card)' }} onClick={onClose}>
+      <div className="flex flex-col h-full w-full max-w-[390px] mx-auto" onClick={e => e.stopPropagation()}>
 
-        <div className="flex items-center justify-between px-[16px] py-[13px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
+        <div className="flex items-center justify-between px-[16px] py-[14px] flex-shrink-0" style={{ borderBottom: '1px solid var(--wc-border)' }}>
           <div className="flex items-center gap-[8px]">
-            <Info className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
-            <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em] text-white">Tax Information</span>
+            <Info className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+            <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Tax Information</span>
           </div>
-          <button onClick={onClose} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-close-tax-info">
-            <XCircle className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+          <button onClick={onClose} className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }} data-testid="button-close-tax-info">
+            <XCircle className="w-[16px] h-[16px]" style={{ color: 'white' }} />
           </button>
         </div>
 
-        <div className="flex" style={{ borderBottom: '1px solid var(--wc-border)' }}>
+        <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid var(--wc-border)' }}>
           {(['rules','prorata','methods'] as const).map(t => (
-            <button key={t} className="flex-1 py-[8px] font-heading font-bold text-[10px] uppercase tracking-[.05em]"
-              style={{ borderBottom: tab === t ? '2px solid var(--wc-y)' : '2px solid transparent', color: tab === t ? 'var(--wc-y)' : 'var(--wc-t3)', marginBottom: '-1px' }}
+            <button key={t} className="flex-1 py-[12px] font-heading font-bold text-[14px] uppercase tracking-[.05em]"
+              style={{ borderBottom: tab === t ? '3px solid var(--wc-y)' : '3px solid transparent', color: tab === t ? 'var(--wc-y)' : 'white', marginBottom: '-1px' }}
               onClick={() => setTab(t)}
               data-testid={`tab-${t}`}>
               {t === 'rules' ? 'Rules' : t === 'prorata' ? 'Pro-rata' : 'Methods'}
@@ -877,7 +877,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <div className="overflow-y-auto p-[12px_16px] flex flex-col gap-[8px]" style={{ maxHeight: 'calc(88vh - 108px)' }}>
+        <div className="overflow-y-auto flex-1 p-[16px] flex flex-col gap-[12px]">
           {tab === 'rules' && (<>
             <InfoBlock title="What's deductible?" color="y">
               Car expenses when you use your vehicle for work: travelling between job sites, visiting client locations, carrying tools too bulky to store elsewhere, or making work deliveries. <strong style={{ color: '#EF4444' }}>Home-to-work travel is not deductible</strong> unless you carry bulky equipment with no secure storage at work.
@@ -912,26 +912,26 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               Pro-rata applies when you didn't hold the vehicle for the full income year (1 Jul – 30 Jun): purchased mid-year, sold mid-year, car written off, or used only part of the year.
             </InfoBlock>
 
-            <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.2)' }}>
-              <div className="px-[12px] py-[8px]" style={{ background: 'rgba(245,196,0,.07)', borderBottom: '1px solid rgba(245,196,0,.2)' }}>
-                <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Example — Mid-Year Purchase</span>
+            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.2)' }}>
+              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(245,196,0,.07)', borderBottom: '1px solid rgba(245,196,0,.2)' }}>
+                <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Example — Mid-Year Purchase</span>
               </div>
-              <div className="p-[10px_12px] flex flex-col gap-[3px]">
+              <div className="p-[14px_16px] flex flex-col gap-[3px]">
                 <TableRow label="Purchased" val="1 Jan 2025" />
                 <TableRow label="Days owned in FY2025" val="181 of 365 days" />
                 <TableRow label="Total car expenses" val="$8,000" />
                 <TableRow label="Business use %" val="65%" highlight />
                 <TableRow label="Pro-rata factor" val="181 \u00F7 365 = 0.496" />
                 <TableRow label="Deductible amount" val="$8,000 \u00D7 65% \u00D7 0.496 = $2,579" highlight />
-                <p className="text-[8.5px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>* Simplified. Depreciation, fuel, insurance each have separate treatment. Consult a registered tax agent.</p>
+                <p className="text-[11px] mt-[6px] text-white">* Simplified. Depreciation, fuel, insurance each have separate treatment. Consult a registered tax agent.</p>
               </div>
             </div>
 
-            <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(34,197,94,.15)' }}>
-              <div className="px-[12px] py-[8px]" style={{ background: 'rgba(34,197,94,.05)', borderBottom: '1px solid rgba(34,197,94,.15)' }}>
-                <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-gr)' }}>Example — Full Year Logbook Method</span>
+            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid rgba(34,197,94,.15)' }}>
+              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(34,197,94,.05)', borderBottom: '1px solid rgba(34,197,94,.15)' }}>
+                <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-gr)' }}>Example — Full Year Logbook Method</span>
               </div>
-              <div className="p-[10px_12px] flex flex-col gap-[3px]">
+              <div className="p-[14px_16px] flex flex-col gap-[3px]">
                 <TableRow label="Total km driven (FY)" val="22,000 km" />
                 <TableRow label="Business km (from logbook)" val="11,440 km" />
                 <TableRow label="Business use %" val="52%" highlight />
@@ -948,24 +948,24 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
             <InfoBlock title="Cents Per Kilometre" color="gr">
               No logbook needed. Claim $0.88/km (2024–25) up to 5,000 km/year. You must be able to explain how you estimated work-related km. Cannot also claim fuel, depreciation etc. separately.
             </InfoBlock>
-            <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
-              <div className="px-[12px] py-[7px]" style={{ background: 'rgba(255,255,255,.03)', borderBottom: '1px solid var(--wc-border)' }}>
-                <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>Quick Comparison</span>
+            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
+              <div className="px-[14px] py-[10px]" style={{ background: 'rgba(255,255,255,.03)', borderBottom: '1px solid var(--wc-border)' }}>
+                <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em] text-white">Quick Comparison</span>
               </div>
-              <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
+              <table className="w-full font-data text-[12px]" style={{ borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,.02)' }}>
-                    <th className="p-[5px_10px] text-left" style={{ color: 'var(--wc-t3)', borderBottom: '1px solid var(--wc-border)' }}> </th>
-                    <th className="p-[5px_10px] text-center" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Logbook</th>
-                    <th className="p-[5px_10px] text-center" style={{ color: 'var(--wc-gr)', borderBottom: '1px solid var(--wc-border)' }}>c/km</th>
+                    <th className="p-[8px_12px] text-left text-white" style={{ borderBottom: '1px solid var(--wc-border)' }}> </th>
+                    <th className="p-[8px_12px] text-center" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>Logbook</th>
+                    <th className="p-[8px_12px] text-center" style={{ color: 'var(--wc-gr)', borderBottom: '1px solid var(--wc-border)' }}>c/km</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[['Km cap','None','5,000 km'],['Logbook required','Yes','No'],['Receipts needed','Yes','No'],['Claim fuel/rego','Yes (% of total)','No'],['Best for','High use / costs','Simple / low use']].map(([l,lb,ck],i)=>(
                     <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                      <td className="p-[4px_10px]" style={{ color: 'var(--wc-t3)' }}>{l}</td>
-                      <td className="p-[4px_10px] text-center" style={{ color: 'var(--wc-y)' }}>{lb}</td>
-                      <td className="p-[4px_10px] text-center" style={{ color: 'var(--wc-gr)' }}>{ck}</td>
+                      <td className="p-[6px_12px] text-white">{l}</td>
+                      <td className="p-[6px_12px] text-center" style={{ color: 'var(--wc-y)' }}>{lb}</td>
+                      <td className="p-[6px_12px] text-center" style={{ color: 'var(--wc-gr)' }}>{ck}</td>
                     </tr>
                   ))}
                 </tbody>
