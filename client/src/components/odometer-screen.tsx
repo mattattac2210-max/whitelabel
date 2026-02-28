@@ -64,7 +64,54 @@ export function OdometerScreen() {
             <div className="h-[5px] rounded-[3px] overflow-hidden" style={{ background: 'rgba(255,255,255,.07)' }}>
               <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${score}%`, background: scoreFill }} />
             </div>
-            <div className="text-[10px] mt-[5px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
+            <div className="text-[10px] mt-[5px] mb-[8px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
+
+            {(() => {
+              const photoTrips = state.trips.filter(t => t.photo).length;
+              const verifiedNoPhoto = state.trips.filter(t => t.verified && !t.photo).length;
+              const verifiedCap = Math.min(state.verifiedSet.size, 20);
+              const base = 50;
+              const photoPoints = photoTrips * 2;
+              const verifiedPoints = verifiedNoPhoto;
+              const total = Math.min(99, base + photoPoints + verifiedPoints + verifiedCap);
+              return (
+                <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.15)' }}>
+                  <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgba(245,196,0,.06)' }}>
+                    <Shield className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
+                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>How We Calculate This at WorkCar</span>
+                  </div>
+                  <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
+                    <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
+                      Your audit score is built from multiple factors that reflect how well-documented your logbook is. The maximum achievable score is <strong className="text-white">99%</strong> — a perfect 100% is intentionally unachievable because WorkCar cannot verify the actual business purpose of each trip.
+                    </div>
+                    <div className="flex flex-col gap-[3px]">
+                      {[
+                        { label: 'Base score', desc: 'All trips sorted (business vs personal)', pts: base, color: 'var(--wc-t2)' },
+                        { label: 'Photo evidence', desc: `${photoTrips} trip${photoTrips !== 1 ? 's' : ''} with photos (2 pts each)`, pts: photoPoints, color: 'var(--wc-y)' },
+                        { label: 'Verified (no photo)', desc: `${verifiedNoPhoto} trip${verifiedNoPhoto !== 1 ? 's' : ''} verified without photo (1 pt each)`, pts: verifiedPoints, color: 'var(--wc-am)' },
+                        { label: 'Odometer verified', desc: `${state.verifiedSet.size} unique trip${state.verifiedSet.size !== 1 ? 's' : ''} confirmed (max 20 pts)`, pts: verifiedCap, color: 'var(--wc-gr)' },
+                      ].map((row, ri) => (
+                        <div key={ri} className="flex items-center gap-[6px] rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgba(255,255,255,.02)' }}>
+                          <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: row.color }} />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-heading font-bold text-[10px] text-white">{row.label}</span>
+                            <span className="text-[9px] ml-[5px]" style={{ color: 'var(--wc-t3)' }}>{row.desc}</span>
+                          </div>
+                          <span className="font-heading font-black text-[12px] flex-shrink-0" style={{ color: row.color }}>+{row.pts}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-[7px] px-[8px] py-[5px] mt-[2px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+                      <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white">Total Score</span>
+                      <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{total}%</span>
+                    </div>
+                    <div className="text-[9px] leading-[1.45] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
+                      Score is capped at 99%. WorkCar cannot verify the actual business purpose of each trip, engine capacity, pro-rata holding periods, or your individual tax situation. Your accountant provides the missing context.
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
