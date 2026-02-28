@@ -79,6 +79,13 @@ const PRICE_MID: Record<string, number> = {
   over70: 85000,
 };
 
+const PRICE_RANGE: Record<string, { lo: number; hi: number }> = {
+  under30: { lo: 10000, hi: 30000 },
+  "30to50": { lo: 30000, hi: 50000 },
+  "50to70": { lo: 50000, hi: 70000 },
+  over70: { lo: 70000, hi: 100000 },
+};
+
 const KM_MID: Record<string, number> = { "0to2k": 1000, "2kto5k": 3500, "5kto10k": 7500, "over10k": 12000 };
 
 const SEG_LABEL: Record<string, string> = {
@@ -220,7 +227,7 @@ const FIN_LABEL: Record<string, string> = { yes: "Yes (financed)", no: "No (owne
 const KMBAND_LABEL: Record<string, string> = { "0to2k": "Under 2,000 km", "2kto5k": "2,000\u20135,000 km", "5kto10k": "5,000\u201310,000 km", "over10k": "Over 10,000 km" };
 const PRICE_LABEL: Record<string, string> = { under30: "Under $30k", "30to50": "$30\u2013$50k", "50to70": "$50\u2013$70k", over70: "$70k+" };
 
-function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance, priceBand, trade, result, costs }: {
+function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance, priceBand, trade, result, costs, personalAnnualKm }: {
   onClose: () => void;
   kmBand: string;
   vehicleAge: string;
@@ -230,10 +237,32 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
   trade: string;
   result: ReturnType<typeof runAlgorithm>;
   costs: ReturnType<typeof estimateCosts>;
+  personalAnnualKm?: number | null;
 }) {
   const bizKm = KM_MID[kmBand] || 3500;
   const segName = SEG_LABEL[vehicleType] || "vehicle";
-  const { pct } = calcLogbook(bizKm, costs, trade);
+  const { pct } = calcLogbook(bizKm, costs, trade, personalAnnualKm);
+
+  const range = PRICE_RANGE[priceBand] || PRICE_RANGE["30to50"];
+  const priceLo = range.lo;
+  const priceHi = range.hi;
+  const cappedLo = Math.min(priceLo, ATO_CAR_LIMIT);
+  const cappedHi = Math.min(priceHi, ATO_CAR_LIMIT);
+
+  const interestLo = finance === "yes" ? Math.round(cappedLo * INT_RATE) : 0;
+  const interestHi = finance === "yes" ? Math.round(cappedHi * INT_RATE) : 0;
+
+  const band = AGE_BANDS[vehicleAge] || AGE_BANDS["3to5"];
+  const cohort = band.iawoCohort;
+  const threshold = IAWO_THRESHOLD[cohort];
+  const isIawoLo = priceLo <= threshold;
+  const isIawoHi = priceHi <= threshold;
+  const depValLo = isIawoLo ? 0 : Math.round(cappedLo * Math.pow(1 - DV_RATE, band.yrs) * DV_RATE);
+  const depValHi = isIawoHi ? 0 : Math.round(cappedHi * Math.pow(1 - DV_RATE, band.yrs) * DV_RATE);
+
+  const annualLo = depValLo + costs.running + interestLo;
+  const annualHi = depValHi + costs.running + interestHi;
+  const showRange = Math.abs(annualHi - annualLo) > 500;
 
   return (
     <div
@@ -279,10 +308,11 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
               { label: "Finance", value: FIN_LABEL[finance] || finance },
               { label: "Price band", value: PRICE_LABEL[priceBand] || priceBand },
               { label: "Annual business km", value: KMBAND_LABEL[kmBand] || kmBand },
+              { label: "Business use %", value: `${pct}%`, highlight: true },
             ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between" style={{ padding: "8px 12px", background: "rgba(255,255,255,.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,.06)" }}>
-                <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>{row.label}</span>
-                <span className="font-data" style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{row.value}</span>
+              <div key={row.label} className="flex items-center justify-between" style={{ padding: "8px 12px", background: (row as any).highlight ? "rgba(245,196,0,.06)" : "rgba(255,255,255,.04)", borderRadius: 10, border: `1px solid ${(row as any).highlight ? "rgba(245,196,0,.2)" : "rgba(255,255,255,.06)"}` }}>
+                <span style={{ fontSize: 11, color: (row as any).highlight ? "var(--wc-y)" : "var(--wc-t3)" }}>{row.label}</span>
+                <span className="font-data" style={{ fontSize: 12, fontWeight: 600, color: (row as any).highlight ? "var(--wc-y)" : "#fff" }}>{row.value}</span>
               </div>
             ))}
           </div>
@@ -298,18 +328,48 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
               </div>
               <div className="flex justify-between" style={{ fontSize: 11 }}>
                 <span style={{ color: "var(--wc-t3)" }}>Depreciation ({costs.method === "iawo" ? "IAWO" : "DV"})</span>
-                <span className="font-data" style={{ color: "#fff" }}>{costs.dep > 0 ? `$${costs.dep.toLocaleString()}/yr` : "$0 (written off)"}</span>
+                <span className="font-data" style={{ color: "#fff" }}>
+                  {showRange && depValLo !== depValHi
+                    ? (depValLo === 0 && depValHi === 0 ? "$0 (written off)" : `$${Math.min(depValLo, depValHi).toLocaleString()}–$${Math.max(depValLo, depValHi).toLocaleString()}/yr`)
+                    : (costs.dep > 0 ? `$${costs.dep.toLocaleString()}/yr` : "$0 (written off)")
+                  }
+                </span>
               </div>
-              {costs.interest > 0 && (
+              {(costs.interest > 0 || interestHi > 0) && (
                 <div className="flex justify-between" style={{ fontSize: 11 }}>
                   <span style={{ color: "var(--wc-t3)" }}>Finance interest (8%)</span>
-                  <span className="font-data" style={{ color: "#fff" }}>${costs.interest.toLocaleString()}/yr</span>
+                  <span className="font-data" style={{ color: "#fff" }}>
+                    {showRange && interestLo !== interestHi
+                      ? `$${interestLo.toLocaleString()}–$${interestHi.toLocaleString()}/yr`
+                      : `$${costs.interest.toLocaleString()}/yr`
+                    }
+                  </span>
                 </div>
               )}
               <div style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
               <div className="flex justify-between" style={{ fontSize: 12 }}>
                 <span style={{ fontWeight: 700 }}>Est. annual vehicle costs</span>
-                <span className="font-data" style={{ fontWeight: 800, color: "var(--wc-y)" }}>${costs.annual.toLocaleString()}</span>
+                <span className="font-data" style={{ fontWeight: 800, color: "var(--wc-y)" }}>
+                  {showRange
+                    ? `$${Math.min(annualLo, annualHi).toLocaleString()}–$${Math.max(annualLo, annualHi).toLocaleString()}`
+                    : `$${costs.annual.toLocaleString()}`
+                  }
+                </span>
+              </div>
+              {showRange && (
+                <div style={{ fontSize: 9, color: "var(--wc-t3)", textAlign: "right", marginTop: -2 }}>
+                  Range based on {PRICE_LABEL[priceBand]} price band
+                </div>
+              )}
+              <div style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
+              <div className="flex justify-between" style={{ fontSize: 12 }}>
+                <span style={{ fontWeight: 700, color: "var(--wc-y)" }}>Your {pct}% business portion</span>
+                <span className="font-data" style={{ fontWeight: 800, color: "var(--wc-y)" }}>
+                  {showRange
+                    ? `~$${Math.round(Math.min(annualLo, annualHi) * pct / 100).toLocaleString()}–$${Math.round(Math.max(annualLo, annualHi) * pct / 100).toLocaleString()}`
+                    : `~$${Math.round(costs.annual * pct / 100).toLocaleString()}`
+                  }
+                </span>
               </div>
             </div>
           </div>
@@ -756,6 +816,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           trade={trade}
           result={initialResult}
           costs={costs}
+          personalAnnualKm={personalAnnualKm}
         />
       )}
 
