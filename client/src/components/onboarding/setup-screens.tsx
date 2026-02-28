@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { estimateCosts, calcCentsPerKm, calcLogbook } from "./recommendation";
 
 interface SetupScreenProps {
   onNext: (data?: any) => void;
@@ -6,6 +7,11 @@ interface SetupScreenProps {
   userData?: {
     trade?: string;
     kmBand?: string;
+    weeklyKm?: number;
+    vehicleAge?: string;
+    vehicleType?: string;
+    finance?: string;
+    priceBand?: string;
     recommendation?: string;
   };
 }
@@ -160,17 +166,30 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
 
   const showRecommendation = kmBand && (kmBand === "5kto10k" || kmBand === "over10k");
 
-  const getDeductionEstimate = () => {
-    if (method === "cents") {
-      return { value: "~$4,400", note: "5,000 km \u00D7 $0.88 (ATO rate)" };
-    }
-    const weeklyKm = kmBand === "over10k" ? 250 : kmBand === "5kto10k" ? 155 : kmBand === "2kto5k" ? 70 : 20;
-    const annual = weeklyKm * 48;
-    const deduction = Math.round(annual * 0.88);
-    return { value: `~$${deduction.toLocaleString()}`, note: `~${weeklyKm} km/wk \u00D7 48 wks \u00D7 $0.88` };
-  };
+  const KM_MID: Record<string, number> = { "0to2k": 1000, "2kto5k": 3500, "5kto10k": 7500, "over10k": 12000 };
 
-  const est = getDeductionEstimate();
+  const costs = useMemo(
+    () => estimateCosts(
+      userData?.vehicleType || "ute-4x2",
+      userData?.finance || "no",
+      userData?.vehicleAge || "3to5",
+      userData?.priceBand || "30to50"
+    ),
+    [userData?.vehicleType, userData?.finance, userData?.vehicleAge, userData?.priceBand]
+  );
+
+  const est = useMemo(() => {
+    const bizKm = (userData?.weeklyKm && userData.weeklyKm > 0)
+      ? userData.weeklyKm * 48
+      : KM_MID[kmBand || "5kto10k"] || 7500;
+    if (method === "cents") {
+      const cents = calcCentsPerKm(bizKm);
+      return { value: `~$${cents.toLocaleString()}`, note: `${Math.min(bizKm, 5000).toLocaleString()} km \u00D7 $0.88 (ATO rate)` };
+    }
+    const trade = userData?.trade || "other";
+    const { amount, pct } = calcLogbook(bizKm, costs, trade);
+    return { value: `~$${amount.toLocaleString()}`, note: `${pct}% of ~$${costs.annual.toLocaleString()} annual vehicle costs` };
+  }, [method, kmBand, costs, userData?.trade, userData?.weeklyKm]);
 
   return (
     <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">
@@ -226,31 +245,42 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
             </div>
           </div>
 
-          {showRecommendation && (
-            <div data-testid="card-tax-recommendation" style={{ padding: "14px 16px", borderRadius: 14, border: "1.5px solid rgba(245,196,0,.3)", background: "rgba(245,196,0,.04)" }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".09em", marginBottom: 8, color: "var(--wc-y)" }}>We Recommend</div>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Logbook Method</div>
-              <div style={{ fontSize: 11, lineHeight: 1.55, color: "#AAA" }}>Based on your km range, the logbook method maximises your deduction.</div>
-              <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(245,196,0,.16)", background: "rgba(245,196,0,.04)" }}>
-                <div style={{ fontSize: 10, color: "#484848", marginBottom: 4 }}>Your estimated difference</div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div style={{ fontSize: 9, color: "#484848" }}>Cents per km</div>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>$4,400/yr</div>
+          {showRecommendation && (() => {
+            const recBizKm = (userData?.weeklyKm && userData.weeklyKm > 0)
+              ? userData.weeklyKm * 48
+              : KM_MID[kmBand || "5kto10k"] || 7500;
+            const recCents = calcCentsPerKm(recBizKm);
+            const recLog = calcLogbook(recBizKm, costs, userData?.trade || "other");
+            const recDiff = recLog.amount - recCents;
+            const recDiff5 = recDiff * 5;
+            return (
+              <div data-testid="card-tax-recommendation" style={{ padding: "14px 16px", borderRadius: 14, border: "1.5px solid rgba(245,196,0,.3)", background: "rgba(245,196,0,.04)" }}>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".09em", marginBottom: 8, color: "var(--wc-y)" }}>We Recommend</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Logbook Method</div>
+                <div style={{ fontSize: 11, lineHeight: 1.55, color: "#AAA" }}>Based on your km range, the logbook method maximises your deduction.</div>
+                <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(245,196,0,.16)", background: "rgba(245,196,0,.04)" }}>
+                  <div style={{ fontSize: 10, color: "#484848", marginBottom: 4 }}>Your estimated difference</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div style={{ fontSize: 9, color: "#484848" }}>Cents per km</div>
+                      <div style={{ fontSize: 16, fontWeight: 800 }}>${recCents.toLocaleString()}/yr</div>
+                    </div>
+                    <div style={{ fontSize: 18, color: "#484848" }}>&rarr;</div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 9, color: "#484848" }}>Logbook estimate</div>
+                      <div style={{ fontSize: 16, fontWeight: 800 }}>${recLog.amount.toLocaleString()}/yr</div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 18, color: "#484848" }}>&rarr;</div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 9, color: "#484848" }}>Logbook estimate</div>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>$9,200/yr</div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between" style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-                  <div style={{ fontSize: 10, color: "#484848" }}>Potential extra over 5 years</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "var(--wc-gr)" }}>$24,000</div>
+                  {recDiff > 0 && (
+                    <div className="flex items-center justify-between" style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                      <div style={{ fontSize: 10, color: "#484848" }}>Potential extra over 5 years</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--wc-gr)" }}>+${recDiff5.toLocaleString()}</div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div>
             <label className="block" style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#484848", marginBottom: 6 }}>Deduction Method</label>

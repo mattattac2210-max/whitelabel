@@ -107,7 +107,7 @@ const TRADE_LABEL: Record<string, string> = {
   "not-tradie": "Other",
 };
 
-function calcDepreciation(age: string, priceBand: string) {
+export function calcDepreciation(age: string, priceBand: string) {
   const band = AGE_BANDS[age] || AGE_BANDS["0to2"];
   const price = PRICE_MID[priceBand] || 40000;
   const cohort = band.iawoCohort;
@@ -121,7 +121,7 @@ function calcDepreciation(age: string, priceBand: string) {
   return { dep: Math.round(bookVal * DV_RATE), method: "dv" as const, note: `Diminishing value` };
 }
 
-function estimateCosts(vtype: string, fin: string, age: string, priceBand: string) {
+export function estimateCosts(vtype: string, fin: string, age: string, priceBand: string) {
   const seg = vtype || "ute-4x2";
   const totalKm = ABS_TOTAL_KM[seg] || 15000;
   const { dep, method, note } = calcDepreciation(age || "3to5", priceBand || "30to50");
@@ -132,11 +132,11 @@ function estimateCosts(vtype: string, fin: string, age: string, priceBand: strin
   return { annual, dep, running, finExtra, method, note, totalKm };
 }
 
-function calcCentsPerKm(businessKm: number) {
+export function calcCentsPerKm(businessKm: number) {
   return Math.round(Math.min(businessKm, CENTS_CAP) * CPK);
 }
 
-function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string) {
+export function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string) {
   const prof = PROF_DEFAULTS[trade] || { bizPct: 0.70 };
   const effectiveTotal = businessKm > costs.totalKm
     ? Math.round(businessKm / prof.bizPct)
@@ -385,7 +385,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
 
   const initWkly = useMemo(() => {
     if (initialWeeklyKm && initialWeeklyKm > 0) return initialWeeklyKm;
-    return Math.round((KM_MID[kmBand] || 6000) / 52);
+    return Math.round((KM_MID[kmBand] || 6000) / 48);
   }, [kmBand, initialWeeklyKm]);
   const [weeklyKm, setWeeklyKm] = useState(initWkly);
   const [showCalcModal, setShowCalcModal] = useState(false);
@@ -397,7 +397,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
   );
 
   const sliderCalc = useMemo(() => {
-    const annKm = weeklyKm * 52;
+    const annKm = weeklyKm * 48;
     const cents = calcCentsPerKm(annKm);
     const { amount: log, pct } = calcLogbook(annKm, costs, trade);
     const diff = log - cents;
