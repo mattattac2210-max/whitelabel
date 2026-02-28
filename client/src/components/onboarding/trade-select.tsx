@@ -131,7 +131,7 @@ export function TradeSelectScreen({ onNext, onBack }: TradeSelectProps) {
             </div>
           </div>
           <div className="font-display" style={{ fontSize: 34, lineHeight: 1, marginBottom: 6 }}>
-            What's your<br /><span style={{ color: 'var(--wc-y)' }}>trade?</span>
+            What's your<br /><span style={{ color: 'var(--wc-y)' }}>trade/occupation?</span>
           </div>
           <p style={{ fontSize: 12, color: 'var(--wc-t3)' }}>Tap to select — we'll move straight on</p>
         </div>
