@@ -347,13 +347,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   }, [onClassify]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (isFlying || !isTop) return;
+    if (isFlying || !isTop || showDetail) return;
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.tagName === 'BUTTON') return;
     setIsDragging(true);
     startXRef.current = e.clientX;
     if (cardRef.current) cardRef.current.setPointerCapture(e.pointerId);
-  }, [isFlying, isTop]);
+  }, [isFlying, isTop, showDetail]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging || isFlying) return;
