@@ -67,13 +67,17 @@ export function OdometerScreen() {
             <div className="text-[10px] mt-[5px] mb-[8px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
 
             {(() => {
-              const photoTrips = state.trips.filter(t => t.photo).length;
-              const verifiedNoPhoto = state.trips.filter(t => t.verified && !t.photo).length;
-              const verifiedCap = Math.min(state.verifiedSet.size, 20);
-              const base = 50;
-              const photoPoints = photoTrips * 2;
-              const verifiedPoints = verifiedNoPhoto;
-              const total = Math.min(99, base + photoPoints + verifiedPoints + verifiedCap);
+              const sortedTrips = state.trips.filter(t => t.type !== null);
+              const totalTrips = sortedTrips.length;
+              const verifiedCount = state.verifiedSet.size;
+              const photoCount = state.trips.filter(t => t.photo).length;
+              const classifiedPct = totalTrips > 0 ? 100 : 0;
+              const verifiedPct = totalTrips > 0 ? (verifiedCount / totalTrips) * 100 : 0;
+              const photoPct = totalTrips > 0 ? (photoCount / totalTrips) * 100 : 0;
+              const classifiedContrib = Math.round(classifiedPct * 0.40);
+              const verifiedContrib = Math.round(verifiedPct * 0.35);
+              const photoContrib = Math.round(photoPct * 0.24);
+              const total = Math.min(99, classifiedContrib + verifiedContrib + photoContrib);
               return (
                 <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.15)' }}>
                   <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgba(245,196,0,.06)' }}>
@@ -82,22 +86,30 @@ export function OdometerScreen() {
                   </div>
                   <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
                     <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
-                      Your audit score is built from multiple factors that reflect how well-documented your logbook is. The maximum achievable score is <strong className="text-white">99%</strong> — a perfect 100% is intentionally unachievable because WorkCar cannot verify the actual business purpose of each trip.
+                      Your audit score is a weighted percentage based on three categories. It scales with however many trips you have — whether it's 5 or 50. The maximum achievable score is <strong className="text-white">99%</strong>.
                     </div>
                     <div className="flex flex-col gap-[3px]">
                       {[
-                        { label: 'Base score', desc: 'All trips sorted (business vs personal)', pts: base, color: 'var(--wc-t2)' },
-                        { label: 'Photo evidence', desc: `${photoTrips} trip${photoTrips !== 1 ? 's' : ''} with photos (2 pts each)`, pts: photoPoints, color: 'var(--wc-y)' },
-                        { label: 'Verified (no photo)', desc: `${verifiedNoPhoto} trip${verifiedNoPhoto !== 1 ? 's' : ''} verified without photo (1 pt each)`, pts: verifiedPoints, color: 'var(--wc-am)' },
-                        { label: 'Odometer verified', desc: `${state.verifiedSet.size} unique trip${state.verifiedSet.size !== 1 ? 's' : ''} confirmed (max 20 pts)`, pts: verifiedCap, color: 'var(--wc-gr)' },
+                        { label: 'Classification', weight: '40%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: classifiedPct, contrib: classifiedContrib, color: 'var(--wc-t2)' },
+                        { label: 'Odometer verified', weight: '35%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: verifiedPct, contrib: verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Photo evidence', weight: '24%', desc: `${photoCount} of ${totalTrips} trips with photos`, pct: photoPct, contrib: photoContrib, color: 'var(--wc-y)' },
                       ].map((row, ri) => (
-                        <div key={ri} className="flex items-center gap-[6px] rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgba(255,255,255,.02)' }}>
-                          <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: row.color }} />
-                          <div className="flex-1 min-w-0">
-                            <span className="font-heading font-bold text-[10px] text-white">{row.label}</span>
-                            <span className="text-[9px] ml-[5px]" style={{ color: 'var(--wc-t3)' }}>{row.desc}</span>
+                        <div key={ri} className="rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgba(255,255,255,.02)' }}>
+                          <div className="flex items-center justify-between mb-[3px]">
+                            <div className="flex items-center gap-[5px]">
+                              <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: row.color }} />
+                              <span className="font-heading font-bold text-[10px] text-white">{row.label}</span>
+                              <span className="font-data text-[8px] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.06)', color: 'var(--wc-t3)' }}>weight {row.weight}</span>
+                            </div>
+                            <span className="font-heading font-black text-[12px] flex-shrink-0" style={{ color: row.color }}>+{row.contrib}</span>
                           </div>
-                          <span className="font-heading font-black text-[12px] flex-shrink-0" style={{ color: row.color }}>+{row.pts}</span>
+                          <div className="flex items-center gap-[6px]">
+                            <div className="flex-1 h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,.06)' }}>
+                              <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(row.pct, 100)}%`, background: row.color }} />
+                            </div>
+                            <span className="font-data text-[8px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }}>{Math.round(row.pct)}%</span>
+                          </div>
+                          <div className="text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{row.desc}</div>
                         </div>
                       ))}
                     </div>
@@ -106,7 +118,7 @@ export function OdometerScreen() {
                       <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{total}%</span>
                     </div>
                     <div className="text-[9px] leading-[1.45] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                      Score is capped at 99%. WorkCar cannot verify the actual business purpose of each trip, engine capacity, pro-rata holding periods, or your individual tax situation. Your accountant provides the missing context.
+                      Score is capped at 99%. The remaining 1% represents factors WorkCar cannot verify — actual business purpose, engine capacity, pro-rata periods, and your individual tax situation.
                     </div>
                   </div>
                 </div>
