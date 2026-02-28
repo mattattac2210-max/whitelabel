@@ -14,6 +14,7 @@ export function OdometerScreen() {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [expandedVerified, setExpandedVerified] = useState<Set<number>>(new Set());
   const [showUnconfirmedWarning, setShowUnconfirmedWarning] = useState(false);
+  const [showOdoInfoPopup, setShowOdoInfoPopup] = useState(false);
 
   const sorted = state.trips.filter(t => t.type !== null);
   const score = stats.auditScore;
@@ -98,6 +99,96 @@ export function OdometerScreen() {
             >
               I Understand
             </button>
+            <button
+              className="w-full rounded-[11px] py-[10px] mt-[8px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: 'var(--wc-t2)' }}
+              onClick={() => { setShowOdoWarning(false); setShowOdoInfoPopup(true); }}
+              data-testid="button-see-more-odo-warning"
+            >
+              See More
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showOdoInfoPopup && (
+        <div
+          className="fixed inset-0 z-[250] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.88)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowOdoInfoPopup(false)}
+          data-testid="odo-info-popup-overlay"
+        >
+          <div
+            className="w-[360px] max-h-[80vh] rounded-[18px] overflow-hidden flex flex-col"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-[16px] py-[14px] flex-shrink-0" style={{ borderBottom: '1px solid var(--wc-border)' }}>
+              <div className="flex items-center gap-[8px]">
+                <Shield className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em] text-white">Odometer Accuracy</span>
+              </div>
+              <button
+                className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,.06)' }}
+                onClick={() => setShowOdoInfoPopup(false)}
+                data-testid="button-close-odo-info-popup"
+              >
+                <AlertTriangle className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-[16px] flex flex-col gap-[14px]">
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}>
+                <div className="flex items-center gap-[6px] mb-[8px]">
+                  <Camera className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
+                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>About Photo Evidence</span>
+                </div>
+                <p className="text-[12px] leading-[1.6] text-white">
+                  Photo evidence for all trips may not be achievable in practice. That's okay. What matters most is keeping <strong style={{ color: 'var(--wc-y)' }}>accurate and consistent odometer readings</strong> across all your trips, regardless of whether they are personal or business.
+                </p>
+              </div>
+
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(34,197,94,.04)', border: '1px solid rgba(34,197,94,.15)' }}>
+                <div className="flex items-center gap-[6px] mb-[8px]">
+                  <Check className="w-[14px] h-[14px]" style={{ color: 'var(--wc-gr)' }} />
+                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Why Odometer Readings Matter</span>
+                </div>
+                <p className="text-[12px] leading-[1.6] text-white">
+                  Accurate odometer records are essential for creating a compliant logbook under ATO guidelines. Your odometer readings establish the total kilometres driven and the business-use percentage that determines your deduction.
+                </p>
+              </div>
+
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.15)' }}>
+                <div className="flex items-center gap-[6px] mb-[8px]">
+                  <Clock className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-am)' }}>Periodic Odometer Updates</span>
+                </div>
+                <p className="text-[12px] leading-[1.6] text-white">
+                  We have created a feature where you can periodically check, update, and upload your most recent odometer reading to ensure the records we generate for you remain accurate to the information you provide.
+                </p>
+              </div>
+
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(239,68,68,.04)', border: '1px solid rgba(239,68,68,.12)' }}>
+                <div className="flex items-start gap-[6px]">
+                  <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[2px]" style={{ color: 'rgba(239,68,68,.7)' }} />
+                  <p className="text-[11px] leading-[1.55]" style={{ color: 'rgba(239,68,68,.8)' }}>
+                    <strong style={{ color: 'rgba(239,68,68,.95)' }}>Your responsibility.</strong> WorkCar is not liable for keeping odometer readings accurate. You must verify the readings for all trips you wish to disclose to the ATO to calculate your logbook deductions. Always ensure the information you provide is truthful and complete.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-[16px] py-[12px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
+              <button
+                className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(245,196,0,.25)' }}
+                onClick={() => setShowOdoInfoPopup(false)}
+                data-testid="button-got-it-odo-popup"
+              >
+                Got It
+              </button>
+            </div>
           </div>
         </div>
       )}
