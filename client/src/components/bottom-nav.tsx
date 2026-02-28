@@ -1,12 +1,12 @@
 import { useApp, type Screen } from '@/lib/app-context';
-import { MapPin, LayoutGrid, Briefcase, FileText, Download } from 'lucide-react';
+import { Home, MapPin, LayoutGrid, Briefcase, FileText, Download } from 'lucide-react';
 
 const navItems: { screen: Screen; label: string; icon: typeof MapPin }[] = [
+  { screen: 'dashboard', label: 'Home', icon: Home },
   { screen: 'sort', label: 'Sort', icon: MapPin },
   { screen: 'classify', label: 'Classify', icon: Briefcase },
   { screen: 'review', label: 'Review', icon: LayoutGrid },
   { screen: 'reports', label: 'Reports', icon: FileText },
-  { screen: 'export', label: 'Export', icon: Download },
 ];
 
 export function BottomNav({ activeOverride }: { activeOverride?: Screen }) {

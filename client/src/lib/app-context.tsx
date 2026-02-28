@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
 import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips } from './trip-data';
 
-export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export' | 'input';
+export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export' | 'input';
 
 export const INDUSTRY_BIZ_AVG = 65;
 
@@ -126,7 +126,7 @@ function nowStr(): string {
 
 const initialState: AppState = {
   trips: initialTrips.map(t => ({ ...t })),
-  currentScreen: 'sort',
+  currentScreen: 'dashboard',
   currentIndex: 0,
   dedTotal: 0,
   bizCount: 0,

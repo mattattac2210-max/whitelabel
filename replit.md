@@ -21,19 +21,37 @@ All application logic runs client-side using React state (via useReducer + Conte
 - **Routing**: `wouter` -- only `/` route and 404 fallback
 - **State Management**: React Context + useReducer (`client/src/lib/app-context.tsx`)
 - **UI Library**: shadcn/ui components, Tailwind CSS
-- **Styling**: Dark theme with CSS custom properties. Colors: `--wc-y: #F5C400` (yellow primary), `--wc-gr: #22C55E` (green), `--wc-re: #EF4444` (red), `--wc-am: #F59E0B` (amber). Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data)
+- **Styling**: Dark theme with CSS custom properties. Colors: `--wc-y: #F5C400` (yellow primary), `--wc-gr: #22C55E` (green), `--wc-re: #EF4444` (red), `--wc-am: #F59E0B` (amber). Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display/onboarding), Inter (onboarding body)
 - **Icons**: Lucide React throughout
+
+### App Flow
+
+1. **Onboarding** (first visit only, stored in `localStorage.wc_onboarded`):
+   - Splash → Q1 Trade → Q2 KM Band → Q3 Vehicle Details → Recommendation → Signup → OTP Verify → Vehicle Setup → Tax Settings → Tracking Method → Plan Select → Mates Rates
+   - Self-contained in `client/src/components/onboarding/` with local state
+   - Algorithm ports RACQ cost calculations from reference HTML for recommendation engine
+
+2. **Dashboard** (main hub after onboarding):
+   - Quick action tiles: Sort Trips, Review, Reports, Export, Add Trip, Odometer
+   - Summary stats: total trips, business km, estimated deduction
+   - 12-week logbook progress strip
+   - Audit readiness card
+
+3. **Logbook Screens** (accessed from dashboard, with bottom nav):
+   - Sort, Classify, Review, Odometer, Reports, Export, Input
+   - Bottom nav includes Home button to return to dashboard
 
 ### Screen Flow
 
-7 screens managed by `currentScreen` state:
-1. **Sort** -- Swipe/tap to classify trips as business or personal. Business button is single-click. Card fly-out animation on classify.
-2. **Classify** -- Step through business trips, pick purpose category from 10-option grid
-3. **Review** -- List/calendar view of all classified trips, reclassify buttons (including connector trips)
-4. **Odometer** -- Verify odometer readings, add photo evidence, audit score tracking
-5. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
-6. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
-7. **Input** -- Manual trip entry form with from/to addresses, date/time, distance, duration, type (business/personal), business purpose category, stops, notes. Trips inserted chronologically.
+8 screens managed by `currentScreen` state:
+1. **Dashboard** -- Main hub with quick action tiles, stats, and 12-week progress
+2. **Sort** -- Swipe/tap to classify trips as business or personal. Business button is single-click. Card fly-out animation on classify.
+3. **Classify** -- Step through business trips, pick purpose category from 10-option grid
+4. **Review** -- List/calendar view of all classified trips, reclassify buttons (including connector trips)
+5. **Odometer** -- Verify odometer readings, add photo evidence, audit score tracking
+6. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
+7. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
+8. **Input** -- Manual trip entry form with from/to addresses, date/time, distance, duration, type (business/personal), business purpose category, stops, notes. Trips inserted chronologically.
 
 ### Trip Data
 
@@ -45,10 +63,10 @@ All application logic runs client-side using React state (via useReducer + Conte
 ### Audit Score
 
 Weighted percentage calculation via `calcAuditScore()` in `app-context.tsx`:
-- Classification: 35% — % of trips sorted
-- Odometer verified: 30% — % of trips with confirmed readings
-- Business use ratio: 24% — deviation from 65% industry average
-- Photo evidence: 10% — % of trips with photos (bonus)
+- Classification: 35% -- % of trips sorted
+- Odometer verified: 30% -- % of trips with confirmed readings
+- Business use ratio: 24% -- deviation from 65% industry average
+- Photo evidence: 10% -- % of trips with photos (bonus)
 - Capped at 99%. Independent review disclaimer included.
 
 ### State Consistency
@@ -66,19 +84,28 @@ All reducer actions (`UPDATE_TRIP`, `RECLASSIFY`, `UNDO_LAST`) recalculate `dedT
 
 | File | Purpose |
 |---|---|
-| `client/src/pages/home.tsx` | Main page with phone frame, status bar, screen container |
+| `client/src/pages/home.tsx` | Main page with phone frame, onboarding/app routing |
 | `client/src/lib/app-context.tsx` | All state management (context + reducer) |
 | `client/src/lib/trip-data.ts` | Trip data constants, categories, helper functions |
+| `client/src/components/onboarding/index.tsx` | Onboarding flow wrapper with step management |
+| `client/src/components/onboarding/splash.tsx` | Splash screen |
+| `client/src/components/onboarding/trade-select.tsx` | Q1 trade selection |
+| `client/src/components/onboarding/km-band.tsx` | Q2 km band selection |
+| `client/src/components/onboarding/vehicle-details.tsx` | Q3 vehicle age/type/finance |
+| `client/src/components/onboarding/recommendation.tsx` | Algorithm + recommendation with interactive slider |
+| `client/src/components/onboarding/auth-screens.tsx` | Signup, Login, Verify, Forgot, PIN screens |
+| `client/src/components/onboarding/setup-screens.tsx` | Vehicle setup, Tax, Tracking, Plans, Mates Rates |
+| `client/src/components/dashboard-screen.tsx` | Dashboard main hub |
 | `client/src/components/sort-screen.tsx` | Sort screen with card deck, deduction tracker, dial, calendar |
 | `client/src/components/trip-card.tsx` | Swipeable trip card with pointer events, fly-out animation |
 | `client/src/components/classify-screen.tsx` | Purpose classification grid |
 | `client/src/components/review-screen.tsx` | Trip review with list/calendar tabs |
 | `client/src/components/odometer-screen.tsx` | Odometer verification with controlled inputs |
 | `client/src/components/reports-screen.tsx` | Session reports list, Tax Info modal, PDF/CSV export |
-| `client/src/components/export-screen.tsx` | Combined export screen -- select, combine, preview, export reports |
-| `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal (includes odometer manual update UI) |
-| `client/src/components/bottom-nav.tsx` | Bottom navigation bar |
-| `client/src/index.css` | Theme CSS variables, custom animations |
+| `client/src/components/export-screen.tsx` | Combined export screen |
+| `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal |
+| `client/src/components/bottom-nav.tsx` | Bottom navigation bar (Home, Sort, Classify, Review, Reports) |
+| `client/src/index.css` | Theme CSS variables, custom animations, onboarding styles (ob-*) |
 
 ### Environment Variables
 

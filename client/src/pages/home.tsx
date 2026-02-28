@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { SortScreen } from '@/components/sort-screen';
 import { ClassifyScreen } from '@/components/classify-screen';
@@ -6,7 +7,10 @@ import { OdometerScreen } from '@/components/odometer-screen';
 import { ReportsScreen } from '@/components/reports-screen';
 import { ExportScreen } from '@/components/export-screen';
 import { InputScreen } from '@/components/input-screen';
+import { DashboardScreen } from '@/components/dashboard-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
+import { BottomNav } from '@/components/bottom-nav';
+import { OnboardingFlow } from '@/components/onboarding/index';
 
 function StatusBar() {
   return (
@@ -33,6 +37,7 @@ function ScreenContainer() {
   const { state } = useApp();
 
   const screens: Record<string, JSX.Element> = {
+    dashboard: <DashboardScreen />,
     sort: <SortScreen />,
     classify: <ClassifyScreen />,
     review: <ReviewScreen />,
@@ -49,7 +54,7 @@ function ScreenContainer() {
   );
 }
 
-export default function Home() {
+function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex justify-center items-center min-h-screen overflow-hidden" style={{ background: '#050505' }}>
       <div
@@ -64,12 +69,40 @@ export default function Home() {
         }}
         data-testid="phone-frame"
       >
-        <StatusBar />
-        <ScreenContainer />
-        <EditModal />
-        <ATOModal />
-        <SummaryModal />
+        {children}
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem('wc_onboarded') === '1');
+  const { state } = useApp();
+
+  if (!onboarded) {
+    return (
+      <PhoneFrame>
+        <StatusBar />
+        <OnboardingFlow
+          onComplete={() => {
+            localStorage.setItem('wc_onboarded', '1');
+            setOnboarded(true);
+          }}
+        />
+      </PhoneFrame>
+    );
+  }
+
+  const showBottomNav = state.currentScreen !== 'dashboard';
+
+  return (
+    <PhoneFrame>
+      <StatusBar />
+      <ScreenContainer />
+      {showBottomNav && <BottomNav />}
+      <EditModal />
+      <ATOModal />
+      <SummaryModal />
+    </PhoneFrame>
   );
 }
