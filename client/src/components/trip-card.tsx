@@ -648,7 +648,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                 if (pinchStartDist.current > 0) {
                   const ratio = dist / pinchStartDist.current;
-                  setDetailScale(Math.min(1.35, Math.max(1, ratio)));
+                  setDetailScale(Math.min(3, Math.max(1, ratio)));
                 }
               }
             }}
@@ -682,11 +682,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               style={{
                 height: '280px',
                 background: '#f0f0f0',
-                transform: detailScale > 1 ? `scaleY(${detailScale}) scaleX(1)` : 'none',
+                transform: detailScale > 1 ? `scale(${detailScale})` : 'none',
                 transformOrigin: 'top center',
                 zIndex: detailScale > 1 ? 50 : 0,
-                borderRadius: detailScale > 1 ? '0 0 12px 12px' : '0',
-                boxShadow: detailScale > 1 ? '0 12px 30px rgba(0,0,0,.7), 0 4px 16px rgba(245,196,0,.2)' : 'none',
+                borderRadius: detailScale > 1 ? '12px' : '0',
+                boxShadow: detailScale > 1
+                  ? `0 ${8 * detailScale}px ${30 * detailScale}px rgba(0,0,0,.8), 0 0 ${16 * detailScale}px rgba(245,196,0,.25)`
+                  : 'none',
                 transition: detailScale > 1 ? 'none' : 'transform .3s ease, box-shadow .3s ease, border-radius .3s ease',
               }}
             >
