@@ -3,6 +3,30 @@ import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart,
 
 export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export';
 
+export const INDUSTRY_BIZ_AVG = 65;
+
+export function calcAuditScore(params: {
+  totalTrips: number;
+  sortedTrips: number;
+  verifiedCount: number;
+  photoCount: number;
+  bizPct: number;
+}) {
+  const { totalTrips, sortedTrips, verifiedCount, photoCount, bizPct } = params;
+  if (sortedTrips === 0) return { classifiedPct: 0, verifiedPct: 0, photoPct: 0, ratioPct: 0, classifiedContrib: 0, verifiedContrib: 0, photoContrib: 0, ratioContrib: 0, total: 0 };
+  const classifiedPct = sortedTrips > 0 ? 100 : 0;
+  const verifiedPct = (verifiedCount / sortedTrips) * 100;
+  const photoPct = (photoCount / sortedTrips) * 100;
+  const deviation = Math.abs(bizPct - INDUSTRY_BIZ_AVG);
+  const ratioPct = Math.max(0, 100 - (deviation / INDUSTRY_BIZ_AVG) * 100);
+  const classifiedContrib = Math.round(classifiedPct * 0.33);
+  const verifiedContrib = Math.round(verifiedPct * 0.28);
+  const photoContrib = Math.round(photoPct * 0.20);
+  const ratioContrib = Math.round(ratioPct * 0.18);
+  const total = Math.min(99, classifiedContrib + verifiedContrib + photoContrib + ratioContrib);
+  return { classifiedPct, verifiedPct, photoPct, ratioPct, classifiedContrib, verifiedContrib, photoContrib, ratioContrib, total };
+}
+
 interface SavedTripSummary {
   from: string;
   to: string;
@@ -297,10 +321,16 @@ function reducer(state: AppState, action: Action): AppState {
           const st = state.trips.filter(t => t.type !== null);
           const tot = st.length;
           if (tot === 0) return 0;
-          const cp = 100;
-          const vp = (state.verifiedSet.size / tot) * 100;
-          const pp = (state.trips.filter(t => t.photo).length / tot) * 100;
-          return Math.min(99, Math.round(cp * 0.40 + vp * 0.35 + pp * 0.24));
+          const bizKmLocal = biz.reduce((s, t) => s + t.km, 0);
+          const totKmLocal = state.trips.reduce((s, t) => s + t.km, 0);
+          const bizPctLocal = totKmLocal > 0 ? (bizKmLocal / totKmLocal) * 100 : 0;
+          return calcAuditScore({
+            totalTrips: state.trips.length,
+            sortedTrips: tot,
+            verifiedCount: state.verifiedSet.size,
+            photoCount: state.trips.filter(t => t.photo).length,
+            bizPct: bizPctLocal,
+          }).total;
         })(),
         lastOdoReading: state.lastOdoReading,
         lastOdoVerifiedAt: state.lastOdoVerifiedAt,
@@ -447,15 +477,14 @@ export function useComputedStats() {
   const bizPct = totKm > 0 ? (bizKm / totKm * 100) : 0;
   const remaining = state.trips.length - state.currentIndex;
   const progress = state.trips.length > 0 ? (state.currentIndex / state.trips.length * 100) : 0;
-  const sortedTrips = state.trips.filter(t => t.type !== null);
-  const totalTrips = sortedTrips.length;
-  const classifiedPct = totalTrips > 0 ? 100 : 0;
-  const verifiedCount = state.verifiedSet.size;
-  const verifiedPct = totalTrips > 0 ? (verifiedCount / totalTrips) * 100 : 0;
-  const photoCount = state.trips.filter(t => t.photo).length;
-  const photoPct = totalTrips > 0 ? (photoCount / totalTrips) * 100 : 0;
-  const auditScore = totalTrips > 0
-    ? Math.min(99, Math.round(classifiedPct * 0.40 + verifiedPct * 0.35 + photoPct * 0.24))
-    : 0;
+  const sortedTripsArr = state.trips.filter(t => t.type !== null);
+  const auditResult = calcAuditScore({
+    totalTrips: state.trips.length,
+    sortedTrips: sortedTripsArr.length,
+    verifiedCount: state.verifiedSet.size,
+    photoCount: state.trips.filter(t => t.photo).length,
+    bizPct,
+  });
+  const auditScore = auditResult.total;
   return { bizKm, totKm, bizPct, remaining, progress, auditScore };
 }

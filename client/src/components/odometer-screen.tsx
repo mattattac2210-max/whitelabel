@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useApp, useComputedStats } from '@/lib/app-context';
+import { useApp, useComputedStats, calcAuditScore, INDUSTRY_BIZ_AVG } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle } from 'lucide-react';
@@ -67,17 +67,20 @@ export function OdometerScreen() {
             <div className="text-[10px] mt-[5px] mb-[8px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
 
             {(() => {
-              const sortedTrips = state.trips.filter(t => t.type !== null);
-              const totalTrips = sortedTrips.length;
+              const sortedTripsArr = state.trips.filter(t => t.type !== null);
+              const totalTrips = sortedTripsArr.length;
               const verifiedCount = state.verifiedSet.size;
               const photoCount = state.trips.filter(t => t.photo).length;
-              const classifiedPct = totalTrips > 0 ? 100 : 0;
-              const verifiedPct = totalTrips > 0 ? (verifiedCount / totalTrips) * 100 : 0;
-              const photoPct = totalTrips > 0 ? (photoCount / totalTrips) * 100 : 0;
-              const classifiedContrib = Math.round(classifiedPct * 0.40);
-              const verifiedContrib = Math.round(verifiedPct * 0.35);
-              const photoContrib = Math.round(photoPct * 0.24);
-              const total = Math.min(99, classifiedContrib + verifiedContrib + photoContrib);
+              const result = calcAuditScore({
+                totalTrips: state.trips.length,
+                sortedTrips: totalTrips,
+                verifiedCount,
+                photoCount,
+                bizPct: stats.bizPct,
+              });
+              const deviation = Math.abs(stats.bizPct - INDUSTRY_BIZ_AVG);
+              const deviationLabel = deviation <= 10 ? 'Within range' : deviation <= 25 ? 'Moderate deviation' : 'High deviation';
+              const deviationColor = deviation <= 10 ? 'var(--wc-gr)' : deviation <= 25 ? 'var(--wc-am)' : 'var(--wc-re)';
               return (
                 <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.15)' }}>
                   <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgba(245,196,0,.06)' }}>
@@ -86,13 +89,14 @@ export function OdometerScreen() {
                   </div>
                   <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
                     <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
-                      Your audit score is a weighted percentage based on three categories. It scales with however many trips you have — whether it's 5 or 50. The maximum achievable score is <strong className="text-white">99%</strong>.
+                      Your audit score is a weighted percentage based on four categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong className="text-white">99%</strong>.
                     </div>
                     <div className="flex flex-col gap-[3px]">
                       {[
-                        { label: 'Classification', weight: '40%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: classifiedPct, contrib: classifiedContrib, color: 'var(--wc-t2)' },
-                        { label: 'Odometer verified', weight: '35%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: verifiedPct, contrib: verifiedContrib, color: 'var(--wc-gr)' },
-                        { label: 'Photo evidence', weight: '24%', desc: `${photoCount} of ${totalTrips} trips with photos`, pct: photoPct, contrib: photoContrib, color: 'var(--wc-y)' },
+                        { label: 'Classification', weight: '33%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
+                        { label: 'Odometer verified', weight: '28%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Photo evidence', weight: '20%', desc: `${photoCount} of ${totalTrips} trips with photos`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
+                        { label: 'Business use ratio', weight: '18%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
                       ].map((row, ri) => (
                         <div key={ri} className="rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgba(255,255,255,.02)' }}>
                           <div className="flex items-center justify-between mb-[3px]">
@@ -113,12 +117,19 @@ export function OdometerScreen() {
                         </div>
                       ))}
                     </div>
+                    <div className="rounded-[7px] px-[8px] py-[4px] mt-[1px]" style={{ background: 'rgba(255,255,255,.02)' }}>
+                      <div className="flex items-center gap-[5px]">
+                        <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: deviationColor }} />
+                        <span className="font-data text-[8px]" style={{ color: deviationColor }}>{deviationLabel}</span>
+                        <span className="text-[8px]" style={{ color: 'var(--wc-t3)' }}>{deviation <= 10 ? 'Your business use aligns with ATO industry benchmarks for tradies.' : deviation <= 25 ? 'Some deviation from industry average — ensure you can justify if audited.' : 'Significant deviation from industry norms — strong documentation recommended.'}</span>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between rounded-[7px] px-[8px] py-[5px] mt-[2px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
                       <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white">Total Score</span>
-                      <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{total}%</span>
+                      <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{result.total}%</span>
                     </div>
                     <div className="text-[9px] leading-[1.45] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                      Score is capped at 99%. The remaining 1% represents factors WorkCar cannot verify — actual business purpose, engine capacity, pro-rata periods, and your individual tax situation.
+                      Score is capped at 99%. Industry average ({INDUSTRY_BIZ_AVG}%) is based on ATO benchmarks for trades and construction. The remaining 1% represents factors WorkCar cannot verify.
                     </div>
                   </div>
                 </div>
