@@ -93,11 +93,10 @@ export function EditModal() {
   }, [editFrom, editTo, stops]);
 
   useEffect(() => {
-    const validStops = stops.filter(s => s.length > 3);
-    if (editFrom.length > 5 && editTo.length > 5 && validStops.length > 0) {
+    if (editFrom.length > 5 && editTo.length > 5) {
       calcRoute();
     }
-  }, [stops, calcRoute]);
+  }, [editFrom, editTo, stops, calcRoute]);
 
   if (!state.editModalOpen || !trip) return null;
 
