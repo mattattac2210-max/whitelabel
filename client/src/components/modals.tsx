@@ -31,6 +31,7 @@ export function EditModal() {
   const [editKm, setEditKm] = useState('');
   const [editDur, setEditDur] = useState('');
   const [editPurpose, setEditPurpose] = useState('');
+  const [editType, setEditType] = useState<'business' | 'personal' | null>(null);
   const [stops, setStops] = useState<string[]>([]);
   const [routeKm, setRouteKm] = useState<number | null>(null);
   const [routeDur, setRouteDur] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function EditModal() {
       setEditDur(trip.duration);
       setEditPurpose(trip.purposeLabel || '');
       setStops(trip.stops || []);
+      setEditType(trip.type);
       setRouteKm(null);
       setRouteDur(null);
       setCalcStatus('idle');
@@ -120,6 +122,7 @@ export function EditModal() {
         duration: editDur || trip.duration,
         purposeLabel: editPurpose || trip.purposeLabel,
         stops: stops.filter(s => s.length > 3),
+        type: editType,
       },
     });
     dispatch({ type: 'ADD_LOG', desc: `Trip edited: ${fromParts[0].trim()} \u2192 ${toParts[0].trim()}${stops.filter(s => s.length > 3).length > 0 ? ` (${stops.filter(s => s.length > 3).length} stop${stops.filter(s => s.length > 3).length > 1 ? 's' : ''})` : ''}`, hasPhoto: false });
@@ -147,6 +150,32 @@ export function EditModal() {
           <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
           <div className="text-[10px] leading-[1.45]" style={{ color: 'rgba(239,68,68,.9)' }}>
             <strong style={{ color: 'var(--wc-re)' }}>All edits are timestamped and logged.</strong> Evidence is strongly recommended. Attach an odometer photo to strengthen your claim.
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[6px]" style={{ color: 'var(--wc-t3)' }}>Trip Type</label>
+          <div className="flex gap-[6px]">
+            <button
+              className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
+              style={editType === 'business'
+                ? { background: 'rgba(245,196,0,.15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
+                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+              onClick={() => setEditType('business')}
+              data-testid="button-edit-type-business"
+            >
+              Business
+            </button>
+            <button
+              className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
+              style={editType === 'personal'
+                ? { background: 'rgba(255,255,255,.12)', border: '2px solid rgba(255,255,255,.4)', color: 'white' }
+                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+              onClick={() => setEditType('personal')}
+              data-testid="button-edit-type-personal"
+            >
+              Personal
+            </button>
           </div>
         </div>
 
