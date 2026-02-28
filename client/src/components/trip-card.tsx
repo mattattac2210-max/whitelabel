@@ -657,7 +657,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               pointerPositions.current.delete(e.pointerId);
               if (activePointers.current.size === 0) {
                 pinchStartDist.current = 0;
-                setDetailScale(1);
               }
             }}
             onPointerCancel={e => {
@@ -665,7 +664,6 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               pointerPositions.current.delete(e.pointerId);
               if (activePointers.current.size === 0) {
                 pinchStartDist.current = 0;
-                setDetailScale(1);
               }
             }}
           >
@@ -693,6 +691,21 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               }}
             >
               <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+              {detailScale > 1 && (
+                <button
+                  className="absolute top-[8px] left-[8px] z-[60] w-[32px] h-[32px] rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(0,0,0,.7)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255,255,255,.2)',
+                    transform: `scale(${1 / detailScale})`,
+                  }}
+                  onClick={() => setDetailScale(1)}
+                  data-testid="button-close-zoom"
+                >
+                  <X className="w-[16px] h-[16px] text-white" />
+                </button>
+              )}
             </div>
             <div className="p-[16px] flex flex-col gap-[12px]">
               <div className="flex items-center gap-[6px]">
