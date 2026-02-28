@@ -300,7 +300,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   y += 3;
   doc.setFontSize(7.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
-  const whyNot = 'Why isn\'t the score 100%? The WorkCar audit score measures automatically verifiable data only \u2014 odometer confirmation, photo evidence, and classification completeness. It cannot verify actual business purposes, vehicle engine capacity, pro-rata holding periods, or your individual tax situation. 100% is intentionally unachievable to reflect real-world compliance nuance.';
+  const whyNot = 'This is an independent review of the information you have provided. It does not replace financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification completeness (35%), odometer verification (30%), business use ratio vs industry benchmarks (24%), and photo evidence (10%). It aligns with the integrity of what the ATO requires for compliance documentation. 100% is intentionally unachievable \u2014 please seek certified financial advice if you require further assistance.';
   const lines = doc.splitTextToSize(whyNot, CW - 4);
   checkY(lines.length * 4 + 2);
   doc.text(lines, ML + 2, y);
@@ -863,7 +863,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
               <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>Why isn't the Audit Score 100%?</span>
             </div>
             <p className="text-[9.5px] leading-[1.55]" style={{ color: 'var(--wc-t3)' }}>
-              The score measures only what WorkCar can verify automatically — odometer readings, photo evidence, and classification completeness. It <strong className="text-white">cannot verify</strong> the actual business purpose of each trip, engine capacity, pro-rata holding periods, or your individual tax situation. A score of 100% is intentionally unachievable to reflect real-world compliance nuance. Your accountant provides the missing context.
+              This is an independent review of the information you have provided. It <strong className="text-white">does not replace</strong> financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification (35%), odometer verification (30%), business use ratio vs industry benchmarks (24%), and photo evidence (10%). It aligns with the integrity of what the ATO requires for compliance documentation. Please seek certified financial advice if you require further assistance.
             </p>
           </div>
 
