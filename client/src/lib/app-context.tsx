@@ -171,16 +171,17 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'UNDO_LAST': {
       if (!state.lastAction) return state;
-      const { idx, type, ded } = state.lastAction;
+      const { idx } = state.lastAction;
       const newTrips = [...state.trips];
       newTrips[idx] = { ...newTrips[idx], type: null };
+      const undoSlice = newTrips.slice(0, idx);
       return {
         ...state,
         trips: newTrips,
         currentIndex: idx,
-        dedTotal: state.dedTotal - ded,
-        bizCount: state.bizCount - (type === 'business' ? 1 : 0),
-        perCount: state.perCount - (type === 'personal' ? 1 : 0),
+        dedTotal: undoSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0),
+        bizCount: undoSlice.filter(t => t.type === 'business').length,
+        perCount: undoSlice.filter(t => t.type === 'personal').length,
         lastAction: null,
       };
     }
@@ -210,14 +211,13 @@ function reducer(state: AppState, action: Action): AppState {
       const newTrips = [...state.trips];
       const trip = newTrips[action.tripIndex];
       const oldType = trip.type;
-      let newDed = state.dedTotal;
-      let newBiz = state.bizCount;
-      let newPer = state.perCount;
-      if (oldType === 'business') { newDed -= trip.km * RATE; newBiz--; }
-      else if (oldType === 'personal') { newPer--; }
       newTrips[action.tripIndex] = { ...trip, type: action.tripType };
-      if (action.tripType === 'business') { newDed += trip.km * RATE; newBiz++; }
-      else { newPer++; }
+      const sortedSlice = newTrips.slice(0, state.currentIndex);
+      const newBiz = sortedSlice.filter(t => t.type === 'business').length;
+      const newPer = sortedSlice.filter(t => t.type === 'personal').length;
+      const newDed = sortedSlice
+        .filter(t => t.type === 'business')
+        .reduce((s, t) => s + t.km * RATE, 0);
       const reclassDesc = `Reclassified "${trip.from} \u2192 ${trip.to}" from ${oldType || 'unsorted'} to ${action.tripType}`;
       return {
         ...state,
@@ -259,8 +259,23 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'UPDATE_TRIP': {
       const newTrips = [...state.trips];
-      newTrips[action.tripIndex] = { ...newTrips[action.tripIndex], ...action.updates };
-      return { ...state, trips: newTrips };
+      const oldTrip = newTrips[action.tripIndex];
+      newTrips[action.tripIndex] = { ...oldTrip, ...action.updates };
+      const sortedForCount = newTrips.slice(0, state.currentIndex);
+      const newBizCount = sortedForCount.filter(t => t.type === 'business').length;
+      const newPerCount = sortedForCount.filter(t => t.type === 'personal').length;
+      const newDedTotal = sortedForCount
+        .filter(t => t.type === 'business')
+        .reduce((s, t) => s + t.km * RATE, 0);
+      const editDesc = `Edited trip: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to}`;
+      return {
+        ...state,
+        trips: newTrips,
+        bizCount: newBizCount,
+        perCount: newPerCount,
+        dedTotal: newDedTotal,
+        auditLog: [{ time: nowStr(), desc: editDesc, hasPhoto: false }, ...state.auditLog],
+      };
     }
     case 'OPEN_EDIT':
       return { ...state, editModalOpen: true, editTripIndex: action.tripIndex };
