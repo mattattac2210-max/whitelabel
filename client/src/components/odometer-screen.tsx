@@ -13,6 +13,7 @@ export function OdometerScreen() {
   const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [expandedVerified, setExpandedVerified] = useState<Set<number>>(new Set());
+  const [showUnconfirmedWarning, setShowUnconfirmedWarning] = useState(false);
 
   const sorted = state.trips.filter(t => t.type !== null);
   const score = stats.auditScore;
@@ -313,16 +314,81 @@ export function OdometerScreen() {
       </div>
 
       <div className="px-[14px] py-[6px] flex-shrink-0">
-        <button
-          className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
-          style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
-          onClick={() => dispatch({ type: 'OPEN_SUMMARY' })}
-          data-testid="button-save-finish"
-        >
-          <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
-          Save &amp; Finish
-        </button>
+        {(() => {
+          const allConfirmed = sorted.every((_, idx) => {
+            const origIdx = state.trips.indexOf(sorted[idx]);
+            return state.verifiedSet.has(origIdx);
+          });
+          const unconfirmedCount = sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length;
+          return (
+            <button
+              className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: allConfirmed ? 'var(--wc-y)' : 'rgba(245,196,0,.3)',
+                boxShadow: allConfirmed ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+                color: allConfirmed ? '#000' : 'rgba(0,0,0,.6)',
+              }}
+              onClick={() => {
+                if (allConfirmed) {
+                  dispatch({ type: 'OPEN_SUMMARY' });
+                } else {
+                  setShowUnconfirmedWarning(true);
+                }
+              }}
+              data-testid="button-save-finish"
+            >
+              <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              {allConfirmed ? 'Save & Finish' : `Save & Finish (${unconfirmedCount} unconfirmed)`}
+            </button>
+          );
+        })()}
       </div>
+
+      {showUnconfirmedWarning && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowUnconfirmedWarning(false)}
+          data-testid="unconfirmed-warning-overlay"
+        >
+          <div
+            className="w-[340px] rounded-[18px] p-[24px] flex flex-col items-center gap-[16px]"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.4)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.4)' }}>
+              <AlertTriangle className="w-[26px] h-[26px]" style={{ color: 'var(--wc-am)' }} />
+            </div>
+            <div className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em] text-white text-center">
+              Unconfirmed Trips
+            </div>
+            <div className="text-[13px] leading-[1.5] text-center" style={{ color: 'var(--wc-t2)' }}>
+              You have <span className="font-bold text-white">{sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length} trip{sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length !== 1 ? 's' : ''}</span> that haven't been confirmed yet. All odometer readings must be confirmed before you can save and finish.
+            </div>
+            <div className="w-full flex flex-col gap-[8px] mt-[4px]">
+              {sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).slice(0, 5).map((t, idx) => (
+                <div key={idx} className="flex items-center gap-[8px] rounded-[10px] px-[12px] py-[8px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                  <AlertTriangle className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
+                  <span className="font-bold text-[12px] text-white truncate flex-1">{t.from} &rarr; {t.to}</span>
+                </div>
+              ))}
+              {sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length > 5 && (
+                <div className="text-[11px] text-center" style={{ color: 'var(--wc-t3)' }}>
+                  +{sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length - 5} more
+                </div>
+              )}
+            </div>
+            <button
+              className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
+              style={{ background: 'var(--wc-am)', boxShadow: '0 2px 12px rgba(245,158,11,.3)' }}
+              onClick={() => setShowUnconfirmedWarning(false)}
+              data-testid="button-dismiss-warning"
+            >
+              Go Back &amp; Confirm
+            </button>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
