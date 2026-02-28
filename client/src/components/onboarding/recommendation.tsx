@@ -227,7 +227,7 @@ const FIN_LABEL: Record<string, string> = { yes: "Yes (financed)", no: "No (owne
 const KMBAND_LABEL: Record<string, string> = { "0to2k": "Under 2,000 km", "2kto5k": "2,000\u20135,000 km", "5kto10k": "5,000\u201310,000 km", "over10k": "Over 10,000 km" };
 const PRICE_LABEL: Record<string, string> = { under30: "Under $30k", "30to50": "$30\u2013$50k", "50to70": "$50\u2013$70k", over70: "$70k+" };
 
-function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance, priceBand, trade, result, costs, personalAnnualKm }: {
+function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance, priceBand, trade, costs, personalAnnualKm, currentWeeklyKm }: {
   onClose: () => void;
   kmBand: string;
   vehicleAge: string;
@@ -235,13 +235,16 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
   finance: string;
   priceBand: string;
   trade: string;
-  result: ReturnType<typeof runAlgorithm>;
   costs: ReturnType<typeof estimateCosts>;
   personalAnnualKm?: number | null;
+  currentWeeklyKm: number;
 }) {
-  const bizKm = KM_MID[kmBand] || 3500;
+  const bizKm = currentWeeklyKm * 48;
   const segName = SEG_LABEL[vehicleType] || "vehicle";
-  const { pct } = calcLogbook(bizKm, costs, trade, personalAnnualKm);
+  const centsAmt = calcCentsPerKm(bizKm);
+  const { amount: logAmt, pct } = calcLogbook(bizKm, costs, trade, personalAnnualKm);
+  const diff = logAmt - centsAmt;
+  const diff5yr = diff * 5;
 
   const range = PRICE_RANGE[priceBand] || PRICE_RANGE["30to50"];
   const priceLo = range.lo;
@@ -266,9 +269,9 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
 
   const logbookLo = Math.round(annualLo * pct / 100);
   const logbookHi = Math.round(annualHi * pct / 100);
-  const logbookMid = Math.round(costs.annual * pct / 100);
-  const diffLo = logbookLo - result.centsAmt;
-  const diffHi = logbookHi - result.centsAmt;
+  const logbookMid = logAmt;
+  const diffLo = logbookLo - centsAmt;
+  const diffHi = logbookHi - centsAmt;
   const diff5Lo = diffLo * 5;
   const diff5Hi = diffHi * 5;
 
@@ -315,7 +318,7 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
               { label: "Vehicle age", value: AGE_LABEL[vehicleAge] || vehicleAge },
               { label: "Finance", value: FIN_LABEL[finance] || finance },
               { label: "Price band", value: PRICE_LABEL[priceBand] || priceBand },
-              { label: "Annual business km", value: KMBAND_LABEL[kmBand] || kmBand },
+              { label: "Annual business km", value: `~${bizKm.toLocaleString()} km (${KMBAND_LABEL[kmBand] || kmBand})` },
               { label: "Business use %", value: `${pct}%`, highlight: true },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between" style={{ padding: "8px 12px", background: (row as any).highlight ? "rgba(245,196,0,.06)" : "rgba(255,255,255,.04)", borderRadius: 10, border: `1px solid ${(row as any).highlight ? "rgba(245,196,0,.2)" : "rgba(255,255,255,.06)"}` }}>
@@ -388,7 +391,7 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1, padding: 14, background: "rgba(56,189,248,.04)", borderRadius: 12, border: "1px solid rgba(56,189,248,.15)" }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: "#38BDF8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Cents/km</div>
-              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>${result.centsAmt.toLocaleString()}</div>
+              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>${centsAmt.toLocaleString()}</div>
               <div style={{ fontSize: 9, color: "var(--wc-t3)", lineHeight: 1.4 }}>
                 {Math.min(bizKm, CENTS_CAP).toLocaleString()} km x $0.88
                 {bizKm > CENTS_CAP ? " (capped)" : ""}
@@ -410,7 +413,7 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
               </div>
             </div>
           </div>
-          <div style={{ marginTop: 8, padding: "10px 14px", background: result.diff > 0 ? "rgba(245,196,0,.05)" : "rgba(56,189,248,.05)", borderRadius: 10, border: `1px solid ${result.diff > 0 ? "rgba(245,196,0,.15)" : "rgba(56,189,248,.15)"}` }}>
+          <div style={{ marginTop: 8, padding: "10px 14px", background: diff > 0 ? "rgba(245,196,0,.05)" : "rgba(56,189,248,.05)", borderRadius: 10, border: `1px solid ${diff > 0 ? "rgba(245,196,0,.15)" : "rgba(56,189,248,.15)"}` }}>
             {showRange ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -430,20 +433,20 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
                 <div style={{ height: 1, background: "rgba(255,255,255,.06)" }} />
                 <div style={{ textAlign: "center" }}>
                   <span style={{ fontSize: 9, color: "var(--wc-t3)" }}>Mid-point estimate: </span>
-                  <span className="font-data" style={{ fontSize: 12, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
-                    {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
+                  <span className="font-data" style={{ fontSize: 12, fontWeight: 800, color: diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                    {diff >= 0 ? "+" : ""}${Math.abs(diff).toLocaleString()}/yr
                   </span>
                 </div>
               </div>
             ) : (
               <div style={{ textAlign: "center" }}>
                 <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>Difference: </span>
-                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
-                  {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
+                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                  {diff >= 0 ? "+" : ""}${Math.abs(diff).toLocaleString()}/yr
                 </span>
                 <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> = </span>
-                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
-                  {result.diff5yr >= 0 ? "+" : ""}${Math.abs(result.diff5yr).toLocaleString()}
+                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                  {diff5yr >= 0 ? "+" : ""}${Math.abs(diff5yr).toLocaleString()}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> over 5 yrs</span>
               </div>
@@ -511,7 +514,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
   const costs = useMemo(() => {
     const annKm = weeklyKm * 48;
     const actualTotal = (personalAnnualKm && personalAnnualKm > 0) ? annKm + personalAnnualKm : null;
-    return estimateCosts(vehicleType || "ute-4x2", finance || "yes", vehicleAge || "3to5", priceBand || "30to50", actualTotal);
+    return estimateCosts(vehicleType || "ute-4x2", finance || "no", vehicleAge || "3to5", priceBand || "30to50", actualTotal);
   }, [vehicleType, finance, vehicleAge, priceBand, weeklyKm, personalAnnualKm]);
 
   const sliderCalc = useMemo(() => {
@@ -858,9 +861,9 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           finance={finance}
           priceBand={priceBand}
           trade={trade}
-          result={initialResult}
           costs={costs}
           personalAnnualKm={personalAnnualKm}
+          currentWeeklyKm={weeklyKm}
         />
       )}
 
