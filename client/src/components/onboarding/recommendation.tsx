@@ -264,6 +264,14 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
   const annualHi = depValHi + costs.running + interestHi;
   const showRange = Math.abs(annualHi - annualLo) > 500;
 
+  const logbookLo = Math.round(annualLo * pct / 100);
+  const logbookHi = Math.round(annualHi * pct / 100);
+  const logbookMid = Math.round(costs.annual * pct / 100);
+  const diffLo = logbookLo - result.centsAmt;
+  const diffHi = logbookHi - result.centsAmt;
+  const diff5Lo = diffLo * 5;
+  const diff5Hi = diffHi * 5;
+
   return (
     <div
       style={{
@@ -387,23 +395,59 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
               </div>
             </div>
             <div style={{ flex: 1, padding: 14, background: "rgba(245,196,0,.04)", borderRadius: 12, border: "1px solid rgba(245,196,0,.15)" }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Logbook</div>
-              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>~${result.logAmt.toLocaleString()}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Logbook ({pct}%)</div>
+              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>
+                {showRange
+                  ? `~$${Math.min(logbookLo, logbookHi).toLocaleString()}–$${Math.max(logbookLo, logbookHi).toLocaleString()}`
+                  : `~$${logbookMid.toLocaleString()}`
+                }
+              </div>
               <div style={{ fontSize: 9, color: "var(--wc-t3)", lineHeight: 1.4 }}>
-                {pct}% of ${costs.annual.toLocaleString()}
+                {pct}% of {showRange
+                  ? `$${Math.min(annualLo, annualHi).toLocaleString()}–$${Math.max(annualLo, annualHi).toLocaleString()}`
+                  : `$${costs.annual.toLocaleString()}`
+                }
               </div>
             </div>
           </div>
-          <div style={{ marginTop: 8, padding: "10px 14px", background: result.diff > 0 ? "rgba(245,196,0,.05)" : "rgba(56,189,248,.05)", borderRadius: 10, border: `1px solid ${result.diff > 0 ? "rgba(245,196,0,.15)" : "rgba(56,189,248,.15)"}`, textAlign: "center" }}>
-            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>Difference: </span>
-            <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
-              {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
-            </span>
-            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> = </span>
-            <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
-              {result.diff5yr >= 0 ? "+" : ""}${Math.abs(result.diff5yr).toLocaleString()}
-            </span>
-            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> over 5 yrs</span>
+          <div style={{ marginTop: 8, padding: "10px 14px", background: result.diff > 0 ? "rgba(245,196,0,.05)" : "rgba(56,189,248,.05)", borderRadius: 10, border: `1px solid ${result.diff > 0 ? "rgba(245,196,0,.15)" : "rgba(56,189,248,.15)"}` }}>
+            {showRange ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: "var(--wc-t3)" }}>If vehicle worth ~${(priceLo / 1000).toFixed(0)}k</span>
+                  <span className="font-data" style={{ fontSize: 13, fontWeight: 800, color: diffLo > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                    {diffLo >= 0 ? "+" : ""}${Math.abs(diffLo).toLocaleString()}/yr
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--wc-t3)", marginLeft: 4 }}>= {diff5Lo >= 0 ? "+" : ""}${Math.abs(diff5Lo).toLocaleString()} over 5yr</span>
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: "var(--wc-t3)" }}>If vehicle worth ~${(priceHi / 1000).toFixed(0)}k</span>
+                  <span className="font-data" style={{ fontSize: 13, fontWeight: 800, color: diffHi > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                    {diffHi >= 0 ? "+" : ""}${Math.abs(diffHi).toLocaleString()}/yr
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--wc-t3)", marginLeft: 4 }}>= {diff5Hi >= 0 ? "+" : ""}${Math.abs(diff5Hi).toLocaleString()} over 5yr</span>
+                  </span>
+                </div>
+                <div style={{ height: 1, background: "rgba(255,255,255,.06)" }} />
+                <div style={{ textAlign: "center" }}>
+                  <span style={{ fontSize: 9, color: "var(--wc-t3)" }}>Mid-point estimate: </span>
+                  <span className="font-data" style={{ fontSize: 12, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                    {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>Difference: </span>
+                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                  {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
+                </span>
+                <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> = </span>
+                <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+                  {result.diff5yr >= 0 ? "+" : ""}${Math.abs(result.diff5yr).toLocaleString()}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> over 5 yrs</span>
+              </div>
+            )}
           </div>
         </div>
 
