@@ -206,7 +206,6 @@ export function SortScreen() {
           </div>
         </div>
       </div>
-
       <div className="px-4 pb-[5px] flex-shrink-0">
         <div className="h-1 rounded-[2px] overflow-hidden" style={{ background: 'rgba(255,255,255,.07)' }}>
           <div
@@ -216,7 +215,6 @@ export function SortScreen() {
           />
         </div>
       </div>
-
       <div className="flex-1 relative mx-[14px]">
         {state.pendingFinalise && (
           <div
@@ -325,7 +323,7 @@ export function SortScreen() {
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="var(--wc-y)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             <div className="font-heading font-black text-[26px] uppercase text-white text-center leading-none" data-testid="text-complete">All Sorted!</div>
-            <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>This session's estimated deduction*</div>
+            <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>This session's estimated claimable deduction*</div>
             {(() => {
               const activeSessionReport = state.savedReports.find(r => r.sessionId === state.sessionId && !r.supersedes);
               const sessionDed = activeSessionReport
@@ -389,7 +387,6 @@ export function SortScreen() {
           </div>
         )}
       </div>
-
       <div className="flex-shrink-0" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
         <div className="px-[14px] pt-[6px] flex flex-col gap-1">
           <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -460,7 +457,6 @@ export function SortScreen() {
 
         <BottomNav activeOverride="sort" />
       </div>
-
       {confirmDelete && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center"
