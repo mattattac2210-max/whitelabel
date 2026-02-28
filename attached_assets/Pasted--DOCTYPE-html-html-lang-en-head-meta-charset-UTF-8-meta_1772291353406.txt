@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WorkCar — Smart Logbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+input,button,select{font-family:inherit;outline:none}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+:root{
+  --y:#F5C400;
+  --yd:rgba(245,196,0,.10);
+  --yb:rgba(245,196,0,.25);
+  --yg:rgba(245,196,0,.05);
+  --yglow:rgba(245,196,0,.4);
+  --bg:#0A0A0A;
+  --card:#141414;
+  --card2:#1A1A1A;
+  --card3:#202020;
+  --b1:rgba(255,255,255,.06);
+  --b2:rgba(255,255,255,.11);
+  --b3:rgba(255,255,255,.18);
+  --t1:#FFFFFF;
+  --t2:#A0A0A0;
+  --t3:#484848;
+  --gr:#22C55E; --grd:rgba(34,197,94,.10);
+  --re:#EF4444; --red:rgba(239,68,68,.10);
+  --am:#F59E0B; --amd:rgba(245,158,11,.10);
+  --bl:#38BDF8;
+  --r1:8px;--r2:14px;--r3:20px;--r4:28px;
+}
+
+html,body{height:100%;overflow:hidden;background:#050505;font-family:'Inter',sans-serif;color:var(--t1);-webkit-font-smoothing:antialiased}
+
+/* ── STAGE ── */
+.stage{display:flex;justify-content:center;align-items:center;height:100vh;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(245,196,0,.06) 0%,transparent 65%),#050505}
+.phone{position:relative;width:390px;height:844px;background:var(--bg);border-radius:50px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 0 0 6px #080808,0 0 0 7px rgba(255,255,255,.04),0 60px 160px rgba(0,0,0,.95),0 0 80px rgba(245,196,0,.03)}
+.phone::after{content:'';position:absolute;inset:0;z-index:999;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:180px;opacity:.025;mix-blend-mode:overlay}
+
+/* ── STATUS BAR ── */
+.sbar{position:absolute;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:14px 28px 0;pointer-events:none}
+.sbar-time{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:.04em}
+.sbar-icons{display:flex;gap:5px;align-items:center}
+
+/* ── SCREEN ENGINE ── */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  opacity:0;transform:translateX(22px);pointer-events:none;
+  transition:opacity .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1);z-index:1}
+.scr.active{opacity:1;transform:translateX(0);pointer-events:all;z-index:10}
+.scr.out{opacity:0;transform:translateX(-22px);z-index:1}
+.scr.back-in{transform:translateX(-22px)}
+.scr.back-out{transform:translateX(22px)}
+
+.body{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.body::-webkit-scrollbar{width:2px}
+.body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06)}
+
+/* ── TYPOGRAPHY ── */
+.display{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}
+.label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:6px}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ── INPUTS ── */
+.inp{width:100%;padding:14px 16px;background:rgba(255,255,255,.05);border:1px solid var(--b2);border-radius:var(--r2);
+  color:var(--t1);font-size:14px;font-family:'Inter',sans-serif;transition:border-color .2s,background .2s}
+.inp::placeholder{color:var(--t3)}
+.inp:focus{border-color:rgba(245,196,0,.45);background:rgba(255,255,255,.07)}
+.otp-box{width:48px;height:58px;text-align:center;background:rgba(255,255,255,.06);border:1.5px solid var(--b2);
+  border-radius:var(--r2);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:28px;transition:border-color .2s}
+.otp-box.active{border-color:var(--y)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:17px 20px;
+  border-radius:var(--r2);border:none;cursor:pointer;font-weight:700;font-size:14px;letter-spacing:.04em;
+  transition:transform .12s,box-shadow .2s,opacity .12s}
+.btn:active{transform:scale(.97)}
+.btn-y{background:var(--y);color:#000}
+.btn-y:hover{box-shadow:0 4px 32px rgba(245,196,0,.35)}
+.btn-ghost{background:transparent;color:var(--t2);border:1.5px solid var(--b2)}
+.btn-ghost:hover{border-color:var(--y);color:var(--y)}
+.btn-sm{padding:10px 16px;font-size:12px;border-radius:var(--r1)}
+.btn-danger{background:var(--red);color:var(--re);border:1.5px solid rgba(239,68,68,.25)}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden}
+.card-y{border-color:var(--yb)}
+.card-glow{border-color:rgba(245,196,0,.3);box-shadow:0 0 28px rgba(245,196,0,.07),inset 0 0 24px rgba(245,196,0,.02)}
+
+/* ── PROGRESS BAR ── */
+.pbar{height:2px;background:var(--b1);border-radius:1px;overflow:hidden}
+.pbar-fill{height:100%;background:var(--y);border-radius:1px;transition:width .4s ease}
+
+/* ── TOGGLE ── */
+.tog{width:46px;height:26px;flex-shrink:0;background:rgba(255,255,255,.1);border-radius:13px;position:relative;cursor:pointer;transition:background .25s}
+.tog.on{background:var(--y)}
+.tog::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.tog.on::after{transform:translateX(20px)}
+
+/* ── RADIO ── */
+.ropt{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:var(--r2);cursor:pointer;
+  border:1.5px solid var(--b1);background:rgba(255,255,255,.02);transition:all .2s}
+.ropt.on{background:rgba(245,196,0,.06);border-color:rgba(245,196,0,.3)}
+.rdot{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:1px;border:2px solid var(--t3);transition:all .2s;
+  display:flex;align-items:center;justify-content:center}
+.ropt.on .rdot{border-color:var(--y);background:var(--y)}
+.ropt.on .rdot::after{content:'';width:7px;height:7px;border-radius:50%;background:#000}
+
+/* ── FEATURE LIST ── */
+.feat{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;color:var(--t2)}
+.fchk{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fchk.y{background:var(--yd)}
+.fchk.x{background:rgba(255,255,255,.03)}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;
+  font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.chip-y{background:rgba(245,196,0,.13);color:var(--y);border:1px solid rgba(245,196,0,.22)}
+.chip-gr{background:rgba(34,197,94,.11);color:var(--gr);border:1px solid rgba(34,197,94,.2)}
+.chip-am{background:rgba(245,158,11,.11);color:var(--am);border:1px solid rgba(245,158,11,.2)}
+.chip-dim{background:rgba(255,255,255,.05);color:var(--t3);border:1px solid var(--b1)}
+
+/* ── OCCUPATION GRID TILES ── */
+.occ-tile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:14px 6px 12px;
+  background:#1a1a1a;
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.occ-tile:active{transform:scale(.94);background:#222}
+.occ-tile.sel{
+  border-color:var(--y);
+  background:rgba(245,196,0,.1);
+  box-shadow:0 0 16px rgba(245,196,0,.15);
+}
+.occ-tile.sel .occ-icon{color:var(--y)}
+.occ-dim .occ-icon{color:rgba(255,255,255,.35)}
+.occ-dim{border-color:rgba(255,255,255,.07);background:#141414}
+.occ-dim.sel{border-color:var(--y);background:rgba(245,196,0,.08)}
+.occ-icon{
+  color:rgba(255,255,255,.7);
+  margin-bottom:8px;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s;
+}
+.occ-label{
+  font-size:10px;font-weight:700;color:var(--t2);
+  text-align:center;line-height:1.2;
+  letter-spacing:.01em;
+}
+.occ-tile.sel .occ-label{color:var(--y)}
+
+/* ── OCCUPATION TILES (Q1 grid) ── */
+.occ-tile {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:14px 6px 12px;
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  cursor:pointer;
+  transition:all .15s;
+  text-align:center;
+  min-height:80px;
+  gap:7px;
+  -webkit-tap-highlight-color:transparent;
+}
+.occ-tile:active { transform:scale(.94); background:rgba(245,196,0,.12); border-color:var(--y); }
+.occ-tile.sel { background:rgba(245,196,0,.15); border-color:var(--y); box-shadow:0 0 0 1px var(--y); }
+.occ-tile.sel svg { stroke:var(--y) !important; }
+.occ-tile.occ-secondary { background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.07); }
+.occ-tile.occ-secondary:active { background:rgba(245,196,0,.08); border-color:rgba(245,196,0,.4); }
+.occ-tile.occ-secondary.sel { background:rgba(245,196,0,.1); border-color:var(--y); }
+.occ-label { font-size:10px; font-weight:700; color:var(--t1); line-height:1.2; letter-spacing:.01em; }
+
+/* ── MATES GOLD CARD ── */
+.gold-card{background:linear-gradient(145deg,#191200,#0E0C00,#191200);
+  border:1.5px solid rgba(245,196,0,.28);border-radius:var(--r3);
+  box-shadow:0 0 36px rgba(245,196,0,.08),inset 0 0 50px rgba(245,196,0,.02);
+  overflow:hidden;position:relative}
+.gold-card::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 28px,rgba(245,196,0,.012) 28px,rgba(245,196,0,.012) 29px)}
+
+/* ── SOCIAL BTNS ── */
+.social-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;
+  border-radius:var(--r2);background:rgba(255,255,255,.05);border:1.5px solid var(--b2);
+  font-weight:700;font-size:12px;letter-spacing:.04em;color:var(--t2);cursor:pointer;transition:border-color .2s,color .2s}
+.social-btn:hover{border-color:var(--b3);color:#fff}
+
+/* ── NUMPAD ── */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto}
+.nkey{height:68px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--b1);
+  color:#fff;font-family:'Bebas Neue',sans-serif;font-size:28px;cursor:pointer;transition:background .15s,transform .1s}
+.nkey:active{background:var(--yd);transform:scale(.92)}
+.nkey-y{background:var(--yd);border-color:var(--yb)}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:12px;color:var(--t3);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ── BACK BTN ── */
+.back{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);transition:color .2s}
+.back:hover{color:var(--t2)}
+
+/* ── BOTTOM NAV ── */
+.bnav{flex-shrink:0;display:flex;justify-content:space-around;align-items:center;padding:9px 18px 22px;
+  background:rgba(8,8,8,.97);border-top:1px solid var(--b1)}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;opacity:.25;transition:opacity .2s}
+.bnav-btn.on{opacity:1}
+.bnav-btn svg{width:22px;height:22px;stroke:var(--t3)}
+.bnav-btn.on svg{stroke:var(--y)}
+.bnav-btn span{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.bnav-btn.on span{color:var(--y)}
+.bnav-btn.on::before{content:'';display:block;width:20px;height:2px;background:var(--y);border-radius:1px;margin-bottom:1px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 16px rgba(245,196,0,.12),0 0 0 2px rgba(245,196,0,.08)}50%{box-shadow:0 0 44px rgba(245,196,0,.42),0 0 0 2px rgba(245,196,0,.22)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes ppip{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.a1{animation:fadeUp .38s .04s both}
+.a2{animation:fadeUp .38s .10s both}
+.a3{animation:fadeUp .38s .16s both}
+.a4{animation:fadeUp .38s .22s both}
+.a5{animation:fadeUp .38s .28s both}
+.a6{animation:fadeUp .38s .34s both}
+
+/* ── UTILS ── */
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.g4{gap:4px}.g6{gap:6px}.g8{gap:8px}.g10{gap:10px}.g12{gap:12px}.g14{gap:14px}.g16{gap:16px}.g20{gap:20px}
+.center{text-align:center}
+.muted{color:var(--t3)}
+.link{color:var(--y);cursor:pointer}
+.link:hover{text-decoration:underline}
+
+/* ── Q1/Q2 TRADE TILE ── */
+.trade-tile{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 18px;border-radius:var(--r2);
+  border:1.5px solid var(--b1);background:var(--card);
+  cursor:pointer;transition:border-color .18s,background .18s,transform .12s;
+  position:relative;overflow:hidden;
+}
+.trade-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:2px 0 0 2px;background:transparent;transition:background .18s}
+.trade-tile:active{transform:scale(.98)}
+.trade-tile.sel{border-color:var(--y);background:rgba(245,196,0,.04)}
+.trade-tile.sel::before{background:var(--y)}
+.trade-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .18s,border-color .18s}
+.trade-tile.sel .trade-icon{background:var(--yd);border-color:var(--yb)}
+.trade-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--b2);margin-left:auto;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .18s}
+.trade-tile.sel .trade-check{background:var(--y);border-color:var(--y)}
+
+/* ── CLAIM HISTORY TILE ── */
+.hist-tile{
+  padding:20px;border-radius:var(--r3);border:1.5px solid var(--b1);background:var(--card);
+  cursor:pointer;transition:border-color .18s,background .18s;
+  text-align:center;flex:1
+}
+.hist-tile.sel{border-color:var(--y);background:rgba(245,196,0,.04)}
+.hist-tile-icon{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 10px;transition:background .18s}
+.hist-tile.sel .hist-tile-icon{background:var(--yd)}
+
+/* ── WEEK PIPS ── */
+.week-row{display:flex;gap:3px}
+.wpip{flex:1;height:5px;border-radius:2px;background:rgba(255,255,255,.07)}
+.wpip.done{background:var(--y)}
+.wpip.now{background:var(--y);box-shadow:0 0 6px rgba(245,196,0,.5);animation:ppip 1.4s ease-in-out infinite}
+
+/* ── RANGE SLIDER ── */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;border:none;padding:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--y);cursor:pointer;border:3px solid #111;box-shadow:0 0 0 1.5px rgba(245,196,0,.4),0 2px 8px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--y);cursor:pointer;border:3px solid #111;box-shadow:0 0 0 1.5px rgba(245,196,0,.4)}
+/* ── ONE-TOUCH ACTION TILE ── */
+.action-tile{display:flex;align-items:center;gap:14px;padding:16px 18px;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
+.action-tile:active{transform:scale(.98);opacity:.88}
+.action-tile.primary{border-color:rgba(245,196,0,.35);background:rgba(245,196,0,.06)}
+.action-tile.primary:active{background:rgba(245,196,0,.12)}
+/* ── PATH BADGE ── */
+.path-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.pb-c1{background:rgba(56,189,248,.1);color:var(--bl);border:1px solid rgba(56,189,248,.22)}
+.pb-c2{background:var(--yd);color:var(--y);border:1px solid var(--yb)}
+.pb-c3{background:rgba(34,197,94,.1);color:var(--gr);border:1px solid rgba(34,197,94,.2)}
+
+/* ── MILESTONE ROWS ── */
+.mrow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--b1)}
+.mrow:last-child{border-bottom:none}
+.mnum{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;flex-shrink:0;font-family:'Bebas Neue',sans-serif;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="phone" id="phone">
+
+<!-- STATUS BAR -->
+<div class="sbar">
+  <span class="sbar-time">9:41</span>
+  <div class="sbar-icons">
+    <svg width="15" height="11" viewBox="0 0 24 18" fill="none"><path d="M1 4C7-1 17-1 23 4" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M4 8c4-4 12-4 16 0" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M8 12c2-2 6-2 8 0" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="white"/></svg>
+    <svg width="22" height="11" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="white" stroke-width="1.5" fill="none"/><rect x="2" y="3" width="14" height="6" rx="1" fill="white"/><path d="M22 4v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S0 — SPLASH
+════════════════════════════════════════════════════════ -->
+<div class="scr active" id="s-splash">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 110% 50% at 50% -5%,rgba(245,196,0,.15) 0%,transparent 60%),var(--bg)"></div>
+  <div class="body" style="position:relative;z-index:1;padding:0 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%">
+
+    <div class="a1" style="margin-bottom:32px;text-align:center">
+      <div style="width:96px;height:96px;border-radius:30px;background:rgba(245,196,0,.07);border:1.5px solid rgba(245,196,0,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:glow 3s ease-in-out infinite">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <path d="M26 4C15 4 7 13 7 21C7 35 26 48 26 48C26 48 45 35 45 21C45 13 37 4 26 4Z" stroke="#F5C400" stroke-width="2.2" fill="none"/>
+          <circle cx="26" cy="21" r="7" stroke="#F5C400" stroke-width="2.2" fill="none"/>
+          <path d="M19 17L22 25L26 19L30 25L33 17" stroke="#F5C400" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="display" style="font-size:46px;line-height:1;letter-spacing:.05em">WORK<span style="color:var(--y)">CAR</span></div>
+      <div class="mono" style="font-size:9px;color:var(--t3);letter-spacing:.15em;text-transform:uppercase;margin-top:4px">workcar.com.au</div>
+    </div>
+
+    <div class="a2" style="text-align:center;margin-bottom:36px">
+      <h1 style="font-size:26px;line-height:1.2;font-weight:700;margin-bottom:10px">
+        Your work car.<br>Your tax back.<br><span style="color:var(--y)">Done properly.</span>
+      </h1>
+      <p style="font-size:13px;color:var(--t2);line-height:1.65;max-width:270px;margin:0 auto">
+        ATO-compliant vehicle logbook built for Australian tradies. Takes 30 seconds a day.
+      </p>
+    </div>
+
+    <!-- 3 icon trio — horizontal bar, not grid -->
+    <div class="a3" style="display:flex;gap:0;margin-bottom:36px;width:100%;border:1px solid var(--b1);border-radius:var(--r3);overflow:hidden">
+      <div style="flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--b1)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round" style="margin-bottom:6px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;line-height:1.4">Auto<br>Track</div>
+      </div>
+      <div style="flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--b1)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round" style="margin-bottom:6px"><path d="M9 18l6-6-6-6"/></svg>
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;line-height:1.4">Swipe<br>Classify</div>
+      </div>
+      <div style="flex:1;padding:14px 10px;text-align:center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round" style="margin-bottom:6px"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;line-height:1.4">Max<br>Claim</div>
+      </div>
+    </div>
+
+    <div class="a4 col g10" style="width:100%">
+      <button class="btn btn-y" onclick="go('s-q1')" style="font-size:15px;padding:18px">Get Started →</button>
+      <button class="btn btn-ghost" onclick="go('s-login')">Already have an account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  Q1 — WHAT'S YOUR TRADE / OCCUPATION?
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-q1" style="padding-top:44px;overflow-y:auto">
+  <div style="padding:20px 22px 48px">
+
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <button class="back" onclick="go('s-splash')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">1 of 3</span>
+          <div class="pbar" style="width:80px"><div class="pbar-fill" style="width:33%"></div></div>
+        </div>
+      </div>
+      <div class="display" style="font-size:34px;line-height:1;margin-bottom:6px">What's your<br><span style="color:var(--y)">trade/occupation?</span></div>
+      <p style="font-size:12px;color:var(--t3)">Tap to select — we'll move straight on</p>
+    </div>
+
+    <!-- Core trades 4-col grid -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px" id="trade-list">
+      <div class="occ-tile" onclick="selectTrade(this,'electrician')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <div class="occ-label">Electrician</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'plumber')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M12 2a10 10 0 100 20"/><path d="M12 6v6l4 2"/><path d="M16.24 7.76A6 6 0 0112 6"/></svg>
+        <div class="occ-label">Plumber</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'builder')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="occ-label">Builder</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'painter')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M20 14.66V20a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+        <div class="occ-label">Painter</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'hvac')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+        <div class="occ-label">HVAC</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'landscaper')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/></svg>
+        <div class="occ-label">Landscaper</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'carpenter')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/></svg>
+        <div class="occ-label">Carpenter</div>
+      </div>
+      <div class="occ-tile" onclick="selectTrade(this,'other')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <div class="occ-label">Other Trade</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:8px;margin:14px 0 10px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+      <div style="font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap">Also benefits from WorkCar</div>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+    </div>
+
+    <!-- Extended professions grid -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'real-estate')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4"/><path d="M15 20h4a2 2 0 002-2V6a2 2 0 00-2-2h-4"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Real Estate</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'sales-rep')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Sales Rep</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'delivery')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Delivery</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'healthcare')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Healthcare</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'consultant')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Consultant</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'mechanic')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Mechanic</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'cleaner')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Cleaner</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'photography')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Photography</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'aged-care')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Aged Care</div>
+      </div>
+      <div class="occ-tile occ-secondary" onclick="selectTrade(this,'not-listed')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="occ-label" style="color:var(--t2)">Not Listed</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  Q2 — BUSINESS KM THIS FY (the hard gate)
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-q2" style="padding-top:44px">
+  <div class="body" style="padding:20px 22px 40px">
+
+    <div class="a1" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button class="back" onclick="go('s-q1')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">2 of 3</span>
+          <div class="pbar" style="width:80px"><div class="pbar-fill" style="width:66%"></div></div>
+        </div>
+      </div>
+      <div class="display" style="font-size:34px;line-height:1;margin-bottom:6px">How many km<br>for <span style="color:var(--y)">work</span><br>this year?</div>
+      <p style="font-size:12px;color:var(--t3)">Tap to select — we'll move straight on</p>
+    </div>
+
+    <div class="col g10 a2" id="km-list">
+
+      <div class="trade-tile" onclick="selectKmBand(this,'0to2k')" style="padding:18px;flex-direction:row;align-items:center;gap:14px;min-height:0">
+        <div class="trade-icon" style="width:46px;height:46px;border-radius:13px;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">Under 2,000 km</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">Occasional supply runs, rare job sites</div>
+        </div>
+        <div class="trade-check"><svg class="tc-tick" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="trade-tile" onclick="selectKmBand(this,'2kto5k')" style="padding:18px;flex-direction:row;align-items:center;gap:14px;min-height:0">
+        <div class="trade-icon" style="width:46px;height:46px;border-radius:13px;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">2,000 – 5,000 km</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">Regular job site travel, few sites per week</div>
+        </div>
+        <div class="trade-check"><svg class="tc-tick" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="trade-tile" onclick="selectKmBand(this,'5kto10k')" style="padding:18px;flex-direction:row;align-items:center;gap:14px;min-height:0">
+        <div class="trade-icon" style="width:46px;height:46px;border-radius:13px;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">5,000 – 10,000 km</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.4">Heavy work travel, daily job site runs</div>
+        </div>
+        <div style="flex-shrink:0;padding:3px 8px;background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.28);border-radius:6px">
+          <div style="font-size:9px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.05em">Logbook zone</div>
+        </div>
+        <div class="trade-check" style="flex-shrink:0"><svg class="tc-tick" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="trade-tile" onclick="selectKmBand(this,'over10k')" style="padding:18px;flex-direction:row;align-items:center;gap:14px;min-height:0">
+        <div class="trade-icon" style="width:46px;height:46px;border-radius:13px;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m4 0h-8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-8a2 2 0 00-2-2z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">Over 10,000 km</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">On the road most days — car is your office</div>
+        </div>
+        <div style="flex-shrink:0;padding:3px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);border-radius:6px">
+          <div style="font-size:9px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.05em">Clear win</div>
+        </div>
+        <div class="trade-check" style="flex-shrink:0"><svg class="tc-tick" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+    </div>
+
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  Q3 — VEHICLE DETAILS (age + type + finance — one screen)
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-q3" style="padding-top:44px">
+  <div class="body" style="padding:20px 22px 40px">
+
+    <div class="a1" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button class="back" onclick="go('s-q2')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">3 of 3</span>
+          <div class="pbar" style="width:80px"><div class="pbar-fill" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="display" style="font-size:34px;line-height:1;margin-bottom:6px">Tell us about<br>your <span style="color:var(--y)">vehicle</span></div>
+      <p style="font-size:12px;color:var(--t3)">3 quick questions — this sets your cost score</p>
+    </div>
+
+    <!-- Vehicle Age -->
+    <div class="a2" style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">How old is your vehicle?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px" id="age-list">
+        <div class="sq-tile" id="age-0to6m" onclick="selectAge(this,'0to6m')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">0–6</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">months</div>
+        </div>
+        <div class="sq-tile" id="age-6to12m" onclick="selectAge(this,'6to12m')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">6–12</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">months</div>
+        </div>
+        <div class="sq-tile" id="age-0to2" onclick="selectAge(this,'0to2')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">1–2</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">years</div>
+        </div>
+        <div class="sq-tile" id="age-3to5" onclick="selectAge(this,'3to5')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">3–5</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">years</div>
+        </div>
+        <div class="sq-tile" id="age-6to9" onclick="selectAge(this,'6to9')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">6–9</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">years</div>
+        </div>
+        <div class="sq-tile" id="age-10plus" onclick="selectAge(this,'10plus')" style="padding:10px 6px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1">10+</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">years</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Type -->
+    <div class="a3" style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Vehicle type</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="type-list">
+        <div class="sq-tile" id="type-ute4x4" onclick="selectVType(this,'ute-4x4')" style="padding:12px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round" style="display:block;margin:0 auto 5px"><rect x="1" y="11" width="22" height="6" rx="2"/><path d="M1 14h22M5 17v2M19 17v2"/><path d="M5 11V9l4-4h6l3 5"/><circle cx="6" cy="17" r="1" fill="var(--t2)"/><circle cx="18" cy="17" r="1" fill="var(--t2)"/></svg>
+          <div style="font-size:11px;font-weight:700;color:var(--t1)">Ute / Van 4×4</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">HiLux, Ranger, LandCruiser</div>
+        </div>
+        <div class="sq-tile" id="type-ute4x2" onclick="selectVType(this,'ute-4x2')" style="padding:12px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round" style="display:block;margin:0 auto 5px"><rect x="1" y="11" width="22" height="6" rx="2"/><path d="M1 14h22M5 17v2M19 17v2"/><path d="M5 11V9l4-4h6l3 5"/></svg>
+          <div style="font-size:11px;font-weight:700;color:var(--t1)">Ute / Van 4×2</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">Transit, Amarok, Navara 2WD</div>
+        </div>
+        <div class="sq-tile" id="type-suv" onclick="selectVType(this,'suv-medium')" style="padding:12px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round" style="display:block;margin:0 auto 5px"><rect x="1" y="12" width="22" height="5" rx="2"/><path d="M1 15h22M5 17v2M19 17v2"/><path d="M4 12V9l3-4h10l3 4v3"/></svg>
+          <div style="font-size:11px;font-weight:700;color:var(--t1)">SUV / Wagon</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">RAV4, Prado, Forester</div>
+        </div>
+        <div class="sq-tile" id="type-car" onclick="selectVType(this,'suv-small')" style="padding:12px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.6" stroke-linecap="round" style="display:block;margin:0 auto 5px"><rect x="2" y="13" width="20" height="5" rx="2"/><path d="M2 16h20M6 18v2M18 18v2"/><path d="M5 13V11l3-4h8l3 4v2"/></svg>
+          <div style="font-size:11px;font-weight:700;color:var(--t1)">Car / Small SUV</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">Corolla, CX-5, i30</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finance Status -->
+    <div class="a4" style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Is the vehicle financed or leased?</div>
+      <div class="row g8" id="finance-list">
+        <div class="sq-tile" id="fin-yes" onclick="selectFinance(this,'yes')" style="flex:1;padding:13px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:700;color:var(--t1)">Yes</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">Loan / lease / novated</div>
+        </div>
+        <div class="sq-tile" id="fin-no" onclick="selectFinance(this,'no')" style="flex:1;padding:13px 10px;text-align:center;background:rgba(255,255,255,.04);border:1.5px solid var(--b1);border-radius:var(--r2);cursor:pointer;transition:all .18s">
+          <div style="font-size:13px;font-weight:700;color:var(--t1)">No</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">Owned outright</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live cost score preview -->
+    <div id="cost-score-preview" style="display:none;padding:12px 14px;background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.14);border-radius:var(--r2);margin-bottom:16px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:11px;color:var(--t2)">Cost intensity score</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div id="score-dots" class="row g4"></div>
+          <div style="font-size:13px;font-weight:800;color:var(--y)" id="score-label">Medium</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a5">
+      <button class="btn btn-y" id="q3-next" onclick="runAlgorithmAndRoute()" disabled style="opacity:.35;font-size:15px">See My Recommendation →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-RECOMMENDATION — OUTPUT (method + why + next action)
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-recommendation" style="padding-top:44px">
+  <div class="body" style="padding:20px 22px 44px">
+
+    <!-- Header -->
+    <div class="a1" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <button class="back" onclick="go('s-q3')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+        </button>
+        <div id="rec-confidence-badge" style="padding:4px 10px;border-radius:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;background:rgba(34,197,94,.12);color:var(--gr);border:1px solid rgba(34,197,94,.28)">High Confidence</div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px">WorkCar Recommends</div>
+      <div class="display" style="font-size:34px;line-height:1.05;margin-bottom:6px" id="rec-headline">Logbook Method</div>
+      <p style="font-size:12px;color:var(--t2);line-height:1.55" id="rec-reason-text">At your km range, cents per km caps your claim at $4,400 no matter how far you drive.</p>
+      <!-- Profession default badge -->
+      <div id="rec-prof-badge" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="rec-prof-note" style="font-size:10px;color:var(--t3)">Based on average electrician business use</span>
+      </div>
+    </div>
+
+    <!-- ── LIVE NUMBERS CARD ── -->
+    <div class="a2" id="rec-compare-card" style="border-radius:var(--r2);border:1.5px solid rgba(245,196,0,.3);background:rgba(245,196,0,.04);overflow:hidden;margin-bottom:14px">
+
+      <!-- Slider section -->
+      <div style="padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;font-weight:700">Business km / week</div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div style="font-size:22px;font-weight:800;color:var(--y);font-family:'JetBrains Mono',monospace;line-height:1" id="slider-wkly-km">115</div>
+            <div style="font-size:10px;color:var(--t3)">km/wk</div>
+            <div style="font-size:10px;color:var(--t3);margin-left:4px">≈</div>
+            <div style="font-size:13px;font-weight:700;color:var(--t2);font-family:'JetBrains Mono',monospace" id="slider-ann-km">6,000</div>
+            <div style="font-size:10px;color:var(--t3)">yr</div>
+          </div>
+        </div>
+        <!-- Custom slider -->
+        <div style="position:relative;height:36px;display:flex;align-items:center">
+          <input type="range" id="km-slider" min="20" max="400" value="115" step="5"
+            oninput="updateSlider(this.value)"
+            style="width:100%;height:4px;-webkit-appearance:none;appearance:none;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(90deg,var(--y) 0%,rgba(255,255,255,.12) 0%);border:none">
+          <!-- Tick marks for context -->
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <div style="font-size:8px;color:var(--t3)">20 km/wk<br><span style="color:rgba(255,255,255,.3)">~1k/yr</span></div>
+          <div style="font-size:8px;color:var(--t3);text-align:center">~5,000<br><span style="font-size:7px;color:rgba(245,196,0,.5)">c/km cap</span></div>
+          <div style="font-size:8px;color:var(--t3);text-align:right">400 km/wk<br><span style="color:rgba(255,255,255,.3)">~20k/yr</span></div>
+        </div>
+      </div>
+
+      <!-- Numbers -->
+      <div style="padding:14px 16px">
+        <!-- Per week row -->
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-bottom:12px">
+          <div>
+            <div style="font-size:9px;color:var(--t3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em">Cents/km</div>
+            <div style="font-size:20px;font-weight:800;color:var(--t2);font-family:'JetBrains Mono',monospace" id="rec-cents-yr">$4,400</div>
+            <div style="font-size:8px;color:var(--t3);margin-top:2px" id="rec-cents-cap-note">capped</div>
+          </div>
+          <div style="font-size:11px;color:var(--t3);padding-bottom:4px">vs</div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:var(--t3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em">Logbook</div>
+            <div style="font-size:26px;font-weight:800;font-family:'JetBrains Mono',monospace" id="rec-log-yr">$7,453</div>
+            <div style="font-size:8px;color:var(--t3);margin-top:2px" id="rec-log-basis">est. costs</div>
+          </div>
+        </div>
+
+        <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:10px"></div>
+
+        <!-- Difference rows -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--r1)">
+            <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Extra this year</div>
+            <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace" id="rec-diff-yr">+$3,053</div>
+          </div>
+          <div style="padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--r1)">
+            <div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Over 5 years</div>
+            <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace" id="rec-diff-5yr">+$15,265</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ONE-TOUCH NEXT ACTION TILES ── -->
+    <!-- Tap = instant navigate, back button = undo -->
+    <div class="a3" style="margin-bottom:6px">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px" id="rec-action-label">Your next step — tap to start</div>
+    </div>
+
+    <div class="col g8 a4" id="rec-action-tiles">
+      <!-- Populated by JS based on recommendation -->
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-SIGNUP — CREATE ACCOUNT
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-signup" style="padding-top:44px">
+  <div class="body" style="padding:16px 22px 40px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:22px">
+      <button class="back" onclick="go('s-recommendation')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+      </button>
+      <div id="signup-badge" class="path-badge pb-c2"></div>
+    </div>
+
+    <div class="a1" style="margin-bottom:24px">
+      <div class="display" style="font-size:34px;line-height:1.05;margin-bottom:6px">Create<br><span style="color:var(--y)">your account</span></div>
+      <p id="signup-sub" style="font-size:12px;color:var(--t3)">Free to start — no credit card needed</p>
+    </div>
+
+    <!-- Primary CTA: Google -->
+    <div class="a2 col g10" style="margin-bottom:20px">
+      <button class="btn" onclick="go('s-setup-vehicle')" style="background:#fff;color:#111;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;border:none;padding:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <button class="btn" onclick="go('s-setup-vehicle')" style="background:#000;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid rgba(255,255,255,.15);padding:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-3.97 2.541-6.07 5.045-6.07 1.456 0 2.67.96 3.585.96.865 0 2.222-1.01 3.842-1.01.613 0 2.886.06 4.374 2.19z"/></svg>
+        Continue with Apple
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="a3 divider" style="margin-bottom:20px">or sign up with email</div>
+
+    <!-- Email fallback -->
+    <div class="a4 col g12" style="margin-bottom:20px">
+      <div>
+        <label class="label">Email</label>
+        <input class="inp" type="email" placeholder="mick@tradie.com.au">
+      </div>
+      <div>
+        <label class="label">Mobile</label>
+        <div class="row g8">
+          <input class="inp" style="width:64px;flex-shrink:0;text-align:center;padding:14px 8px" value="+61" readonly>
+          <input class="inp" style="flex:1" type="tel" placeholder="04XX XXX XXX">
+        </div>
+      </div>
+      <div>
+        <label class="label">Password</label>
+        <input class="inp" type="password" placeholder="Min 8 characters">
+      </div>
+    </div>
+
+    <!-- Referral code -->
+    <div class="a5" style="padding:12px 14px;background:rgba(245,196,0,.05);border:1px solid rgba(245,196,0,.18);border-radius:var(--r2);margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <label class="label" style="color:var(--y);margin:0">Referral Code (optional)</label>
+      </div>
+      <input class="inp" style="background:rgba(0,0,0,.2);margin-bottom:8px" type="text" placeholder="e.g. BOLT-7T5KT9">
+      <div style="display:flex;gap:14px">
+        <div style="display:flex;align-items:flex-start;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5" stroke-linecap="round" style="margin-top:1px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style="font-size:10px;color:var(--t3);line-height:1.4">Your mate earns <strong style="color:var(--y)">1 Bolt</strong> when you become a paying customer</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:5px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5" stroke-linecap="round" style="margin-top:1px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style="font-size:10px;color:var(--t3);line-height:1.4">If they've unlocked crew half-price, you get it too</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T&Cs -->
+    <div class="a6" style="margin-bottom:20px">
+      <label class="row g10" style="cursor:pointer;padding:2px 0;align-items:flex-start">
+        <div id="chk" onclick="toggleChk()" style="width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(245,196,0,.38);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:rgba(245,196,0,.08)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span style="font-size:11px;color:var(--t2);line-height:1.6">I agree to the <span class="link">Terms of Service</span> and <span class="link">Privacy Policy</span>. Data stored in Australia 🇦🇺</span>
+      </label>
+    </div>
+
+    <div class="a7 col g10">
+      <button class="btn btn-y" onclick="go('s-verify')" style="font-size:15px">Create Account →</button>
+      <p class="center muted" style="font-size:11px">Already have an account? <span class="link" onclick="go('s-login')">Sign In</span></p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-VERIFY — OTP
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-verify" style="padding-top:44px">
+  <div style="padding:16px 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+    <div class="a1" style="width:76px;height:76px;border-radius:24px;background:var(--yd);border:1.5px solid var(--yb);display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:glow 3s ease-in-out infinite">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.92 19.79 19.79 0 01.13 2.23a2 2 0 012-2.17h3a2 2 0 012 1.72c.13 1.08.37 2.13.7 3.15a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c1.02.33 2.07.57 3.15.7a2 2 0 011.72 2z"/></svg>
+    </div>
+    <div class="a2 center" style="margin-bottom:30px">
+      <div class="display" style="font-size:30px;margin-bottom:8px">Verify your number</div>
+      <p style="font-size:13px;color:var(--t2)">6-digit code sent to</p>
+      <p style="font-size:15px;font-weight:700;color:var(--y);margin-top:4px">+61 04XX XXX XXX</p>
+    </div>
+    <div class="a3 row g8" style="margin-bottom:30px">
+      <input class="otp-box" type="text" maxlength="1" value="4">
+      <input class="otp-box" type="text" maxlength="1" value="8">
+      <input class="otp-box active" type="text" maxlength="1">
+      <input class="otp-box" type="text" maxlength="1">
+      <input class="otp-box" type="text" maxlength="1">
+      <input class="otp-box" type="text" maxlength="1">
+    </div>
+    <div class="a4 col g10" style="width:100%">
+      <button class="btn btn-y" onclick="go('s-setup-vehicle')">Verify &amp; Continue →</button>
+      <p class="center" style="font-size:11px;color:var(--t3)">Didn't get it? <span class="link">Resend in 0:45</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-LOGIN
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-login" style="padding-top:44px">
+  <div class="body" style="padding:16px 22px 40px">
+    <button class="back" onclick="go('s-splash')" style="margin-bottom:24px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+    </button>
+    <div class="a1">
+      <div class="display" style="font-size:36px;margin-bottom:4px">Welcome<br><span style="color:var(--y)">back</span></div>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:26px">Sign in to your WorkCar account</p>
+    </div>
+    <div class="a2 col g12">
+      <div><label class="label">Email or Mobile</label><input class="inp" type="text" placeholder="mick@tradie.com.au"></div>
+      <div>
+        <label class="label">Password</label>
+        <input class="inp" type="password" placeholder="Your password">
+        <div style="text-align:right;margin-top:6px"><span class="link" style="font-size:11px" onclick="go('s-forgot')">Forgot password?</span></div>
+      </div>
+    </div>
+    <div class="a3 col g10" style="margin-top:22px">
+      <button class="btn btn-y" onclick="go('s-dashboard-stub')">Sign In →</button>
+      <button class="btn btn-ghost" onclick="go('s-pin')" style="font-size:12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Sign in with PIN / Face ID
+      </button>
+      <div class="divider">or continue with</div>
+      <div class="row g8">
+        <button class="social-btn"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google</button>
+        <button class="social-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-3.97 2.541-6.07 5.045-6.07 1.456 0 2.67.96 3.585.96.865 0 2.222-1.01 3.842-1.01.613 0 2.886.06 4.374 2.19z"/></svg>Apple</button>
+      </div>
+      <p class="center" style="font-size:11px;color:var(--t3)">New here? <span class="link" onclick="go('s-q1')">Create account</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-PIN
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-pin" style="padding-top:44px">
+  <div style="padding:16px 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+    <div class="a1" style="width:76px;height:76px;border-radius:24px;background:var(--yd);border:1.5px solid var(--yb);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <div class="a2 center" style="margin-bottom:28px">
+      <div class="display" style="font-size:28px;margin-bottom:6px">Enter PIN</div>
+      <p style="font-size:12px;color:var(--t3)">Or use Face ID / Touch ID</p>
+    </div>
+    <div class="a3 row g14" style="margin-bottom:36px;justify-content:center">
+      <div style="width:15px;height:15px;border-radius:50%;background:var(--y)"></div>
+      <div style="width:15px;height:15px;border-radius:50%;background:var(--y)"></div>
+      <div style="width:15px;height:15px;border-radius:50%;background:var(--y)"></div>
+      <div style="width:15px;height:15px;border-radius:50%;border:2px solid var(--b2)"></div>
+    </div>
+    <div class="a4 numpad" style="margin-bottom:24px">
+      <button class="nkey" onclick="go('s-dashboard-stub')">1</button><button class="nkey">2</button><button class="nkey">3</button>
+      <button class="nkey">4</button><button class="nkey">5</button><button class="nkey">6</button>
+      <button class="nkey">7</button><button class="nkey">8</button><button class="nkey">9</button>
+      <button class="nkey nkey-y" style="grid-column:1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M9 9h.01M15 9h.01M9.5 14c.83.9 2.13 1 2.5 1s1.67-.1 2.5-1M22 12A10 10 0 1112 2a10 10 0 0110 10z"/></svg></button>
+      <button class="nkey" style="grid-column:2">0</button>
+      <button class="nkey" style="grid-column:3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button>
+    </div>
+    <p style="font-size:11px;color:var(--t3)">Use password instead? <span class="link" onclick="go('s-login')">Sign in</span></p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-FORGOT
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-forgot" style="padding-top:44px">
+  <div style="padding:16px 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+    <div style="width:76px;height:76px;border-radius:24px;background:var(--yd);border:1.5px solid var(--yb);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
+    <div class="display" style="font-size:28px;margin-bottom:8px">Reset password</div>
+    <p style="font-size:12px;color:var(--t2);text-align:center;max-width:240px;margin-bottom:28px;line-height:1.65">Enter your email and we'll send a reset link</p>
+    <div class="col g12" style="width:100%">
+      <div><label class="label">Email Address</label><input class="inp" type="email" placeholder="mick@tradie.com.au"></div>
+      <button class="btn btn-y" onclick="go('s-login')">Send Reset Link →</button>
+      <button class="btn btn-ghost" onclick="go('s-login')">Back to Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-SETUP-VEHICLE — STEP 1 of 3
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-setup-vehicle" style="padding-top:44px">
+  <div class="body" style="padding:16px 22px 40px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em">Vehicle Setup</div>
+      <div class="col g4" style="align-items:flex-end">
+        <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">Step 1 of 3</span>
+        <div class="pbar" style="width:90px"><div class="pbar-fill" style="width:33%"></div></div>
+      </div>
+    </div>
+    <div class="a1">
+      <div class="display" style="font-size:32px;line-height:1;margin-bottom:6px">Your <span style="color:var(--y)">vehicle</span></div>
+      <p style="font-size:11px;color:var(--t3);margin-bottom:22px">Required for ATO-compliant logbook records</p>
+    </div>
+    <div class="a2 col g12">
+      <div><label class="label">Business / Company Name</label><input class="inp" type="text" placeholder="Holding Company Pty Ltd"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="label">Make</label><input class="inp" type="text" placeholder="Toyota"></div>
+        <div><label class="label">Model</label><input class="inp" type="text" placeholder="HiLux SR5"></div>
+        <div><label class="label">Year</label><input class="inp" type="text" placeholder="2022"></div>
+        <div><label class="label">Engine</label><input class="inp" type="text" placeholder="2.8L Diesel"></div>
+      </div>
+      <div><label class="label">Registration Plate</label><input class="inp" type="text" placeholder="ABC-123 (VIC)"></div>
+      <div>
+        <label class="label">Odometer Reading (km)</label>
+        <input class="inp mono" type="number" value="18402" style="font-size:20px;font-weight:700">
+        <p style="font-size:9px;color:var(--t3);margin-top:5px">Read directly from dashboard. Required for ATO.</p>
+      </div>
+      <div class="row" style="justify-content:space-between;padding:13px 14px;background:var(--card);border:1px solid var(--b1);border-radius:var(--r2)">
+        <div>
+          <div style="font-size:14px;font-weight:600">GPS Key Tag</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Auto-detects trips when you start driving</div>
+        </div>
+        <div class="tog on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <button class="btn btn-y a3" style="margin-top:22px" onclick="go('s-setup-tax')">Next →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-SETUP-TAX — STEP 2 of 3 (path-aware)
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-setup-tax" style="padding-top:44px">
+  <div class="body" style="padding:16px 22px 40px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:22px">
+      <button class="back" onclick="go('s-setup-vehicle')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+      </button>
+      <div class="col g4" style="align-items:flex-end">
+        <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">Step 2 of 3</span>
+        <div class="pbar" style="width:90px"><div class="pbar-fill" style="width:66%"></div></div>
+      </div>
+    </div>
+    <div class="a1">
+      <div class="display" style="font-size:32px;line-height:1;margin-bottom:6px"><span style="color:var(--y)">Tax</span> settings</div>
+      <p style="font-size:11px;color:var(--t3);margin-bottom:22px">Helps WorkCar calculate your best deduction</p>
+    </div>
+    <div class="a2 col g14">
+      <div>
+        <label class="label">Business Type</label>
+        <div class="row" style="justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:var(--r2);cursor:pointer">
+          <span style="font-size:14px" id="biz-type-val">Construction</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <!-- Annual business KM band (4 options) -->
+      <div>
+        <label class="label">Annual Business KM</label>
+        <div class="col g8" id="km-band-opts">
+          <div class="ropt" id="tb-under2500" onclick="selectKmBand('under2500')">
+            <div class="rdot" style="background:none;border-color:var(--t3)"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">Under 2,500 km</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Occasional work trips</div></div>
+          </div>
+          <div class="ropt" id="tb-2500to5000" onclick="selectKmBand('2500to5000')">
+            <div class="rdot" style="background:none;border-color:var(--t3)"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">2,500 – 5,000 km</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Regular job site travel</div></div>
+          </div>
+          <div class="ropt" id="tb-5000to7000" onclick="selectKmBand('5000to7000')">
+            <div class="rdot" style="background:none;border-color:var(--t3)"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">5,000 – 7,000 km</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Heavy work travel, multiple sites</div></div>
+          </div>
+          <div class="ropt" id="tb-over7000" onclick="selectKmBand('over7000')">
+            <div class="rdot" style="background:none;border-color:var(--t3)"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">Over 7,000 km</div><div style="font-size:10px;color:var(--t3);margin-top:2px">On the road most days</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart recommendation callout — updates based on km + history -->
+      <div id="tax-recommend" style="padding:14px 16px;border-radius:var(--r2);border:1.5px solid;display:none">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px" id="rec-label">We Recommend</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px" id="rec-method">Logbook Method</div>
+        <div style="font-size:11px;line-height:1.55;color:var(--t2)" id="rec-reason">Based on your km range, the logbook method maximises your deduction.</div>
+        <div style="margin-top:10px;padding:8px 10px;border-radius:var(--r1);border:1px solid" id="rec-numbers-wrap">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Your estimated difference</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:9px;color:var(--t3)">Cents per km</div><div style="font-size:16px;font-weight:800" id="rec-cents-val">$4,400/yr</div></div>
+            <div style="font-size:18px;color:var(--t3)">→</div>
+            <div style="text-align:right"><div style="font-size:9px;color:var(--t3)">Logbook estimate</div><div style="font-size:16px;font-weight:800" id="rec-logbook-val">$9,200/yr</div></div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:10px;color:var(--t3)">Potential extra over 5 years</div>
+            <div style="font-size:16px;font-weight:800" id="rec-5yr-val" style="color:var(--gr)">$24,000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deduction method selector -->
+      <div>
+        <label class="label">Deduction Method</label>
+        <div class="col g8" id="method-opts">
+          <div class="ropt on" id="m-logbook">
+            <div class="rdot"></div>
+            <div>
+              <div style="font-size:13px;font-weight:700">Logbook Method</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">Claim % of all car expenses. Best when business km &gt; 5,000/yr.</div>
+            </div>
+          </div>
+          <div class="ropt" id="m-cents">
+            <div class="rdot" style="background:none;border-color:var(--t3)"></div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--t2)">Cents Per Kilometre</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">$0.88/km up to 5,000 km. Simple. No receipts needed.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live deduction preview -->
+      <div style="padding:14px 16px;background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.16);border-radius:var(--r2)">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Estimated annual deduction:</div>
+        <div class="display" style="font-size:32px;color:var(--y)" id="deduct-val">~$13,728</div>
+        <div style="font-size:10px;color:var(--t3)" id="deduct-note">300 km/wk × $0.88 × 52 wks</div>
+      </div>
+    </div>
+    <button class="btn btn-y a3" style="margin-top:22px" onclick="go('s-tracking-method')">Next →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-TRACKING-METHOD — STEP 2b of 3
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-tracking-method" style="padding-top:44px">
+  <div class="body" style="padding:16px 22px 40px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:22px">
+      <button class="back" onclick="go('s-setup-tax')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+      </button>
+      <div class="col g4" style="align-items:flex-end">
+        <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">Step 2b of 3</span>
+        <div class="pbar" style="width:90px"><div class="pbar-fill" style="width:75%"></div></div>
+      </div>
+    </div>
+    <div class="a1">
+      <div class="display" style="font-size:32px;line-height:1;margin-bottom:6px"><span style="color:var(--y)">Tracking</span> setup</div>
+      <p style="font-size:11px;color:var(--t3);margin-bottom:22px">How WorkCar detects your trips</p>
+    </div>
+    <div class="a2 col g12">
+      <div class="card" style="padding:14px 16px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div style="flex:1;padding-right:14px">
+            <div style="font-size:14px;font-weight:600">Motion Detection</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.5">Auto-starts when phone detects driving speed</div>
+          </div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="card card-y" style="padding:14px 16px">
+        <div class="row g12" style="margin-bottom:12px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">GPS Key Tag <span class="chip chip-y" style="margin-left:4px">Recommended</span></div>
+            <div style="font-size:11px;color:var(--t2);margin-top:3px;line-height:1.5">Bluetooth device in your car — most reliable, zero manual effort</div>
+          </div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div style="background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.14);border-radius:var(--r1);padding:14px;text-align:center">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.3);border:1.5px solid rgba(245,196,0,.28);display:flex;align-items:center;justify-content:center;margin:0 auto 8px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 2v2M12 20v2"/></svg>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--y)">WorkCar GPS Key Tag</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">Clips to keys. Logbook starts when you get in.</div>
+          <button style="margin-top:10px;padding:7px 16px;background:var(--yd);border:1px solid var(--yb);border-radius:var(--r1);font-size:10px;font-weight:700;color:var(--y);cursor:pointer;letter-spacing:.05em;text-transform:uppercase">Order Key Tag →</button>
+        </div>
+      </div>
+      <div>
+        <label class="label" style="margin-bottom:10px">When to track</label>
+        <div class="col g8" id="when-track">
+          <div class="ropt on"><div class="rdot"></div><div><div style="font-size:13px;font-weight:700">Always</div><div style="font-size:10px;color:var(--t3);margin-top:2px">All days, all times</div></div></div>
+          <div class="ropt"><div class="rdot" style="background:none;border-color:var(--t3)"></div><div><div style="font-size:13px;font-weight:700;color:var(--t2)">Work Days Only</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Mon–Fri, pauses weekends</div></div></div>
+          <div class="ropt"><div class="rdot" style="background:none;border-color:var(--t3)"></div><div><div style="font-size:13px;font-weight:700;color:var(--t2)">Set My Own Hours</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Custom days and time windows</div></div></div>
+        </div>
+      </div>
+      <div>
+        <label class="label" style="margin-bottom:10px">Default trip type</label>
+        <div class="col g8" id="trip-default">
+          <div class="ropt on"><div class="rdot"></div><div><div style="font-size:13px;font-weight:700">Match Previous Trip</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Inherits last trip's business/personal tag</div></div></div>
+          <div class="ropt"><div class="rdot" style="background:none;border-color:var(--t3)"></div><div><div style="font-size:13px;font-weight:700;color:var(--t2)">Always Business</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Mark all trips business by default</div></div></div>
+          <div class="ropt"><div class="rdot" style="background:none;border-color:var(--t3)"></div><div><div style="font-size:13px;font-weight:700;color:var(--t2)">Time-Based Rules</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Auto-tag based on time of day</div></div></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-y a3" style="margin-top:22px" onclick="go('s-motion-perm')">Next →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-MOTION-PERM
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-motion-perm" style="padding-top:44px">
+  <div style="padding:16px 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+    <div class="a1" style="width:84px;height:84px;border-radius:26px;background:var(--yd);border:1.5px solid var(--yb);display:flex;align-items:center;justify-content:center;margin-bottom:22px;animation:glow 3s ease-in-out infinite">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a10 10 0 0110 10"/><path d="M12 2a10 10 0 00-10 10"/><path d="M12 12l-3-5"/><circle cx="12" cy="12" r="2" fill="var(--y)" stroke="none"/><path d="M5 19a9 9 0 0114 0" stroke-width="1.5"/></svg>
+    </div>
+    <div class="a2 center" style="margin-bottom:28px">
+      <div class="display" style="font-size:30px;margin-bottom:10px">Enable motion<br><span style="color:var(--y)">sensing</span></div>
+      <p style="font-size:13px;color:var(--t2);line-height:1.65;max-width:280px">WorkCar uses motion sensors to know when you've started driving — no manual recording needed.</p>
+    </div>
+    <div class="a3" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--b2);border-radius:var(--r2);padding:16px;margin-bottom:22px">
+      <div class="col g8">
+        <div class="row g8" style="padding:8px 12px;background:rgba(255,255,255,.03);border-radius:var(--r1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-size:11px;color:var(--t2)">Auto-detects trip start and end</span>
+        </div>
+        <div class="row g8" style="padding:8px 12px;background:rgba(255,255,255,.03);border-radius:var(--r1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-size:11px;color:var(--t2)">No activity data stored or shared</span>
+        </div>
+        <div class="row g8" style="padding:8px 12px;background:rgba(255,255,255,.03);border-radius:var(--r1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-size:11px;color:var(--t2)">Required for ATO-compliant auto-logging</span>
+        </div>
+      </div>
+    </div>
+    <div class="a4 col g10" style="width:100%">
+      <button class="btn btn-y" onclick="go('s-location-perm')">Allow Motion &amp; Fitness →</button>
+      <button class="btn btn-ghost" onclick="go('s-location-perm')" style="font-size:12px">Not now — manual tracking only</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-LOCATION-PERM — STEP 3 of 3
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-location-perm" style="padding-top:44px">
+  <div style="padding:16px 28px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+    <div class="row" style="justify-content:space-between;width:100%;margin-bottom:28px;align-items:center">
+      <button class="back" onclick="go('s-tracking-method')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back
+      </button>
+      <div class="col g4" style="align-items:flex-end">
+        <span style="font-size:10px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.08em">Step 3 of 3</span>
+        <div class="pbar" style="width:90px"><div class="pbar-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="a1" style="width:160px;height:160px;position:relative;margin-bottom:24px">
+      <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse,rgba(245,196,0,.18) 0%,rgba(245,196,0,.04) 50%,transparent 75%)"></div>
+      <svg viewBox="0 0 160 160" style="width:100%;height:100%">
+        <line x1="0" y1="80" x2="160" y2="80" stroke="rgba(245,196,0,.07)" stroke-width="1"/>
+        <line x1="80" y1="0" x2="80" y2="160" stroke="rgba(245,196,0,.07)" stroke-width="1"/>
+        <circle cx="80" cy="80" r="55" fill="none" stroke="rgba(245,196,0,.06)" stroke-width="1"/>
+        <path d="M38 125 Q62 72 80 86 Q98 100 122 40" stroke="var(--y)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="7 4" opacity=".8"/>
+        <circle cx="38" cy="125" r="5" fill="var(--gr)"/>
+        <circle cx="38" cy="125" r="9" fill="none" stroke="rgba(34,197,94,.3)" stroke-width="2"/>
+        <path d="M122 40 C122 30 112 24 108 24 C104 24 94 30 94 40 C94 52 108 66 108 66 C108 66 122 52 122 40Z" fill="var(--y)"/>
+        <circle cx="108" cy="40" r="4" fill="#000"/>
+        <circle cx="80" cy="86" r="4.5" fill="var(--y)" opacity=".9"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+      </svg>
+    </div>
+    <div class="a2 center" style="margin-bottom:28px">
+      <div class="display" style="font-size:30px;margin-bottom:10px">Allow location<br><span style="color:var(--y)">tracking</span></div>
+      <p style="font-size:13px;color:var(--t2);line-height:1.65;max-width:275px">Background GPS for auto-logged trips. WorkCar only records while your car is moving.</p>
+    </div>
+    <div class="a3 col g10" style="width:100%">
+      <button class="btn btn-y" onclick="go('s-all-set')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Allow Location
+      </button>
+      <button class="btn btn-ghost" onclick="go('s-all-set')" style="font-size:12px">Set via SMS — carrier rates apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-ALL-SET — YOU'RE LIVE
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-all-set" style="padding-top:44px">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:28px;text-align:center">
+    <div class="a1" style="margin-bottom:24px">
+      <div style="width:130px;height:130px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,196,0,.16) 0%,transparent 70%);display:flex;align-items:center;justify-content:center;margin:0 auto;animation:glow 3s ease-in-out infinite">
+        <svg width="72" height="72" viewBox="0 0 64 64" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 38h48v8H8z" fill="rgba(245,196,0,.07)"/>
+          <path d="M16 38l6-14h20l6 14"/>
+          <path d="M8 42h4M52 42h4"/>
+          <path d="M22 38l4-10h12l4 10" fill="rgba(245,196,0,.09)"/>
+          <circle cx="18" cy="44" r="5" fill="rgba(245,196,0,.05)"/>
+          <circle cx="46" cy="44" r="5" fill="rgba(245,196,0,.05)"/>
+          <circle cx="18" cy="44" r="2" fill="var(--y)"/>
+          <circle cx="46" cy="44" r="2" fill="var(--y)"/>
+          <line x1="2" y1="36" x2="10" y2="36" stroke="var(--y)" stroke-opacity=".4"/>
+          <line x1="0" y1="40" x2="7" y2="40" stroke="var(--y)" stroke-opacity=".22"/>
+        </svg>
+      </div>
+    </div>
+    <div class="a2" style="margin-bottom:14px">
+      <div class="display" style="font-size:38px;margin-bottom:8px">WorkCar is live!</div>
+      <p style="font-size:15px;color:var(--y);font-weight:700;margin-bottom:8px">Start driving. We handle the rest.</p>
+      <p style="font-size:13px;color:var(--t2);line-height:1.65;max-width:270px;margin:0 auto">Every trip gets logged. Swipe to classify. Watch your tax deduction grow in real time.</p>
+    </div>
+    <div class="a3" style="width:100%;padding:14px;background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.14);border-radius:var(--r2);margin:18px 0">
+      <div class="row" style="justify-content:space-around">
+        <div class="center"><div class="display" style="font-size:28px;color:var(--y)">0</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Trips</div></div>
+        <div style="width:1px;background:var(--b1)"></div>
+        <div class="center"><div class="display" style="font-size:28px;color:var(--y)">$0</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Claimed</div></div>
+        <div style="width:1px;background:var(--b1)"></div>
+        <div class="center"><div class="display" style="font-size:28px;color:var(--y)">0km</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Business</div></div>
+      </div>
+    </div>
+    <div class="a4" style="width:100%;padding:10px 14px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.16);border-radius:var(--r1);margin-bottom:16px">
+      <div class="row g8">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bl)" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span style="font-size:11px;color:var(--t2);flex:1">Enable notifications for new trip alerts</span>
+        <span class="link" style="font-size:11px" onclick="alert('Notifications enabled!')">Enable</span>
+      </div>
+    </div>
+    <button class="btn btn-y a5" onclick="go('s-plan-select')" style="width:100%;font-size:15px">See My Plan →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-PLAN-SELECT — PATH-AWARE (3 CUSTOMERS)
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-plan-select" style="padding-top:44px">
+  <div class="body" style="padding:16px 20px 44px">
+
+    <!-- C1: Easy Claimer (cents per km) -->
+    <div id="plan-c1" style="display:none">
+      <div class="a1" style="margin-bottom:20px">
+        <div class="path-badge pb-c1" style="margin-bottom:10px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Cents-per-Km Method
+        </div>
+        <div class="display" style="font-size:30px;line-height:1;margin-bottom:6px">Simple.<br>No logbook needed.</div>
+        <p style="font-size:12px;color:var(--t3)">Your business travel is under 5,000 km/yr. The cents-per-km method is your easiest path to a solid claim.</p>
+      </div>
+
+      <div class="a2" style="padding:16px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.18);border-radius:var(--r2);margin-bottom:16px">
+        <div style="font-size:10px;color:var(--bl);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Your maximum claim</div>
+        <div class="display" style="font-size:36px;color:var(--bl)">$4,400</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px">5,000 km × $0.88 (2024–25 ATO rate)</div>
+      </div>
+
+      <!-- 1-month free trial card -->
+      <div class="a3 card card-glow" style="padding:20px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Easy Track</div>
+            <div class="display" style="font-size:36px;color:var(--y)">Free</div>
+            <div style="font-size:11px;color:var(--t3)">1 month trial, then $19 once at tax time</div>
+          </div>
+          <button class="btn btn-y btn-sm" style="width:auto;padding:12px 18px" onclick="go('s-dashboard-stub')">Start Free →</button>
+        </div>
+        <div class="col g6">
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>GPS km counter — business vs personal</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Running cents-per-km tally</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Year-end one-page ATO summary — $19</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Accountant share link</span></div>
+        </div>
+      </div>
+
+      <!-- Upgrade nudge -->
+      <div class="a4" style="padding:12px 14px;background:rgba(245,196,0,.04);border:1px solid rgba(245,196,0,.14);border-radius:var(--r2);margin-bottom:12px">
+        <div style="font-size:11px;color:var(--t2);line-height:1.55">
+          <strong style="color:var(--y)">Heads up:</strong> If you cross 5,000 km of business travel, the logbook method can add <strong style="color:#fff">$3,000–$8,000</strong> more to your claim. WorkCar will tell you exactly when that crossover happens.
+        </div>
+      </div>
+
+      <div class="a4 col g8">
+        <div class="gold-card" style="padding:14px 16px;cursor:pointer" onclick="go('s-mates-rates')">
+          <div class="row g10" style="align-items:center;position:relative;z-index:1">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:var(--y)">Bolts ⚡</div>
+              <div style="font-size:11px;color:var(--t2);margin-top:2px">Refer paying mates → earn Bolts → gift logbooks</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C2: Logbook Sprinter -->
+    <div id="plan-c2" style="display:none">
+      <div class="a1" style="margin-bottom:18px">
+        <div class="path-badge pb-c2" style="margin-bottom:10px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--y)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          12-Week Logbook Sprint
+        </div>
+        <div class="display" style="font-size:30px;line-height:1;margin-bottom:6px">Complete once.<br>Claim for <span style="color:var(--y)">5 years.</span></div>
+        <p style="font-size:12px;color:var(--t3)">12 continuous weeks is all the ATO requires. Do it once, lock in your deduction rate for five financial years.</p>
+      </div>
+
+      <!-- Week progress strip -->
+      <div class="a2 card" style="padding:14px 16px;margin-bottom:14px">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em">Your 12-Week Logbook</div>
+          <div class="mono" style="font-size:11px;color:var(--y)">Week 1 of 12</div>
+        </div>
+        <div class="week-row">
+          <div class="wpip now"></div><div class="wpip"></div><div class="wpip"></div><div class="wpip"></div>
+          <div class="wpip"></div><div class="wpip"></div><div class="wpip"></div><div class="wpip"></div>
+          <div class="wpip"></div><div class="wpip"></div><div class="wpip"></div><div class="wpip"></div>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-top:7px;text-align:center">Complete → <strong style="color:var(--t2)">5 years of deductions locked in</strong></div>
+      </div>
+
+      <!-- Kickstart plan card -->
+      <div class="a3 card card-glow" style="padding:20px;margin-bottom:12px;position:relative">
+        <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:4px 16px;background:var(--y);border-radius:16px;white-space:nowrap">
+          <span style="font-size:9px;font-weight:800;color:#000;letter-spacing:.07em;text-transform:uppercase">⚡ Kickstart</span>
+        </div>
+        <div style="margin-top:6px">
+          <div class="row" style="justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div>
+              <div class="display" style="font-size:36px;color:var(--y)">$97</div>
+              <div style="font-size:11px;color:var(--t3)">One-time · paid at Week 12</div>
+            </div>
+            <button class="btn btn-y btn-sm" style="width:auto;padding:12px 18px" onclick="go('s-dashboard-stub')">Start Free →</button>
+          </div>
+
+          <!-- Roadmap -->
+          <div style="background:rgba(245,196,0,.03);border:1px solid rgba(245,196,0,.1);border-radius:var(--r1);padding:12px;margin:12px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Your Roadmap</div>
+            <div class="mrow">
+              <div class="mnum" style="background:rgba(245,196,0,.12);color:var(--y)">1</div>
+              <div><div style="font-size:12px;font-weight:600">Auto-track every trip</div><div style="font-size:10px;color:var(--t3)">GPS logs start, end, km — no manual entry</div></div>
+            </div>
+            <div class="mrow">
+              <div class="mnum" style="background:rgba(245,196,0,.12);color:var(--y)">4</div>
+              <div><div style="font-size:12px;font-weight:600">Swipe to classify</div><div style="font-size:10px;color:var(--t3)">Business vs personal in one flick</div></div>
+            </div>
+            <div class="mrow">
+              <div class="mnum" style="background:rgba(245,196,0,.12);color:var(--y)">8</div>
+              <div><div style="font-size:12px;font-weight:600">Deduction estimate confirmed</div><div style="font-size:10px;color:var(--t3)">Live ATO calc shows your dollar-for-dollar claim</div></div>
+            </div>
+            <div class="mrow">
+              <div class="mnum" style="background:rgba(34,197,94,.12);color:var(--gr)">12</div>
+              <div><div style="font-size:12px;font-weight:600;color:var(--gr)">Logbook certified ✓</div><div style="font-size:10px;color:var(--t3)">ATO PDF unlocked for $97 — valid 5 years</div></div>
+            </div>
+          </div>
+
+          <div class="col g6">
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Unlimited GPS-logged trips</span></div>
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Swipe-to-classify</span></div>
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Live ATO deduction estimates</span></div>
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Expense tracking + receipts</span></div>
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>ATO PDF at Week 12 — $97 once</span></div>
+            <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Accountant share link</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="a4 gold-card" style="padding:14px 16px;cursor:pointer" onclick="go('s-mates-rates')">
+        <div class="row g10" style="align-items:center;position:relative;z-index:1">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--y)">Bolts ⚡</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:2px">10 paying referrals → gift a logbook or 4 crew at half price</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- C3: Don't Know (trial + data) -->
+    <div id="plan-c3" style="display:none">
+      <div class="a1" style="margin-bottom:18px">
+        <div class="path-badge pb-c3" style="margin-bottom:10px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          30-Day Discovery Trial
+        </div>
+        <div class="display" style="font-size:30px;line-height:1;margin-bottom:6px">We'll figure out<br>your <span style="color:var(--y)">best claim</span><br>together.</div>
+        <p style="font-size:12px;color:var(--t3)">You don't need to know your numbers yet. 30 days of free tracking and we'll tell you exactly which ATO method wins for you.</p>
+      </div>
+
+      <div class="a2 card card-glow" style="padding:20px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Discovery Mode</div>
+            <div class="display" style="font-size:36px;color:var(--gr)">Free</div>
+            <div style="font-size:11px;color:var(--t3)">30-day trial — no card, no obligation</div>
+          </div>
+          <button class="btn btn-y btn-sm" style="width:auto;padding:12px 18px" onclick="go('s-dashboard-stub')">Start Free →</button>
+        </div>
+
+        <div style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.14);border-radius:var(--r1);padding:12px;margin-bottom:14px">
+          <div style="font-size:9px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">What happens in 30 days</div>
+          <div class="mrow">
+            <div class="mnum" style="background:rgba(34,197,94,.1);color:var(--gr)">1</div>
+            <div><div style="font-size:12px;font-weight:600">Auto-track all trips</div><div style="font-size:10px;color:var(--t3)">GPS runs silently in background</div></div>
+          </div>
+          <div class="mrow">
+            <div class="mnum" style="background:rgba(34,197,94,.1);color:var(--gr)">2</div>
+            <div><div style="font-size:12px;font-weight:600">Classify as you go</div><div style="font-size:10px;color:var(--t3)">Swipe business or personal each trip</div></div>
+          </div>
+          <div class="mrow">
+            <div class="mnum" style="background:rgba(34,197,94,.1);color:var(--gr)">30</div>
+            <div><div style="font-size:12px;font-weight:600;color:var(--gr)">Your recommendation</div><div style="font-size:10px;color:var(--t3)">We tell you which method wins + exactly how much more you can claim</div></div>
+          </div>
+        </div>
+
+        <div class="col g6">
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>GPS auto-tracking</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Swipe-to-classify</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Running deduction estimate</span></div>
+          <div class="feat"><div class="fchk y"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span>Personalised method recommendation at Day 30</span></div>
+        </div>
+
+        <div style="margin-top:12px;padding:10px 12px;background:rgba(56,189,248,.05);border-radius:var(--r1);border:1px solid rgba(56,189,248,.14)">
+          <div style="font-size:10px;color:var(--bl);line-height:1.55">
+            At Day 30 you'll get a notification: <em style="color:#fff">"Based on your trips, the logbook method would get you $X,XXX more than cents-per-km."</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="a3 gold-card" style="padding:14px 16px;cursor:pointer" onclick="go('s-mates-rates')">
+        <div class="row g10" style="align-items:center;position:relative;z-index:1">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--y)">Bolts ⚡</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:2px">Refer paying mates → earn Bolts → gift logbooks</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-MATES-RATES — BOLTS REFERRAL PROGRAM
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-mates-rates" style="padding-top:44px">
+  <div class="body" style="padding:0">
+
+    <!-- Header -->
+    <div class="gold-card" style="border-radius:0;border-left:none;border-right:none;border-top:none;padding:24px 22px 20px;text-align:center">
+      <div style="position:relative;z-index:1">
+        <button class="back" onclick="go('s-plan-select')" style="position:absolute;top:0;left:0;color:var(--t2)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:glow 3s ease-in-out infinite">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="display" style="font-size:30px;margin-bottom:6px">Bolts ⚡</div>
+        <p style="font-size:13px;color:var(--t2);line-height:1.6;max-width:260px;margin:0 auto">Refer your mates. Earn Bolts. Hit 10 and you can gift a logbook or get your whole crew sorted at half price.</p>
+      </div>
+    </div>
+
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+
+      <!-- Progress card -->
+      <div class="card" style="padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em">Your Bolts</div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div class="display" style="font-size:28px;color:var(--y);line-height:1">5.3</div>
+            <div style="font-size:11px;color:var(--t3)">/ 10</div>
+          </div>
+        </div>
+        <!-- Progress bar -->
+        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:8px">
+          <div style="height:100%;width:53%;background:linear-gradient(90deg,var(--y),#D4A800);border-radius:3px;transition:width .5s"></div>
+        </div>
+        <!-- Person dots -->
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+          <!-- 5 paying (full bolts) -->
+          <div title="Paying customer — 1 Bolt" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.15);border:1.5px solid rgba(245,196,0,.5);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--y)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Paying customer — 1 Bolt" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.15);border:1.5px solid rgba(245,196,0,.5);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--y)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Paying customer — 1 Bolt" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.15);border:1.5px solid rgba(245,196,0,.5);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--y)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Paying customer — 1 Bolt" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.15);border:1.5px solid rgba(245,196,0,.5);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--y)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Paying customer — 1 Bolt" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.15);border:1.5px solid rgba(245,196,0,.5);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--y)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <!-- 3 free signups (partial bolt = 0.1 each, shown dimmer) -->
+          <div title="Free Google signup — 0.1 Bolts" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.05);border:1.5px solid rgba(245,196,0,.2);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(245,196,0,.4)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Free Google signup — 0.1 Bolts" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.05);border:1.5px solid rgba(245,196,0,.2);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(245,196,0,.4)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div title="Free Google signup — 0.1 Bolts" style="width:28px;height:28px;border-radius:50%;background:rgba(245,196,0,.05);border:1.5px solid rgba(245,196,0,.2);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(245,196,0,.4)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <!-- 2 empty slots -->
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,.15)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.03);border:1.5px dashed rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,.15)" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 018 0v2"/></svg>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div style="display:flex;gap:12px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--y)"></div>
+            <div style="font-size:9px;color:var(--t3)">Paying customer = 1 Bolt</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:rgba(245,196,0,.35)"></div>
+            <div style="font-size:9px;color:var(--t3)">Google signup = 0.1 Bolt</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What you unlock at 10 Bolts -->
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Unlock at 10 Bolts — choose one</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <!-- Reward A: Gift a logbook -->
+        <div style="padding:14px 12px;background:rgba(245,196,0,.05);border:1.5px solid rgba(245,196,0,.2);border-radius:var(--r2);text-align:center;opacity:.55">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:4px">Gift a Logbook</div>
+          <div style="font-size:9px;color:var(--t3);line-height:1.4">Nominate any person. They get the full 12-week logbook free. Worth $97.</div>
+          <div style="margin-top:8px;padding:4px 8px;background:rgba(245,196,0,.08);border-radius:4px;display:inline-block">
+            <div style="font-size:9px;font-weight:700;color:var(--y)">4.7 Bolts to go</div>
+          </div>
+        </div>
+        <!-- Reward B: Crew deal -->
+        <div style="padding:14px 12px;background:rgba(245,196,0,.05);border:1.5px solid rgba(245,196,0,.2);border-radius:var(--r2);text-align:center;opacity:.55">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(245,196,0,.1);border:1.5px solid rgba(245,196,0,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:4px">Crew Half-Price</div>
+          <div style="font-size:9px;color:var(--t3);line-height:1.4">Up to 4 crew get the logbook for $48.50 each. They sign up, you share the code.</div>
+          <div style="margin-top:8px;padding:4px 8px;background:rgba(245,196,0,.08);border-radius:4px;display:inline-block">
+            <div style="font-size:9px;font-weight:700;color:var(--y)">4.7 Bolts to go</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div class="card" style="padding:14px 16px">
+        <div style="font-size:11px;font-weight:700;margin-bottom:12px;color:var(--t1)">How Bolts work</div>
+        <div class="col g10">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <div style="font-size:9px;font-weight:800;color:var(--y)">1</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">Share your link</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">Mate signs in with Google → you earn 0.1 Bolt immediately</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <div style="font-size:9px;font-weight:800;color:var(--y)">2</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">They become a paying customer</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">Pays for any WorkCar product → you earn 1 full Bolt. Bolts reset after you redeem.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <div style="font-size:9px;font-weight:800;color:var(--y)">3</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">Hit 10 → choose your reward</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">Gift one full logbook, or unlock half-price for up to 4 crew. More rewards coming.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite link -->
+      <div style="padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--b1);border-radius:var(--r1)">
+        <div style="font-size:9px;font-weight:700;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Your invite link</div>
+        <div class="row g8">
+          <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t1)">workcar.com/?ref=7T5kT9</div>
+          <button onclick="alert('Copied!')" style="padding:6px 12px;background:var(--yd);border:1px solid var(--yb);border-radius:var(--r1);font-size:10px;font-weight:700;color:var(--y);cursor:pointer;letter-spacing:.04em">COPY</button>
+        </div>
+      </div>
+
+      <button class="btn btn-y" onclick="alert('Share sheet opened!')" style="background:linear-gradient(135deg,#F5C400,#D4A800)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Invite Mates
+      </button>
+      <button class="btn btn-ghost" onclick="go('s-dashboard-stub')">Go to Dashboard →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+  S-DASHBOARD-STUB — END OF PART 1
+════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-dashboard-stub" style="padding-top:44px">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
+    <div style="width:68px;height:68px;border-radius:20px;background:var(--yd);border:1.5px solid var(--yb);display:flex;align-items:center;justify-content:center;margin-bottom:16px;animation:glow 3s ease-in-out infinite">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div class="display" style="font-size:28px;margin-bottom:8px">Auth Flow Complete ✓</div>
+    <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:28px">End of Part 1/3.<br>Part 2 → Dashboard, Tracking, Classify.<br>Part 3 → Reports, Expenses, Settings.</p>
+    <div class="col g10" style="width:100%">
+      <button class="btn btn-y" onclick="go('s-splash')">← Restart from Splash</button>
+      <button class="btn btn-ghost" onclick="go('s-mates-rates')">Mates Rates →</button>
+      <button class="btn btn-ghost" onclick="go('s-plan-select')">Plan Select →</button>
+    </div>
+
+    <!-- Screen index -->
+    <div style="margin-top:28px;padding:14px 16px;background:var(--card);border-radius:var(--r2);border:1px solid var(--b1);text-align:left;width:100%">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:12px">Part 1 — Full Screen Index</div>
+      <div class="col g5">
+        <div onclick="go('s-splash')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Splash</div>
+        <div onclick="go('s-q1')" style="font-size:11px;color:var(--y);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1);font-weight:600">→ Q1: What's your trade?</div>
+        <div onclick="go('s-q2')" style="font-size:11px;color:var(--y);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1);font-weight:600">→ Q2: Business km?</div>
+        <div onclick="go('s-q3')" style="font-size:11px;color:var(--y);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1);font-weight:600">→ Q3: Vehicle details (age + type + finance)</div>
+        <div onclick="go('s-recommendation')" style="font-size:11px;color:var(--gr);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1);font-weight:600">→ Recommendation screen</div>
+        <div onclick="go('s-signup')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Sign Up</div>
+        <div onclick="go('s-verify')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ OTP Verify</div>
+        <div onclick="go('s-login')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Login</div>
+        <div onclick="go('s-pin')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ PIN / Face ID</div>
+        <div onclick="go('s-forgot')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Forgot Password</div>
+        <div onclick="go('s-setup-vehicle')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Setup Vehicle</div>
+        <div onclick="go('s-setup-tax')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Tax Settings</div>
+        <div onclick="go('s-tracking-method')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Tracking Setup</div>
+        <div onclick="go('s-motion-perm')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Motion Permission</div>
+        <div onclick="go('s-location-perm')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Location Permission</div>
+        <div onclick="go('s-all-set')" style="font-size:11px;color:var(--t2);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ All Set!</div>
+        <div onclick="showPlan('c1');go('s-plan-select')" style="font-size:11px;color:var(--bl);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Plan: C1 Easy Claimer ($19)</div>
+        <div onclick="showPlan('c2');go('s-plan-select')" style="font-size:11px;color:var(--y);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Plan: C2 Logbook Sprinter ($97)</div>
+        <div onclick="showPlan('c3');go('s-plan-select')" style="font-size:11px;color:var(--gr);cursor:pointer;padding:5px 0;border-bottom:1px solid var(--b1)">→ Plan: C3 Discovery Trial (free)</div>
+        <div onclick="go('s-mates-rates')" style="font-size:11px;color:var(--y);cursor:pointer;padding:5px 0">→ Mates Rates</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /phone -->
+</div><!-- /stage -->
+
+<script>
+// ── STATE ──────────────────────────────────────────────────
+let current    = 's-splash';
+let userTrade  = null;
+// userBizUsePct removed — profession defaults now in PROF_DEFAULTS
+let userKmBand = null;   // '0to2k' | '2kto5k' | '5kto10k' | 'over10k'
+let userAge    = null;   // '0to6m' | '6to12m' | '0to2' | '3to5' | '6to9' | '10plus'
+let userVType  = null;   // 'ute-4x4' | 'ute-4x2' | 'suv-medium' | 'suv-small'
+let userFin    = null;   // 'yes' | 'no'
+let userPrice  = null;   // 'under30' | '30to50' | '50to70' | 'over70'
+let userLogbookHist = null;
+
+// ══════════════════════════════════════════════════════════
+// PROFESSION DEFAULTS — business use % + km band by occupation
+// ══════════════════════════════════════════════════════════
+const PROF_PCT = {
+  electrician:  { bizPct:0.82, kmBand:'5kto10k' },
+  plumber:      { bizPct:0.85, kmBand:'5kto10k' },
+  builder:      { bizPct:0.78, kmBand:'5kto10k' },
+  carpenter:    { bizPct:0.78, kmBand:'5kto10k' },
+  painter:      { bizPct:0.80, kmBand:'5kto10k' },
+  hvac:         { bizPct:0.83, kmBand:'5kto10k' },
+  landscaper:   { bizPct:0.75, kmBand:'5kto10k' },
+  other:        { bizPct:0.70, kmBand:'2kto5k'  },
+  'real-estate':{ bizPct:0.65, kmBand:'5kto10k' },
+  'sales-rep':  { bizPct:0.72, kmBand:'over10k'  },
+  delivery:     { bizPct:0.90, kmBand:'over10k'  },
+  healthcare:   { bizPct:0.55, kmBand:'2kto5k'  },
+  consultant:   { bizPct:0.60, kmBand:'2kto5k'  },
+  mechanic:     { bizPct:0.70, kmBand:'2kto5k'  },
+  cleaner:      { bizPct:0.80, kmBand:'5kto10k' },
+  photography:  { bizPct:0.55, kmBand:'2kto5k'  },
+  'aged-care':  { bizPct:0.65, kmBand:'2kto5k'  },
+  'not-listed': { bizPct:0.50, kmBand:'2kto5k'  },
+  'not-tradie': { bizPct:0.50, kmBand:'2kto5k'  },
+};
+
+// ══════════════════════════════════════════════════════════
+// ATO CALCULATION ENGINE
+// Source: RACQ Private Vehicle Expenses 2025
+// IAWO: ATO historical small business thresholds
+// DV rate: 25% per ATO TR 2024/1 (effective life 8yr)
+// Running costs: RACQ 2025 totals minus avg depreciation component
+// Interest: 8% midpoint of 2024 Australian dealer finance rates
+// ══════════════════════════════════════════════════════════
+
+const CPK        = 0.88;    // ATO 2024-25 cents-per-km rate
+const CENTS_CAP  = 5000;    // km ceiling — no benefit past this
+const ATO_LIMIT  = 68108;   // ATO car cost limit 2024-25
+const DV_RATE    = 0.25;    // 200% diminishing value / 8yr effective life
+const INT_RATE   = 0.08;    // 8% — midpoint 2024 dealer finance
+
+// RACQ 2025: running costs excl. depreciation (fuel+rego+insurance+service)
+// 4x4 ute:  $22,933 total - $10,033 avg dep = $12,900
+// 4x2 ute:  $14,664 total - $4,964 avg dep  = $9,700
+// Med SUV:  $15,674 total - $5,974 avg dep  = $9,700
+// Small car:$12,465 total - $6,565 avg dep  = $5,900
+const RUNNING = {
+  'ute-4x4':  12900,
+  'ute-4x2':  9700,
+  'suv-medium':9700,
+  'suv-small': 5900,
+};
+
+// ABS survey: average total km/yr by segment
+const ABS_KM = {
+  'ute-4x4':15300, 'ute-4x2':15300,
+  'suv-medium':11100, 'suv-small':11100,
+};
+
+// IAWO eligibility threshold by vehicle age band (purchase year)
+// 0-2yr = bought 2023-25 → $20k threshold (Budget 2023-24)
+// 3-5yr = bought 2020-22 → $150k COVID IAWO (MYEFO 2020)
+// 6-9yr = bought 2016-19 → $25k (varied $20k-$30k, midpoint)
+// 10+yr = bought pre-2016 → $0 (no IAWO for vehicles that era)
+const IAWO_LIMIT = {
+  '0to2':20000, '3to5':150000, '6to9':25000, '10plus':0
+};
+
+// Age band midpoints in years — used for DV book value calc
+const AGE_YRS = { '0to2':1, '3to5':4, '6to9':7, '10plus':12 };
+
+// Purchase price band midpoints
+const PRICE_MID = {
+  'under30':20000, '30to50':40000, '50to70':60000, 'over70':85000
+};
+
+// Business km band midpoints (what user declared in Q2)
+const KM_MID = {
+  '0to2k':1000, '2kto5k':3500, '5kto10k':7500, 'over10k':12000
+};
+
+// Profession default business-use % (decimal)
+// Used ONLY when bizKm exceeds ABS average, to derive effective total km
+const PROF_BIZ_PCT = {
+  electrician:.85, plumber:.82, builder:.78, carpenter:.76,
+  painter:.75, hvac:.80, landscaper:.72, 'other-trade':.75,
+  'real-estate':.65, 'sales-rep':.78, delivery:.92,
+  healthcare:.55, consultant:.45, mechanic:.70,
+  cleaner:.68, photography:.60, 'aged-care':.72,
+  'not-listed':.50, 'not-tradie':.50,
+};
+
+const SEG_LABEL = {
+  'ute-4x4':'4×4 ute/van', 'ute-4x2':'4×2 ute/van',
+  'suv-medium':'SUV/wagon', 'suv-small':'small car/SUV',
+};
+
+function calcDepreciation(age, priceBand) {
+  const price     = PRICE_MID[priceBand] || 40000;
+  const threshold = IAWO_LIMIT[age] || 0;
+  // IAWO: if purchase price under threshold, fully written off — $0 dep
+  if (price <= threshold) {
+    return { dep:0, iawo:true, price, threshold, age };
+  }
+  // DV: calculate opening WDV at age midpoint, then apply 25%
+  const capped   = Math.min(price, ATO_LIMIT);  // ATO car cost limit applies
+  const yrs      = AGE_YRS[age] || 4;
+  const openWDV  = capped * Math.pow(1 - DV_RATE, yrs);
+  const dep      = Math.round(openWDV * DV_RATE);
+  return { dep, iawo:false, price, capped, yrs, openWDV:Math.round(openWDV), threshold, age };
+}
+
+function estimateCosts(vtype, fin, age, priceBand) {
+  const seg     = vtype || 'ute-4x2';
+  const totalKm = ABS_KM[seg] || 15000;
+  const depResult = calcDepreciation(age || '3to5', priceBand || '30to50');
+  const running   = RUNNING[seg] || 9700;
+  const price     = PRICE_MID[priceBand] || 40000;
+  const interest  = fin === 'yes' ? Math.round(Math.min(price, ATO_LIMIT) * INT_RATE) : 0;
+  const annual    = depResult.dep + running + interest;
+  return { ...depResult, annual, running, interest, totalKm, seg };
+}
+
+function calcCentsPerKm(bizKm) {
+  return Math.round(Math.min(bizKm, CENTS_CAP) * CPK);
+}
+
+function calcLogbook(bizKm, costs) {
+  // Business use % = bizKm / effectiveTotalKm
+  // Use ABS average as total km denominator unless bizKm exceeds it,
+  // in which case derive total from profession default % (can't be >100% business)
+  const profPct = PROF_BIZ_PCT[userTrade] || 0.70;
+  const effectiveTotal = bizKm > costs.totalKm
+    ? Math.round(bizKm / profPct)
+    : costs.totalKm;
+  const pct = Math.min(bizKm / effectiveTotal, 1.0);
+  return { amount: Math.round(costs.annual * pct), pct: Math.round(pct * 100), effectiveTotal };
+}
+
+// ══════════════════════════════════════════════════════════
+// DECISION ALGORITHM
+// ══════════════════════════════════════════════════════════
+function runAlgorithm(kmBand, age, fin, vtype, priceBand) {
+  const bizKm    = KM_MID[kmBand] || 3500;
+  const costs    = estimateCosts(vtype, fin, age, priceBand);
+  const centsAmt = calcCentsPerKm(bizKm);
+  const { amount: logAmt, pct } = calcLogbook(bizKm, costs);
+  const diff     = logAmt - centsAmt;
+  const diff5yr  = diff * 5;
+  const segName  = SEG_LABEL[vtype] || 'vehicle';
+  const isCapped = bizKm >= CENTS_CAP;
+  const isIAWO   = costs.iawo;
+
+  let method, headline, reason, nextText, confidence;
+  let color = 'var(--y)', border = 'rgba(245,196,0,.32)', bg = 'rgba(245,196,0,.04)';
+
+  if (diff <= 0) {
+    method     = 'Cents Per Kilometre';
+    confidence = Math.abs(diff) > 1000 ? 'High Confidence' : 'Medium Confidence';
+    color = 'var(--bl)'; border = 'rgba(56,189,248,.28)'; bg = 'rgba(56,189,248,.04)';
+    headline   = isIAWO ? 'Cents wins — depreciation already written off.' : 'Cents per km is your best option.';
+    reason     = isIAWO
+      ? `Your vehicle was likely instant-written-off — no depreciation left to claim via logbook. At ${pct}% business use, running costs alone (~$${logAmt.toLocaleString()}/yr) don't beat the 88c/km rate.`
+      : `At ~${bizKm.toLocaleString()} km/yr for work, your ${segName}'s running costs don't push the logbook past 88c/km. Keep it simple — no receipts, no 12-week period needed.`;
+    nextText   = 'Track your km. WorkCar tallies your cents-per-km claim automatically — export a one-page ATO summary at tax time for $19.';
+
+  } else if (diff < 500) {
+    method     = 'Logbook Method';
+    headline   = 'Logbook edges ahead.';
+    confidence = 'Medium Confidence';
+    color = 'var(--am)'; border = 'rgba(245,158,11,.32)'; bg = 'rgba(245,158,11,.04)';
+    reason     = isIAWO
+      ? `Even with depreciation written off, running costs at ${pct}% business use produce ~$${logAmt.toLocaleString()}/yr — $${diff.toLocaleString()} more than cents per km. Modest, but $${diff5yr.toLocaleString()} over 5 years.`
+      : `Your ${segName} at ${pct}% business use: logbook produces ~$${logAmt.toLocaleString()}/yr — $${diff.toLocaleString()} more per year than cents per km. That's $${diff5yr.toLocaleString()} over 5 years for 12 weeks of tracking.`;
+    nextText   = 'Start a 12-week logbook. WorkCar auto-tracks every trip. Nothing to pay until you export at Week 12.';
+
+  } else if (diff < 3000) {
+    method     = 'Logbook Method';
+    headline   = isCapped ? 'Logbook wins — cents is capped.' : 'Logbook clearly ahead.';
+    confidence = diff > 1500 ? 'High Confidence' : 'Medium Confidence';
+    reason     = isCapped
+      ? `Cents per km is stuck at $4,400 — you've driven past the cap. Your ${segName} at ${pct}% business use produces ~$${logAmt.toLocaleString()}/yr via logbook. That's $${diff.toLocaleString()} more per year, $${diff5yr.toLocaleString()} over 5 years.`
+      : `Your ${segName} at ${pct}% business use: logbook ~$${logAmt.toLocaleString()}/yr vs cents per km $${centsAmt.toLocaleString()}. That's $${diff.toLocaleString()}/yr extra — $${diff5yr.toLocaleString()} over 5 years.`;
+    nextText   = 'Start your 12-week logbook now — WorkCar handles GPS tracking automatically.';
+
+  } else {
+    method     = 'Logbook Method';
+    headline   = diff > 8000 ? 'Logbook wins by a mile.' : 'Logbook wins by a lot.';
+    confidence = 'High Confidence';
+    color = 'var(--gr)'; border = 'rgba(34,197,94,.32)'; bg = 'rgba(34,197,94,.04)';
+    const depNote = !isIAWO && costs.dep > 0 ? `, including $${costs.dep.toLocaleString()} depreciation` : '';
+    reason     = `Your ${segName} costs $${costs.annual.toLocaleString()}/yr to run${fin === 'yes' ? ' (including finance)' : ''}${depNote}. At ${pct}% business use, logbook produces ~$${logAmt.toLocaleString()}/yr — $${diff.toLocaleString()} more than the $4,400 cents cap. Over 5 years: $${diff5yr.toLocaleString()}.`;
+    nextText   = 'Start your 12-week logbook now. At this difference, every week you delay costs real money.';
+  }
+
+  return { method, headline, reason, nextText, confidence,
+           centsAmt, logAmt, diff, diff5yr, pct, isCapped, isIAWO,
+           color, borderColor: border, bgColor: bg,
+           costs, segName };
+}
+// ── NAVIGATION ─────────────────────────────────────────────
+function go(id) {
+  if (id === current) return;
+  const from = document.getElementById(current);
+  const to   = document.getElementById(id);
+
+  if (!to) return;
+  from.classList.remove('active');
+  from.classList.add('out');
+  to.classList.add('active');
+  current = id;
+  setTimeout(() => from.classList.remove('out'), 320);
+}
+
+// ── Q1: TRADE SELECTION ────────────────────────────────────
+function selectTrade(el, trade) {
+  document.querySelectorAll('.occ-tile').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  userTrade = trade;
+  // Apply profession km default if user hasn't manually picked a band yet
+  const labels = {
+    electrician:'Electrical', plumber:'Plumbing', builder:'Construction',
+    carpenter:'Carpentry', painter:'Painting', hvac:'HVAC',
+    landscaper:'Landscaping', other:'Trade', 'real-estate':'Real Estate',
+    'sales-rep':'Sales', delivery:'Delivery', healthcare:'Healthcare',
+    consultant:'Consulting', mechanic:'Mechanical', cleaner:'Cleaning',
+    photography:'Photography', 'aged-care':'Aged Care',
+    'not-listed':'Other', 'not-tradie':'Other',
+  };
+  const bv = document.getElementById('biz-type-val');
+  if (bv) bv.textContent = labels[trade] || 'Other';
+  setTimeout(() => go('s-q2'), 120);
+}
+
+// ── Q2: KM BAND ────────────────────────────────────────────
+function selectKmBand(el, band) {
+  document.querySelectorAll('#km-list .trade-tile').forEach(t => {
+    t.classList.remove('sel');
+    const tc = t.querySelector('.tc-tick'); if (tc) tc.style.display = 'none';
+  });
+  el.classList.add('sel');
+  const tc = el.querySelector('.tc-tick'); if (tc) tc.style.display = 'block';
+  userKmBand = band;
+  setTimeout(() => go('s-q3'), 120);
+}
+
+// ── Q3: VEHICLE DETAILS ────────────────────────────────────
+function selectAge(el, age) {
+  document.querySelectorAll('#age-list .sq-tile').forEach(t => sqDeselect(t));
+  sqSelect(el); userAge = age; checkQ3Complete();
+}
+function selectVType(el, vtype) {
+  document.querySelectorAll('#type-list .sq-tile').forEach(t => sqDeselect(t));
+  sqSelect(el); userVType = vtype; checkQ3Complete();
+}
+function selectFinance(el, fin) {
+  document.querySelectorAll('#finance-list .sq-tile').forEach(t => sqDeselect(t));
+  sqSelect(el); userFin = fin; checkQ3Complete();
+}
+
+function selectPrice(el, price) {
+  document.querySelectorAll('#price-list .sq-tile').forEach(t => sqDeselect(t));
+  sqSelect(el); userPrice = price; checkQ3Complete();
+}
+
+function sqSelect(el) {
+  el.style.borderColor = 'var(--y)';
+  el.style.background  = 'rgba(245,196,0,.10)';
+  el.style.color       = 'var(--y)';
+  el.querySelectorAll('div,svg').forEach(c => { if (c.style) c.style.color = 'var(--y)'; });
+}
+function sqDeselect(el) {
+  el.style.borderColor = 'var(--b1)';
+  el.style.background  = 'rgba(255,255,255,.04)';
+  el.style.color       = '';
+  el.querySelectorAll('div').forEach(c => { c.style.color = ''; });
+}
+
+function updateCostScorePreview() {
+  if (!userAge || !userVType || !userFin) return;
+  // Use actual estimated annual cost as the "score" indicator
+  const costs  = estimateCosts(userVType, userFin, userAge, userPrice);
+  const annual = costs.annual;
+  // Tier by estimated annual cost
+  const tier   = annual < 10000 ? 'low' : annual < 16000 ? 'medium' : 'high';
+  const tiers  = {
+    low:    { label: 'Lower cost', color: 'var(--bl)' },
+    medium: { label: 'Mid-range',  color: 'var(--am)' },
+    high:   { label: 'High cost',  color: 'var(--gr)' },
+  };
+  const cfg    = tiers[tier];
+  const preview = document.getElementById('cost-score-preview');
+  if (!preview) return;
+  preview.style.display = 'block';
+  const lbl  = document.getElementById('score-label');
+  const note = document.getElementById('dep-note');
+  const depV = document.getElementById('dep-val');
+  const totV = document.getElementById('total-cost-val');
+  if (lbl)  lbl.textContent  = costs.method === 'iawo' ? 'Instant Write-Off' : 'Diminishing Value';
+  if (note) note.textContent = costs.note;
+  if (depV) depV.textContent = costs.dep > 0 ? '$' + costs.dep.toLocaleString() + '/yr' : '$0 (written off)';
+  if (totV) totV.textContent = '~$' + annual.toLocaleString() + '/yr';
+}
+
+function checkQ3Complete() {
+  const btn = document.getElementById('q3-next');
+  if (!btn) return;
+  const ready = userAge && userVType && userFin && userPrice;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '.35';
+  if (ready) updateCostScorePreview();
+}
+
+// ── RUN ALGORITHM → POPULATE RECOMMENDATION SCREEN ────────
+// ── STORED RESULT STATE (for slider to update live) ────────
+let lastResult = null;
+
+function runAlgorithmAndRoute() {
+  lastResult = runAlgorithm(userKmBand, userAge, userFin, userVType, userPrice);
+
+  // Set confidence badge
+  const badge = document.getElementById('rec-confidence-badge');
+  if (badge) {
+    badge.textContent = lastResult.confidence;
+    const isHigh = lastResult.confidence === 'High Confidence';
+    badge.style.background  = isHigh ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.12)';
+    badge.style.color       = isHigh ? 'var(--gr)' : 'var(--am)';
+    badge.style.borderColor = isHigh ? 'rgba(34,197,94,.28)' : 'rgba(245,158,11,.28)';
+  }
+
+  // Headline + reason
+  const hl = document.getElementById('rec-headline');
+  const rt = document.getElementById('rec-reason-text');
+  if (hl) { hl.textContent = lastResult.method; hl.style.color = lastResult.color; }
+  if (rt)   rt.textContent = lastResult.reason;
+
+  // Profession default badge
+  const profNote = document.getElementById('rec-prof-note');
+  const tradeLabel = (document.getElementById('biz-type-val') || {}).textContent || 'your profession';
+  const profPct = Math.round((PROF_BIZ_PCT[userTrade] || 0.70) * 100);
+  if (profNote) profNote.textContent = `Based on ${profPct}% average business use for ${tradeLabel}`;
+
+  // Init slider from km band midpoint
+  const costs = estimateCosts(userVType || 'ute-4x2', userFin || 'yes', userAge || '3to5', userPrice || '30to50');
+  const profBizPct = PROF_BIZ_PCT[userTrade] || 0.70;
+  const bizKmFromBand = KM_MID[userKmBand] || Math.round(costs.totalKm * profBizPct);
+  const kmMidWkly = Math.round(bizKmFromBand / 52);
+  const slider = document.getElementById('km-slider');
+  if (slider) { slider.value = Math.max(20, Math.min(400, kmMidWkly)); updateSlider(slider.value, true); }
+
+  // Build one-touch action tiles
+  buildActionTiles(lastResult);
+
+  // Update signup badge
+  const signupBadge = document.getElementById('signup-badge');
+  const signupSub   = document.getElementById('signup-sub');
+  if (lastResult.method.includes('Cents')) {
+    if (signupBadge) { signupBadge.className = 'path-badge pb-c1'; signupBadge.textContent = '✓ Cents-per-Km'; }
+    if (signupSub)     signupSub.textContent = '30-day free trial — GPS km tracking, $19 export at tax time';
+    showPlan('c1');
+  } else {
+    if (signupBadge) { signupBadge.className = 'path-badge pb-c2'; signupBadge.textContent = '⚡ Logbook Sprinter'; }
+    if (signupSub)     signupSub.textContent = '12-week GPS logbook — free to run, $97 to export your certified PDF';
+    showPlan('c2');
+  }
+
+  go('s-recommendation');
+}
+
+// ── SLIDER UPDATE ──────────────────────────────────────────
+function updateSlider(wklyKm, updateGradient = true) {
+  wklyKm = parseInt(wklyKm);
+  const annKm  = wklyKm * 52;
+  const costs  = estimateCosts(userVType || 'ute-4x2', userFin || 'yes', userAge || '3to5', userPrice || '30to50');
+  const cents  = calcCentsPerKm(annKm);
+  const { amount: log, pct: logPct } = calcLogbook(annKm, costs);
+  const diff   = log - cents;
+  const diff5  = diff * 5;
+  const color  = diff >= 0 ? (lastResult ? lastResult.color : 'var(--y)') : 'var(--t2)';
+  const isCapped = annKm >= CENTS_CAP;
+
+  // Weekly/annual display
+  const setT = (id, val, c) => {
+    const e = document.getElementById(id);
+    if (e) { e.textContent = val; if (c) e.style.color = c; }
+  };
+  setT('slider-wkly-km', wklyKm);
+  setT('slider-ann-km',  annKm.toLocaleString());
+  setT('rec-cents-yr',   '$' + cents.toLocaleString(), isCapped ? 'var(--t2)' : 'var(--t1)');
+  setT('rec-cents-cap-note', isCapped ? 'capped at 5,000 km' : wklyKm + ' km/wk × $0.88');
+  setT('rec-log-yr',     '~$' + log.toLocaleString(), color);
+  setT('rec-log-basis',  logPct + '% of ~$' + costs.annual.toLocaleString());
+  setT('rec-diff-yr',    (diff >= 0 ? '+' : '') + '$' + Math.abs(diff).toLocaleString(), color);
+  setT('rec-diff-5yr',   (diff >= 0 ? '+' : '') + '$' + Math.abs(diff5).toLocaleString(), color);
+
+  // Update slider track fill gradient
+  if (updateGradient) {
+    const slider = document.getElementById('km-slider');
+    if (slider) {
+      const pct = ((wklyKm - 20) / (400 - 20)) * 100;
+      slider.style.background = `linear-gradient(90deg, var(--y) ${pct}%, rgba(255,255,255,.12) ${pct}%)`;
+    }
+  }
+
+  // Rebuild action tiles if recommendation flips
+  if (lastResult) {
+    const newMethod = diff >= 0 ? 'Logbook Method' : 'Cents Per Kilometre';
+    if (newMethod !== lastResult._sliderMethod) {
+      lastResult._sliderMethod = newMethod;
+      buildActionTiles({ ...lastResult, method: newMethod, diff, diff5yr: diff5 });
+    }
+  }
+}
+
+// ── ONE-TOUCH ACTION TILES ─────────────────────────────────
+function buildActionTiles(result) {
+  const container = document.getElementById('rec-action-tiles');
+  if (!container) return;
+  const isLogbook = result.method.includes('Logbook') || result.method.includes('compare');
+
+  const tiles = isLogbook ? [
+    {
+      primary: true,
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+      title: 'Start 12-week logbook',
+      sub:   'Free to start — $97 one-time when you export at Week 12',
+      weeks: '12 weeks',
+      dest:  's-signup',
+      plan:  'c2'
+    },
+    {
+      primary: false,
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+      title: 'I already have a logbook',
+      sub:   'Under 5 years old and travel pattern unchanged — reuse your %',
+      weeks: null,
+      dest:  's-signup',
+      plan:  'c2',
+      logbookHist: 'have-recent'
+    }
+  ] : [
+    {
+      primary: true,
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+      title: 'Use cents per km',
+      sub:   'Track km now — $19 one-page ATO summary at tax time',
+      weeks: null,
+      dest:  's-signup',
+      plan:  'c1'
+    },
+    {
+      primary: false,
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`,
+      title: 'Run both for 30 days',
+      sub:   'WorkCar tracks your actual pattern and confirms which method wins',
+      weeks: '30 days',
+      dest:  's-signup',
+      plan:  'c3'
+    }
+  ];
+
+  container.innerHTML = tiles.map(t => `
+    <div class="action-tile${t.primary ? ' primary' : ''}" onclick="tileNavigate('${t.dest}','${t.plan || ''}','${t.logbookHist || ''}')">
+      <div style="width:44px;height:44px;border-radius:12px;background:${t.primary ? 'rgba(245,196,0,.1)' : 'rgba(255,255,255,.05)'};border:1.5px solid ${t.primary ? 'rgba(245,196,0,.25)' : 'var(--b1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${t.icon}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${t.primary ? '#fff' : 'var(--t2)'};">${t.title}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:3px;line-height:1.4">${t.sub}</div>
+      </div>
+      ${t.weeks ? `<div style="flex-shrink:0;padding:4px 8px;background:${t.primary ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.06)'};border-radius:6px;text-align:center"><div style="font-size:10px;font-weight:700;color:${t.primary ? 'var(--y)' : 'var(--t3)'}">${t.weeks}</div></div>` : ''}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${t.primary ? 'rgba(245,196,0,.6)' : 'var(--t3)'}" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  `).join('');
+}
+
+function tileNavigate(dest, plan, logbookHist) {
+  if (plan) showPlan(plan);
+  if (logbookHist) userLogbookHist = logbookHist;
+  go(dest);
+}
+
+// ── SHOW PLAN PANEL ────────────────────────────────────────
+function showPlan(id) {
+  ['c1','c2','c3'].forEach(c => {
+    const el = document.getElementById('plan-' + c);
+    if (el) el.style.display = (c === id) ? 'block' : 'none';
+  });
+}
+
+// ── CHECKBOX ───────────────────────────────────────────────
+let chkOn = true;
+function toggleChk() {
+  chkOn = !chkOn;
+  const el = document.getElementById('chk');
+  if (!el) return;
+  if (chkOn) {
+    el.style.background = 'rgba(245,196,0,.08)'; el.style.borderColor = 'rgba(245,196,0,.38)';
+    el.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--y)" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  } else {
+    el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,.11)'; el.innerHTML = '';
+  }
+}
+
+// ── INIT ────────────────────────────────────────────────────
+showPlan('c2');
+// Init slider track gradient on load
+const _sl = document.getElementById('km-slider');
+if (_sl) { const p = ((_sl.value-20)/(400-20))*100; _sl.style.background=`linear-gradient(90deg,var(--y) ${p}%,rgba(255,255,255,.12) ${p}%)`; }
+</script>
+</body>
+</html>
