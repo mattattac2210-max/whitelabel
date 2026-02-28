@@ -1,66 +1,43 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface KmBandProps {
   onNext: (kmBand: string) => void;
   onBack: () => void;
 }
 
-const kmBands = [
-  {
-    id: '0to2k',
-    title: 'Under 2,000 km',
-    subtitle: 'Occasional supply runs, rare job sites',
-    badge: null,
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="1.8" strokeLinecap="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 8v4l3 3" />
-      </svg>
-    ),
-  },
-  {
-    id: '2kto5k',
-    title: '2,000 – 5,000 km',
-    subtitle: 'Regular job site travel, few sites per week',
-    badge: null,
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-  },
-  {
-    id: '5kto10k',
-    title: '5,000 – 10,000 km',
-    subtitle: 'Heavy work travel, daily job site runs',
-    badge: { text: 'Logbook zone', type: 'yellow' as const },
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'over10k',
-    title: 'Over 10,000 km',
-    subtitle: 'On the road most days — car is your office',
-    badge: { text: 'Clear win', type: 'green' as const },
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m4 0h-8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-8a2 2 0 00-2-2z" />
-      </svg>
-    ),
-  },
+const bands = [
+  { id: '0to2k', min: 0, max: 2000, label: 'Under 2,000 km', badge: null },
+  { id: '2kto5k', min: 2000, max: 5000, label: '2,000 – 5,000 km', badge: null },
+  { id: '5kto10k', min: 5000, max: 10000, label: '5,000 – 10,000 km', badge: { text: 'Logbook zone', type: 'yellow' as const } },
+  { id: 'over10k', min: 10000, max: 99999, label: 'Over 10,000 km', badge: { text: 'Clear win', type: 'green' as const } },
 ];
 
-export function KmBandScreen({ onNext, onBack }: KmBandProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+function getBandForKm(yearlyKm: number) {
+  for (let i = bands.length - 1; i >= 0; i--) {
+    if (yearlyKm >= bands[i].min) return bands[i];
+  }
+  return bands[0];
+}
 
-  const handleSelect = (bandId: string) => {
-    setSelected(bandId);
-    setTimeout(() => onNext(bandId), 120);
+function formatNum(n: number): string {
+  return n.toLocaleString('en-AU');
+}
+
+export function KmBandScreen({ onNext, onBack }: KmBandProps) {
+  const [mode, setMode] = useState<'week' | 'year'>('week');
+  const [weeklyKm, setWeeklyKm] = useState(100);
+
+  const yearlyKm = useMemo(() => weeklyKm * 48, [weeklyKm]);
+  const displayKm = mode === 'week' ? weeklyKm : yearlyKm;
+  const activeBand = useMemo(() => getBandForKm(yearlyKm), [yearlyKm]);
+
+  const handleConfirm = () => {
+    onNext(activeBand.id);
   };
+
+  const sliderMin = 5;
+  const sliderMax = 500;
+  const pct = ((weeklyKm - sliderMin) / (sliderMax - sliderMin)) * 100;
 
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 44 }}>
@@ -88,60 +65,211 @@ export function KmBandScreen({ onNext, onBack }: KmBandProps) {
             </div>
           </div>
           <div className="font-display" style={{ fontSize: 34, lineHeight: 1, marginBottom: 6 }}>
-            How many km<br />for <span style={{ color: 'var(--wc-y)' }}>work</span><br />this year?
+            What do you estimate<br />your <span style={{ color: 'var(--wc-y)' }}>work km</span> are?
           </div>
-          <p style={{ fontSize: 12, color: 'var(--wc-t3)' }}>Tap to select — we'll move straight on</p>
+          <p style={{ fontSize: 12, color: 'var(--wc-t3)' }}>Drag the slider or tap a band below</p>
         </div>
 
-        <div className="flex flex-col gap-[10px] ob-a2">
-          {kmBands.map((band) => (
+        <div className="ob-a2">
+          <div
+            className="flex items-center justify-center gap-1"
+            style={{
+              background: 'rgba(255,255,255,.06)',
+              borderRadius: 12,
+              padding: 4,
+              marginBottom: 20,
+              width: 'fit-content',
+              alignSelf: 'center',
+              margin: '0 auto 20px',
+            }}
+          >
+            <button
+              onClick={() => setMode('week')}
+              style={{
+                padding: '7px 18px',
+                borderRadius: 9,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '.03em',
+                background: mode === 'week' ? 'var(--wc-y)' : 'transparent',
+                color: mode === 'week' ? '#000' : 'var(--wc-t3)',
+                transition: 'all .15s',
+              }}
+              data-testid="toggle-km-week"
+            >
+              Per Week
+            </button>
+            <button
+              onClick={() => setMode('year')}
+              style={{
+                padding: '7px 18px',
+                borderRadius: 9,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '.03em',
+                background: mode === 'year' ? 'var(--wc-y)' : 'transparent',
+                color: mode === 'year' ? '#000' : 'var(--wc-t3)',
+                transition: 'all .15s',
+              }}
+              data-testid="toggle-km-year"
+            >
+              Per Year
+            </button>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: 6 }}>
+            <div className="font-data" style={{ fontSize: 44, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
+              {formatNum(displayKm)}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--wc-t3)', marginTop: 4 }}>
+              km / {mode === 'week' ? 'week' : 'year'}
+            </div>
+          </div>
+
+          <div style={{ fontSize: 11, color: 'var(--wc-t3)', textAlign: 'center', marginBottom: 16 }}>
+            {mode === 'week' ? (
+              <>That's roughly <span className="font-data" style={{ color: 'var(--wc-t2)', fontWeight: 600 }}>{formatNum(yearlyKm)}</span> km/year (48 working weeks)</>
+            ) : (
+              <>That's about <span className="font-data" style={{ color: 'var(--wc-t2)', fontWeight: 600 }}>{formatNum(weeklyKm)}</span> km/week over 48 weeks</>
+            )}
+          </div>
+
+          <div style={{ padding: '0 4px', marginBottom: 8 }}>
+            <input
+              type="range"
+              min={sliderMin}
+              max={sliderMax}
+              step={5}
+              value={weeklyKm}
+              onChange={(e) => setWeeklyKm(Number(e.target.value))}
+              className="ob-km-slider"
+              style={{
+                width: '100%',
+                background: `linear-gradient(to right, var(--wc-y) 0%, var(--wc-y) ${pct}%, rgba(255,255,255,.1) ${pct}%, rgba(255,255,255,.1) 100%)`,
+              }}
+              data-testid="slider-km"
+            />
+            <div className="flex justify-between" style={{ fontSize: 9, color: 'var(--wc-t3)', marginTop: 4 }}>
+              <span>{formatNum(sliderMin * 48)}/yr</span>
+              <span>{formatNum(sliderMax * 48)}/yr</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 20, marginBottom: 20 }}>
+          <div
+            style={{
+              background: activeBand.badge?.type === 'green'
+                ? 'rgba(34,197,94,.08)'
+                : activeBand.badge?.type === 'yellow'
+                  ? 'rgba(245,196,0,.06)'
+                  : 'rgba(255,255,255,.04)',
+              border: `1.5px solid ${activeBand.badge?.type === 'green'
+                ? 'rgba(34,197,94,.25)'
+                : activeBand.badge?.type === 'yellow'
+                  ? 'rgba(245,196,0,.2)'
+                  : 'rgba(255,255,255,.08)'}`,
+              borderRadius: 16,
+              padding: '14px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: 'rgba(245,196,0,.1)',
+              border: '1px solid rgba(245,196,0,.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--wc-y)" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
+                {activeBand.label}
+              </div>
+              {activeBand.badge && (
+                <span style={{
+                  display: 'inline-block',
+                  marginTop: 4,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '.05em',
+                  padding: '2px 7px',
+                  borderRadius: 5,
+                  background: activeBand.badge.type === 'yellow' ? 'rgba(245,196,0,.15)' : 'rgba(34,197,94,.12)',
+                  color: activeBand.badge.type === 'yellow' ? 'var(--wc-y)' : 'var(--wc-gr)',
+                }}>
+                  {activeBand.badge.text}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-[8px]" style={{ marginBottom: 10 }}>
+          {bands.map((band) => (
             <div
               key={band.id}
-              className={`ob-trade-tile ${selected === band.id ? 'selected' : ''}`}
-              style={{ padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 0 }}
-              onClick={() => handleSelect(band.id)}
+              className="flex items-center gap-3 cursor-pointer transition-all duration-150"
+              style={{
+                padding: '12px 14px',
+                borderRadius: 12,
+                background: activeBand.id === band.id ? 'rgba(245,196,0,.08)' : 'rgba(255,255,255,.025)',
+                border: `1.5px solid ${activeBand.id === band.id ? 'rgba(245,196,0,.3)' : 'rgba(255,255,255,.06)'}`,
+              }}
+              onClick={() => {
+                const midKm = band.id === 'over10k' ? 250 : Math.round((band.min + band.max) / 2 / 48 / 5) * 5;
+                setWeeklyKm(band.id === '0to2k' ? 20 : band.id === '2kto5k' ? 70 : band.id === '5kto10k' ? 155 : midKm);
+              }}
               data-testid={`tile-km-${band.id}`}
             >
-              <div className="ob-trade-icon" style={{ width: 46, height: 46, borderRadius: 13, flexShrink: 0 }}>
-                {band.icon}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>{band.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--wc-t3)', marginTop: 3, lineHeight: 1.4 }}>{band.subtitle}</div>
-              </div>
-              {band.badge && (
-                <div
-                  style={{
-                    flexShrink: 0,
-                    padding: '3px 8px',
-                    background: band.badge.type === 'yellow' ? 'rgba(245,196,0,.12)' : 'rgba(34,197,94,.1)',
-                    border: `1px solid ${band.badge.type === 'yellow' ? 'rgba(245,196,0,.28)' : 'rgba(34,197,94,.28)'}`,
-                    borderRadius: 6,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: band.badge.type === 'yellow' ? 'var(--wc-y)' : 'var(--wc-gr)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '.05em',
-                    }}
-                  >
-                    {band.badge.text}
-                  </div>
-                </div>
-              )}
-              <div className="ob-trade-check" style={{ flexShrink: 0 }}>
-                {selected === band.id && (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+              <div style={{
+                width: 14, height: 14, borderRadius: '50%',
+                border: `2px solid ${activeBand.id === band.id ? 'var(--wc-y)' : 'rgba(255,255,255,.2)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                {activeBand.id === band.id && (
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--wc-y)' }} />
                 )}
               </div>
+              <div style={{ flex: 1, fontSize: 13, fontWeight: activeBand.id === band.id ? 700 : 500, color: activeBand.id === band.id ? '#fff' : 'var(--wc-t3)' }}>
+                {band.label}
+              </div>
+              {band.badge && (
+                <span style={{
+                  fontSize: 8,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '.04em',
+                  padding: '2px 6px',
+                  borderRadius: 5,
+                  background: band.badge.type === 'yellow' ? 'rgba(245,196,0,.1)' : 'rgba(34,197,94,.08)',
+                  color: band.badge.type === 'yellow' ? 'var(--wc-y)' : 'var(--wc-gr)',
+                }}>
+                  {band.badge.text}
+                </span>
+              )}
             </div>
           ))}
         </div>
+
+        <button
+          className="ob-btn ob-btn-y"
+          style={{ marginTop: 16, width: '100%' }}
+          onClick={handleConfirm}
+          data-testid="button-km-next"
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
