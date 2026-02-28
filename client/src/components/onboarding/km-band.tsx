@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 
 interface KmBandProps {
-  onNext: (kmBand: string) => void;
+  onNext: (kmBand: string, weeklyKm: number) => void;
   onBack: () => void;
   defaultBand?: string;
 }
@@ -38,7 +38,7 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
   const activeBand = useMemo(() => getBandForKm(yearlyKm), [yearlyKm]);
 
   const handleConfirm = () => {
-    onNext(activeBand.id);
+    onNext(activeBand.id, weeklyKm);
   };
 
   const sliderMin = 5;

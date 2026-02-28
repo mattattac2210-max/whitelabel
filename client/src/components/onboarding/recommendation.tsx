@@ -7,6 +7,7 @@ interface RecommendationProps {
   finance: string;
   priceBand: string;
   trade: string;
+  initialWeeklyKm?: number;
   onNext: (data: { plan: string }) => void;
   onBack: () => void;
 }
@@ -376,13 +377,16 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
   );
 }
 
-export default function Recommendation({ kmBand, vehicleAge, vehicleType, finance, priceBand, trade, onNext, onBack }: RecommendationProps) {
+export default function Recommendation({ kmBand, vehicleAge, vehicleType, finance, priceBand, trade, initialWeeklyKm, onNext, onBack }: RecommendationProps) {
   const initialResult = useMemo(
     () => runAlgorithm(kmBand, vehicleAge, finance, vehicleType, priceBand, trade),
     [kmBand, vehicleAge, finance, vehicleType, priceBand, trade]
   );
 
-  const initWkly = useMemo(() => Math.round((KM_MID[kmBand] || 6000) / 52), [kmBand]);
+  const initWkly = useMemo(() => {
+    if (initialWeeklyKm && initialWeeklyKm > 0) return initialWeeklyKm;
+    return Math.round((KM_MID[kmBand] || 6000) / 52);
+  }, [kmBand, initialWeeklyKm]);
   const [weeklyKm, setWeeklyKm] = useState(initWkly);
   const [showCalcModal, setShowCalcModal] = useState(false);
 
