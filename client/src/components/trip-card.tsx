@@ -129,7 +129,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
   );
 }
 
-function InteractiveMap({ from, to, interactive = true }: { from: string; to: string; interactive?: boolean }) {
+function InteractiveMap({ from, to, stops = [], interactive = true }: { from: string; to: string; stops?: string[]; interactive?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
 
@@ -165,9 +165,11 @@ function InteractiveMap({ from, to, interactive = true }: { from: string; to: st
       });
 
       const ds = new g.DirectionsService();
+      const waypoints = stops.filter(s => s.length > 3).map(s => ({ location: s, stopover: true }));
       ds.route({
         origin: from,
         destination: to,
+        waypoints,
         travelMode: g.TravelMode.DRIVING,
         region: 'au',
       }).then((result: any) => {
@@ -253,10 +255,10 @@ function InteractiveMap({ from, to, interactive = true }: { from: string; to: st
         };
         animRef.current = requestAnimationFrame(animate);
 
-        const leg = result.routes?.[0]?.legs?.[0];
-        if (leg) {
+        const legs = result.routes?.[0]?.legs;
+        if (legs && legs.length > 0) {
           new g.Marker({
-            position: leg.start_location,
+            position: legs[0].start_location,
             map,
             icon: {
               path: g.SymbolPath.CIRCLE,
@@ -269,8 +271,27 @@ function InteractiveMap({ from, to, interactive = true }: { from: string; to: st
             label: { text: 'A', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
             zIndex: 5,
           });
+          for (let i = 0; i < legs.length - 1; i++) {
+            const label = String.fromCharCode(66 + i);
+            new g.Marker({
+              position: legs[i].end_location,
+              map,
+              icon: {
+                path: g.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#F59E0B',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 2,
+              },
+              label: { text: label, color: '#fff', fontSize: '9px', fontWeight: 'bold' },
+              zIndex: 6,
+            });
+          }
+          const lastLeg = legs[legs.length - 1];
+          const endLabel = String.fromCharCode(65 + legs.length);
           new g.Marker({
-            position: leg.end_location,
+            position: lastLeg.end_location,
             map,
             icon: {
               path: g.SymbolPath.CIRCLE,
@@ -280,7 +301,7 @@ function InteractiveMap({ from, to, interactive = true }: { from: string; to: st
               strokeColor: '#fff',
               strokeWeight: 2.5,
             },
-            label: { text: 'B', color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+            label: { text: endLabel, color: '#fff', fontSize: '10px', fontWeight: 'bold' },
             zIndex: 5,
           });
         }
@@ -291,7 +312,7 @@ function InteractiveMap({ from, to, interactive = true }: { from: string; to: st
       cancelled = true;
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [from, to]);
+  }, [from, to, stops.join('|')]);
 
   return <div ref={mapRef} className="w-full h-full" />;
 }
@@ -483,7 +504,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           }}
           data-testid="map-tap-area">
           <div className="absolute inset-[-20%_0_0_0]" style={{ transform: 'rotateX(28deg) scale(1.15)', transformOrigin: '50% 55%' }}>
-            <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} interactive={false} />
+            <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} stops={trip.stops || []} interactive={false} />
           </div>
           <div className="absolute inset-0 pointer-events-none z-[1]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.15) 100%)' }} />
           {isTop && tutorialPhase !== 'done' && (
@@ -545,6 +566,17 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <div className="text-[10px] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
               </div>
             </div>
+            {(trip.stops || []).map((stop, i) => (
+              <div key={i} className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+                <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,.14)' }}>
+                  <MapPin className="w-[10px] h-[10px]" stroke="#F59E0B" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-[11px] text-white truncate">{stop.split(',')[0]}</div>
+                  <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{stop.split(',').slice(1).join(',').trim()}</div>
+                </div>
+              </div>
+            ))}
             <div className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
               <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
                 <MapPin className="w-[10px] h-[10px]" stroke="#F5C400" />
@@ -690,7 +722,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 transition: detailScale > 1 ? 'none' : 'transform .3s ease, box-shadow .3s ease, border-radius .3s ease',
               }}
             >
-              <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
+              <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} stops={trip.stops || []} />
               {detailScale > 1 && (
                 <button
                   className="absolute top-[8px] left-[8px] z-[60] w-[32px] h-[32px] rounded-full flex items-center justify-center"
@@ -732,6 +764,20 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                       <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
                     </div>
                   </div>
+                  {(trip.stops || []).map((stop, i) => (
+                    <div key={i}>
+                      <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
+                      <div className="flex items-start gap-[10px]">
+                        <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(245,158,11,.14)' }}>
+                          <MapPin className="w-[14px] h-[14px]" stroke="#F59E0B" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-heading font-semibold text-[14px] text-white truncate">{stop.split(',')[0]}</div>
+                          <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{stop.split(',').slice(1).join(',').trim()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
                   <div className="flex items-start gap-[10px]">
                     <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>

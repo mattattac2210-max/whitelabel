@@ -47,7 +47,7 @@ export function EditModal() {
       setEditKm(String(trip.km));
       setEditDur(trip.duration);
       setEditPurpose(trip.purposeLabel || '');
-      setStops([]);
+      setStops(trip.stops || []);
       setRouteKm(null);
       setRouteDur(null);
       setCalcStatus('idle');
@@ -120,6 +120,7 @@ export function EditModal() {
         km: totalKm,
         duration: editDur || trip.duration,
         purposeLabel: editPurpose || trip.purposeLabel,
+        stops: stops.filter(s => s.length > 3),
       },
     });
     dispatch({ type: 'ADD_LOG', desc: `Trip edited: ${fromParts[0].trim()} \u2192 ${toParts[0].trim()}${stops.filter(s => s.length > 3).length > 0 ? ` (${stops.filter(s => s.length > 3).length} stop${stops.filter(s => s.length > 3).length > 1 ? 's' : ''})` : ''}`, hasPhoto: false });
