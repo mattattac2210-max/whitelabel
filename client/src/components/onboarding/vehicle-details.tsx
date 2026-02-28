@@ -160,153 +160,143 @@ export default function VehicleDetails({ onNext, onBack }: VehicleDetailsProps) 
 
   return (
     <div className="ob-screen entering" style={{ paddingTop: 44 }}>
-      <div className="scrollbar-thin" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain", padding: "20px 22px 40px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "10px 20px 12px" }}>
 
-        <div className="ob-a1" style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <button
               className="flex items-center gap-1 bg-transparent border-none cursor-pointer text-[11px] font-bold uppercase tracking-wider"
               style={{ color: "var(--wc-t3)" }}
               onClick={onBack}
               data-testid="button-back-q3"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".08em" }}>3 of 3</span>
-              <div className="ob-pbar" style={{ width: 80 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".08em" }}>3 of 3</span>
+              <div className="ob-pbar" style={{ width: 60 }}>
                 <div className="ob-pbar-fill" style={{ width: "100%" }} />
               </div>
             </div>
           </div>
-          <div className="font-display" style={{ fontSize: 34, lineHeight: 1, marginBottom: 6 }}>
-            Tell us about<br />your <span style={{ color: "var(--wc-y)" }}>vehicle</span>
+          <div className="font-display" style={{ fontSize: 26, lineHeight: 1, marginBottom: 3 }}>
+            Your <span style={{ color: "var(--wc-y)" }}>vehicle</span>
           </div>
-          <p style={{ fontSize: 12, color: "var(--wc-t3)" }}>3 quick questions &mdash; this sets your cost score</p>
+          <p style={{ fontSize: 11, color: "var(--wc-t3)", margin: 0 }}>4 quick picks to set your cost score</p>
         </div>
 
-        <div className="ob-a2" style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 10 }}>
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 6 }}>
             How old is your vehicle?
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
             {AGE_OPTIONS.map((opt) => (
               <div
                 key={opt.id}
                 className={`ob-sq-tile${vehicleAge === opt.id ? " selected" : ""}`}
-                style={{ padding: "10px 6px", textAlign: "center" }}
+                style={{ padding: "7px 4px", textAlign: "center" }}
                 onClick={() => setVehicleAge(opt.id)}
                 data-testid={`tile-age-${opt.id}`}
               >
-                <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1 }}>{opt.label}</div>
-                <div style={{ fontSize: 9, color: "var(--wc-t3)", marginTop: 3, textTransform: "uppercase", letterSpacing: ".04em" }}>{opt.sub}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1 }}>{opt.label}</div>
+                <div style={{ fontSize: 8, color: "var(--wc-t3)", marginTop: 2, textTransform: "uppercase", letterSpacing: ".04em" }}>{opt.sub}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="ob-a3" style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 10 }}>
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 6 }}>
             Vehicle type
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {TYPE_OPTIONS.map((opt) => (
               <div
                 key={opt.id}
                 className={`ob-sq-tile${vehicleType === opt.id ? " selected" : ""}`}
-                style={{ padding: "12px 10px", textAlign: "center" }}
+                style={{ padding: "8px 8px", textAlign: "center" }}
                 onClick={() => setVehicleType(opt.id)}
                 data-testid={`tile-type-${opt.id}`}
               >
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 5 }}>{opt.icon}</div>
-                <div style={{ fontSize: 11, fontWeight: 700 }}>{opt.label}</div>
-                <div style={{ fontSize: 9, color: "var(--wc-t3)", marginTop: 2 }}>{opt.sub}</div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 3 }}>{opt.icon}</div>
+                <div style={{ fontSize: 10, fontWeight: 700 }}>{opt.label}</div>
+                <div style={{ fontSize: 8, color: "var(--wc-t3)", marginTop: 1 }}>{opt.sub}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="ob-a4" style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 10 }}>
-            Is the vehicle financed or leased?
+        <div style={{ display: "flex", gap: 16, marginBottom: 10 }}>
+          <div style={{ flex: "0 0 auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 6 }}>
+              Financed?
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {FINANCE_OPTIONS.map((opt) => (
+                <div
+                  key={opt.id}
+                  className={`ob-sq-tile${finance === opt.id ? " selected" : ""}`}
+                  style={{ padding: "8px 14px", textAlign: "center" }}
+                  onClick={() => setFinance(opt.id)}
+                  data-testid={`tile-finance-${opt.id}`}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 700 }}>{opt.label}</div>
+                  <div style={{ fontSize: 8, color: "var(--wc-t3)", marginTop: 1 }}>{opt.sub}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {FINANCE_OPTIONS.map((opt) => (
-              <div
-                key={opt.id}
-                className={`ob-sq-tile${finance === opt.id ? " selected" : ""}`}
-                style={{ flex: 1, padding: "13px 10px", textAlign: "center" }}
-                onClick={() => setFinance(opt.id)}
-                data-testid={`tile-finance-${opt.id}`}
-              >
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
-                <div style={{ fontSize: 9, color: "var(--wc-t3)", marginTop: 2 }}>{opt.sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="ob-a5" style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 10 }}>
-            Purchase price band
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 7 }}>
-            {PRICE_OPTIONS.map((opt) => (
-              <div
-                key={opt.id}
-                className={`ob-sq-tile${priceBand === opt.id ? " selected" : ""}`}
-                style={{ padding: "10px 6px", textAlign: "center" }}
-                onClick={() => setPriceBand(opt.id)}
-                data-testid={`tile-price-${opt.id}`}
-              >
-                <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1 }}>{opt.label}</div>
-                <div style={{ fontSize: 8, color: "var(--wc-t3)", marginTop: 3 }}>{opt.sub}</div>
-              </div>
-            ))}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-t2)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 6 }}>
+              Price band
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 5 }}>
+              {PRICE_OPTIONS.map((opt) => (
+                <div
+                  key={opt.id}
+                  className={`ob-sq-tile${priceBand === opt.id ? " selected" : ""}`}
+                  style={{ padding: "7px 4px", textAlign: "center" }}
+                  onClick={() => setPriceBand(opt.id)}
+                  data-testid={`tile-price-${opt.id}`}
+                >
+                  <div style={{ fontSize: 10, fontWeight: 800, lineHeight: 1 }}>{opt.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {costPreview && (
           <div
             style={{
-              padding: "12px 14px",
+              padding: "8px 12px",
               background: "rgba(245,196,0,.04)",
               border: "1px solid rgba(245,196,0,.14)",
-              borderRadius: 14,
-              marginBottom: 16,
+              borderRadius: 10,
+              marginBottom: 10,
             }}
             data-testid="cost-score-preview"
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 11, color: "var(--wc-t2)" }}>Cost intensity score</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "var(--wc-y)" }}>
-                  {costPreview.method === "iawo" ? "Instant Write-Off" : "Diminishing Value"}
-                </span>
+              <div style={{ fontSize: 10, color: "var(--wc-t2)" }}>
+                {costPreview.method === "iawo" ? "Instant Write-Off" : "Diminishing Value"}
               </div>
-            </div>
-            <div style={{ fontSize: 10, color: "var(--wc-t3)", marginTop: 4 }}>{costPreview.note}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-              <span style={{ fontSize: 10, color: "var(--wc-t3)" }}>Depreciation</span>
-              <span className="font-data" style={{ fontSize: 11, fontWeight: 700, color: "var(--wc-y)" }}>
-                {costPreview.dep > 0 ? `$${costPreview.dep.toLocaleString()}/yr` : "$0 (written off)"}
+              <span className="font-data" style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-y)" }}>
+                {costPreview.dep > 0 ? `Dep $${costPreview.dep.toLocaleString()}/yr` : "Dep $0"}
               </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-              <span style={{ fontSize: 10, color: "var(--wc-t3)" }}>Est. total costs</span>
-              <span className="font-data" style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>
-                ~${costPreview.annual.toLocaleString()}/yr
+              <span className="font-data" style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>
+                ~${costPreview.annual.toLocaleString()}/yr total
               </span>
             </div>
           </div>
         )}
 
-        <div>
+        <div style={{ marginTop: "auto" }}>
           <button
             className="ob-btn ob-btn-y"
             disabled={!allSelected}
-            style={{ opacity: allSelected ? 1 : 0.35, fontSize: 15 }}
+            style={{ opacity: allSelected ? 1 : 0.35, fontSize: 14, padding: "12px 0" }}
             onClick={() => {
               if (allSelected) {
                 onNext({ vehicleAge: vehicleAge!, vehicleType: vehicleType!, finance: finance!, priceBand: priceBand! });
