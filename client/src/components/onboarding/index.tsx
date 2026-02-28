@@ -53,6 +53,7 @@ interface UserData {
   trade: string;
   kmBand: string;
   weeklyKm: number;
+  personalWeeklyKm: number;
   vehicleAge: string;
   vehicleType: string;
   finance: string;
@@ -70,6 +71,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     trade: '',
     kmBand: '',
     weeklyKm: 0,
+    personalWeeklyKm: 100,
     vehicleAge: '',
     vehicleType: '',
     finance: '',
@@ -107,7 +109,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       case 'q2-km':
         return (
           <KmBandScreen
-            onNext={(kmBand, weeklyKm) => { update({ kmBand, weeklyKm }); setStep('q3-vehicle'); }}
+            onNext={(kmBand, weeklyKm, personalWeeklyKm) => { update({ kmBand, weeklyKm, personalWeeklyKm }); setStep('q3-vehicle'); }}
             onBack={() => setStep('q1-trade')}
             defaultBand={getDefaultBand(userData.trade)}
           />
@@ -134,6 +136,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             priceBand={userData.priceBand}
             trade={userData.trade}
             initialWeeklyKm={userData.weeklyKm}
+            personalWeeklyKm={userData.personalWeeklyKm}
             onNext={(rec) => {
               update({ recommendation: rec && rec.plan ? rec.plan : 'logbook' });
               setStep('signup');

@@ -8,6 +8,7 @@ interface RecommendationProps {
   priceBand: string;
   trade: string;
   initialWeeklyKm?: number;
+  personalWeeklyKm?: number;
   onNext: (data: { plan: string }) => void;
   onBack: () => void;
 }
@@ -138,13 +139,10 @@ export function calcCentsPerKm(businessKm: number) {
   return Math.round(Math.min(businessKm, CENTS_CAP) * CPK);
 }
 
-export function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string, personalKmBand?: string | null) {
-  const PERSONAL_KM_MID: Record<string, number> = {
-    "under5k": 3500, "5kto10k": 7500, "10kto20k": 15000, "over20k": 22000,
-  };
+export function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string, personalAnnualKm?: number | null) {
   let effectiveTotal: number;
-  if (personalKmBand && PERSONAL_KM_MID[personalKmBand]) {
-    effectiveTotal = Math.max(businessKm, PERSONAL_KM_MID[personalKmBand]);
+  if (personalAnnualKm != null && personalAnnualKm > 0) {
+    effectiveTotal = businessKm + personalAnnualKm;
   } else {
     const profPct = (PROF_DEFAULTS[trade] || { bizPct: 0.70 }).bizPct;
     const derivedTotal = businessKm / profPct;
@@ -154,11 +152,11 @@ export function calcLogbook(businessKm: number, costs: { totalKm: number; annual
   return { amount: Math.round(costs.annual * pct), pct: Math.round(pct * 100) };
 }
 
-function runAlgorithm(kmBand: string, age: string, fin: string, vtype: string, priceBand: string, trade: string) {
+function runAlgorithm(kmBand: string, age: string, fin: string, vtype: string, priceBand: string, trade: string, personalAnnualKm?: number | null) {
   const bizKm = KM_MID[kmBand] || 3500;
   const costs = estimateCosts(vtype, fin, age, priceBand);
   const centsAmt = calcCentsPerKm(bizKm);
-  const { amount: logAmt, pct } = calcLogbook(bizKm, costs, trade);
+  const { amount: logAmt, pct } = calcLogbook(bizKm, costs, trade, personalAnnualKm);
   const diff = logAmt - centsAmt;
   const diff5yr = diff * 5;
   const segName = SEG_LABEL[vtype] || "vehicle";
@@ -386,10 +384,12 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
   );
 }
 
-export default function Recommendation({ kmBand, vehicleAge, vehicleType, finance, priceBand, trade, initialWeeklyKm, onNext, onBack }: RecommendationProps) {
+export default function Recommendation({ kmBand, vehicleAge, vehicleType, finance, priceBand, trade, initialWeeklyKm, personalWeeklyKm, onNext, onBack }: RecommendationProps) {
+  const personalAnnualKm = personalWeeklyKm ? personalWeeklyKm * 48 : null;
+
   const initialResult = useMemo(
-    () => runAlgorithm(kmBand, vehicleAge, finance, vehicleType, priceBand, trade),
-    [kmBand, vehicleAge, finance, vehicleType, priceBand, trade]
+    () => runAlgorithm(kmBand, vehicleAge, finance, vehicleType, priceBand, trade, personalAnnualKm),
+    [kmBand, vehicleAge, finance, vehicleType, priceBand, trade, personalAnnualKm]
   );
 
   const initWkly = useMemo(() => {
@@ -408,12 +408,12 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
   const sliderCalc = useMemo(() => {
     const annKm = weeklyKm * 48;
     const cents = calcCentsPerKm(annKm);
-    const { amount: log, pct } = calcLogbook(annKm, costs, trade);
+    const { amount: log, pct } = calcLogbook(annKm, costs, trade, personalAnnualKm);
     const diff = log - cents;
     const diff5 = diff * 5;
     const isCapped = annKm >= CENTS_CAP;
     return { annKm, cents, log, diff, diff5, isCapped, pct };
-  }, [weeklyKm, costs, trade]);
+  }, [weeklyKm, costs, trade, personalAnnualKm]);
 
   const sliderPct = ((weeklyKm - 20) / (400 - 20)) * 100;
 

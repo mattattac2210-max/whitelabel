@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 
 interface KmBandProps {
-  onNext: (kmBand: string, weeklyKm: number) => void;
+  onNext: (kmBand: string, weeklyKm: number, personalWeeklyKm: number) => void;
   onBack: () => void;
   defaultBand?: string;
 }
@@ -33,17 +33,25 @@ function formatNum(n: number): string {
 export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
   const [mode, setMode] = useState<'week' | 'year'>('week');
   const [weeklyKm, setWeeklyKm] = useState(() => getDefaultWeekly(defaultBand));
+  const [personalWeeklyKm, setPersonalWeeklyKm] = useState(100);
 
   const yearlyKm = useMemo(() => weeklyKm * 48, [weeklyKm]);
+  const personalYearlyKm = useMemo(() => personalWeeklyKm * 48, [personalWeeklyKm]);
   const activeBand = useMemo(() => getBandForKm(yearlyKm), [yearlyKm]);
+  const totalYearlyKm = yearlyKm + personalYearlyKm;
+  const bizPctDisplay = totalYearlyKm > 0 ? Math.round((yearlyKm / totalYearlyKm) * 100) : 0;
 
   const handleConfirm = () => {
-    onNext(activeBand.id, weeklyKm);
+    onNext(activeBand.id, weeklyKm, personalWeeklyKm);
   };
 
   const sliderMin = 5;
   const sliderMax = 500;
   const pct = ((weeklyKm - sliderMin) / (sliderMax - sliderMin)) * 100;
+
+  const persSliderMin = 10;
+  const persSliderMax = 400;
+  const persPct = ((personalWeeklyKm - persSliderMin) / (persSliderMax - persSliderMin)) * 100;
 
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 44 }}>
@@ -276,6 +284,77 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
               )}
             </div>
           ))}
+        </div>
+
+        <div className="ob-a3" style={{ marginTop: 20 }}>
+          <div style={{ fontSize: 10, color: 'var(--wc-t3)', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700, marginBottom: 10 }}>
+            And your <span style={{ color: 'var(--wc-t2)' }}>personal</span> driving?
+          </div>
+          <div style={{
+            padding: '12px 14px',
+            background: 'rgba(255,255,255,.03)',
+            border: '1px solid rgba(255,255,255,.06)',
+            borderRadius: 12,
+          }}>
+            <div className="flex justify-between items-baseline" style={{ marginBottom: 8 }}>
+              <div>
+                <span className="font-data" style={{ fontSize: 18, fontWeight: 800, color: 'var(--wc-t2)' }} data-testid="text-personal-km">{formatNum(personalWeeklyKm)}</span>
+                <span style={{ fontSize: 10, color: 'var(--wc-t3)', marginLeft: 4 }}>km/wk</span>
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--wc-t3)' }}>
+                {formatNum(personalYearlyKm)} km/yr
+              </div>
+            </div>
+            <div style={{ position: 'relative', height: 24, display: 'flex', alignItems: 'center' }}>
+              <div style={{
+                position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 2,
+                background: 'rgba(255,255,255,.08)',
+              }} />
+              <div style={{
+                position: 'absolute', left: 0, height: 4, borderRadius: 2,
+                width: `${persPct}%`,
+                background: 'linear-gradient(90deg, var(--wc-t3), var(--wc-t2))',
+              }} />
+              <input
+                type="range"
+                min={persSliderMin}
+                max={persSliderMax}
+                step={5}
+                value={personalWeeklyKm}
+                onChange={(e) => setPersonalWeeklyKm(Number(e.target.value))}
+                data-testid="slider-personal-km"
+                style={{
+                  position: 'absolute', width: '100%', height: 24,
+                  opacity: 0, cursor: 'pointer', zIndex: 2, margin: 0,
+                }}
+              />
+              <div style={{
+                position: 'absolute', left: `${persPct}%`, transform: 'translateX(-50%)',
+                width: 18, height: 18, borderRadius: '50%',
+                background: 'var(--wc-t2)', border: '2px solid #000',
+                boxShadow: '0 0 8px rgba(255,255,255,.15)',
+                pointerEvents: 'none', zIndex: 1,
+              }} />
+            </div>
+            <div className="flex justify-between" style={{ marginTop: 4, fontSize: 8, color: 'var(--wc-t3)' }}>
+              <span>10 km/wk</span>
+              <span>400 km/wk</span>
+            </div>
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginTop: 10, padding: '8px 12px',
+            background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.12)',
+            borderRadius: 10,
+          }} data-testid="text-total-km-summary">
+            <div style={{ fontSize: 10, color: 'var(--wc-t3)' }}>Total est.</div>
+            <div className="font-data" style={{ fontSize: 12, fontWeight: 700, color: 'var(--wc-t2)' }}>
+              {formatNum(totalYearlyKm)} km/yr
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--wc-y)' }}>
+              {bizPctDisplay}% business
+            </div>
+          </div>
         </div>
 
         <button

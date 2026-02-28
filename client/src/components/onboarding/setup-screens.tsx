@@ -187,9 +187,10 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
       return { value: `~$${cents.toLocaleString()}`, note: `${Math.min(bizKm, 5000).toLocaleString()} km \u00D7 $0.88 (ATO rate)` };
     }
     const trade = userData?.trade || "other";
-    const { amount, pct } = calcLogbook(bizKm, costs, trade);
+    const persAnnual = (userData?.personalWeeklyKm && userData.personalWeeklyKm > 0) ? userData.personalWeeklyKm * 48 : null;
+    const { amount, pct } = calcLogbook(bizKm, costs, trade, persAnnual);
     return { value: `~$${amount.toLocaleString()}`, note: `${pct}% of ~$${costs.annual.toLocaleString()} annual vehicle costs` };
-  }, [method, kmBand, costs, userData?.trade, userData?.weeklyKm]);
+  }, [method, kmBand, costs, userData?.trade, userData?.weeklyKm, userData?.personalWeeklyKm]);
 
   return (
     <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">
@@ -250,7 +251,8 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
               ? userData.weeklyKm * 48
               : KM_MID[kmBand || "5kto10k"] || 7500;
             const recCents = calcCentsPerKm(recBizKm);
-            const recLog = calcLogbook(recBizKm, costs, userData?.trade || "other");
+            const recPersAnnual = (userData?.personalWeeklyKm && userData.personalWeeklyKm > 0) ? userData.personalWeeklyKm * 48 : null;
+            const recLog = calcLogbook(recBizKm, costs, userData?.trade || "other", recPersAnnual);
             const recDiff = recLog.amount - recCents;
             const recDiff5 = recDiff * 5;
             return (
