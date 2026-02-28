@@ -244,53 +244,53 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
           borderRadius: 10,
           marginBottom: 6,
         }}>
-          <div className="flex justify-between items-center" style={{ marginBottom: 6 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
             <div style={{ fontSize: 10, color: 'var(--wc-t3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 700 }}>
               Personal driving
             </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="flex items-center gap-0"
+            <div
+              className="flex items-center gap-1"
+              style={{
+                background: 'rgba(255,255,255,.06)',
+                borderRadius: 10,
+                padding: 3,
+              }}
+            >
+              <button
+                onClick={() => setPersonalMode('week')}
+                data-testid="toggle-personal-week"
                 style={{
-                  background: 'rgba(255,255,255,.06)',
-                  borderRadius: 7,
-                  padding: 2,
+                  padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 700, letterSpacing: '.03em',
+                  background: personalMode === 'week' ? 'var(--wc-y)' : 'transparent',
+                  color: personalMode === 'week' ? '#000' : 'var(--wc-t3)',
+                  transition: 'all .18s',
                 }}
               >
-                <button
-                  onClick={() => setPersonalMode('week')}
-                  data-testid="toggle-personal-week"
-                  style={{
-                    padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                    fontSize: 9, fontWeight: 700, letterSpacing: '.03em',
-                    background: personalMode === 'week' ? 'var(--wc-t2)' : 'transparent',
-                    color: personalMode === 'week' ? '#000' : 'var(--wc-t3)',
-                    transition: 'all .18s',
-                  }}
-                >
-                  Wk
-                </button>
-                <button
-                  onClick={() => setPersonalMode('year')}
-                  data-testid="toggle-personal-year"
-                  style={{
-                    padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                    fontSize: 9, fontWeight: 700, letterSpacing: '.03em',
-                    background: personalMode === 'year' ? 'var(--wc-t2)' : 'transparent',
-                    color: personalMode === 'year' ? '#000' : 'var(--wc-t3)',
-                    transition: 'all .18s',
-                  }}
-                >
-                  Yr
-                </button>
-              </div>
-              <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: 'var(--wc-t2)' }} data-testid="text-personal-km">
-                {formatNum(personalMode === 'week' ? personalWeeklyKm : personalYearlyKm)}
-              </span>
-              <span style={{ fontSize: 9, color: 'var(--wc-t3)' }}>
-                {personalMode === 'week' ? 'km/wk' : 'km/yr'}
-              </span>
+                Per Week
+              </button>
+              <button
+                onClick={() => setPersonalMode('year')}
+                data-testid="toggle-personal-year"
+                style={{
+                  padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 700, letterSpacing: '.03em',
+                  background: personalMode === 'year' ? 'var(--wc-y)' : 'transparent',
+                  color: personalMode === 'year' ? '#000' : 'var(--wc-t3)',
+                  transition: 'all .18s',
+                }}
+              >
+                Per Year
+              </button>
             </div>
+          </div>
+          <div style={{ textAlign: 'center', marginBottom: 4 }}>
+            <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: 'var(--wc-t2)' }} data-testid="text-personal-km">
+              {formatNum(personalMode === 'week' ? personalWeeklyKm : personalYearlyKm)}
+            </span>
+            <span style={{ fontSize: 9, color: 'var(--wc-t3)', marginLeft: 4 }}>
+              {personalMode === 'week' ? `km/wk = ${formatNum(personalYearlyKm)} km/year` : `km/year = ${formatNum(personalWeeklyKm)} km/wk`}
+            </span>
           </div>
           <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
             <div style={{
