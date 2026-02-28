@@ -138,30 +138,36 @@ export function SetupVehicleScreen({ onNext, onBack }: SetupScreenProps) {
 }
 
 export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
-  const [kmBand, setKmBand] = useState<string | null>(null);
-  const [method, setMethod] = useState<string>("logbook");
-
-  const tradeLabel = userData?.trade
-    ? userData.trade.charAt(0).toUpperCase() + userData.trade.slice(1)
-    : "Construction";
-
   const kmBandOptions = [
-    { id: "under2500", label: "Under 2,500 km", desc: "Occasional work trips" },
-    { id: "2500to5000", label: "2,500 \u2013 5,000 km", desc: "Regular job site travel" },
-    { id: "5000to7000", label: "5,000 \u2013 7,000 km", desc: "Heavy work travel, multiple sites" },
-    { id: "over7000", label: "Over 7,000 km", desc: "On the road most days" },
+    { id: "0to2k", label: "Under 2,000 km", desc: "Occasional work trips" },
+    { id: "2kto5k", label: "2,000 \u2013 5,000 km", desc: "Regular job site travel" },
+    { id: "5kto10k", label: "5,000 \u2013 10,000 km", desc: "Heavy work travel, multiple sites" },
+    { id: "over10k", label: "Over 10,000 km", desc: "On the road most days" },
   ];
 
-  const showRecommendation = kmBand && (kmBand === "5000to7000" || kmBand === "over7000");
+  const initialKmBand = userData?.kmBand && kmBandOptions.some(o => o.id === userData.kmBand)
+    ? userData.kmBand
+    : null;
+
+  const [kmBand, setKmBand] = useState<string | null>(initialKmBand);
+  const [method, setMethod] = useState<string>(
+    userData?.recommendation === "cents" ? "cents" : "logbook"
+  );
+
+  const tradeLabel = userData?.trade
+    ? userData.trade.charAt(0).toUpperCase() + userData.trade.slice(1).replace(/-/g, ' ')
+    : "Construction";
+
+  const showRecommendation = kmBand && (kmBand === "5kto10k" || kmBand === "over10k");
 
   const getDeductionEstimate = () => {
     if (method === "cents") {
       return { value: "~$4,400", note: "5,000 km \u00D7 $0.88 (ATO rate)" };
     }
-    const weeklyKm = kmBand === "over7000" ? 200 : kmBand === "5000to7000" ? 130 : kmBand === "2500to5000" ? 80 : 40;
-    const annual = weeklyKm * 52;
+    const weeklyKm = kmBand === "over10k" ? 250 : kmBand === "5kto10k" ? 155 : kmBand === "2kto5k" ? 70 : 20;
+    const annual = weeklyKm * 48;
     const deduction = Math.round(annual * 0.88);
-    return { value: `~$${deduction.toLocaleString()}`, note: `${weeklyKm} km/wk \u00D7 $0.88 \u00D7 52 wks` };
+    return { value: `~$${deduction.toLocaleString()}`, note: `~${weeklyKm} km/wk \u00D7 48 wks \u00D7 $0.88` };
   };
 
   const est = getDeductionEstimate();
@@ -194,7 +200,12 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
           </div>
 
           <div>
-            <label className="block" style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#484848", marginBottom: 6 }}>Annual Business KM</label>
+            <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+              <label className="block" style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", color: "#484848" }}>Annual Business KM</label>
+              {initialKmBand && (
+                <span style={{ fontSize: 9, color: 'var(--wc-y)', opacity: 0.7 }}>From your earlier answer</span>
+              )}
+            </div>
             <div className="flex flex-col" style={{ gap: 8 }}>
               {kmBandOptions.map((opt) => (
                 <div
