@@ -5,6 +5,7 @@ import { ReviewScreen } from '@/components/review-screen';
 import { OdometerScreen } from '@/components/odometer-screen';
 import { ReportsScreen } from '@/components/reports-screen';
 import { ExportScreen } from '@/components/export-screen';
+import { InputScreen } from '@/components/input-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
 
 function StatusBar() {
@@ -38,6 +39,7 @@ function ScreenContainer() {
     odometer: <OdometerScreen />,
     reports: <ReportsScreen />,
     export: <ExportScreen />,
+    input: <InputScreen />,
   };
 
   return (

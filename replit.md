@@ -26,13 +26,14 @@ All application logic runs client-side using React state (via useReducer + Conte
 
 ### Screen Flow
 
-6 screens managed by `currentScreen` state:
+7 screens managed by `currentScreen` state:
 1. **Sort** -- Swipe/tap to classify trips as business or personal. Business button is single-click. Card fly-out animation on classify.
 2. **Classify** -- Step through business trips, pick purpose category from 10-option grid
-3. **Review** -- List/calendar view of all classified trips, reclassify buttons
+3. **Review** -- List/calendar view of all classified trips, reclassify buttons (including connector trips)
 4. **Odometer** -- Verify odometer readings, add photo evidence, audit score tracking
 5. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
 6. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
+7. **Input** -- Manual trip entry form with from/to addresses, date/time, distance, duration, type (business/personal), business purpose category, stops, notes. Trips inserted chronologically.
 
 ### Trip Data
 

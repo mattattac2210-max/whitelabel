@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
 import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips } from './trip-data';
 
-export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export';
+export type Screen = 'sort' | 'classify' | 'review' | 'odometer' | 'reports' | 'export' | 'input';
 
 export const INDUSTRY_BIZ_AVG = 65;
 
@@ -116,7 +116,8 @@ type Action =
   | { type: 'DELETE_SESSION'; sessionId: string }
   | { type: 'PROMOTE_REPORT'; reportIndex: number }
   | { type: 'COME_BACK_LATER' }
-  | { type: 'RESUME_SORTING' };
+  | { type: 'RESUME_SORTING' }
+  | { type: 'ADD_TRIP'; trip: Trip };
 
 function nowStr(): string {
   const n = new Date();
@@ -494,6 +495,45 @@ function reducer(state: AppState, action: Action): AppState {
         pendingFinalise: false,
         auditLog: [{ time: nowStr(), desc: 'User resumed sorting session', hasPhoto: false }, ...state.auditLog],
       };
+    case 'ADD_TRIP': {
+      const newTrips = [...state.trips];
+      const tripTime = new Date(action.trip.year, action.trip.month, action.trip.day).getTime();
+      let insertIdx = newTrips.length;
+      for (let i = 0; i < newTrips.length; i++) {
+        const tTime = new Date(newTrips[i].year, newTrips[i].month, newTrips[i].day).getTime();
+        if (tTime > tripTime) {
+          insertIdx = i;
+          break;
+        }
+        if (tTime === tripTime && (action.trip.time || '') < (newTrips[i].time || '')) {
+          insertIdx = i;
+          break;
+        }
+      }
+      newTrips.splice(insertIdx, 0, action.trip);
+      const newCurrentIndex = state.currentIndex + 1;
+      const sortedSlice = newTrips.slice(0, newCurrentIndex);
+      const newBiz = sortedSlice.filter(t => t.type === 'business').length;
+      const newPer = sortedSlice.filter(t => t.type === 'personal').length;
+      const newDed = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0);
+      const newVerified = new Set(state.verifiedSet);
+      for (let i = insertIdx; i < newTrips.length; i++) {
+        if (newTrips[i].odoReading != null || newTrips[i].odoStartReading != null) {
+          newTrips[i] = { ...newTrips[i], odoReading: null, odoStartReading: null, verified: false };
+          newVerified.delete(i);
+        }
+      }
+      return {
+        ...state,
+        trips: newTrips,
+        currentIndex: newCurrentIndex,
+        bizCount: newBiz,
+        perCount: newPer,
+        dedTotal: newDed,
+        verifiedSet: newVerified,
+        auditLog: [{ time: nowStr(), desc: `Trip added: ${action.trip.from} → ${action.trip.to} (${action.trip.km} km, ${action.trip.type})`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
       const targetSessionId = state.savedReports[idx].sessionId;
