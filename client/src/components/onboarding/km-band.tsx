@@ -330,17 +330,43 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
         </div>
 
         <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '6px 12px',
-          background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.12)',
-          borderRadius: 8,
+          padding: '10px 14px',
+          background: 'rgba(245,196,0,.06)', border: '1.5px solid rgba(245,196,0,.22)',
+          borderRadius: 12,
         }} data-testid="text-total-km-summary">
-          <div style={{ fontSize: 9, color: 'var(--wc-t3)' }}>Total</div>
-          <div className="font-data" style={{ fontSize: 11, fontWeight: 700, color: 'var(--wc-t2)' }}>
-            {formatNum(totalYearlyKm)} km/yr
+          <div className="flex justify-between items-center" style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 9, color: 'var(--wc-t3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 700 }}>
+              Your business use ratio
+            </div>
+            <div className="font-data" style={{ fontSize: 10, color: 'var(--wc-t2)' }}>
+              {formatNum(totalYearlyKm)} km/yr total
+            </div>
           </div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--wc-y)' }}>
-            {bizPctDisplay}% business
+          <div className="flex items-center gap-3">
+            <div className="font-display" style={{ fontSize: 36, lineHeight: 1, color: 'var(--wc-y)' }} data-testid="text-biz-pct">
+              {bizPctDisplay}%
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                height: 8, borderRadius: 4,
+                background: 'rgba(255,255,255,.08)',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%', borderRadius: 4,
+                  width: `${bizPctDisplay}%`,
+                  background: 'linear-gradient(90deg, var(--wc-y), #F59E0B)',
+                  transition: 'width .3s ease',
+                }} />
+              </div>
+              <div className="flex justify-between" style={{ marginTop: 3, fontSize: 8, color: 'var(--wc-t3)' }}>
+                <span>{formatNum(yearlyKm)} work</span>
+                <span>{formatNum(personalYearlyKm)} personal</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--wc-t3)', marginTop: 6, lineHeight: 1.4 }}>
+            This ratio drives your deduction recommendation
           </div>
         </div>
 
