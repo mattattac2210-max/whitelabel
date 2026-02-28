@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { RATE, getTripOdoEnd } from '@/lib/trip-data';
-import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck } from 'lucide-react';
+import { RATE, CATEGORIES, getTripOdoEnd } from '@/lib/trip-data';
+import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark } from 'lucide-react';
 import { AddressInput } from './address-input';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
@@ -121,6 +121,7 @@ export function EditModal() {
         km: totalKm,
         duration: editDur || trip.duration,
         purposeLabel: editPurpose || trip.purposeLabel,
+        purposeIndex: editPurpose ? CATEGORIES.findIndex(c => c.label === editPurpose) : trip.purposeIndex,
         stops: stops.filter(s => s.length > 3),
         type: editType,
       },
@@ -177,6 +178,32 @@ export function EditModal() {
               Personal
             </button>
           </div>
+          {editType === 'business' && (
+            <div className="mt-[8px]">
+              <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[5px]" style={{ color: 'var(--wc-t3)' }}>Business Purpose</label>
+              <div className="grid grid-cols-5 gap-[4px]">
+                {CATEGORIES.map((cat, ci) => {
+                  const iconMap: Record<string, any> = { Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark };
+                  const Icon = iconMap[cat.icon];
+                  const selected = editPurpose === cat.label;
+                  return (
+                    <button
+                      key={ci}
+                      className="rounded-[7px] p-[6px_2px] cursor-pointer transition-all text-center"
+                      style={selected
+                        ? { background: 'rgba(245,196,0,.15)', border: '1.5px solid var(--wc-y)' }
+                        : { background: 'rgba(255,255,255,.03)', border: '1.5px solid var(--wc-border)' }}
+                      onClick={() => setEditPurpose(selected ? '' : cat.label)}
+                      data-testid={`button-edit-purpose-${ci}`}
+                    >
+                      {Icon && <Icon className="w-[14px] h-[14px] mx-auto mb-[2px]" style={{ color: selected ? 'var(--wc-y)' : 'var(--wc-t3)' }} />}
+                      <div className="font-heading text-[7px] uppercase tracking-[.02em] leading-tight" style={{ color: selected ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{cat.label}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-[5px] mb-3">
