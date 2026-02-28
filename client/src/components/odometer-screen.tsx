@@ -55,7 +55,7 @@ export function OdometerScreen() {
         {!heroCollapsed && (
           <div className="px-[13px] pb-3 border-t pt-[10px]" style={{ borderColor: 'rgba(255,255,255,.06)' }}>
             <div className="text-[12px] leading-[1.55] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>
-              Your audit score measures how ATO-ready your logbook is. Verify odometer readings and add photo evidence to increase your score.
+              Your audit score is an independent review of the information you have provided. It measures how well your logbook aligns with ATO compliance documentation requirements.
             </div>
             <div className="flex items-baseline justify-between mb-[5px]">
               <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Audit readiness</span>
@@ -128,8 +128,8 @@ export function OdometerScreen() {
                       <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white">Total Score</span>
                       <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{result.total}%</span>
                     </div>
-                    <div className="text-[9px] leading-[1.45] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                      Score is capped at 99%. Industry average ({INDUSTRY_BIZ_AVG}%) is based on ATO benchmarks for trades and construction. The remaining 1% represents factors WorkCar cannot verify.
+                    <div className="text-[9px] leading-[1.45] mt-[3px] rounded-[6px] px-[7px] py-[5px]" style={{ color: 'var(--wc-t3)', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                      This is an independent review of the information you have provided. It does not replace financial or institutional recommendations and does not guarantee compliance. This score aligns with the integrity of what the ATO requires for compliance documentation. Industry average ({INDUSTRY_BIZ_AVG}%) is based on ATO benchmarks for trades and construction. Please seek certified financial advice if you require further assistance.
                     </div>
                   </div>
                 </div>
