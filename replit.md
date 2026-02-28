@@ -31,7 +31,7 @@ All application logic runs client-side using React state (via useReducer + Conte
    - Self-contained in `client/src/components/onboarding/` with local state
    - Q2 KM Band uses tap-to-advance tile cards (same style as Q1 trade tiles) with profession-based default band via PROF_DEFAULTS
    - Q3 Vehicle Details has 4 questions: age (6 options), type, finance, purchase price band (4 options)
-   - Algorithm uses IAWO-aware depreciation engine with RUNNING_ONLY segment costs, calcDepreciation (DV method or instant write-off), profession-based business use % for logbook calculation
+   - Algorithm uses IAWO-aware depreciation engine with RUNNING segment costs (ute-4x4: $12,900, ute-4x2: $9,700, suv-medium: $9,700, suv-small: $5,900), calcDepreciation (DV method or instant write-off), INT_RATE=8% finance interest, profession-based business use % for logbook calculation
    - UserData includes: trade, kmBand, vehicleAge, vehicleType, finance, priceBand, recommendation
 
 2. **Dashboard** (main hub after onboarding):

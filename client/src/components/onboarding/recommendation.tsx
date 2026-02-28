@@ -17,33 +17,35 @@ const CENTS_CAP = 5000;
 const ATO_CAR_LIMIT = 68108;
 const DV_RATE = 0.25;
 
+const INT_RATE = 0.08;
+
 const PROF_DEFAULTS: Record<string, { bizPct: number; kmBand: string }> = {
-  electrician: { bizPct: 0.82, kmBand: "5kto10k" },
-  plumber: { bizPct: 0.85, kmBand: "5kto10k" },
+  electrician: { bizPct: 0.85, kmBand: "5kto10k" },
+  plumber: { bizPct: 0.82, kmBand: "5kto10k" },
   builder: { bizPct: 0.78, kmBand: "5kto10k" },
-  carpenter: { bizPct: 0.78, kmBand: "5kto10k" },
-  painter: { bizPct: 0.80, kmBand: "5kto10k" },
-  hvac: { bizPct: 0.83, kmBand: "5kto10k" },
-  landscaper: { bizPct: 0.75, kmBand: "5kto10k" },
-  other: { bizPct: 0.70, kmBand: "2kto5k" },
+  carpenter: { bizPct: 0.76, kmBand: "5kto10k" },
+  painter: { bizPct: 0.75, kmBand: "5kto10k" },
+  hvac: { bizPct: 0.80, kmBand: "5kto10k" },
+  landscaper: { bizPct: 0.72, kmBand: "5kto10k" },
+  other: { bizPct: 0.75, kmBand: "2kto5k" },
   "real-estate": { bizPct: 0.65, kmBand: "5kto10k" },
-  "sales-rep": { bizPct: 0.72, kmBand: "over10k" },
-  delivery: { bizPct: 0.90, kmBand: "over10k" },
+  "sales-rep": { bizPct: 0.78, kmBand: "over10k" },
+  delivery: { bizPct: 0.92, kmBand: "over10k" },
   healthcare: { bizPct: 0.55, kmBand: "2kto5k" },
-  consultant: { bizPct: 0.60, kmBand: "2kto5k" },
+  consultant: { bizPct: 0.45, kmBand: "2kto5k" },
   mechanic: { bizPct: 0.70, kmBand: "2kto5k" },
-  cleaner: { bizPct: 0.80, kmBand: "5kto10k" },
-  photography: { bizPct: 0.55, kmBand: "2kto5k" },
-  "aged-care": { bizPct: 0.65, kmBand: "2kto5k" },
+  cleaner: { bizPct: 0.68, kmBand: "5kto10k" },
+  photography: { bizPct: 0.60, kmBand: "2kto5k" },
+  "aged-care": { bizPct: 0.72, kmBand: "2kto5k" },
   "not-listed": { bizPct: 0.50, kmBand: "2kto5k" },
   "not-tradie": { bizPct: 0.50, kmBand: "2kto5k" },
 };
 
-const RUNNING_ONLY: Record<string, number> = {
-  "ute-4x4": 8500,
-  "ute-4x2": 6800,
-  "suv-medium": 7200,
-  "suv-small": 5500,
+const RUNNING: Record<string, number> = {
+  "ute-4x4": 12900,
+  "ute-4x2": 9700,
+  "suv-medium": 9700,
+  "suv-small": 5900,
 };
 
 const ABS_TOTAL_KM: Record<string, number> = {
@@ -125,22 +127,29 @@ export function estimateCosts(vtype: string, fin: string, age: string, priceBand
   const seg = vtype || "ute-4x2";
   const totalKm = ABS_TOTAL_KM[seg] || 15000;
   const { dep, method, note } = calcDepreciation(age || "3to5", priceBand || "30to50");
-  const running = RUNNING_ONLY[seg] || 6800;
+  const running = RUNNING[seg] || 9700;
   const price = PRICE_MID[priceBand] || 40000;
-  const finExtra = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * 0.05) : 0;
-  const annual = dep + running + finExtra;
-  return { annual, dep, running, finExtra, method, note, totalKm };
+  const interest = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * INT_RATE) : 0;
+  const annual = dep + running + interest;
+  return { annual, dep, running, interest, method, note, totalKm };
 }
 
 export function calcCentsPerKm(businessKm: number) {
   return Math.round(Math.min(businessKm, CENTS_CAP) * CPK);
 }
 
-export function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string) {
-  const prof = PROF_DEFAULTS[trade] || { bizPct: 0.70 };
-  const effectiveTotal = businessKm > costs.totalKm
-    ? Math.round(businessKm / prof.bizPct)
-    : costs.totalKm;
+export function calcLogbook(businessKm: number, costs: { totalKm: number; annual: number }, trade: string, personalKmBand?: string | null) {
+  const PERSONAL_KM_MID: Record<string, number> = {
+    "under5k": 3500, "5kto10k": 7500, "10kto20k": 15000, "over20k": 22000,
+  };
+  let effectiveTotal: number;
+  if (personalKmBand && PERSONAL_KM_MID[personalKmBand]) {
+    effectiveTotal = Math.max(businessKm, PERSONAL_KM_MID[personalKmBand]);
+  } else {
+    const profPct = (PROF_DEFAULTS[trade] || { bizPct: 0.70 }).bizPct;
+    const derivedTotal = businessKm / profPct;
+    effectiveTotal = Math.max(derivedTotal, costs.totalKm);
+  }
   const pct = Math.min(businessKm / effectiveTotal, 1.0);
   return { amount: Math.round(costs.annual * pct), pct: Math.round(pct * 100) };
 }
@@ -289,10 +298,10 @@ function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance,
                 <span style={{ color: "var(--wc-t3)" }}>Depreciation ({costs.method === "iawo" ? "IAWO" : "DV"})</span>
                 <span className="font-data" style={{ color: "#fff" }}>{costs.dep > 0 ? `$${costs.dep.toLocaleString()}/yr` : "$0 (written off)"}</span>
               </div>
-              {costs.finExtra > 0 && (
+              {costs.interest > 0 && (
                 <div className="flex justify-between" style={{ fontSize: 11 }}>
-                  <span style={{ color: "var(--wc-t3)" }}>Finance charges (est.)</span>
-                  <span className="font-data" style={{ color: "#fff" }}>${costs.finExtra.toLocaleString()}/yr</span>
+                  <span style={{ color: "var(--wc-t3)" }}>Finance interest (8%)</span>
+                  <span className="font-data" style={{ color: "#fff" }}>${costs.interest.toLocaleString()}/yr</span>
                 </div>
               )}
               <div style={{ height: 1, background: "rgba(255,255,255,.08)" }} />

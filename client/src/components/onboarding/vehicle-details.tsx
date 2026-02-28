@@ -105,11 +105,11 @@ const PRICE_MID: Record<string, number> = {
   over70: 85000,
 };
 
-const RUNNING_ONLY: Record<string, number> = {
-  "ute-4x4": 8500,
-  "ute-4x2": 6800,
-  "suv-medium": 7200,
-  "suv-small": 5500,
+const RUNNING: Record<string, number> = {
+  "ute-4x4": 12900,
+  "ute-4x2": 9700,
+  "suv-medium": 9700,
+  "suv-small": 5900,
 };
 
 function calcDepreciation(age: string, priceBand: string) {
@@ -134,14 +134,16 @@ function calcDepreciation(age: string, priceBand: string) {
   };
 }
 
+const INT_RATE = 0.08;
+
 function estimateCostsLocal(vtype: string, fin: string, age: string, priceBand: string) {
   const seg = vtype || "ute-4x2";
   const { dep, method, note } = calcDepreciation(age || "3to5", priceBand || "30to50");
-  const running = RUNNING_ONLY[seg] || 6800;
+  const running = RUNNING[seg] || 9700;
   const price = PRICE_MID[priceBand] || 40000;
-  const finExtra = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * 0.05) : 0;
-  const annual = dep + running + finExtra;
-  return { annual, dep, running, finExtra, method, note };
+  const interest = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * INT_RATE) : 0;
+  const annual = dep + running + interest;
+  return { annual, dep, running, interest, method, note };
 }
 
 export default function VehicleDetails({ onNext, onBack }: VehicleDetailsProps) {
