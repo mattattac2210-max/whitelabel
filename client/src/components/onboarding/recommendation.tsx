@@ -112,6 +112,179 @@ function runAlgorithm(kmBand: string, age: string, fin: string, vtype: string) {
   };
 }
 
+const AGE_LABEL: Record<string, string> = { "0to2": "0–2 yrs", "3to5": "3–5 yrs", "6to9": "6–9 yrs", "10plus": "10+ yrs" };
+const FIN_LABEL: Record<string, string> = { yes: "Yes (financed)", no: "No (owned outright)", "not-sure": "Not sure" };
+const KMBAND_LABEL: Record<string, string> = { "0to2k": "Under 2,000 km", "2kto5k": "2,000–5,000 km", "5kto10k": "5,000–10,000 km", "over10k": "Over 10,000 km" };
+
+function CalcBreakdownModal({ onClose, kmBand, vehicleAge, vehicleType, finance, result, costs }: {
+  onClose: () => void;
+  kmBand: string;
+  vehicleAge: string;
+  vehicleType: string;
+  finance: string;
+  result: ReturnType<typeof runAlgorithm>;
+  costs: ReturnType<typeof estimateCosts>;
+}) {
+  const bizKm = KM_MID[kmBand] || 3500;
+  const segName = SEG_LABEL[vehicleType] || "vehicle";
+  const pct = Math.round((bizKm / costs.totalKm) * 100);
+
+  return (
+    <div
+      style={{
+        position: "absolute", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,.85)",
+        display: "flex", flexDirection: "column",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          flex: 1, overflow: "auto",
+          padding: "60px 22px 40px",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".09em" }}>
+            How this was calculated
+          </div>
+          <button
+            onClick={onClose}
+            data-testid="button-close-calc"
+            style={{
+              background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 8, width: 32, height: 32, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#fff" }}>Your inputs</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { label: "Vehicle type", value: segName },
+              { label: "Vehicle age", value: AGE_LABEL[vehicleAge] || vehicleAge },
+              { label: "Finance", value: FIN_LABEL[finance] || finance },
+              { label: "Annual business km", value: KMBAND_LABEL[kmBand] || kmBand },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between" style={{ padding: "8px 12px", background: "rgba(255,255,255,.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,.06)" }}>
+                <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>{row.label}</span>
+                <span className="font-data" style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#fff" }}>Cost estimate breakdown</div>
+          <div style={{ padding: 14, background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex justify-between" style={{ fontSize: 11 }}>
+                <span style={{ color: "var(--wc-t3)" }}>RACQ base cost/km ({segName})</span>
+                <span className="font-data" style={{ color: "#fff" }}>${costs.cpp.toFixed(2)}/km</span>
+              </div>
+              <div className="flex justify-between" style={{ fontSize: 11 }}>
+                <span style={{ color: "var(--wc-t3)" }}>ABS avg total km/yr ({segName})</span>
+                <span className="font-data" style={{ color: "#fff" }}>{costs.totalKm.toLocaleString()} km</span>
+              </div>
+              <div className="flex justify-between" style={{ fontSize: 11 }}>
+                <span style={{ color: "var(--wc-t3)" }}>Age adjustment</span>
+                <span className="font-data" style={{ color: "#fff" }}>{costs.aMult.toFixed(2)}x</span>
+              </div>
+              <div className="flex justify-between" style={{ fontSize: 11 }}>
+                <span style={{ color: "var(--wc-t3)" }}>Finance adjustment</span>
+                <span className="font-data" style={{ color: "#fff" }}>{costs.fMult.toFixed(2)}x</span>
+              </div>
+              <div style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
+              <div className="flex justify-between" style={{ fontSize: 12 }}>
+                <span style={{ fontWeight: 700 }}>Est. annual running costs</span>
+                <span className="font-data" style={{ fontWeight: 800, color: "var(--wc-y)" }}>${costs.annual.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#fff" }}>Method comparison</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, padding: 14, background: "rgba(56,189,248,.04)", borderRadius: 12, border: "1px solid rgba(56,189,248,.15)" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#38BDF8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Cents/km</div>
+              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>${result.centsAmt.toLocaleString()}</div>
+              <div style={{ fontSize: 9, color: "var(--wc-t3)", lineHeight: 1.4 }}>
+                {Math.min(bizKm, CENTS_CAP).toLocaleString()} km x $0.88
+                {bizKm > CENTS_CAP ? " (capped)" : ""}
+              </div>
+            </div>
+            <div style={{ flex: 1, padding: 14, background: "rgba(245,196,0,.04)", borderRadius: 12, border: "1px solid rgba(245,196,0,.15)" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--wc-y)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Logbook</div>
+              <div className="font-data" style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>~${result.logAmt.toLocaleString()}</div>
+              <div style={{ fontSize: 9, color: "var(--wc-t3)", lineHeight: 1.4 }}>
+                {pct}% of ${costs.annual.toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 8, padding: "10px 14px", background: result.diff > 0 ? "rgba(245,196,0,.05)" : "rgba(56,189,248,.05)", borderRadius: 10, border: `1px solid ${result.diff > 0 ? "rgba(245,196,0,.15)" : "rgba(56,189,248,.15)"}`, textAlign: "center" }}>
+            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}>Difference: </span>
+            <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+              {result.diff >= 0 ? "+" : ""}${Math.abs(result.diff).toLocaleString()}/yr
+            </span>
+            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> = </span>
+            <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: result.diff > 0 ? "var(--wc-y)" : "#38BDF8" }}>
+              {result.diff5yr >= 0 ? "+" : ""}${Math.abs(result.diff5yr).toLocaleString()}
+            </span>
+            <span style={{ fontSize: 11, color: "var(--wc-t3)" }}> over 5 yrs</span>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "#fff" }}>Data sources</div>
+          <div style={{ fontSize: 10, color: "var(--wc-t3)", lineHeight: 1.6 }}>
+            Vehicle running costs are based on <strong style={{ color: "var(--wc-t2)" }}>RACQ vehicle running cost survey</strong> averages
+            for your vehicle segment. Total annual kilometres use <strong style={{ color: "var(--wc-t2)" }}>ABS Survey of Motor Vehicle Use</strong> figures.
+            The ATO cents-per-km rate of <strong style={{ color: "var(--wc-t2)" }}>$0.88</strong> applies for the 2024–25 financial year.
+            Finance and age adjustments use industry averages.
+          </div>
+        </div>
+
+        <div style={{
+          padding: 14, borderRadius: 12,
+          background: "rgba(239,68,68,.06)",
+          border: "1px solid rgba(239,68,68,.2)",
+        }}>
+          <div className="flex items-start gap-2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--wc-re)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div style={{ fontSize: 10, color: "var(--wc-t2)", lineHeight: 1.6 }}>
+              <strong>Important:</strong> This estimate is based on industry averages and the information you provided.
+              It does not take into account your individual circumstances, actual vehicle expenses, or specific
+              tax situation. Always consult a registered tax professional before making tax decisions.
+              WorkCar is not a tax agent and does not provide financial advice.
+            </div>
+          </div>
+        </div>
+
+        <button
+          className="ob-btn ob-btn-ghost"
+          style={{ marginTop: 20, width: "100%" }}
+          onClick={onClose}
+          data-testid="button-calc-got-it"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Recommendation({ kmBand, vehicleAge, vehicleType, finance, onNext, onBack }: RecommendationProps) {
   const initialResult = useMemo(
     () => runAlgorithm(kmBand, vehicleAge, finance, vehicleType),
@@ -120,6 +293,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
 
   const initWkly = useMemo(() => Math.round((KM_MID[kmBand] || 6000) / 52), [kmBand]);
   const [weeklyKm, setWeeklyKm] = useState(initWkly);
+  const [showCalcModal, setShowCalcModal] = useState(false);
 
   const costs = useMemo(
     () => estimateCosts(vehicleType || "ute-4x2", finance || "yes", vehicleAge || "3to5"),
@@ -250,6 +424,29 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           <p style={{ fontSize: 12, color: "var(--wc-t2)", lineHeight: 1.55 }} data-testid="text-recommendation-reason">
             {initialResult.reason}
           </p>
+          <button
+            onClick={() => setShowCalcModal(true)}
+            data-testid="button-how-calculated"
+            className="inline-flex items-center gap-1.5"
+            style={{
+              marginTop: 10,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 600,
+              color: "var(--wc-y)",
+              padding: 0,
+              opacity: 0.85,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            How was this calculated?
+          </button>
         </div>
 
         <div
@@ -410,6 +607,18 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           ))}
         </div>
       </div>
+
+      {showCalcModal && (
+        <CalcBreakdownModal
+          onClose={() => setShowCalcModal(false)}
+          kmBand={kmBand}
+          vehicleAge={vehicleAge}
+          vehicleType={vehicleType}
+          finance={finance}
+          result={initialResult}
+          costs={costs}
+        />
+      )}
     </div>
   );
 }
