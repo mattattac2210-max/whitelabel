@@ -389,6 +389,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
   }, [kmBand, initialWeeklyKm]);
   const [weeklyKm, setWeeklyKm] = useState(initWkly);
   const [showCalcModal, setShowCalcModal] = useState(false);
+  const [showLogbookModal, setShowLogbookModal] = useState(false);
 
   const costs = useMemo(
     () => estimateCosts(vehicleType || "ute-4x2", finance || "yes", vehicleAge || "3to5", priceBand || "30to50"),
@@ -448,6 +449,7 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           sub: "Under 5 years old and travel pattern unchanged \u2014 reuse your %",
           weeks: null,
           plan: "c2",
+          hasLogbookPopup: true,
         },
       ]
     : [
@@ -674,7 +676,13 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
             <div
               key={i}
               className={`ob-action-tile${tile.primary ? " primary" : ""}`}
-              onClick={() => onNext({ plan: tile.plan })}
+              onClick={() => {
+                if (tile.hasLogbookPopup) {
+                  setShowLogbookModal(true);
+                } else {
+                  onNext({ plan: tile.plan });
+                }
+              }}
               data-testid={`tile-action-${i}`}
             >
               <div
@@ -735,6 +743,79 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
           result={initialResult}
           costs={costs}
         />
+      )}
+
+      {showLogbookModal && (
+        <div
+          className="absolute inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,.7)", backdropFilter: "blur(6px)" }}
+          onClick={() => setShowLogbookModal(false)}
+          data-testid="modal-logbook-existing"
+        >
+          <div
+            className="ob-a1"
+            style={{
+              width: "calc(100% - 40px)",
+              maxWidth: 350,
+              padding: 24,
+              background: "#141414",
+              border: "1.5px solid rgba(245,196,0,.25)",
+              borderRadius: 18,
+              boxShadow: "0 0 40px rgba(245,196,0,.08), inset 0 0 30px rgba(245,196,0,.02)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: "rgba(245,196,0,.1)", border: "1.5px solid rgba(245,196,0,.25)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--wc-y)" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <div className="font-display" style={{ fontSize: 22, lineHeight: 1.1 }}>
+                Trust <span style={{ color: "var(--wc-y)" }}>your</span> numbers
+              </div>
+            </div>
+
+            <p style={{ fontSize: 13, color: "var(--wc-t2)", lineHeight: 1.65, marginBottom: 14 }}>
+              You know your deductions better than we do. These results are based on <strong style={{ color: "#fff" }}>averages</strong>, not your individual circumstances.
+            </p>
+            <p style={{ fontSize: 13, color: "var(--wc-t2)", lineHeight: 1.65, marginBottom: 20 }}>
+              If your logbook is <strong style={{ color: "#fff" }}>expiring soon</strong>, this could be the right time to sort out the next <strong style={{ color: "var(--wc-y)" }}>5 years</strong> based on how you actually drive now.
+            </p>
+
+            <div style={{
+              padding: "12px 14px", background: "rgba(245,196,0,.04)",
+              border: "1px solid rgba(245,196,0,.14)", borderRadius: 12, marginBottom: 18,
+            }}>
+              <div style={{ fontSize: 11, color: "var(--wc-t2)", lineHeight: 1.55 }}>
+                <strong style={{ color: "var(--wc-y)" }}>Tip:</strong> A new 12-week logbook locks in your <em>current</em> driving pattern for 5 years. If your work has changed since your last logbook, a fresh one could mean a bigger claim.
+              </div>
+            </div>
+
+            <button
+              className="ob-btn ob-btn-y"
+              style={{ width: "100%", marginBottom: 10 }}
+              onClick={() => { setShowLogbookModal(false); onNext({ plan: "c2" }); }}
+              data-testid="button-logbook-start-fresh"
+            >
+              Start a fresh 12-week logbook
+            </button>
+            <button
+              className="ob-btn ob-btn-ghost"
+              style={{ width: "100%" }}
+              onClick={() => { setShowLogbookModal(false); onNext({ plan: "c2" }); }}
+              data-testid="button-logbook-reuse"
+            >
+              Continue with existing logbook
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
