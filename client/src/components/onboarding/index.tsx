@@ -123,6 +123,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               setStep('recommendation');
             }}
             onBack={() => setStep('q2-km')}
+            weeklyKm={userData.weeklyKm}
+            personalWeeklyKm={userData.personalWeeklyKm}
           />
         );
 

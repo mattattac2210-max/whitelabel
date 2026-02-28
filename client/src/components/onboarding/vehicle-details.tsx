@@ -3,6 +3,8 @@ import { useState } from "react";
 interface VehicleDetailsProps {
   onNext: (data: { vehicleAge: string; vehicleType: string; finance: string; priceBand: string }) => void;
   onBack: () => void;
+  weeklyKm?: number;
+  personalWeeklyKm?: number;
 }
 
 const AGE_OPTIONS = [
@@ -136,17 +138,25 @@ function calcDepreciation(age: string, priceBand: string) {
 
 const INT_RATE = 0.08;
 
-function estimateCostsLocal(vtype: string, fin: string, age: string, priceBand: string) {
+const ABS_TOTAL_KM: Record<string, number> = {
+  "ute-4x4": 15300, "ute-4x2": 15300,
+  "suv-medium": 11100, "suv-small": 11100,
+};
+
+function estimateCostsLocal(vtype: string, fin: string, age: string, priceBand: string, actualTotalKm?: number | null) {
   const seg = vtype || "ute-4x2";
+  const baselineKm = ABS_TOTAL_KM[seg] || 15000;
   const { dep, method, note } = calcDepreciation(age || "3to5", priceBand || "30to50");
-  const running = RUNNING[seg] || 9700;
+  const baseRunning = RUNNING[seg] || 9700;
+  const kmScale = (actualTotalKm && actualTotalKm > 0) ? actualTotalKm / baselineKm : 1;
+  const running = Math.round(baseRunning * kmScale);
   const price = PRICE_MID[priceBand] || 40000;
   const interest = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * INT_RATE) : 0;
   const annual = dep + running + interest;
   return { annual, dep, running, interest, method, note };
 }
 
-export default function VehicleDetails({ onNext, onBack }: VehicleDetailsProps) {
+export default function VehicleDetails({ onNext, onBack, weeklyKm, personalWeeklyKm }: VehicleDetailsProps) {
   const [vehicleAge, setVehicleAge] = useState<string | null>(null);
   const [vehicleType, setVehicleType] = useState<string | null>(null);
   const [finance, setFinance] = useState<string | null>(null);
@@ -154,9 +164,13 @@ export default function VehicleDetails({ onNext, onBack }: VehicleDetailsProps) 
 
   const allSelected = vehicleAge && vehicleType && finance && priceBand;
 
+  const bizAnnual = (weeklyKm && weeklyKm > 0) ? weeklyKm * 48 : 0;
+  const persAnnual = (personalWeeklyKm && personalWeeklyKm > 0) ? personalWeeklyKm * 48 : 0;
+  const actualTotalKm = (bizAnnual + persAnnual) > 0 ? bizAnnual + persAnnual : null;
+
   let costPreview: { annual: number; method: string; note: string; dep: number } | null = null;
   if (allSelected) {
-    const costs = estimateCostsLocal(vehicleType, finance, vehicleAge, priceBand);
+    const costs = estimateCostsLocal(vehicleType, finance, vehicleAge, priceBand, actualTotalKm);
     costPreview = { annual: costs.annual, method: costs.method, note: costs.note, dep: costs.dep };
   }
 
