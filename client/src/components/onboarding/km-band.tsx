@@ -32,6 +32,7 @@ function formatNum(n: number): string {
 
 export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
   const [mode, setMode] = useState<'week' | 'year'>('week');
+  const [personalMode, setPersonalMode] = useState<'week' | 'year'>('week');
   const [weeklyKm, setWeeklyKm] = useState(() => getDefaultWeekly(defaultBand));
   const [personalWeeklyKm, setPersonalWeeklyKm] = useState(100);
 
@@ -247,10 +248,48 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
             <div style={{ fontSize: 10, color: 'var(--wc-t3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 700 }}>
               Personal driving
             </div>
-            <div>
-              <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: 'var(--wc-t2)' }} data-testid="text-personal-km">{formatNum(personalWeeklyKm)}</span>
-              <span style={{ fontSize: 9, color: 'var(--wc-t3)', marginLeft: 3 }}>km/wk</span>
-              <span style={{ fontSize: 9, color: 'var(--wc-t3)', marginLeft: 6 }}>{formatNum(personalYearlyKm)}/yr</span>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex items-center gap-0"
+                style={{
+                  background: 'rgba(255,255,255,.06)',
+                  borderRadius: 7,
+                  padding: 2,
+                }}
+              >
+                <button
+                  onClick={() => setPersonalMode('week')}
+                  data-testid="toggle-personal-week"
+                  style={{
+                    padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                    fontSize: 9, fontWeight: 700, letterSpacing: '.03em',
+                    background: personalMode === 'week' ? 'var(--wc-t2)' : 'transparent',
+                    color: personalMode === 'week' ? '#000' : 'var(--wc-t3)',
+                    transition: 'all .18s',
+                  }}
+                >
+                  Wk
+                </button>
+                <button
+                  onClick={() => setPersonalMode('year')}
+                  data-testid="toggle-personal-year"
+                  style={{
+                    padding: '3px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                    fontSize: 9, fontWeight: 700, letterSpacing: '.03em',
+                    background: personalMode === 'year' ? 'var(--wc-t2)' : 'transparent',
+                    color: personalMode === 'year' ? '#000' : 'var(--wc-t3)',
+                    transition: 'all .18s',
+                  }}
+                >
+                  Yr
+                </button>
+              </div>
+              <span className="font-data" style={{ fontSize: 14, fontWeight: 800, color: 'var(--wc-t2)' }} data-testid="text-personal-km">
+                {formatNum(personalMode === 'week' ? personalWeeklyKm : personalYearlyKm)}
+              </span>
+              <span style={{ fontSize: 9, color: 'var(--wc-t3)' }}>
+                {personalMode === 'week' ? 'km/wk' : 'km/yr'}
+              </span>
             </div>
           </div>
           <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
