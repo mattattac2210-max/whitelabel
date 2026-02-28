@@ -124,11 +124,14 @@ export function calcDepreciation(age: string, priceBand: string) {
   return { dep: Math.round(bookVal * DV_RATE), method: "dv" as const, note: `Diminishing value` };
 }
 
-export function estimateCosts(vtype: string, fin: string, age: string, priceBand: string) {
+export function estimateCosts(vtype: string, fin: string, age: string, priceBand: string, actualTotalKm?: number | null) {
   const seg = vtype || "ute-4x2";
-  const totalKm = ABS_TOTAL_KM[seg] || 15000;
+  const baselineKm = ABS_TOTAL_KM[seg] || 15000;
+  const totalKm = (actualTotalKm && actualTotalKm > 0) ? actualTotalKm : baselineKm;
   const { dep, method, note } = calcDepreciation(age || "3to5", priceBand || "30to50");
-  const running = RUNNING[seg] || 9700;
+  const baseRunning = RUNNING[seg] || 9700;
+  const kmScale = totalKm / baselineKm;
+  const running = Math.round(baseRunning * kmScale);
   const price = PRICE_MID[priceBand] || 40000;
   const interest = fin === "yes" ? Math.round(Math.min(price, ATO_CAR_LIMIT) * INT_RATE) : 0;
   const annual = dep + running + interest;
@@ -154,7 +157,8 @@ export function calcLogbook(businessKm: number, costs: { totalKm: number; annual
 
 function runAlgorithm(kmBand: string, age: string, fin: string, vtype: string, priceBand: string, trade: string, personalAnnualKm?: number | null) {
   const bizKm = KM_MID[kmBand] || 3500;
-  const costs = estimateCosts(vtype, fin, age, priceBand);
+  const actualTotal = (personalAnnualKm && personalAnnualKm > 0) ? bizKm + personalAnnualKm : null;
+  const costs = estimateCosts(vtype, fin, age, priceBand, actualTotal);
   const centsAmt = calcCentsPerKm(bizKm);
   const { amount: logAmt, pct } = calcLogbook(bizKm, costs, trade, personalAnnualKm);
   const diff = logAmt - centsAmt;
@@ -400,10 +404,11 @@ export default function Recommendation({ kmBand, vehicleAge, vehicleType, financ
   const [showCalcModal, setShowCalcModal] = useState(false);
   const [showLogbookModal, setShowLogbookModal] = useState(false);
 
-  const costs = useMemo(
-    () => estimateCosts(vehicleType || "ute-4x2", finance || "yes", vehicleAge || "3to5", priceBand || "30to50"),
-    [vehicleType, finance, vehicleAge, priceBand]
-  );
+  const costs = useMemo(() => {
+    const annKm = weeklyKm * 48;
+    const actualTotal = (personalAnnualKm && personalAnnualKm > 0) ? annKm + personalAnnualKm : null;
+    return estimateCosts(vehicleType || "ute-4x2", finance || "yes", vehicleAge || "3to5", priceBand || "30to50", actualTotal);
+  }, [vehicleType, finance, vehicleAge, priceBand, weeklyKm, personalAnnualKm]);
 
   const sliderCalc = useMemo(() => {
     const annKm = weeklyKm * 48;

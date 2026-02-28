@@ -168,15 +168,18 @@ export function SetupTaxScreen({ onNext, onBack, userData }: SetupScreenProps) {
 
   const KM_MID: Record<string, number> = { "0to2k": 1000, "2kto5k": 3500, "5kto10k": 7500, "over10k": 12000 };
 
-  const costs = useMemo(
-    () => estimateCosts(
+  const costs = useMemo(() => {
+    const bizKm = (userData?.weeklyKm && userData.weeklyKm > 0) ? userData.weeklyKm * 48 : KM_MID[kmBand || "5kto10k"] || 7500;
+    const persAnnual = (userData?.personalWeeklyKm && userData.personalWeeklyKm > 0) ? userData.personalWeeklyKm * 48 : null;
+    const actualTotal = persAnnual ? bizKm + persAnnual : null;
+    return estimateCosts(
       userData?.vehicleType || "ute-4x2",
       userData?.finance || "no",
       userData?.vehicleAge || "3to5",
-      userData?.priceBand || "30to50"
-    ),
-    [userData?.vehicleType, userData?.finance, userData?.vehicleAge, userData?.priceBand]
-  );
+      userData?.priceBand || "30to50",
+      actualTotal
+    );
+  }, [userData?.vehicleType, userData?.finance, userData?.vehicleAge, userData?.priceBand, userData?.weeklyKm, userData?.personalWeeklyKm, kmBand]);
 
   const est = useMemo(() => {
     const bizKm = (userData?.weeklyKm && userData.weeklyKm > 0)
