@@ -316,17 +316,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
   const startXRef = useRef(0);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
-  const [detailDragX, setDetailDragX] = useState(0);
-  const [detailDragging, setDetailDragging] = useState(false);
-  const detailStartX = useRef(0);
-  const detailStartY = useRef(0);
-  const detailLocked = useRef(false);
-  const detailMultitouch = useRef(false);
   const activePointers = useRef(new Set<number>());
   const pointerPositions = useRef(new Map<number, { x: number; y: number }>());
   const pinchStartDist = useRef(0);
   const [detailScale, setDetailScale] = useState(1);
-  const pinchCooldown = useRef(false);
 
   const baseOdo = state.lastOdoReading || state.baseOdo;
   const oStart = getTripOdoStart(state.trips, tripIndex, baseOdo);
@@ -625,7 +618,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
-          onClick={() => { if (!detailDragging) setShowDetail(false); }}
+          onClick={() => setShowDetail(false)}
           data-testid="detail-overlay"
         >
           <div
