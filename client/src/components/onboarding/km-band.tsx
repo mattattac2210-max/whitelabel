@@ -31,6 +31,7 @@ function formatNum(n: number): string {
 }
 
 export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
+  const [mode, setMode] = useState<'week' | 'year'>('week');
   const [weeklyKm, setWeeklyKm] = useState(() => getDefaultWeekly(defaultBand));
   const [personalWeeklyKm, setPersonalWeeklyKm] = useState(100);
 
@@ -84,12 +85,50 @@ export function KmBandScreen({ onNext, onBack, defaultBand }: KmBandProps) {
           <p style={{ fontSize: 11, color: 'var(--wc-t3)', margin: 0 }}>Drag the slider or tap a band</p>
         </div>
 
+        <div
+          className="flex items-center justify-center gap-1"
+          style={{
+            background: 'rgba(255,255,255,.06)',
+            borderRadius: 10,
+            padding: 3,
+            width: 'fit-content',
+            margin: '0 auto 6px',
+          }}
+        >
+          <button
+            onClick={() => setMode('week')}
+            data-testid="toggle-km-week"
+            style={{
+              padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontSize: 11, fontWeight: 700, letterSpacing: '.03em',
+              background: mode === 'week' ? 'var(--wc-y)' : 'transparent',
+              color: mode === 'week' ? '#000' : 'var(--wc-t3)',
+              transition: 'all .18s',
+            }}
+          >
+            Per Week
+          </button>
+          <button
+            onClick={() => setMode('year')}
+            data-testid="toggle-km-year"
+            style={{
+              padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontSize: 11, fontWeight: 700, letterSpacing: '.03em',
+              background: mode === 'year' ? 'var(--wc-y)' : 'transparent',
+              color: mode === 'year' ? '#000' : 'var(--wc-t3)',
+              transition: 'all .18s',
+            }}
+          >
+            Per Year
+          </button>
+        </div>
+
         <div style={{ textAlign: 'center', marginBottom: 4 }}>
           <div className="font-display" style={{ fontSize: 40, lineHeight: 1, color: 'var(--wc-y)' }} data-testid="text-km-display">
-            {formatNum(weeklyKm)}
+            {formatNum(mode === 'week' ? weeklyKm : yearlyKm)}
           </div>
           <div style={{ fontSize: 10, color: 'var(--wc-t3)', marginTop: 2 }}>
-            km/wk = {formatNum(yearlyKm)} km/year
+            {mode === 'week' ? `km/wk = ${formatNum(yearlyKm)} km/year` : `km/year = ${formatNum(weeklyKm)} km/wk`}
           </div>
         </div>
 
