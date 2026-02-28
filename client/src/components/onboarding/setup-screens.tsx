@@ -663,6 +663,153 @@ function PersonDot({ type }: { type: "paying" | "free" | "empty" }) {
   );
 }
 
+export function MotionPermScreen({ onNext, onBack }: SetupScreenProps) {
+  return (
+    <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center" style={{ padding: "0 28px 40px" }}>
+        <button data-testid="button-motion-back" className="absolute top-[56px] left-[22px] inline-flex items-center gap-1 bg-transparent border-none cursor-pointer" style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#484848", zIndex: 2 }} onClick={onBack}>
+          <BackArrow />Back
+        </button>
+
+        <div style={{ width: 88, height: 88, borderRadius: "50%", background: "rgba(245,196,0,.07)", border: "1.5px solid rgba(245,196,0,.22)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, animation: "ob-glow 3s ease-in-out infinite" }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--wc-y)" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+
+        <div className="font-display text-center" style={{ fontSize: 30, lineHeight: 1.1, marginBottom: 8 }}>
+          Motion &<br /><span style={{ color: "var(--wc-y)" }}>Fitness</span>
+        </div>
+        <p style={{ fontSize: 13, color: "#AAA", textAlign: "center", lineHeight: 1.6, maxWidth: 280, marginBottom: 24 }}>
+          WorkCar uses motion sensors to detect when you're driving. This lets us auto-start trip logging without draining your battery.
+        </p>
+
+        <div style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 14, marginBottom: 14, textAlign: "center" }}>
+          <div style={{ fontSize: 11, color: "#AAA", lineHeight: 1.6 }}>
+            <strong style={{ color: "#fff" }}>Why we need this:</strong> Detects vehicle acceleration vs walking so we only log real trips.
+          </div>
+        </div>
+
+        <button data-testid="button-allow-motion" className="ob-btn ob-btn-y" style={{ marginBottom: 10 }} onClick={() => onNext()}>
+          Allow Motion Access
+        </button>
+        <button data-testid="button-skip-motion" className="ob-btn ob-btn-ghost" onClick={() => onNext()}>
+          Skip for now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function LocationPermScreen({ onNext, onBack }: SetupScreenProps) {
+  return (
+    <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center" style={{ padding: "0 28px 40px" }}>
+        <button data-testid="button-location-back" className="absolute top-[56px] left-[22px] inline-flex items-center gap-1 bg-transparent border-none cursor-pointer" style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#484848", zIndex: 2 }} onClick={onBack}>
+          <BackArrow />Back
+        </button>
+
+        <div style={{ width: 88, height: 88, borderRadius: "50%", background: "rgba(34,197,94,.07)", border: "1.5px solid rgba(34,197,94,.22)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, animation: "ob-glow 3s ease-in-out infinite" }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--wc-gr)" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+
+        <div className="font-display text-center" style={{ fontSize: 30, lineHeight: 1.1, marginBottom: 8 }}>
+          Location<br /><span style={{ color: "var(--wc-gr)" }}>Always</span>
+        </div>
+        <p style={{ fontSize: 13, color: "#AAA", textAlign: "center", lineHeight: 1.6, maxWidth: 280, marginBottom: 14 }}>
+          To log trips in the background while you drive, WorkCar needs "Always" location access. We never sell or share your data.
+        </p>
+
+        <div style={{ width: "100%", padding: "14px 16px", background: "rgba(34,197,94,.04)", border: "1px solid rgba(34,197,94,.14)", borderRadius: 14, marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex items-start gap-2.5">
+              <CheckIcon size={12} stroke="var(--wc-gr)" strokeWidth={2.5} />
+              <span style={{ fontSize: 11, color: "#AAA" }}>Auto-logs trip start and end points</span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <CheckIcon size={12} stroke="var(--wc-gr)" strokeWidth={2.5} />
+              <span style={{ fontSize: 11, color: "#AAA" }}>Measures distance accurately via GPS</span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <CheckIcon size={12} stroke="var(--wc-gr)" strokeWidth={2.5} />
+              <span style={{ fontSize: 11, color: "#AAA" }}>Works in background without opening app</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ width: "100%", padding: "10px 14px", background: "rgba(239,68,68,.04)", border: "1px solid rgba(239,68,68,.14)", borderRadius: 10, marginBottom: 20, textAlign: "center" }}>
+          <span style={{ fontSize: 10, color: "var(--wc-t2)" }}>
+            Select <strong style={{ color: "#fff" }}>"Allow Always"</strong> when prompted. "While Using" won't track background trips.
+          </span>
+        </div>
+
+        <button data-testid="button-allow-location" className="ob-btn ob-btn-y" style={{ marginBottom: 10 }} onClick={() => onNext()}>
+          Allow Location Access
+        </button>
+        <button data-testid="button-skip-location" className="ob-btn ob-btn-ghost" onClick={() => onNext()}>
+          Skip for now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function AllSetScreen({ onNext, onBack }: SetupScreenProps) {
+  return (
+    <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 120% 50% at 50% -5%, rgba(245,196,0,.12) 0%, transparent 55%), var(--wc-bg)',
+        }}
+      />
+      <div className="relative z-[1] flex-1 flex flex-col items-center justify-center" style={{ padding: "0 28px 40px" }}>
+
+        <div className="ob-glow" style={{ width: 96, height: 96, borderRadius: 30, background: "rgba(34,197,94,.07)", border: "1.5px solid rgba(34,197,94,.28)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--wc-gr)" strokeWidth="2" strokeLinecap="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+
+        <div className="font-display text-center" style={{ fontSize: 34, lineHeight: 1, marginBottom: 8 }}>
+          WORK<span style={{ color: "var(--wc-y)" }}>CAR</span><br />
+          <span style={{ fontSize: 28, color: "var(--wc-gr)" }}>is live!</span>
+        </div>
+        <p style={{ fontSize: 13, color: "#AAA", textAlign: "center", lineHeight: 1.6, maxWidth: 280, marginBottom: 24 }}>
+          Everything is set up. Your logbook is recording. Just drive and we'll handle the rest.
+        </p>
+
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+          {[
+            { icon: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z", text: "GPS tracking active", color: "var(--wc-gr)" },
+            { icon: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", text: "Motion detection on", color: "var(--wc-y)" },
+            { icon: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z", text: "12-week logbook started", color: "var(--wc-y)" },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3" style={{ padding: "12px 14px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", borderRadius: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${item.color}12`, border: `1px solid ${item.color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="1.8" strokeLinecap="round">
+                  <path d={item.icon} />
+                </svg>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{item.text}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--wc-gr)" strokeWidth="3" strokeLinecap="round" style={{ marginLeft: "auto" }}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          ))}
+        </div>
+
+        <button data-testid="button-all-set-continue" className="ob-btn ob-btn-y" onClick={() => onNext()}>
+          Choose Your Plan &rarr;
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function MatesRatesScreen({ onNext, onBack }: SetupScreenProps) {
   return (
     <div style={{ paddingTop: 44 }} className="absolute inset-0 flex flex-col overflow-hidden">

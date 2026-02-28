@@ -27,9 +27,12 @@ All application logic runs client-side using React state (via useReducer + Conte
 ### App Flow
 
 1. **Onboarding** (first visit only, stored in `localStorage.wc_onboarded`):
-   - Splash → Q1 Trade → Q2 KM Band → Q3 Vehicle Details → Recommendation → Signup → OTP Verify → Vehicle Setup → Tax Settings → Tracking Method → Plan Select → Mates Rates
+   - Splash → Q1 Trade → Q2 KM Band → Q3 Vehicle Details → Recommendation → Signup → OTP Verify → Vehicle Setup → Tax Settings → Tracking Method → Motion Permission → Location Permission → All Set → Plan Select → Mates Rates
    - Self-contained in `client/src/components/onboarding/` with local state
-   - Algorithm ports RACQ cost calculations from reference HTML for recommendation engine
+   - Q2 KM Band uses tap-to-advance tile cards (same style as Q1 trade tiles) with profession-based default band via PROF_DEFAULTS
+   - Q3 Vehicle Details has 4 questions: age (6 options), type, finance, purchase price band (4 options)
+   - Algorithm uses IAWO-aware depreciation engine with RUNNING_ONLY segment costs, calcDepreciation (DV method or instant write-off), profession-based business use % for logbook calculation
+   - UserData includes: trade, kmBand, vehicleAge, vehicleType, finance, priceBand, recommendation
 
 2. **Dashboard** (main hub after onboarding):
    - Quick action tiles: Sort Trips, Review, Reports, Export, Add Trip, Odometer

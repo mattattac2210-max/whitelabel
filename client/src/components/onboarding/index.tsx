@@ -5,7 +5,29 @@ import { KmBandScreen } from './km-band';
 import VehicleDetails from './vehicle-details';
 import Recommendation from './recommendation';
 import { SignupScreen, LoginScreen, VerifyScreen, ForgotScreen, PinScreen } from './auth-screens';
-import { SetupVehicleScreen, SetupTaxScreen, TrackingMethodScreen, PlanSelectScreen, MatesRatesScreen } from './setup-screens';
+import { SetupVehicleScreen, SetupTaxScreen, TrackingMethodScreen, MotionPermScreen, LocationPermScreen, AllSetScreen, PlanSelectScreen, MatesRatesScreen } from './setup-screens';
+
+const PROF_DEFAULTS: Record<string, { bizPct: number; kmBand: string }> = {
+  electrician: { bizPct: 0.82, kmBand: '5kto10k' },
+  plumber: { bizPct: 0.85, kmBand: '5kto10k' },
+  builder: { bizPct: 0.78, kmBand: '5kto10k' },
+  carpenter: { bizPct: 0.78, kmBand: '5kto10k' },
+  painter: { bizPct: 0.80, kmBand: '5kto10k' },
+  hvac: { bizPct: 0.83, kmBand: '5kto10k' },
+  landscaper: { bizPct: 0.75, kmBand: '5kto10k' },
+  other: { bizPct: 0.70, kmBand: '2kto5k' },
+  'real-estate': { bizPct: 0.65, kmBand: '5kto10k' },
+  'sales-rep': { bizPct: 0.72, kmBand: 'over10k' },
+  delivery: { bizPct: 0.90, kmBand: 'over10k' },
+  healthcare: { bizPct: 0.55, kmBand: '2kto5k' },
+  consultant: { bizPct: 0.60, kmBand: '2kto5k' },
+  mechanic: { bizPct: 0.70, kmBand: '2kto5k' },
+  cleaner: { bizPct: 0.80, kmBand: '5kto10k' },
+  photography: { bizPct: 0.55, kmBand: '2kto5k' },
+  'aged-care': { bizPct: 0.65, kmBand: '2kto5k' },
+  'not-listed': { bizPct: 0.50, kmBand: '2kto5k' },
+  'not-tradie': { bizPct: 0.50, kmBand: '2kto5k' },
+};
 
 type Step =
   | 'splash'
@@ -21,6 +43,9 @@ type Step =
   | 'setup-vehicle'
   | 'setup-tax'
   | 'tracking'
+  | 'motion-perm'
+  | 'location-perm'
+  | 'all-set'
   | 'plan-select'
   | 'mates-rates';
 
@@ -30,6 +55,7 @@ interface UserData {
   vehicleAge: string;
   vehicleType: string;
   finance: string;
+  priceBand: string;
   recommendation: string;
 }
 
@@ -45,12 +71,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     vehicleAge: '',
     vehicleType: '',
     finance: '',
+    priceBand: '',
     recommendation: '',
   });
 
   const update = useCallback((partial: Partial<UserData>) => {
     setUserData(prev => ({ ...prev, ...partial }));
   }, []);
+
+  const getDefaultBand = (trade: string) => {
+    const prof = PROF_DEFAULTS[trade];
+    return prof ? prof.kmBand : undefined;
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -75,6 +107,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <KmBandScreen
             onNext={(kmBand) => { update({ kmBand }); setStep('q3-vehicle'); }}
             onBack={() => setStep('q1-trade')}
+            defaultBand={getDefaultBand(userData.trade)}
           />
         );
 
@@ -82,7 +115,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         return (
           <VehicleDetails
             onNext={(data) => {
-              update({ vehicleAge: data.vehicleAge, vehicleType: data.vehicleType, finance: data.finance });
+              update({ vehicleAge: data.vehicleAge, vehicleType: data.vehicleType, finance: data.finance, priceBand: data.priceBand });
               setStep('recommendation');
             }}
             onBack={() => setStep('q2-km')}
@@ -96,6 +129,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             vehicleAge={userData.vehicleAge}
             vehicleType={userData.vehicleType}
             finance={userData.finance}
+            priceBand={userData.priceBand}
+            trade={userData.trade}
             onNext={(rec) => {
               update({ recommendation: rec && rec.plan ? rec.plan : 'logbook' });
               setStep('signup');
@@ -171,8 +206,32 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       case 'tracking':
         return (
           <TrackingMethodScreen
-            onNext={() => setStep('plan-select')}
+            onNext={() => setStep('motion-perm')}
             onBack={() => setStep('setup-tax')}
+          />
+        );
+
+      case 'motion-perm':
+        return (
+          <MotionPermScreen
+            onNext={() => setStep('location-perm')}
+            onBack={() => setStep('tracking')}
+          />
+        );
+
+      case 'location-perm':
+        return (
+          <LocationPermScreen
+            onNext={() => setStep('all-set')}
+            onBack={() => setStep('motion-perm')}
+          />
+        );
+
+      case 'all-set':
+        return (
+          <AllSetScreen
+            onNext={() => setStep('plan-select')}
+            onBack={() => setStep('location-perm')}
           />
         );
 
@@ -180,7 +239,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         return (
           <PlanSelectScreen
             onNext={() => setStep('mates-rates')}
-            onBack={() => setStep('tracking')}
+            onBack={() => setStep('all-set')}
             userData={userData}
           />
         );
