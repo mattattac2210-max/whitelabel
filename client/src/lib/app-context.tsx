@@ -260,17 +260,37 @@ function reducer(state: AppState, action: Action): AppState {
     case 'UPDATE_TRIP': {
       const newTrips = [...state.trips];
       const oldTrip = newTrips[action.tripIndex];
+      const kmChanged = action.updates.km != null && action.updates.km !== oldTrip.km;
+      const routeChanged = kmChanged || action.updates.from != null || action.updates.to != null || action.updates.stops != null;
       newTrips[action.tripIndex] = { ...oldTrip, ...action.updates };
+      if (routeChanged) {
+        newTrips[action.tripIndex].odoReading = null;
+        newTrips[action.tripIndex].odoStartReading = null;
+        newTrips[action.tripIndex].verified = false;
+      }
+      const newVerified = new Set(state.verifiedSet);
+      if (routeChanged) {
+        newVerified.delete(action.tripIndex);
+        for (let i = action.tripIndex + 1; i < newTrips.length; i++) {
+          if (newTrips[i].odoStartReading != null || newTrips[i].odoReading != null) {
+            newTrips[i] = { ...newTrips[i], odoStartReading: null, odoReading: null, verified: false };
+            newVerified.delete(i);
+          }
+        }
+      }
       const sortedForCount = newTrips.slice(0, state.currentIndex);
       const newBizCount = sortedForCount.filter(t => t.type === 'business').length;
       const newPerCount = sortedForCount.filter(t => t.type === 'personal').length;
       const newDedTotal = sortedForCount
         .filter(t => t.type === 'business')
         .reduce((s, t) => s + t.km * RATE, 0);
-      const editDesc = `Edited trip: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to}`;
+      const editDesc = routeChanged
+        ? `Route edited: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to} (${newTrips[action.tripIndex].km.toFixed(1)} km)`
+        : `Edited trip: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to}`;
       return {
         ...state,
         trips: newTrips,
+        verifiedSet: newVerified,
         bizCount: newBizCount,
         perCount: newPerCount,
         dedTotal: newDedTotal,
