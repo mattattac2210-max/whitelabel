@@ -93,10 +93,10 @@ export function OdometerScreen() {
                     </div>
                     <div className="flex flex-col gap-[3px]">
                       {[
-                        { label: 'Classification', weight: '33%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
-                        { label: 'Odometer verified', weight: '28%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
-                        { label: 'Photo evidence', weight: '20%', desc: `${photoCount} of ${totalTrips} trips with photos`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
-                        { label: 'Business use ratio', weight: '18%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
+                        { label: 'Classification', weight: '35%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
+                        { label: 'Odometer verified', weight: '30%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Photo evidence', weight: '10%', desc: `${photoCount} of ${totalTrips} trips with photos (bonus)`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
+                        { label: 'Business use ratio', weight: '24%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
                       ].map((row, ri) => (
                         <div key={ri} className="rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgba(255,255,255,.02)' }}>
                           <div className="flex items-center justify-between mb-[3px]">

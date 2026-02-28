@@ -19,10 +19,10 @@ export function calcAuditScore(params: {
   const photoPct = (photoCount / sortedTrips) * 100;
   const deviation = Math.abs(bizPct - INDUSTRY_BIZ_AVG);
   const ratioPct = Math.max(0, 100 - (deviation / INDUSTRY_BIZ_AVG) * 100);
-  const classifiedContrib = Math.round(classifiedPct * 0.33);
-  const verifiedContrib = Math.round(verifiedPct * 0.28);
-  const photoContrib = Math.round(photoPct * 0.20);
-  const ratioContrib = Math.round(ratioPct * 0.18);
+  const classifiedContrib = Math.round(classifiedPct * 0.35);
+  const verifiedContrib = Math.round(verifiedPct * 0.30);
+  const photoContrib = Math.round(photoPct * 0.10);
+  const ratioContrib = Math.round(ratioPct * 0.24);
   const total = Math.min(99, classifiedContrib + verifiedContrib + photoContrib + ratioContrib);
   return { classifiedPct, verifiedPct, photoPct, ratioPct, classifiedContrib, verifiedContrib, photoContrib, ratioContrib, total };
 }
