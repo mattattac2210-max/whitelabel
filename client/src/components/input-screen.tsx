@@ -319,10 +319,10 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     setPhase('ended');
   };
 
-  const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm > 0;
+  const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm >= 1;
 
   const handleSendToSort = () => {
-    if (!startAddress || !endAddress || tripKm <= 0) return;
+    if (!startAddress || !endAddress || tripKm < 1) return;
     const startD = new Date(startTime || Date.now());
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -677,6 +677,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
   const handleSave = () => {
     if (!from || !to) return;
     const parsedKm = parseFloat(km) || 0;
+    if (parsedKm < 1) return;
     const d = new Date(date + 'T00:00:00');
     const fromParts = from.split(',');
     const toParts = to.split(',');
@@ -722,7 +723,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
     }, 1200);
   };
 
-  const canSave = from.length > 2 && to.length > 2;
+  const canSave = from.length > 2 && to.length > 2 && (parseFloat(km) || 0) >= 1;
 
   return (
     <div className="flex flex-col h-full" data-testid="existing-trip-screen">
@@ -840,9 +841,13 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
               style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
               value={km}
               onChange={e => setKm(e.target.value)}
-              placeholder="0.0"
+              placeholder="Min 1"
+              min="1"
               data-testid="input-km"
             />
+            {km && (parseFloat(km) || 0) < 1 && (parseFloat(km) || 0) > 0 && (
+              <div className="font-data text-[7px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>Min 1 km</div>
+            )}
           </div>
           <div className="flex-1">
             <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Duration</label>
