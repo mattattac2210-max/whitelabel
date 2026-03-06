@@ -122,7 +122,9 @@ type Action =
   | { type: 'PROMOTE_REPORT'; reportIndex: number }
   | { type: 'COME_BACK_LATER' }
   | { type: 'RESUME_SORTING' }
-  | { type: 'ADD_TRIP'; trip: Trip };
+  | { type: 'ADD_TRIP'; trip: Trip }
+  | { type: 'CONFIRM_GAP'; tripIndex: number };
+
 
 function nowStr(): string {
   const n = new Date();
@@ -543,6 +545,12 @@ function reducer(state: AppState, action: Action): AppState {
         verifiedSet: newVerified,
         auditLog: [{ time: nowStr(), desc: `Trip added: ${action.trip.from} → ${action.trip.to} (${action.trip.km} km, ${action.trip.type})`, hasPhoto: false }, ...state.auditLog],
       };
+    }
+    case 'CONFIRM_GAP': {
+      const newTrips = state.trips.map((t, i) =>
+        i === action.tripIndex ? { ...t, gapConfirmed: true } : t
+      );
+      return { ...state, trips: newTrips };
     }
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
