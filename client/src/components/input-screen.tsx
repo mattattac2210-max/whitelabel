@@ -563,21 +563,23 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
-        {tripKm === 0 && (
-          <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-am)' }}>Enter distance manually</label>
-            <input
-              type="number"
-              step="0.1"
-              className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
-              value={tripKm || ''}
-              onChange={e => setTripKm(parseFloat(e.target.value) || 0)}
-              placeholder="0.0 km"
-              data-testid="live-manual-km"
-            />
-          </div>
-        )}
+        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(245,158,11,.06)' : 'rgba(255,255,255,.03)', border: tripKm < 1 ? '1px solid rgba(245,158,11,.2)' : '1px solid var(--wc-border)' }}>
+          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: tripKm < 1 ? 'var(--wc-am)' : 'var(--wc-t3)' }}>{tripKm < 1 ? 'Enter distance (min 1 km)' : 'Distance (km)'}</label>
+          <input
+            type="number"
+            step="0.1"
+            min="1"
+            className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            value={tripKm || ''}
+            onChange={e => setTripKm(parseFloat(e.target.value) || 0)}
+            placeholder="Min 1"
+            data-testid="live-manual-km"
+          />
+          {tripKm > 0 && tripKm < 1 && (
+            <div className="font-data text-[7px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>Min 1 km</div>
+          )}
+        </div>
 
         {saved ? (
           <div
