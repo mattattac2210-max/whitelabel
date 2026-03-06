@@ -210,8 +210,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   sectionTitle('Journey List');
 
-  const cols = ['Date','ODO start','ODO end','Type','Purpose','km','Biz km','Reimburse'];
-  const colW = [22, 20, 20, 16, 30, 14, 14, 22];
+  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Reimburse'];
+  const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
   const hdrH = 6.5;
 
   doc.setFillColor(250, 246, 220);
@@ -235,12 +235,14 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     doc.rect(ML, y, CW, 5.8, 'S');
 
     const purposeStr = isBiz && t.purposeLabel ? t.purposeLabel : '\u2014';
+    const noteStr = t.notes ? (t.notes.length > 14 ? t.notes.slice(0, 13) + '\u2026' : t.notes) : '\u2014';
     const cells = [
       t.date,
       t.odoStart?.toLocaleString('en-AU') ?? '\u2014',
       t.odoEnd?.toLocaleString('en-AU') ?? '\u2014',
       isBiz ? 'Business' : 'Personal',
-      purposeStr.length > 12 ? purposeStr.slice(0, 11) + '\u2026' : purposeStr,
+      purposeStr.length > 10 ? purposeStr.slice(0, 9) + '\u2026' : purposeStr,
+      isBiz ? noteStr : '\u2014',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '',
       isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00',
@@ -248,13 +250,16 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
     let cx2 = ML;
     cells.forEach((cell, ci) => {
-      doc.setFontSize(7.5); doc.setFont('helvetica', ci === 3 && isBiz ? 'bold' : 'normal');
+      doc.setFontSize(7); doc.setFont('helvetica', ci === 3 && isBiz ? 'bold' : 'normal');
       if (ci === 3) {
         if (isBiz) doc.setTextColor(...GY);
         else doc.setTextColor(...GG);
       } else if (ci === 4 && isBiz) {
         doc.setTextColor(...GY);
-      } else if (ci === 7 && isBiz) {
+      } else if (ci === 5 && isBiz && t.notes) {
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...GG);
+      } else if (ci === 8 && isBiz) {
         doc.setTextColor(...GR);
       } else {
         doc.setTextColor(...BK);
@@ -263,20 +268,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
       cx2 += colW[ci];
     });
 
-    if (isBiz && t.notes) {
-      y += 5.8;
-      checkY(5);
-      doc.setFillColor(255, 253, 240);
-      doc.rect(ML, y, CW, 4.5, 'F');
-      doc.setDrawColor(235, 235, 235);
-      doc.rect(ML, y, CW, 4.5, 'S');
-      doc.setFontSize(6.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
-      const noteStr = t.notes.length > 90 ? t.notes.slice(0, 89) + '\u2026' : t.notes;
-      doc.text(`Notes: ${noteStr}`, ML + 3, y + 3.2);
-      y += 4.5;
-    } else {
-      y += 5.8;
-    }
+    y += 5.8;
   });
 
   checkY(7);
@@ -286,12 +278,12 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.rect(ML, y, CW, 6.5, 'S');
   doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
   doc.text('Totals', ML + 1.5, y + 4.5);
-  const totStart = colW.slice(0, 4).reduce((a, b) => a + b, 0) + colW[4];
+  const totStart = colW.slice(0, 6).reduce((a, b) => a + b, 0);
   doc.text(totalKm.toFixed(1), ML + totStart + 1.5, y + 4.5);
   doc.setTextColor(...GY);
-  doc.text(bizKm.toFixed(1), ML + totStart + colW[5] + 1.5, y + 4.5);
+  doc.text(bizKm.toFixed(1), ML + totStart + colW[6] + 1.5, y + 4.5);
   doc.setTextColor(...GR);
-  doc.text(`$${totalEst.toFixed(2)}`, ML + totStart + colW[5] + colW[6] + 1.5, y + 4.5);
+  doc.text(`$${totalEst.toFixed(2)}`, ML + totStart + colW[6] + colW[7] + 1.5, y + 4.5);
   y += 10;
 
   sectionTitle('WorkCar Audit Score & Compliance Notes');
