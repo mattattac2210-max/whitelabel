@@ -3,7 +3,7 @@ import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { AddressInput } from './address-input';
-import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Square, Car, History } from 'lucide-react';
+import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Square, Car, History, Crosshair, Pause, Play } from 'lucide-react';
 
 let nextManualId = 8000;
 
@@ -38,7 +38,7 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
             </div>
             <div>
               <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
-              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Set your starting point and drive. Live map tracking with end trip button.</div>
+              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Use current location or enter start point. Live map, real-time distance and timer.</div>
             </div>
           </div>
         </button>
@@ -69,30 +69,39 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
 function LiveTripScreen({ onBack }: { onBack: () => void }) {
   const { state, dispatch } = useApp();
   const [startAddress, setStartAddress] = useState('');
-  const [phase, setPhase] = useState<'setup' | 'driving' | 'ended'>('setup');
+  const [phase, setPhase] = useState<'setup' | 'driving' | 'paused' | 'ended'>('setup');
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsed, setElapsed] = useState(0);
+  const [pausedElapsed, setPausedElapsed] = useState(0);
   const [endAddress, setEndAddress] = useState('');
   const [tripKm, setTripKm] = useState(0);
   const [tripDuration, setTripDuration] = useState('');
   const [saved, setSaved] = useState(false);
   const [mapError, setMapError] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const pathRef = useRef<{ lat: number; lng: number }[]>([]);
+  const polylineRef = useRef<any>(null);
+  const liveKmRef = useRef(0);
 
   useEffect(() => {
     if (phase !== 'driving') return;
     timerRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+      setElapsed(pausedElapsed + Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [phase, startTime]);
+  }, [phase, startTime, pausedElapsed]);
 
   useEffect(() => {
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
   }, []);
 
   const fmtElapsed = (s: number) => {
@@ -101,6 +110,14 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     const sec = s % 60;
     if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
     return `${m}:${String(sec).padStart(2, '0')}`;
+  };
+
+  const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   };
 
   const initMap = useCallback((lat: number, lng: number) => {
@@ -134,14 +151,116 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
       },
     });
     markerRef.current = marker;
+
+    const polyline = new window.google.maps.Polyline({
+      path: [pos],
+      geodesic: true,
+      strokeColor: '#F5C400',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map,
+    });
+    polylineRef.current = polyline;
   }, []);
 
-  const handleStartDriving = () => {
+  const startGeoTracking = useCallback(() => {
+    if (!navigator.geolocation) return;
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (pathRef.current.length > 0) {
+          const last = pathRef.current[pathRef.current.length - 1];
+          const segKm = haversineKm(last, newPos);
+          if (segKm > 0.005) {
+            liveKmRef.current += segKm;
+            setTripKm(Math.round(liveKmRef.current * 10) / 10);
+            pathRef.current.push(newPos);
+          }
+        } else {
+          pathRef.current.push(newPos);
+        }
+
+        if (markerRef.current) {
+          markerRef.current.setPosition(newPos);
+        }
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.panTo(newPos);
+        }
+        if (polylineRef.current) {
+          polylineRef.current.setPath(pathRef.current);
+        }
+      },
+      (err) => {
+        if (err.code === 1) {
+          stopGeoTracking();
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+  }, []);
+
+  const stopGeoTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      return;
+    }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (window._gmapsLoaded) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: { lat, lng } }, (results: any, status: string) => {
+            if (status === 'OK' && results?.[0]) {
+              setStartAddress(results[0].formatted_address);
+              startCoordsRef.current = { lat, lng };
+              setGeoStatus('done');
+            } else {
+              setStartAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+              startCoordsRef.current = { lat, lng };
+              setGeoStatus('done');
+            }
+          });
+        } else {
+          setStartAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          startCoordsRef.current = { lat, lng };
+          setGeoStatus('done');
+        }
+      },
+      () => {
+        setGeoStatus('error');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleCommence = () => {
     if (!startAddress) return;
     setPhase('driving');
     setStartTime(Date.now());
+    setPausedElapsed(0);
+    pathRef.current = [];
+    liveKmRef.current = 0;
 
-    if (window._gmapsLoaded) {
+    if (startCoordsRef.current) {
+      pathRef.current.push(startCoordsRef.current);
+      if (window._gmapsLoaded) {
+        initMap(startCoordsRef.current.lat, startCoordsRef.current.lng);
+      }
+      startGeoTracking();
+    } else if (window._gmapsLoaded) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: startAddress, region: 'au' }, (results: any, status: string) => {
         if (status === 'OK' && results?.[0]) {
@@ -149,46 +268,62 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           const lat = loc.lat();
           const lng = loc.lng();
           startCoordsRef.current = { lat, lng };
+          pathRef.current.push({ lat, lng });
           initMap(lat, lng);
         } else {
           initMap(-33.8688, 151.2093);
         }
+        startGeoTracking();
       });
     } else {
       setMapError(true);
+      startGeoTracking();
     }
+  };
+
+  const handlePause = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setPausedElapsed(elapsed);
+    stopGeoTracking();
+    setPhase('paused');
+  };
+
+  const handleResume = () => {
+    setStartTime(Date.now());
+    setPhase('driving');
+    startGeoTracking();
   };
 
   const handleEndTrip = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    const totalSec = Math.floor((Date.now() - startTime) / 1000);
+    stopGeoTracking();
+    const totalSec = phase === 'paused' ? pausedElapsed : elapsed;
     const mins = Math.round(totalSec / 60);
-    const durStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
+    const durStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins || 1} min`;
     setTripDuration(durStr);
-    setPhase('ended');
 
-    if (window._gmapsLoaded && startCoordsRef.current && endAddress) {
-      const ds = new window.google.maps.DirectionsService();
-      ds.route({
-        origin: startAddress,
-        destination: endAddress,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-        region: 'au',
-      }, (result: any, status: string) => {
-        if (status === 'OK' && result?.routes?.[0]) {
-          const totalM = result.routes[0].legs.reduce((s: number, l: any) => s + (l.distance?.value || 0), 0);
-          setTripKm(Math.round((totalM / 1000) * 10) / 10);
+    if (liveKmRef.current > 0) {
+      setTripKm(Math.round(liveKmRef.current * 10) / 10);
+    }
+
+    if (window._gmapsLoaded && pathRef.current.length > 0) {
+      const lastPos = pathRef.current[pathRef.current.length - 1];
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ location: lastPos }, (results: any, status: string) => {
+        if (status === 'OK' && results?.[0]) {
+          setEndAddress(results[0].formatted_address);
         }
       });
     }
+
+    setPhase('ended');
   };
 
   const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm > 0;
 
   const handleSendToSort = () => {
     if (!startAddress || !endAddress || tripKm <= 0) return;
-    const now = new Date();
-    const startD = new Date(startTime);
+    const startD = new Date(startTime || Date.now());
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const dateStr = `${dayNames[startD.getDay()]}, ${startD.getDate()} ${monthNames[startD.getMonth()]}`;
@@ -252,16 +387,46 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
               <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
               <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Where are you starting?</span>
             </div>
+
+            <button
+              className="w-full rounded-[10px] p-[11px_14px] mb-[10px] flex items-center gap-[10px] cursor-pointer transition-all"
+              style={{
+                background: geoStatus === 'done' ? 'rgba(34,197,94,.08)' : 'rgba(255,255,255,.05)',
+                border: geoStatus === 'done' ? '1.5px solid rgba(34,197,94,.3)' : '1.5px solid var(--wc-border)',
+              }}
+              onClick={handleUseCurrentLocation}
+              disabled={geoStatus === 'loading'}
+              data-testid="button-use-location"
+            >
+              <Crosshair className="w-[16px] h-[16px] flex-shrink-0" style={{ color: geoStatus === 'done' ? 'var(--wc-gr)' : 'var(--wc-y)' }} />
+              <span className="text-[12px] font-bold" style={{ color: geoStatus === 'done' ? 'var(--wc-gr)' : 'var(--wc-t2)' }}>
+                {geoStatus === 'loading' ? 'Getting location...' : geoStatus === 'done' ? 'Location found' : geoStatus === 'error' ? 'Location unavailable' : 'Use Current Location'}
+              </span>
+              {geoStatus === 'done' && <Check className="w-[14px] h-[14px] ml-auto" style={{ color: 'var(--wc-gr)' }} />}
+            </button>
+
+            {geoStatus === 'error' && (
+              <div className="text-[10px] mb-[8px] px-[4px]" style={{ color: 'var(--wc-re)' }}>
+                Could not get location. Please enable location permissions or enter an address below.
+              </div>
+            )}
+
+            <div className="flex items-center gap-[8px] mb-[10px]">
+              <div className="flex-1 h-[1px]" style={{ background: 'var(--wc-border)' }} />
+              <span className="font-data text-[8px] uppercase tracking-[.15em]" style={{ color: 'var(--wc-t3)' }}>or enter address</span>
+              <div className="flex-1 h-[1px]" style={{ background: 'var(--wc-border)' }} />
+            </div>
+
             <AddressInput
               className="w-full rounded-[10px] p-[12px_14px] text-[13px] text-white outline-none transition-all"
               style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
               value={startAddress}
-              onChange={setStartAddress}
+              onChange={(v) => { setStartAddress(v); if (geoStatus === 'done') setGeoStatus('idle'); startCoordsRef.current = null; }}
               placeholder="Enter starting address"
               data-testid="live-start-address"
             />
             <div className="text-[10px] mt-[8px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-              Enter your current location or starting point. Once you hit drive, we'll track the trip on the map.
+              We'll track distance and time in real-time on the map.
             </div>
           </div>
 
@@ -272,12 +437,12 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
               color: startAddress.length > 3 ? 'black' : 'rgba(0,0,0,.4)',
               cursor: startAddress.length > 3 ? 'pointer' : 'not-allowed',
             }}
-            onClick={handleStartDriving}
+            onClick={handleCommence}
             disabled={startAddress.length <= 3}
-            data-testid="button-start-driving"
+            data-testid="button-commence"
           >
             <Car className="w-[20px] h-[20px]" strokeWidth={2.5} />
-            Start Driving
+            Commence
           </button>
         </div>
 
@@ -286,19 +451,28 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     );
   }
 
-  if (phase === 'driving') {
+  if (phase === 'driving' || phase === 'paused') {
+    const isPaused = phase === 'paused';
     return (
       <div className="flex flex-col h-full" data-testid="live-driving-screen">
         <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
-          <div className="w-[8px] h-[8px] rounded-full animate-pulse" style={{ background: 'var(--wc-gr)' }} />
-          <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Trip In Progress</span>
+          <div className="w-[8px] h-[8px] rounded-full" style={{ background: isPaused ? 'var(--wc-am)' : 'var(--wc-gr)', animation: isPaused ? 'none' : 'pulse 2s infinite' }} />
+          <span className="font-heading font-extrabold text-[16px] uppercase tracking-[.04em]" style={{ color: isPaused ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
+            {isPaused ? 'Paused' : 'Trip In Progress'}
+          </span>
           <span className="ml-auto font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>{fmtElapsed(elapsed)}</span>
         </div>
 
         <div className="px-[14px] pb-[6px] flex-shrink-0">
-          <div className="rounded-[10px] p-[8px_12px] flex items-center gap-[8px]" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
-            <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-            <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>From: {startAddress}</span>
+          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+            <div className="flex items-center gap-[8px]">
+              <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+              <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{startAddress.length > 30 ? startAddress.slice(0, 28) + '…' : startAddress}</span>
+            </div>
+            <div className="flex items-center gap-[4px] ml-[8px] flex-shrink-0">
+              <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)}</span>
+              <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
+            </div>
           </div>
         </div>
 
@@ -308,39 +482,48 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: '#1a1a2e' }}>
               <Navigation className="w-[28px] h-[28px]" style={{ color: 'var(--wc-t3)' }} />
               <span className="font-heading text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Map unavailable</span>
-              <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Trip still recording</span>
+              <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Trip still recording — {tripKm.toFixed(1)} km</span>
+            </div>
+          )}
+          {isPaused && (
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,.5)' }}>
+              <div className="rounded-[12px] p-[16px_24px] text-center" style={{ background: 'rgba(245,158,11,.1)', border: '1.5px solid rgba(245,158,11,.3)' }}>
+                <Pause className="w-[24px] h-[24px] mx-auto mb-[6px]" style={{ color: 'var(--wc-am)' }} />
+                <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'var(--wc-am)' }}>Paused</div>
+              </div>
             </div>
           )}
         </div>
 
         <div className="px-[14px] pt-[10px] pb-[6px] flex flex-col gap-[8px] flex-shrink-0">
-          <div>
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Where did you end up?</label>
-            <AddressInput
-              className="w-full rounded-[10px] p-[10px_12px] text-[12px] text-white outline-none transition-all"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
-              value={endAddress}
-              onChange={setEndAddress}
-              placeholder="Enter destination"
-              data-testid="live-end-address"
-            />
+          <div className="flex gap-[8px]">
+            <button
+              className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
+              style={{
+                background: isPaused ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.1)',
+                border: isPaused ? '2px solid rgba(34,197,94,.3)' : '2px solid rgba(245,158,11,.3)',
+                color: isPaused ? 'var(--wc-gr)' : 'var(--wc-am)',
+              }}
+              onClick={isPaused ? handleResume : handlePause}
+              data-testid={isPaused ? 'button-resume' : 'button-pause'}
+            >
+              {isPaused ? <Play className="w-[16px] h-[16px]" strokeWidth={2.5} /> : <Pause className="w-[16px] h-[16px]" strokeWidth={2.5} />}
+              {isPaused ? 'Resume' : 'Pause'}
+            </button>
+            <button
+              className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
+              style={{
+                background: 'var(--wc-re)',
+                color: 'white',
+                boxShadow: '0 4px 20px rgba(239,68,68,.25)',
+              }}
+              onClick={handleEndTrip}
+              data-testid="button-end-trip"
+            >
+              <Square className="w-[14px] h-[14px]" fill="currentColor" strokeWidth={0} />
+              End Trip
+            </button>
           </div>
-
-          <button
-            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-[8px] transition-all"
-            style={{
-              background: endAddress.length > 3 ? 'var(--wc-re)' : 'rgba(239,68,68,.2)',
-              color: endAddress.length > 3 ? 'white' : 'rgba(255,255,255,.4)',
-              cursor: endAddress.length > 3 ? 'pointer' : 'not-allowed',
-              boxShadow: endAddress.length > 3 ? '0 4px 20px rgba(239,68,68,.25)' : 'none',
-            }}
-            onClick={handleEndTrip}
-            disabled={endAddress.length <= 3}
-            data-testid="button-end-trip"
-          >
-            <Square className="w-[16px] h-[16px]" fill="currentColor" strokeWidth={0} />
-            End Trip
-          </button>
         </div>
       </div>
     );
@@ -360,11 +543,25 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
           <div className="flex flex-col gap-[6px] text-[12px]" style={{ color: 'var(--wc-t2)' }}>
             <div><strong className="text-white">From:</strong> {startAddress}</div>
-            <div><strong className="text-white">To:</strong> {endAddress}</div>
+            {endAddress && <div><strong className="text-white">To:</strong> {endAddress}</div>}
             <div><strong className="text-white">Duration:</strong> {tripDuration}</div>
-            {tripKm > 0 && <div><strong className="text-white">Distance:</strong> {tripKm} km</div>}
+            <div><strong className="text-white">Distance:</strong> <span className="font-data font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)} km</span></div>
           </div>
         </div>
+
+        {!endAddress && (
+          <div className="mb-[10px]">
+            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Destination</label>
+            <AddressInput
+              className="w-full rounded-[10px] p-[10px_12px] text-[12px] text-white outline-none transition-all"
+              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
+              value={endAddress}
+              onChange={setEndAddress}
+              placeholder="Enter destination"
+              data-testid="live-end-address"
+            />
+          </div>
+        )}
 
         {tripKm === 0 && (
           <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>

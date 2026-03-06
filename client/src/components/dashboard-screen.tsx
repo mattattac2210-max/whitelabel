@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
-import { MapPin, LayoutGrid, FileText, Download, Plus, Gauge, ChevronRight } from 'lucide-react';
+import { MapPin, LayoutGrid, FileText, Download, Plus, Gauge, ChevronRight, Navigation } from 'lucide-react';
 
 export function DashboardScreen() {
   const { state, dispatch } = useApp();
+  const [autoTrack, setAutoTrack] = useState(() => localStorage.getItem('wc_autotrack') === '1');
 
   const totalTrips = state.currentIndex;
   const bizKm = state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
@@ -39,6 +41,38 @@ export function DashboardScreen() {
             </div>
             <div className="font-data text-[9px] tracking-[.15em] uppercase" style={{ color: 'var(--wc-t3)' }}>Smart Logbook</div>
           </div>
+          <button
+            className="ml-auto flex items-center gap-[6px] rounded-[10px] p-[7px_12px] cursor-pointer transition-all active:scale-[.97]"
+            style={{
+              background: autoTrack ? 'rgba(34,197,94,.1)' : 'rgba(255,255,255,.04)',
+              border: autoTrack ? '1.5px solid rgba(34,197,94,.3)' : '1.5px solid var(--wc-border)',
+            }}
+            onClick={() => {
+              const next = !autoTrack;
+              setAutoTrack(next);
+              localStorage.setItem('wc_autotrack', next ? '1' : '0');
+            }}
+            data-testid="toggle-autotrack"
+          >
+            <Navigation className="w-[13px] h-[13px]" style={{ color: autoTrack ? 'var(--wc-gr)' : 'var(--wc-t3)' }} />
+            <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: autoTrack ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
+              Auto
+            </span>
+            <div
+              className="w-[30px] h-[16px] rounded-full relative transition-all"
+              style={{
+                background: autoTrack ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)',
+              }}
+            >
+              <div
+                className="absolute top-[2px] w-[12px] h-[12px] rounded-full transition-all"
+                style={{
+                  left: autoTrack ? '16px' : '2px',
+                  background: autoTrack ? 'var(--wc-gr)' : 'var(--wc-t3)',
+                }}
+              />
+            </div>
+          </button>
         </div>
       </div>
 
