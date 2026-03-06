@@ -1,15 +1,421 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
-import { type Trip, CATEGORIES, RATE, getTripOdoEnd } from '@/lib/trip-data';
+import { type Trip, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { AddressInput } from './address-input';
-import { MapPin, Check, Calendar, Clock, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Plus, ArrowRight, Gauge } from 'lucide-react';
-
-const iconMap: Record<string, any> = { Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark };
+import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Square, Car, History } from 'lucide-react';
 
 let nextManualId = 8000;
 
-export function InputScreen() {
+type InputMode = 'choose' | 'existing' | 'live';
+
+function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => void }) {
+  const { dispatch } = useApp();
+  return (
+    <div className="flex flex-col h-full" data-testid="input-choose-screen">
+      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+        <button
+          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+          data-testid="button-back-choose"
+        >
+          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+        </button>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Add Trip</span>
+      </div>
+
+      <div className="flex-1 px-[18px] flex flex-col justify-center gap-[14px] pb-[40px]">
+        <button
+          className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
+          style={{ background: 'rgba(245,196,0,.06)', border: '2px solid rgba(245,196,0,.25)' }}
+          onClick={() => onSelect('live')}
+          data-testid="choose-start-new"
+        >
+          <div className="flex items-center gap-[14px]">
+            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.3)' }}>
+              <Navigation className="w-[24px] h-[24px]" style={{ color: 'var(--wc-y)' }} />
+            </div>
+            <div>
+              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
+              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Set your starting point and drive. Live map tracking with end trip button.</div>
+            </div>
+          </div>
+        </button>
+
+        <button
+          className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
+          style={{ background: 'rgba(255,255,255,.03)', border: '2px solid var(--wc-border)' }}
+          onClick={() => onSelect('existing')}
+          data-testid="choose-add-existing"
+        >
+          <div className="flex items-center gap-[14px]">
+            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}>
+              <History className="w-[24px] h-[24px]" style={{ color: 'var(--wc-t2)' }} />
+            </div>
+            <div>
+              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px] text-white">Add Existing Trip</div>
+              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+function LiveTripScreen({ onBack }: { onBack: () => void }) {
+  const { state, dispatch } = useApp();
+  const [startAddress, setStartAddress] = useState('');
+  const [phase, setPhase] = useState<'setup' | 'driving' | 'ended'>('setup');
+  const [startTime, setStartTime] = useState<number>(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [endAddress, setEndAddress] = useState('');
+  const [tripKm, setTripKm] = useState(0);
+  const [tripDuration, setTripDuration] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (phase !== 'driving') return;
+    timerRef.current = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [phase, startTime]);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  const fmtElapsed = (s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+    return `${m}:${String(sec).padStart(2, '0')}`;
+  };
+
+  const initMap = useCallback((lat: number, lng: number) => {
+    if (!mapRef.current || !window._gmapsLoaded) return;
+    const pos = { lat, lng };
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: pos,
+      zoom: 15,
+      disableDefaultUI: true,
+      zoomControl: true,
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a9a' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a3e' }] },
+        { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#333348' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e0e1a' }] },
+      ],
+    });
+    mapInstanceRef.current = map;
+    const marker = new window.google.maps.Marker({
+      position: pos,
+      map,
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#F5C400',
+        fillOpacity: 1,
+        strokeColor: '#000',
+        strokeWeight: 2,
+      },
+    });
+    markerRef.current = marker;
+  }, []);
+
+  const handleStartDriving = () => {
+    if (!startAddress) return;
+    setPhase('driving');
+    setStartTime(Date.now());
+
+    if (window._gmapsLoaded) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: startAddress, region: 'au' }, (results: any, status: string) => {
+        if (status === 'OK' && results?.[0]) {
+          const loc = results[0].geometry.location;
+          const lat = loc.lat();
+          const lng = loc.lng();
+          startCoordsRef.current = { lat, lng };
+          initMap(lat, lng);
+        } else {
+          initMap(-33.8688, 151.2093);
+        }
+      });
+    } else {
+      setMapError(true);
+    }
+  };
+
+  const handleEndTrip = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const totalSec = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.round(totalSec / 60);
+    const durStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
+    setTripDuration(durStr);
+    setPhase('ended');
+
+    if (window._gmapsLoaded && startCoordsRef.current && endAddress) {
+      const ds = new window.google.maps.DirectionsService();
+      ds.route({
+        origin: startAddress,
+        destination: endAddress,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        region: 'au',
+      }, (result: any, status: string) => {
+        if (status === 'OK' && result?.routes?.[0]) {
+          const totalM = result.routes[0].legs.reduce((s: number, l: any) => s + (l.distance?.value || 0), 0);
+          setTripKm(Math.round((totalM / 1000) * 10) / 10);
+        }
+      });
+    }
+  };
+
+  const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm > 0;
+
+  const handleSendToSort = () => {
+    if (!startAddress || !endAddress || tripKm <= 0) return;
+    const now = new Date();
+    const startD = new Date(startTime);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dateStr = `${dayNames[startD.getDay()]}, ${startD.getDate()} ${monthNames[startD.getMonth()]}`;
+    const h = startD.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const timeStr = `${h12}:${String(startD.getMinutes()).padStart(2, '0')} ${ampm}`;
+    const fromParts = startAddress.split(',');
+    const toParts = endAddress.split(',');
+
+    const trip: Trip = {
+      id: nextManualId++,
+      date: dateStr,
+      day: startD.getDate(),
+      month: startD.getMonth(),
+      year: startD.getFullYear(),
+      time: timeStr,
+      duration: tripDuration,
+      km: tripKm,
+      from: fromParts[0].trim(),
+      fromSub: fromParts.slice(1).join(',').trim(),
+      to: toParts[0].trim(),
+      toSub: toParts.slice(1).join(',').trim(),
+      type: null,
+      verified: false,
+      photo: false,
+      odoReading: null,
+      odoStartReading: null,
+      purposeLabel: null,
+      purposeIndex: null,
+      stops: [],
+      notes: '',
+    };
+
+    dispatch({ type: 'ADD_TRIP', trip });
+    dispatch({ type: 'ADD_LOG', desc: `Live trip ended: ${trip.from} → ${trip.to} (${tripKm} km) — sent to sort`, hasPhoto: false });
+    setSaved(true);
+    setTimeout(() => {
+      dispatch({ type: 'GO_SCREEN', screen: 'sort' });
+    }, 1200);
+  };
+
+  if (phase === 'setup') {
+    return (
+      <div className="flex flex-col h-full" data-testid="live-setup-screen">
+        <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+          <button
+            className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            onClick={onBack}
+            data-testid="button-back-live"
+          >
+            <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          </button>
+          <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Start Trip</span>
+        </div>
+
+        <div className="flex-1 px-[18px] flex flex-col justify-center pb-[40px]">
+          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.15)' }}>
+            <div className="flex items-center gap-[10px] mb-[14px]">
+              <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+              <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Where are you starting?</span>
+            </div>
+            <AddressInput
+              className="w-full rounded-[10px] p-[12px_14px] text-[13px] text-white outline-none transition-all"
+              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
+              value={startAddress}
+              onChange={setStartAddress}
+              placeholder="Enter starting address"
+              data-testid="live-start-address"
+            />
+            <div className="text-[10px] mt-[8px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+              Enter your current location or starting point. Once you hit drive, we'll track the trip on the map.
+            </div>
+          </div>
+
+          <button
+            className="w-full rounded-[14px] py-[16px] font-heading font-black text-[18px] tracking-[.07em] uppercase flex items-center justify-center gap-[8px] transition-all"
+            style={{
+              background: startAddress.length > 3 ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
+              color: startAddress.length > 3 ? 'black' : 'rgba(0,0,0,.4)',
+              cursor: startAddress.length > 3 ? 'pointer' : 'not-allowed',
+            }}
+            onClick={handleStartDriving}
+            disabled={startAddress.length <= 3}
+            data-testid="button-start-driving"
+          >
+            <Car className="w-[20px] h-[20px]" strokeWidth={2.5} />
+            Start Driving
+          </button>
+        </div>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
+  if (phase === 'driving') {
+    return (
+      <div className="flex flex-col h-full" data-testid="live-driving-screen">
+        <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+          <div className="w-[8px] h-[8px] rounded-full animate-pulse" style={{ background: 'var(--wc-gr)' }} />
+          <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Trip In Progress</span>
+          <span className="ml-auto font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>{fmtElapsed(elapsed)}</span>
+        </div>
+
+        <div className="px-[14px] pb-[6px] flex-shrink-0">
+          <div className="rounded-[10px] p-[8px_12px] flex items-center gap-[8px]" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+            <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+            <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>From: {startAddress}</span>
+          </div>
+        </div>
+
+        <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden relative" style={{ border: '1px solid var(--wc-border)', background: '#1a1a2e', minHeight: '200px' }}>
+          <div ref={mapRef} className="w-full h-full" data-testid="live-map" />
+          {mapError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: '#1a1a2e' }}>
+              <Navigation className="w-[28px] h-[28px]" style={{ color: 'var(--wc-t3)' }} />
+              <span className="font-heading text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Map unavailable</span>
+              <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Trip still recording</span>
+            </div>
+          )}
+        </div>
+
+        <div className="px-[14px] pt-[10px] pb-[6px] flex flex-col gap-[8px] flex-shrink-0">
+          <div>
+            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Where did you end up?</label>
+            <AddressInput
+              className="w-full rounded-[10px] p-[10px_12px] text-[12px] text-white outline-none transition-all"
+              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
+              value={endAddress}
+              onChange={setEndAddress}
+              placeholder="Enter destination"
+              data-testid="live-end-address"
+            />
+          </div>
+
+          <button
+            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-[8px] transition-all"
+            style={{
+              background: endAddress.length > 3 ? 'var(--wc-re)' : 'rgba(239,68,68,.2)',
+              color: endAddress.length > 3 ? 'white' : 'rgba(255,255,255,.4)',
+              cursor: endAddress.length > 3 ? 'pointer' : 'not-allowed',
+              boxShadow: endAddress.length > 3 ? '0 4px 20px rgba(239,68,68,.25)' : 'none',
+            }}
+            onClick={handleEndTrip}
+            disabled={endAddress.length <= 3}
+            data-testid="button-end-trip"
+          >
+            <Square className="w-[16px] h-[16px]" fill="currentColor" strokeWidth={0} />
+            End Trip
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full" data-testid="live-ended-screen">
+      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Trip Complete</span>
+      </div>
+
+      <div className="flex-1 px-[18px] pt-[6px] overflow-y-auto scrollbar-thin">
+        <div className="rounded-[14px] p-[16px] mb-[12px]" style={{ background: 'rgba(34,197,94,.05)', border: '1.5px solid rgba(34,197,94,.2)' }}>
+          <div className="flex items-center gap-[8px] mb-[10px]">
+            <Check className="w-[16px] h-[16px]" style={{ color: 'var(--wc-gr)' }} />
+            <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Trip Recorded</span>
+          </div>
+          <div className="flex flex-col gap-[6px] text-[12px]" style={{ color: 'var(--wc-t2)' }}>
+            <div><strong className="text-white">From:</strong> {startAddress}</div>
+            <div><strong className="text-white">To:</strong> {endAddress}</div>
+            <div><strong className="text-white">Duration:</strong> {tripDuration}</div>
+            {tripKm > 0 && <div><strong className="text-white">Distance:</strong> {tripKm} km</div>}
+          </div>
+        </div>
+
+        {tripKm === 0 && (
+          <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-am)' }}>Enter distance manually</label>
+            <input
+              type="number"
+              step="0.1"
+              className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
+              style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+              value={tripKm || ''}
+              onChange={e => setTripKm(parseFloat(e.target.value) || 0)}
+              placeholder="0.0 km"
+              data-testid="live-manual-km"
+            />
+          </div>
+        )}
+
+        {saved ? (
+          <div
+            className="w-full rounded-[14px] py-[15px] font-heading font-extrabold text-[16px] tracking-[.06em] uppercase flex items-center justify-center gap-2 transition-all"
+            style={{ background: 'rgba(34,197,94,.12)', border: '2px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}
+            data-testid="live-saved-confirm"
+          >
+            <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+            Sent to Sort
+          </div>
+        ) : (
+          <button
+            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black transition-all flex items-center justify-center gap-[8px]"
+            style={{
+              background: canSendToSort ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
+              opacity: canSendToSort ? 1 : 0.5,
+              boxShadow: canSendToSort ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+              cursor: canSendToSort ? 'pointer' : 'not-allowed',
+            }}
+            onClick={handleSendToSort}
+            disabled={!canSendToSort}
+            data-testid="button-send-to-sort"
+          >
+            <ArrowRight className="w-[18px] h-[18px]" strokeWidth={2.5} />
+            Send to Sort
+          </button>
+        )}
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+function ExistingTripScreen({ onBack }: { onBack: () => void }) {
   const { state, dispatch } = useApp();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -23,8 +429,6 @@ export function InputScreen() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   });
-  const [tripType, setTripType] = useState<'business' | 'personal'>('business');
-  const [purpose, setPurpose] = useState('');
   const [notes, setNotes] = useState('');
   const [stops, setStops] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
@@ -73,25 +477,6 @@ export function InputScreen() {
     }, 600);
   }, [from, to, stops]);
 
-  const resetForm = () => {
-    setFrom('');
-    setTo('');
-    setKm('');
-    setDuration('');
-    setTripType('business');
-    setPurpose('');
-    setNotes('');
-    setStops([]);
-    setSaved(false);
-    setOdoStart('');
-    setRouteKm(null);
-    setRouteDur(null);
-    setCalcStatus('idle');
-    const now = new Date();
-    setDate(now.toISOString().split('T')[0]);
-    setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
-  };
-
   const handleSave = () => {
     if (!from || !to) return;
     const parsedKm = parseFloat(km) || 0;
@@ -121,93 +506,43 @@ export function InputScreen() {
       fromSub: fromParts.slice(1).join(',').trim(),
       to: toParts[0].trim(),
       toSub: toParts.slice(1).join(',').trim(),
-      type: tripType,
+      type: null,
       verified: false,
       photo: false,
       odoReading: odoStart ? Math.round(parseFloat(odoStart) + parsedKm) : null,
       odoStartReading: odoStart ? Math.round(parseFloat(odoStart)) : null,
-      purposeLabel: purpose || null,
-      purposeIndex: purpose ? CATEGORIES.findIndex(c => c.label === purpose) : null,
+      purposeLabel: null,
+      purposeIndex: null,
       stops: stops.filter(s => s.length > 3),
       notes: notes || '',
     };
 
     dispatch({ type: 'ADD_TRIP', trip });
-    dispatch({ type: 'ADD_LOG', desc: `Manual trip added: ${trip.from} → ${trip.to} (${parsedKm} km, ${tripType})`, hasPhoto: false });
+    dispatch({ type: 'ADD_LOG', desc: `Existing trip added: ${trip.from} → ${trip.to} (${parsedKm} km) — sent to sort`, hasPhoto: false });
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => {
+      dispatch({ type: 'GO_SCREEN', screen: 'sort' });
+    }, 1200);
   };
 
   const canSave = from.length > 2 && to.length > 2;
-  const estDed = tripType === 'business' ? (parseFloat(km) || 0) * RATE : 0;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-[18px] pt-[6px] pb-[10px]">
-        <div className="flex items-center justify-between mb-[10px]">
-          <div>
-            <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] text-white leading-none">Add Trip</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Manual entry</div>
-          </div>
-          <div className="flex items-center gap-[6px]">
-            <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>
-              {state.trips.length} trips logged
-            </div>
-          </div>
-        </div>
+    <div className="flex flex-col h-full" data-testid="existing-trip-screen">
+      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+        <button
+          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          onClick={onBack}
+          data-testid="button-back-existing"
+        >
+          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+        </button>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Add Existing</span>
+        <span className="ml-auto font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sends to sort</span>
+      </div>
 
-        <div className="mb-[10px]">
-          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Trip Type</label>
-          <div className="flex gap-[6px]">
-            <button
-              className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
-              style={tripType === 'business'
-                ? { background: 'rgba(245,196,0,.15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
-                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
-              onClick={() => setTripType('business')}
-              data-testid="input-type-business"
-            >
-              Business
-            </button>
-            <button
-              className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
-              style={tripType === 'personal'
-                ? { background: 'rgba(255,255,255,.12)', border: '2px solid rgba(255,255,255,.4)', color: 'white' }
-                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
-              onClick={() => setTripType('personal')}
-              data-testid="input-type-personal"
-            >
-              Personal
-            </button>
-          </div>
-        </div>
-
-        {tripType === 'business' && (
-          <div className="mb-[10px]">
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Business Purpose</label>
-            <div className="grid grid-cols-5 gap-[4px]">
-              {CATEGORIES.map((cat, ci) => {
-                const Icon = iconMap[cat.icon];
-                const selected = purpose === cat.label;
-                return (
-                  <button
-                    key={ci}
-                    className="rounded-[7px] p-[6px_2px] cursor-pointer transition-all text-center"
-                    style={selected
-                      ? { background: 'rgba(245,196,0,.15)', border: '1.5px solid var(--wc-y)' }
-                      : { background: 'rgba(255,255,255,.03)', border: '1.5px solid var(--wc-border)' }}
-                    onClick={() => setPurpose(selected ? '' : cat.label)}
-                    data-testid={`input-purpose-${ci}`}
-                  >
-                    {Icon && <Icon className="w-[14px] h-[14px] mx-auto mb-[2px]" style={{ color: selected ? 'var(--wc-y)' : 'var(--wc-t3)' }} />}
-                    <div className="font-heading text-[7px] uppercase tracking-[.02em] leading-tight" style={{ color: selected ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{cat.label}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-[18px] pt-[4px] pb-[10px]">
         <div className="mb-[8px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>From</label>
           <AddressInput
@@ -350,7 +685,7 @@ export function InputScreen() {
                 style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: odoStart && parseFloat(km) > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}
                 data-testid="input-odo-end"
               >
-                {odoStart && parseFloat(km) > 0 ? Math.round(parseFloat(odoStart) + parseFloat(km)).toLocaleString() : '—'}
+                {odoStart && parseFloat(km) > 0 ? Math.round(parseFloat(odoStart) + parseFloat(km)).toLocaleString() : '\u2014'}
               </div>
             </div>
           </div>
@@ -394,51 +729,41 @@ export function InputScreen() {
           </div>
         )}
 
-        {tripType === 'business' && parseFloat(km) > 0 && (
-          <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.14)' }}>
-            <div className="flex justify-between items-center">
-              <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Est. Deduction</span>
-              <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>${estDed.toFixed(2)}</span>
-            </div>
-          </div>
-        )}
-
         {saved ? (
           <div
-            className="w-full rounded-[10px] py-[11px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase flex items-center justify-center gap-2 transition-all mb-[6px]"
+            className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase flex items-center justify-center gap-2 transition-all mb-[6px]"
             style={{ background: 'rgba(34,197,94,.12)', border: '2px solid rgba(34,197,94,.3)', color: 'var(--wc-gr)' }}
             data-testid="input-saved-confirm"
           >
             <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
-            Trip Added
+            Sent to Sort
           </div>
         ) : (
           <button
-            className="w-full rounded-[10px] py-[11px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all mb-[6px]"
+            className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all mb-[6px] flex items-center justify-center gap-[6px]"
             style={{
               background: canSave ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
               opacity: canSave ? 1 : 0.5,
+              boxShadow: canSave ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
             }}
             onClick={handleSave}
             disabled={!canSave}
             data-testid="input-save-trip"
           >
-            <Plus className="w-[16px] h-[16px] inline mr-1" strokeWidth={2.5} />
-            Add Trip
+            <ArrowRight className="w-[16px] h-[16px]" strokeWidth={2.5} />
+            Send to Sort
           </button>
         )}
-
-        <button
-          className="w-full rounded-[10px] py-[9px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
-          style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-          onClick={() => { resetForm(); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
-          data-testid="input-go-sort"
-        >
-          <ArrowRight className="w-[12px] h-[12px]" />
-          Go to Sort
-        </button>
       </div>
       <BottomNav />
     </div>
   );
+}
+
+export function InputScreen() {
+  const [mode, setMode] = useState<InputMode>('choose');
+
+  if (mode === 'existing') return <ExistingTripScreen onBack={() => setMode('choose')} />;
+  if (mode === 'live') return <LiveTripScreen onBack={() => setMode('choose')} />;
+  return <ChooseScreen onSelect={setMode} />;
 }

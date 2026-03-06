@@ -54,7 +54,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 5. **Odometer** -- Verify odometer readings, add photo evidence, audit score tracking
 6. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
 7. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
-8. **Input** -- Manual trip entry form with from/to addresses, date/time, distance, duration, type (business/personal), business purpose category, stops, notes. Trips inserted chronologically.
+8. **Input** -- Add Trip screen with a choice gate: "Start New Trip" (live tracking with map, start/end trip flow) or "Add Existing Trip" (manual form for past trips). Both paths create trips with `type: null` (unsorted) and send them to the sort queue. The existing form includes from/to addresses, date/time, distance, duration, odometer, stops, and notes. The live trip flow includes starting address entry, driving phase with map + timer, destination entry, and end trip with distance calculation.
 
 ### Trip Data
 
