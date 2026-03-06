@@ -8,9 +8,10 @@ export function DashboardScreen() {
   const totalTrips = state.currentIndex;
   const bizKm = state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const dedTotal = state.dedTotal;
+  const unsortedCount = state.trips.length - state.currentIndex;
 
   const tiles = [
-    { screen: 'sort' as const, label: 'Sort Trips', sub: 'Classify business vs personal', icon: MapPin, primary: true },
+    { screen: 'sort' as const, label: 'Sort Trips', sub: unsortedCount > 0 ? `${unsortedCount} trip${unsortedCount !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: unsortedCount },
     { screen: 'review' as const, label: 'Review', sub: 'View all classified trips', icon: LayoutGrid, primary: false },
     { screen: 'reports' as const, label: 'Reports', sub: 'Session summaries', icon: FileText, primary: false },
     { screen: 'export' as const, label: 'Export', sub: 'PDF & CSV exports', icon: Download, primary: false },
@@ -80,10 +81,11 @@ export function DashboardScreen() {
         <div className="grid grid-cols-2 gap-2">
           {tiles.map(tile => {
             const Icon = tile.icon;
+            const badgeCount = (tile as any).badge;
             return (
               <button
                 key={tile.screen}
-                className="flex items-center gap-3 p-4 rounded-xl text-left transition-all active:scale-[.98]"
+                className="relative flex items-center gap-3 p-4 rounded-xl text-left transition-all active:scale-[.98]"
                 style={{
                   background: tile.primary ? 'rgba(245,196,0,.06)' : 'var(--wc-card)',
                   border: tile.primary ? '1.5px solid rgba(245,196,0,.35)' : '1px solid var(--wc-border)',
@@ -97,6 +99,25 @@ export function DashboardScreen() {
                 }}
                 data-testid={`dash-tile-${tile.screen}`}
               >
+                {badgeCount > 0 && (
+                  <div
+                    className="absolute flex items-center justify-center font-data"
+                    style={{
+                      top: -6, right: -4,
+                      minWidth: 22, height: 22,
+                      borderRadius: 11,
+                      padding: '0 6px',
+                      background: 'var(--wc-y)',
+                      color: '#000',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      boxShadow: '0 0 8px rgba(245,196,0,.5)',
+                    }}
+                    data-testid="badge-unsorted-count"
+                  >
+                    {badgeCount}
+                  </div>
+                )}
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
@@ -114,7 +135,7 @@ export function DashboardScreen() {
                   <div className="text-[13px] font-bold" style={{ color: tile.primary ? '#fff' : 'var(--wc-t2)' }}>
                     {tile.label}
                   </div>
-                  <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{tile.sub}</div>
+                  <div className="text-[9px] mt-[2px]" style={{ color: badgeCount > 0 && tile.primary ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{tile.sub}</div>
                 </div>
               </button>
             );
