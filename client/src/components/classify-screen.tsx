@@ -86,7 +86,7 @@ export function ClassifyScreen() {
   const { classifyStep, classifyBizTrips, trips } = state;
 
   useEffect(() => {
-    if (classifyStep >= classifyBizTrips.length && classifyBizTrips.length > 0) {
+    if (classifyBizTrips.length === 0 || classifyStep >= classifyBizTrips.length) {
       dispatch({ type: 'GO_SCREEN', screen: 'review' });
     }
   }, [classifyStep, classifyBizTrips.length, dispatch]);

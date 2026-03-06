@@ -241,7 +241,7 @@ function reducer(state: AppState, action: Action): AppState {
         perCount: newPerCount,
         classifyStep: 0,
         classifyBizTrips: bizTrips,
-        currentScreen: 'classify',
+        currentScreen: bizTrips.length > 0 ? 'classify' : 'review',
       };
     }
     case 'CLASSIFY_NEXT': {

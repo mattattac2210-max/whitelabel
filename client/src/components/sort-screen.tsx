@@ -133,7 +133,7 @@ export function SortScreen() {
   const logbookPct = Math.min(100, Math.round((state.dedTotal / 5000) * 100));
 
   const sortDone = isComplete;
-  const classifyDone = state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length;
+  const classifyDone = state.bizCount === 0 || (state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length);
   const odoDone = state.lastOdoReading != null;
 
   const nextScreen = !sortDone ? null : !classifyDone ? 'classify' as const : 'review' as const;
@@ -355,13 +355,15 @@ export function SortScreen() {
                       onClick={() => {
                         if (hasExisting) {
                           dispatch({ type: 'GO_SCREEN', screen: 'review' });
-                        } else {
+                        } else if (state.bizCount > 0) {
                           dispatch({ type: 'INIT_CLASSIFY' });
+                        } else {
+                          dispatch({ type: 'GO_SCREEN', screen: 'review' });
                         }
                       }}
                       data-testid="button-classify-trips"
                     >
-                      {hasExisting ? 'Edit & Create Rev ' + (sessionReports.length + 1) + ' \u2192' : 'Classify Business Trips \u2192'}
+                      {hasExisting ? 'Edit & Create Rev ' + (sessionReports.length + 1) + ' \u2192' : state.bizCount > 0 ? 'Classify Business Trips \u2192' : 'Review All Trips \u2192'}
                     </button>
                   </>
                 );
