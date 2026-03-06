@@ -26,7 +26,7 @@ export function OdometerScreen() {
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
-          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'review' })}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'notes' })}
           data-testid="button-back-odo"
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />

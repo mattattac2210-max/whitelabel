@@ -129,6 +129,7 @@ export function InputScreen() {
       purposeLabel: purpose || null,
       purposeIndex: purpose ? CATEGORIES.findIndex(c => c.label === purpose) : null,
       stops: stops.filter(s => s.length > 3),
+      notes: notes || '',
     };
 
     dispatch({ type: 'ADD_TRIP', trip });

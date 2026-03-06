@@ -42,7 +42,8 @@ export function ReviewScreen() {
             { id: 'step1', label: 'Sort', done: true },
             { id: 'step2', label: 'Classify', done: unclassified === 0 },
             { id: 'step3', label: 'Review', active: true },
-            { id: 'step4', label: 'Odometer' },
+            { id: 'step4', label: 'Notes' },
+            { id: 'step5', label: 'Odometer' },
           ].map((step, i, arr) => (
             <div key={step.id} className="flex flex-col items-center flex-1 relative">
               {i < arr.length - 1 && (
@@ -182,6 +183,11 @@ export function ReviewScreen() {
                     {t.purposeLabel && (
                       <div className="text-[12px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
                     )}
+                    {t.notes && (
+                      <div className="text-[11px] rounded-[6px] p-[5px_8px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
+                        <span className="font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
+                      </div>
+                    )}
                     <div className="flex gap-[6px] flex-wrap">
                           <button
                             className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
@@ -255,11 +261,11 @@ export function ReviewScreen() {
         <button
           className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
           style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
-          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'odometer' })}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'notes' })}
           data-testid="button-done-review"
         >
           <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
-          Continue to Odometer &rarr;
+          Continue to Notes &rarr;
         </button>
       </div>
 

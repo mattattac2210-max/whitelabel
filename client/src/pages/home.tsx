@@ -8,6 +8,7 @@ import { ReportsScreen } from '@/components/reports-screen';
 import { ExportScreen } from '@/components/export-screen';
 import { InputScreen } from '@/components/input-screen';
 import { DashboardScreen } from '@/components/dashboard-screen';
+import { NotesScreen } from '@/components/notes-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
 
 import { OnboardingFlow } from '@/components/onboarding/index';
@@ -41,6 +42,7 @@ function ScreenContainer() {
     sort: <SortScreen />,
     classify: <ClassifyScreen />,
     review: <ReviewScreen />,
+    notes: <NotesScreen />,
     odometer: <OdometerScreen />,
     reports: <ReportsScreen />,
     export: <ExportScreen />,
