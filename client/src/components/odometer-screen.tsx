@@ -71,12 +71,16 @@ export function OdometerScreen() {
               const totalTrips = sortedTripsArr.length;
               const verifiedCount = state.verifiedSet.size;
               const photoCount = state.trips.filter(t => t.photo).length;
+              const bizTripsArr = state.trips.filter(t => t.type === 'business');
+              const notesCount = bizTripsArr.filter(t => t.notes && t.notes.length > 0).length;
               const result = calcAuditScore({
                 totalTrips: state.trips.length,
                 sortedTrips: totalTrips,
                 verifiedCount,
                 photoCount,
                 bizPct: stats.bizPct,
+                notesCount,
+                bizCount: bizTripsArr.length,
               });
               const deviation = Math.abs(stats.bizPct - INDUSTRY_BIZ_AVG);
               const deviationLabel = deviation <= 10 ? 'Within range' : deviation <= 25 ? 'Moderate deviation' : 'High deviation';
@@ -89,12 +93,13 @@ export function OdometerScreen() {
                   </div>
                   <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
                     <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
-                      Your audit score is a weighted percentage based on four categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong className="text-white">99%</strong>.
+                      Your audit score is a weighted percentage based on five categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong className="text-white">99%</strong>.
                     </div>
                     <div className="flex flex-col gap-[3px]">
                       {[
-                        { label: 'Classification', weight: '35%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
-                        { label: 'Odometer verified', weight: '30%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Classification', weight: '30%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
+                        { label: 'Odometer verified', weight: '25%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Trip notes', weight: '10%', desc: `${notesCount} of ${bizTripsArr.length} business trips with notes`, pct: result.notesPct, contrib: result.notesContrib, color: 'var(--wc-am)' },
                         { label: 'Photo evidence', weight: '10%', desc: `${photoCount} of ${totalTrips} trips with photos (bonus)`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
                         { label: 'Business use ratio', weight: '24%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
                       ].map((row, ri) => (

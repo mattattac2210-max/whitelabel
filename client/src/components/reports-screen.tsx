@@ -210,8 +210,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   sectionTitle('Journey List');
 
-  const cols = ['Start date','End date','ODO start','ODO end','Type','km','Biz km','Reimburse'];
-  const colW = [22, 22, 22, 22, 18, 14, 14, 22];
+  const cols = ['Date','ODO start','ODO end','Type','Purpose','km','Biz km','Reimburse'];
+  const colW = [22, 20, 20, 16, 30, 14, 14, 22];
   const hdrH = 6.5;
 
   doc.setFillColor(250, 246, 220);
@@ -234,11 +234,13 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     doc.setDrawColor(235, 235, 235);
     doc.rect(ML, y, CW, 5.8, 'S');
 
+    const purposeStr = isBiz && t.purposeLabel ? t.purposeLabel : '\u2014';
     const cells = [
-      t.date, t.date,
+      t.date,
       t.odoStart?.toLocaleString('en-AU') ?? '\u2014',
       t.odoEnd?.toLocaleString('en-AU') ?? '\u2014',
       isBiz ? 'Business' : 'Personal',
+      purposeStr.length > 12 ? purposeStr.slice(0, 11) + '\u2026' : purposeStr,
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '',
       isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00',
@@ -246,10 +248,12 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
     let cx2 = ML;
     cells.forEach((cell, ci) => {
-      doc.setFontSize(7.5); doc.setFont('helvetica', ci === 4 && isBiz ? 'bold' : 'normal');
-      if (ci === 4) {
+      doc.setFontSize(7.5); doc.setFont('helvetica', ci === 3 && isBiz ? 'bold' : 'normal');
+      if (ci === 3) {
         if (isBiz) doc.setTextColor(...GY);
         else doc.setTextColor(...GG);
+      } else if (ci === 4 && isBiz) {
+        doc.setTextColor(...GY);
       } else if (ci === 7 && isBiz) {
         doc.setTextColor(...GR);
       } else {
@@ -258,7 +262,21 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
       doc.text(String(cell), cx2 + 1.5, y + 4);
       cx2 += colW[ci];
     });
-    y += 5.8;
+
+    if (isBiz && t.notes) {
+      y += 5.8;
+      checkY(5);
+      doc.setFillColor(255, 253, 240);
+      doc.rect(ML, y, CW, 4.5, 'F');
+      doc.setDrawColor(235, 235, 235);
+      doc.rect(ML, y, CW, 4.5, 'S');
+      doc.setFontSize(6.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
+      const noteStr = t.notes.length > 90 ? t.notes.slice(0, 89) + '\u2026' : t.notes;
+      doc.text(`Notes: ${noteStr}`, ML + 3, y + 3.2);
+      y += 4.5;
+    } else {
+      y += 5.8;
+    }
   });
 
   checkY(7);
@@ -268,7 +286,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.rect(ML, y, CW, 6.5, 'S');
   doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
   doc.text('Totals', ML + 1.5, y + 4.5);
-  const totStart = colW.slice(0, 5).reduce((a, b) => a + b, 0);
+  const totStart = colW.slice(0, 4).reduce((a, b) => a + b, 0) + colW[4];
   doc.text(totalKm.toFixed(1), ML + totStart + 1.5, y + 4.5);
   doc.setTextColor(...GY);
   doc.text(bizKm.toFixed(1), ML + totStart + colW[5] + 1.5, y + 4.5);
@@ -350,7 +368,7 @@ function exportCSV(report: any) {
   const allTrips = report.trips || [];
   const headers = [
     'Start Date','End Date','ODO Start (km)','ODO End (km)',
-    'Business/Personal','Purpose','Total Distance (km)',
+    'Business/Personal','Purpose','Notes','Total Distance (km)',
     'Business km (autofilled)','Reimbursement (autofilled)',
     'Verified','Photo Evidence'
   ];
@@ -361,6 +379,7 @@ function exportCSV(report: any) {
       t.odoStart ?? '', t.odoEnd ?? '',
       isBiz ? 'Business' : 'Personal',
       t.purposeLabel ?? '',
+      t.notes ?? '',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '0',
       isBiz ? (t.km * RATE).toFixed(2) : '0.00',
@@ -779,12 +798,14 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
   const bizTrips = allTrips.filter((t: any) => t.type === 'business');
   const verified = bizTrips.filter((t: any) => t.verified).length;
   const withPurpose = bizTrips.filter((t: any) => t.purposeLabel).length;
+  const withNotes = bizTrips.filter((t: any) => t.notes && t.notes.length > 0).length;
   const withPhoto = bizTrips.filter((t: any) => t.photo).length;
   const hasOdo = !!report.lastOdoReading;
 
   const checks = [
     { label: 'All trips sorted (business vs personal)', desc: `${allTrips.length} trips classified`, pass: allTrips.length > 0, required: true },
     { label: 'Business trip purposes labelled', desc: `${withPurpose} of ${bizTrips.length} have a purpose`, pass: withPurpose === bizTrips.length && bizTrips.length > 0, required: true },
+    { label: 'Business trip notes added', desc: `${withNotes} of ${bizTrips.length} have notes (client/site details)`, pass: withNotes === bizTrips.length && bizTrips.length > 0, required: false },
     { label: 'Odometer reading recorded', desc: hasOdo ? `${report.lastOdoReading?.toLocaleString('en-AU')} km verified` : 'No odometer reading saved', pass: hasOdo, required: true },
     { label: 'Logbook covers a continuous period', desc: 'WorkCar records trips as they occur in real-time', pass: true, required: true },
     { label: 'Odometer verified on business trips', desc: `${verified} of ${bizTrips.length} trips odometer-verified`, pass: verified === bizTrips.length && bizTrips.length > 0, required: false },
