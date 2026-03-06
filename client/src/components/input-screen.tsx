@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
-import { type Trip, CATEGORIES, RATE } from '@/lib/trip-data';
+import { type Trip, CATEGORIES, RATE, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { AddressInput } from './address-input';
-import { MapPin, Check, Calendar, Clock, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Plus, ArrowRight } from 'lucide-react';
+import { MapPin, Check, Calendar, Clock, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Plus, ArrowRight, Gauge } from 'lucide-react';
 
 const iconMap: Record<string, any> = { Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark };
 
@@ -28,6 +28,7 @@ export function InputScreen() {
   const [notes, setNotes] = useState('');
   const [stops, setStops] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  const [odoStart, setOdoStart] = useState('');
 
   const [routeKm, setRouteKm] = useState<number | null>(null);
   const [routeDur, setRouteDur] = useState<string | null>(null);
@@ -82,6 +83,7 @@ export function InputScreen() {
     setNotes('');
     setStops([]);
     setSaved(false);
+    setOdoStart('');
     setRouteKm(null);
     setRouteDur(null);
     setCalcStatus('idle');
@@ -122,8 +124,8 @@ export function InputScreen() {
       type: tripType,
       verified: false,
       photo: false,
-      odoReading: null,
-      odoStartReading: null,
+      odoReading: odoStart ? Math.round(parseFloat(odoStart) + parsedKm) : null,
+      odoStartReading: odoStart ? Math.round(parseFloat(odoStart)) : null,
       purposeLabel: purpose || null,
       purposeIndex: purpose ? CATEGORIES.findIndex(c => c.label === purpose) : null,
       stops: stops.filter(s => s.length > 3),
@@ -320,6 +322,51 @@ export function InputScreen() {
               data-testid="input-duration"
             />
           </div>
+        </div>
+
+        <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[6px] mb-[6px]">
+            <Gauge className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
+            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Odometer (optional)</span>
+          </div>
+          <div className="flex gap-[6px] items-end">
+            <div className="flex-1">
+              <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Reading</label>
+              <input
+                type="number"
+                className="w-full rounded-lg p-[7px_10px] text-[12px] text-white outline-none font-data"
+                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                value={odoStart}
+                onChange={e => setOdoStart(e.target.value)}
+                placeholder="e.g. 84280"
+                data-testid="input-odo-start"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Reading</label>
+              <div
+                className="w-full rounded-lg p-[7px_10px] text-[12px] font-data"
+                style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: odoStart && parseFloat(km) > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}
+                data-testid="input-odo-end"
+              >
+                {odoStart && parseFloat(km) > 0 ? Math.round(parseFloat(odoStart) + parseFloat(km)).toLocaleString() : '—'}
+              </div>
+            </div>
+          </div>
+          {state.trips.length > 0 && (
+            <button
+              className="mt-[6px] rounded-[6px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
+              style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+              onClick={() => {
+                const lastOdo = getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo);
+                setOdoStart(Math.round(lastOdo).toString());
+              }}
+              data-testid="input-use-last-odo"
+            >
+              <Gauge className="w-[10px] h-[10px]" />
+              Use last reading ({Math.round(getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo)).toLocaleString()} km)
+            </button>
+          )}
         </div>
 
         <div className="mb-[10px]">
