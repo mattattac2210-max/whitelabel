@@ -9,7 +9,7 @@ import { ExportScreen } from '@/components/export-screen';
 import { InputScreen } from '@/components/input-screen';
 import { DashboardScreen } from '@/components/dashboard-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
-import { BottomNav } from '@/components/bottom-nav';
+
 import { OnboardingFlow } from '@/components/onboarding/index';
 
 function StatusBar() {
@@ -93,13 +93,10 @@ export default function Home() {
     );
   }
 
-  const showBottomNav = state.currentScreen !== 'dashboard';
-
   return (
     <PhoneFrame>
       <StatusBar />
       <ScreenContainer />
-      {showBottomNav && <BottomNav />}
       <EditModal />
       <ATOModal />
       <SummaryModal />
