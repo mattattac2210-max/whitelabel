@@ -13,36 +13,25 @@ export function ReviewScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="review-screen">
-      <div className="flex items-center gap-[10px] px-4 pt-[8px] pb-[6px] flex-shrink-0">
+      <div className="flex items-center gap-[8px] px-[14px] pt-[6px] pb-[4px] flex-shrink-0">
         <button
-          className="w-[32px] h-[32px] rounded-lg flex items-center justify-center"
+          className="w-[28px] h-[28px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
           data-testid="button-back-review"
         >
-          <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Review</span>
-        <span className="ml-auto font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{sorted.length} trips</span>
-      </div>
-
-      <div className="flex gap-[6px] px-[14px] pb-[8px] flex-shrink-0">
-        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
-          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-y)' }} data-testid="text-review-biz">{biz.length}</div>
-        </div>
-        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Personal</div>
-          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-t2)' }}>{per.length}</div>
-        </div>
-        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction*</div>
-          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-gr)' }}>${Math.round(state.dedTotal).toLocaleString('en-AU')}</div>
+        <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Review</span>
+        <div className="ml-auto flex gap-[8px]">
+          <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>{biz.length} biz</span>
+          <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>{per.length} per</span>
+          <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-gr)' }}>${Math.round(state.dedTotal).toLocaleString('en-AU')}</span>
         </div>
       </div>
 
-      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[10px] overflow-y-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {sorted.map((t) => {
+      <div className="flex-1 px-[14px] flex flex-col overflow-y-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {sorted.map((t, listIdx) => {
           const origIdx = state.trips.indexOf(t);
           const isExpanded = expandedTrip === origIdx;
           const isBiz = t.type === 'business';
@@ -50,25 +39,27 @@ export function ReviewScreen() {
           return (
             <div
               key={origIdx}
-              className="rounded-[16px] cursor-pointer transition-all"
+              className="flex-1 min-h-0 flex flex-col cursor-pointer transition-all"
               style={{
-                background: 'var(--wc-card)',
-                border: '1px solid var(--wc-border)',
-                borderLeft: isBiz ? '4px solid rgb(var(--wc-ink) / .6)' : '4px solid rgba(180,180,180,.25)',
+                borderBottom: listIdx < sorted.length - 1 ? '1px solid var(--wc-border)' : 'none',
+                borderLeft: isBiz ? '3px solid rgb(var(--wc-ink) / .5)' : '3px solid rgba(180,180,180,.2)',
               }}
               data-testid={`review-trip-${origIdx}`}
             >
-              <div className="flex items-center gap-[12px] p-[18px_18px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
+              <div
+                className="flex-1 flex items-center gap-[10px] px-[14px]"
+                onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}
+              >
                 <div className="flex-1 min-w-0">
-                  <div className={`font-semibold text-[17px] mb-[6px] leading-[1.3] ${isExpanded ? '' : 'truncate'}`} style={{ color: 'var(--wc-text)' }}>
+                  <div className={`font-semibold text-[15px] leading-[1.2] ${isExpanded ? '' : 'truncate'}`} style={{ color: 'var(--wc-text)' }}>
                     {t.from} &rarr; {t.to}
                   </div>
-                  <div className="text-[14px]" style={{ color: 'var(--wc-t3)' }}>
+                  <div className="text-[12px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>
                     {t.date} &middot; {t.km} km &middot; {t.duration}
                   </div>
                 </div>
                 <span
-                  className="font-heading font-bold text-[13px] px-[12px] py-[6px] rounded-[8px] uppercase tracking-[.04em] flex-shrink-0"
+                  className="font-heading font-bold text-[11px] px-[10px] py-[4px] rounded-[6px] uppercase tracking-[.04em] flex-shrink-0"
                   style={{
                     background: isBiz ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
                     color: isBiz ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
@@ -77,26 +68,26 @@ export function ReviewScreen() {
                 >
                   {isBiz ? 'Biz' : 'Per'}
                 </span>
-                <ChevronDown className="w-[18px] h-[18px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
+                <ChevronDown className="w-[16px] h-[16px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
               </div>
               {isExpanded && (
-                <div className="p-[14px_18px_16px] flex flex-col gap-[10px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-                  <div className="text-[14px] leading-[1.8]" style={{ color: 'var(--wc-t2)' }}>
+                <div className="px-[14px] pb-[10px] flex flex-col gap-[8px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
+                  <div className="text-[13px] leading-[1.7] pt-[8px]" style={{ color: 'var(--wc-t2)' }}>
                     <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
                     <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
-                    <strong style={{ color: 'var(--wc-text)' }}>Time:</strong> {t.time} &middot; <strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {t.duration}
+                    <strong style={{ color: 'var(--wc-text)' }}>Time:</strong> {t.time} &middot; {t.duration}
                   </div>
                   {t.purposeLabel && (
-                    <div className="text-[14px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
+                    <div className="text-[13px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
                   )}
                   {t.notes && (
-                    <div className="text-[13px] rounded-[10px] p-[8px_12px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
-                      <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
+                    <div className="text-[12px] rounded-[8px] p-[6px_10px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
+                      <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
                     </div>
                   )}
-                  <div className="flex gap-[8px]">
+                  <div className="flex gap-[6px]">
                     <button
-                      className="flex-1 py-[12px] rounded-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      className="flex-1 py-[10px] rounded-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
                       style={{ color: 'rgba(180,180,180,.7)', background: t.type === 'personal' ? 'rgba(180,180,180,.1)' : 'transparent', border: '1.5px solid rgba(180,180,180,.25)' }}
                       onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'personal' }); }}
                       data-testid={`reclassify-personal-${origIdx}`}
@@ -104,7 +95,7 @@ export function ReviewScreen() {
                       &larr; Personal
                     </button>
                     <button
-                      className="flex-1 py-[12px] rounded-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      className="flex-1 py-[10px] rounded-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
                       style={{ color: 'var(--wc-y)', background: 'var(--wc-yd)', border: '1.5px solid rgb(var(--wc-ink) / .4)' }}
                       onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
                       data-testid={`reclassify-business-${origIdx}`}
@@ -112,7 +103,7 @@ export function ReviewScreen() {
                       Business &rarr;
                     </button>
                     <button
-                      className="py-[12px] px-[16px] rounded-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      className="py-[10px] px-[12px] rounded-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
                       style={{ border: '1px solid var(--wc-border)', background: 'rgb(var(--wc-ink) / .04)', color: 'var(--wc-t2)' }}
                       onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: origIdx }); }}
                       data-testid={`edit-trip-${origIdx}`}
@@ -127,9 +118,9 @@ export function ReviewScreen() {
         })}
       </div>
 
-      <div className="px-[14px] py-[8px] flex-shrink-0">
+      <div className="px-[14px] py-[6px] flex-shrink-0">
         <button
-          className="w-full rounded-[14px] py-[14px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
+          className="w-full rounded-[12px] py-[13px] font-heading font-black text-[16px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
           style={{
             background: 'var(--wc-y)',
             color: 'var(--wc-bg)',
@@ -139,7 +130,7 @@ export function ReviewScreen() {
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'notes' })}
           data-testid="button-done-review"
         >
-          <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+          <Check className="w-[17px] h-[17px]" strokeWidth={2.5} />
           Continue to Notes &rarr;
         </button>
       </div>
