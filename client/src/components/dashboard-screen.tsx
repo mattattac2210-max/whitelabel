@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
-import { MapPin, LayoutGrid, FileText, Download, Plus, Gauge, ChevronRight, Navigation } from 'lucide-react';
+import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car } from 'lucide-react';
 
 export function DashboardScreen() {
   const { state, dispatch } = useApp();
@@ -14,11 +14,13 @@ export function DashboardScreen() {
 
   const tiles = [
     { screen: 'sort' as const, label: 'Sort Trips', sub: unsortedCount > 0 ? `${unsortedCount} trip${unsortedCount !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: unsortedCount },
-    { screen: 'review' as const, label: 'Review', sub: 'View all classified trips', icon: LayoutGrid, primary: false },
-    { screen: 'reports' as const, label: 'Reports', sub: 'Session summaries', icon: FileText, primary: false },
-    { screen: 'export' as const, label: 'Export', sub: 'PDF & CSV exports', icon: Download, primary: false },
-    { screen: 'input' as const, label: 'Add Trip', sub: 'Manual trip entry', icon: Plus, primary: false },
-    { screen: 'odometer' as const, label: 'Odometer', sub: 'Verify readings', icon: Gauge, primary: false },
+    { screen: 'reports' as const, label: 'Driving Reports', sub: 'Trip summaries & export', icon: Car, primary: false },
+    { screen: 'input' as const, label: 'Add Trip', sub: 'Manual or live entry', icon: Plus, primary: false },
+    { screen: 'expenses' as const, label: 'Add Expenses', sub: 'Fuel, rego, servicing', icon: Receipt, primary: false },
+    { screen: 'expense-reports' as const, label: 'Expense Reports', sub: 'Costs by category', icon: FileText, primary: false },
+    { screen: 'stats' as const, label: 'My Stats', sub: 'Trips, km & trends', icon: BarChart3, primary: false },
+    { screen: 'export' as const, label: 'Export', sub: 'PDF & CSV download', icon: Download, primary: false },
+    { screen: 'find-keys' as const, label: 'Find My Keys', sub: 'Last known location', icon: Key, primary: false },
   ];
 
   return (
@@ -195,26 +197,6 @@ export function DashboardScreen() {
         </div>
       </div>
 
-      <div
-        className="ob-a5 rounded-xl p-4 flex items-center gap-3 cursor-pointer active:scale-[.98] transition-transform"
-        style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.16)' }}
-        onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'odometer' })}
-        data-testid="dash-audit-card"
-      >
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(245,196,0,.1)', border: '1.5px solid rgba(245,196,0,.25)' }}
-        >
-          <Gauge className="w-5 h-5" stroke="var(--wc-y)" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1">
-          <div className="text-[13px] font-bold">Audit Readiness</div>
-          <div className="text-[10px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-            Verify odometer readings to boost your score
-          </div>
-        </div>
-        <ChevronRight className="w-4 h-4" stroke="var(--wc-t3)" strokeWidth={2} />
-      </div>
     </div>
   );
 }
