@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
-import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle, Info } from 'lucide-react';
+import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle, Info, AlertTriangle, Settings } from 'lucide-react';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer, getEstimateMode } from '@/lib/deduction-estimator';
 import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
 
@@ -126,7 +126,53 @@ export function DashboardScreen() {
         />
       </div>
 
-      {estimateMode === 'industry' && (
+      {estimateMode === 'industry' && !readinessChecks.basicDetailsComplete && (
+        <div className="ob-a2b mb-4">
+          <div
+            className="w-full rounded-xl p-[14px] text-left"
+            style={{ background: 'rgba(245,158,11,.04)', border: '1.5px solid rgba(245,158,11,.2)' }}
+            data-testid="card-basic-details-prompt"
+          >
+            <div className="flex items-start gap-[10px] mb-[10px]">
+              <div
+                className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0 mt-[1px]"
+                style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}
+              >
+                <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold text-white leading-[1.3]">We need a couple of details to run estimates</div>
+                <div className="text-[10px] mt-[3px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                  Tell us your vehicle type and purchase price so we can show you per-trip deduction values as you sort.
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-[8px]">
+              <button
+                className="flex-1 rounded-[10px] py-[10px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
+                data-testid="button-fill-basic-details"
+              >
+                <Car className="w-[13px] h-[13px]" />
+                Fill In Details
+                <ChevronRight className="w-[12px] h-[12px]" />
+              </button>
+              <button
+                className="rounded-[10px] py-[10px] px-[14px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+                onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
+                data-testid="button-customise-details"
+              >
+                <Settings className="w-[12px] h-[12px]" />
+                Customise
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {estimateMode === 'industry' && readinessChecks.basicDetailsComplete && (
         <div className="ob-a2b mb-4">
           <button
             className="w-full rounded-xl p-[12px_14px] flex items-start gap-[10px] text-left cursor-pointer transition-all active:scale-[.99]"
@@ -141,9 +187,9 @@ export function DashboardScreen() {
               <Info className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-bold text-white leading-[1.3]">Deductions are estimated</div>
+              <div className="text-[12px] font-bold text-white leading-[1.3]">Estimates use industry averages</div>
               <div className="text-[10px] mt-[3px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-                Using industry averages for the quickest setup. Tap to customise with your own figures for a more accurate estimate.
+                You're good to go! Tap here anytime to customise with your actual expenses for a more accurate figure.
               </div>
             </div>
             <ChevronRight className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
