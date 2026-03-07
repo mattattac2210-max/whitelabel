@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { SortScreen } from '@/components/sort-screen';
 import { ClassifyScreen } from '@/components/classify-screen';
@@ -14,8 +13,6 @@ import { StatsScreen } from '@/components/stats-screen';
 import { FindKeysScreen } from '@/components/find-keys-screen';
 import { AccountScreen } from '@/components/account-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
-
-import { OnboardingFlow } from '@/components/onboarding/index';
 
 function StatusBar() {
   return (
@@ -86,23 +83,6 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 }
 
 export default function Home() {
-  const [onboarded, setOnboarded] = useState(() => localStorage.getItem('wc_onboarded') === '1');
-  const { state } = useApp();
-
-  if (!onboarded) {
-    return (
-      <PhoneFrame>
-        <StatusBar />
-        <OnboardingFlow
-          onComplete={() => {
-            localStorage.setItem('wc_onboarded', '1');
-            setOnboarded(true);
-          }}
-        />
-      </PhoneFrame>
-    );
-  }
-
   return (
     <PhoneFrame>
       <StatusBar />

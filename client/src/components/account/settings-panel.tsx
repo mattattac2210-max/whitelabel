@@ -47,7 +47,7 @@ export function SettingsPanel() {
   const updStr = (key: keyof AppSettings) => (v: string) => setS(prev => ({ ...prev, [key]: v }));
 
   const handleLogout = () => {
-    if (confirm('Log out and clear all data? This cannot be undone.')) {
+    if (confirm('Clear all data and reset? This cannot be undone.')) {
       localStorage.clear();
       window.location.reload();
     }
@@ -92,7 +92,7 @@ export function SettingsPanel() {
           data-testid="button-logout"
         >
           <LogOut className="w-[16px] h-[16px]" />
-          Log Out
+          Reset App
         </button>
       </div>
 
