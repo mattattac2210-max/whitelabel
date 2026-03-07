@@ -132,10 +132,22 @@ export function StatsScreen() {
   const totalKm = sorted.reduce((s, t) => s + t.km, 0);
   const bizKm = biz.reduce((s, t) => s + t.km, 0);
   const perKm = per.reduce((s, t) => s + t.km, 0);
-  const totalDed = calcLogbookDeduction(bizKm, totalKm);
   const bizPct = totalKm > 0 ? (bizKm / totalKm * 100) : 0;
   const avgTripKm = sorted.length > 0 ? totalKm / sorted.length : 0;
   const avgBizTripKm = biz.length > 0 ? bizKm / biz.length : 0;
+
+  const { projectedDeductibles, weeksTracked } = useMemo(() => {
+    const dateKeys = sorted.map(t => getDateKey(t)).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+    if (dateKeys.length === 0) return { projectedDeductibles: 0, weeksTracked: 0 };
+    const sorted_ = [...dateKeys].sort();
+    const earliest = new Date(sorted_[0]);
+    const latest = new Date(sorted_[sorted_.length - 1]);
+    const daySpan = Math.max(1, Math.ceil((latest.getTime() - earliest.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    const wks = Math.min(12, Math.max(1, daySpan / 7));
+    const logbookDed = calcLogbookDeduction(bizKm, totalKm);
+    const weeklyRate = logbookDed / wks;
+    return { projectedDeductibles: Math.round(weeklyRate * 48), weeksTracked: Math.round(wks * 10) / 10 };
+  }, [sorted, bizKm, totalKm]);
 
   const dayStats = useMemo(() => {
     const days: Record<string, { biz: number; per: number; bizKm: number; perKm: number }> = {};
@@ -210,8 +222,15 @@ export function StatsScreen() {
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <DollarSign className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-gr)' }} />
-            <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-gr)' }}>${totalDed.toFixed(0)}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Deduction Est.</div>
+            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-gr)' }}>
+              ${projectedDeductibles.toLocaleString('en-AU')}
+            </div>
+            <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[2px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+              Claimable Est.
+            </div>
+            <div className="font-data text-[7px] mt-[1px] leading-[1.3]" style={{ color: 'var(--wc-t3)', opacity: 0.7 }}>
+              Projected from {weeksTracked} wk avg
+            </div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
@@ -224,6 +243,15 @@ export function StatsScreen() {
             <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Fuel Costs</div>
           </div>
         </div>
+
+        {projectedDeductibles > 0 && (
+          <div className="rounded-[8px] px-[10px] py-[6px] flex items-start gap-[6px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+            <DollarSign className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-t3)' }} />
+            <div className="font-data text-[9px] leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>
+              Claimable deductibles estimated at <strong style={{ color: 'var(--wc-gr)' }}>${projectedDeductibles.toLocaleString('en-AU')}</strong> — projected from your {weeksTracked}-week logbook average across 48 weeks. This is an estimate only.
+            </div>
+          </div>
+        )}
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em] mb-[12px]" style={{ color: 'var(--wc-t2)' }}>Business vs Personal</div>
