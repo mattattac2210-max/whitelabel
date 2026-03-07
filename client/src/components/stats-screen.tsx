@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, TrendingUp, Calendar, MapPin, DollarSign, Clock, Fuel } from 'lucide-react';
+import { ArrowLeft, TrendingUp, MapPin, DollarSign, Fuel, Route, Target } from 'lucide-react';
 
 interface TripLike {
   from: string;
@@ -23,6 +23,79 @@ function getDayNameFromDate(t: TripLike): string | null {
   }
   const match = t.date.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i);
   return match ? match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase() : null;
+}
+
+function getDateKey(t: TripLike): string {
+  if (t.year !== undefined && t.month !== undefined && t.day !== undefined) {
+    return `${t.year}-${String(t.month + 1).padStart(2, '0')}-${String(t.day).padStart(2, '0')}`;
+  }
+  const months: Record<string, string> = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+  const m = t.date.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
+  if (m) return `2026-${months[m[2]] || '01'}-${m[1].padStart(2, '0')}`;
+  return t.date;
+}
+
+function DonutChart({ bizPct, size = 90, stroke = 10 }: { bizPct: number; size?: number; stroke?: number }) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const bizLen = (bizPct / 100) * circ;
+  const perLen = circ - bizLen;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--wc-ink) / .06)" strokeWidth={stroke} />
+      {bizPct > 0 && (
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke="var(--wc-y)" strokeWidth={stroke}
+          strokeDasharray={`${bizLen} ${perLen}`}
+          strokeDashoffset={circ / 4}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray .6s ease' }}
+        />
+      )}
+      {bizPct > 0 && bizPct < 100 && (
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke="rgb(var(--wc-ink) / .15)" strokeWidth={stroke}
+          strokeDasharray={`${perLen} ${bizLen}`}
+          strokeDashoffset={circ / 4 - bizLen}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray .6s ease' }}
+        />
+      )}
+    </svg>
+  );
+}
+
+function LineChart({ data, width = 300, height = 100 }: { data: { label: string; value: number }[]; width?: number; height?: number }) {
+  if (data.length === 0) return null;
+  const maxVal = Math.max(1, ...data.map(d => d.value));
+  const padX = 6;
+  const padY = 8;
+  const w = width - padX * 2;
+  const h = height - padY * 2;
+  const points = data.map((d, i) => ({
+    x: padX + (data.length > 1 ? (i / (data.length - 1)) * w : w / 2),
+    y: padY + h - (d.value / maxVal) * h,
+  }));
+  const lineD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaD = lineD + ` L${points[points.length - 1].x},${padY + h} L${points[0].x},${padY + h} Z`;
+
+  return (
+    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--wc-y)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="var(--wc-y)" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={areaD} fill="url(#lineGrad)" />
+      <path d={lineD} fill="none" stroke="var(--wc-y)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="var(--wc-bg)" stroke="var(--wc-y)" strokeWidth="2" />
+      ))}
+    </svg>
+  );
 }
 
 export function StatsScreen() {
@@ -65,29 +138,42 @@ export function StatsScreen() {
   const avgBizTripKm = biz.length > 0 ? bizKm / biz.length : 0;
 
   const dayStats = useMemo(() => {
-    const days: Record<string, { trips: number; km: number }> = {};
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayNames.forEach(d => { days[d] = { trips: 0, km: 0 }; });
+    const days: Record<string, { biz: number; per: number; bizKm: number; perKm: number }> = {};
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    dayNames.forEach(d => { days[d] = { biz: 0, per: 0, bizKm: 0, perKm: 0 }; });
     sorted.forEach(t => {
       const dayName = getDayNameFromDate(t);
       if (dayName && days[dayName]) {
-        days[dayName].trips += 1;
-        days[dayName].km += t.km;
+        if (t.type === 'business') { days[dayName].biz += 1; days[dayName].bizKm += t.km; }
+        else { days[dayName].per += 1; days[dayName].perKm += t.km; }
       }
     });
     return dayNames.map(name => ({ name, ...days[name] }));
   }, [sorted]);
 
-  const maxDayTrips = Math.max(1, ...dayStats.map(d => d.trips));
+  const maxDayTotal = Math.max(1, ...dayStats.map(d => d.biz + d.per));
 
-  const topDestinations = useMemo(() => {
+  const dailyKmTrend = useMemo(() => {
     const map: Record<string, number> = {};
     sorted.forEach(t => {
-      const dest = t.to;
-      map[dest] = (map[dest] || 0) + 1;
+      const key = getDateKey(t);
+      map[key] = (map[key] || 0) + t.km;
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const entries = Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
+    return entries.map(([label, value]) => ({ label, value }));
   }, [sorted]);
+
+  const topDestinations = useMemo(() => {
+    const map: Record<string, { count: number; km: number }> = {};
+    sorted.forEach(t => {
+      if (!map[t.to]) map[t.to] = { count: 0, km: 0 };
+      map[t.to].count += 1;
+      map[t.to].km += t.km;
+    });
+    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+  }, [sorted]);
+
+  const maxDestCount = Math.max(1, ...topDestinations.map(([, d]) => d.count));
 
   const expenses = useMemo(() => {
     try {
@@ -114,62 +200,171 @@ export function StatsScreen() {
         <TrendingUp className="ml-auto w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
       </div>
 
-      <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
+      <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
+
         <div className="grid grid-cols-2 gap-[6px]">
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <MapPin className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
-            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-y)' }}>{sorted.length}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Total Trips</div>
+            <MapPin className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
+            <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-y)' }}>{sorted.length}</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Total Trips</div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <DollarSign className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-gr)' }} />
-            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-gr)' }}>${totalDed.toFixed(0)}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Deduction Est.</div>
+            <DollarSign className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-gr)' }} />
+            <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-gr)' }}>${totalDed.toFixed(0)}</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Deduction Est.</div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <TrendingUp className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
-            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{totalKm.toFixed(0)}<span className="text-[14px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Total Distance</div>
+            <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
+            <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-text)' }}>{totalKm.toFixed(0)}<span className="text-[13px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Total Distance</div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <Fuel className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-am)' }} />
-            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-am)' }}>${fuelCost > 0 ? fuelCost.toFixed(0) : '—'}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Fuel Costs</div>
+            <Fuel className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-am)' }} />
+            <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-am)' }}>${fuelCost > 0 ? fuelCost.toFixed(0) : '—'}</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Fuel Costs</div>
           </div>
         </div>
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>Business vs Personal</div>
-          <div className="h-[10px] rounded-full overflow-hidden flex" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-            {bizPct > 0 && <div className="h-full" style={{ width: `${bizPct}%`, background: 'var(--wc-y)' }} />}
-            {bizPct < 100 && <div className="h-full" style={{ width: `${100 - bizPct}%`, background: 'rgba(180,180,180,.3)' }} />}
-          </div>
-          <div className="flex justify-between mt-[6px]">
-            <div className="text-[12px]"><span style={{ color: 'var(--wc-y)' }}>{biz.length} business</span> <span style={{ color: 'var(--wc-t3)' }}>({bizKm.toFixed(0)} km)</span></div>
-            <div className="text-[12px]"><span style={{ color: 'var(--wc-t2)' }}>{per.length} personal</span> <span style={{ color: 'var(--wc-t3)' }}>({perKm.toFixed(0)} km)</span></div>
-          </div>
-        </div>
-
-        <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>Trips by Day</div>
-          <div className="flex items-end gap-[6px]">
-            {dayStats.map(d => (
-              <div key={d.name} className="flex-1 flex flex-col items-center">
-                <div className="w-full rounded-[4px] transition-all" style={{ height: `${Math.max(4, (d.trips / maxDayTrips) * 50)}px`, background: d.trips > 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)' }} />
-                <div className="font-data text-[8px] uppercase mt-[4px]" style={{ color: d.trips > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{d.name}</div>
-                <div className="font-data text-[9px] font-bold" style={{ color: 'var(--wc-t2)' }}>{d.trips}</div>
+          <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em] mb-[12px]" style={{ color: 'var(--wc-t2)' }}>Business vs Personal</div>
+          <div className="flex items-center gap-[16px]">
+            <div className="flex-shrink-0 relative">
+              <DonutChart bizPct={bizPct} size={84} stroke={9} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="font-heading font-black text-[18px] leading-none" style={{ color: 'var(--wc-y)' }}>{Math.round(bizPct)}%</div>
+                <div className="font-data text-[7px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
               </div>
-            ))}
+            </div>
+            <div className="flex-1 flex flex-col gap-[8px]">
+              <div className="flex items-center gap-[8px]">
+                <div className="w-[8px] h-[8px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-y)' }} />
+                <div className="flex-1">
+                  <div className="font-heading font-bold text-[13px]" style={{ color: 'var(--wc-text)' }}>{biz.length} Business</div>
+                  <div className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{bizKm.toFixed(1)} km</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-[8px]">
+                <div className="w-[8px] h-[8px] rounded-full flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .15)' }} />
+                <div className="flex-1">
+                  <div className="font-heading font-bold text-[13px]" style={{ color: 'var(--wc-text)' }}>{per.length} Personal</div>
+                  <div className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{perKm.toFixed(1)} km</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
-          {topDestinations.map(([dest, count], i) => (
-            <div key={dest} className="flex items-center gap-[8px] py-[6px]" style={{ borderTop: i > 0 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}>
-              <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center font-data text-[10px] font-bold" style={{ background: 'rgb(var(--wc-ink) / .1)', color: 'var(--wc-y)' }}>{i + 1}</div>
-              <div className="flex-1 text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{dest}</div>
-              <div className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{count} trip{count !== 1 ? 's' : ''}</div>
+          <div className="flex items-center justify-between mb-[12px]">
+            <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Trips by Day</div>
+            <div className="flex items-center gap-[10px]">
+              <div className="flex items-center gap-[3px]">
+                <div className="w-[6px] h-[6px] rounded-[2px]" style={{ background: 'var(--wc-y)' }} />
+                <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>Biz</span>
+              </div>
+              <div className="flex items-center gap-[3px]">
+                <div className="w-[6px] h-[6px] rounded-[2px]" style={{ background: 'rgb(var(--wc-ink) / .12)' }} />
+                <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>Per</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-end gap-[5px]" style={{ height: '80px' }}>
+            {dayStats.map(d => {
+              const total = d.biz + d.per;
+              const barH = total > 0 ? Math.max(8, (total / maxDayTotal) * 68) : 4;
+              const bizH = total > 0 ? (d.biz / total) * barH : 0;
+              const perH = barH - bizH;
+              return (
+                <div key={d.name} className="flex-1 flex flex-col items-center justify-end h-full">
+                  <div className="w-full flex flex-col rounded-[4px] overflow-hidden" style={{ height: `${barH}px` }}>
+                    {perH > 0 && <div style={{ height: `${perH}px`, background: 'rgb(var(--wc-ink) / .1)' }} />}
+                    {bizH > 0 && <div style={{ height: `${bizH}px`, background: 'var(--wc-y)' }} />}
+                    {total === 0 && <div className="h-full" style={{ background: 'rgb(var(--wc-ink) / .04)' }} />}
+                  </div>
+                  <div className="font-data text-[8px] uppercase mt-[4px]" style={{ color: total > 0 ? 'var(--wc-text)' : 'var(--wc-t3)' }}>{d.name}</div>
+                  <div className="font-data text-[9px] font-bold" style={{ color: total > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{total}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {dailyKmTrend.length > 1 && (
+          <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+            <div className="flex items-center justify-between mb-[8px]">
+              <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Daily KM Trend</div>
+              <div className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{dailyKmTrend.length} days</div>
+            </div>
+            <div className="rounded-[8px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
+              <LineChart data={dailyKmTrend} height={110} />
+            </div>
+            <div className="flex justify-between mt-[6px]">
+              <div className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+                {dailyKmTrend[0]?.label.replace(/^\d{4}-/, '').replace('-', '/')}
+              </div>
+              <div className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+                {dailyKmTrend[dailyKmTrend.length - 1]?.label.replace(/^\d{4}-/, '').replace('-', '/')}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center justify-between mb-[8px]">
+            <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>KM by Day</div>
+          </div>
+          <div className="flex flex-col gap-[6px]">
+            {dayStats.map(d => {
+              const totalDayKm = d.bizKm + d.perKm;
+              const maxKm = Math.max(1, ...dayStats.map(dd => dd.bizKm + dd.perKm));
+              const pct = totalDayKm > 0 ? (totalDayKm / maxKm) * 100 : 0;
+              return (
+                <div key={d.name} className="flex items-center gap-[8px]">
+                  <div className="font-data text-[9px] uppercase w-[26px] flex-shrink-0 text-right" style={{ color: totalDayKm > 0 ? 'var(--wc-text)' : 'var(--wc-t3)' }}>{d.name}</div>
+                  <div className="flex-1 h-[14px] rounded-[4px] overflow-hidden relative" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
+                    {pct > 0 && (
+                      <div
+                        className="h-full rounded-[4px] flex items-center"
+                        style={{ width: `${Math.max(2, pct)}%`, background: 'linear-gradient(90deg, var(--wc-y), rgb(var(--wc-ink) / .08))', transition: 'width .5s ease' }}
+                      />
+                    )}
+                  </div>
+                  <div className="font-data text-[10px] font-bold w-[36px] text-right" style={{ color: totalDayKm > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}>
+                    {totalDayKm > 0 ? totalDayKm.toFixed(0) : '—'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[6px] mb-[10px]">
+            <Target className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
+            <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
+          </div>
+          {topDestinations.map(([dest, data], i) => (
+            <div key={dest} className="mb-[8px] last:mb-0">
+              <div className="flex items-center justify-between mb-[3px]">
+                <div className="flex items-center gap-[6px] flex-1 min-w-0">
+                  <div
+                    className="w-[18px] h-[18px] rounded-full flex items-center justify-center font-data text-[9px] font-bold flex-shrink-0"
+                    style={{ background: i === 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .08)', color: i === 0 ? 'var(--wc-bg)' : 'var(--wc-t2)' }}
+                  >{i + 1}</div>
+                  <div className="text-[12px] truncate font-heading font-bold" style={{ color: 'var(--wc-text)' }}>{dest}</div>
+                </div>
+                <div className="font-data text-[10px] flex-shrink-0 ml-[8px]" style={{ color: 'var(--wc-t3)' }}>{data.count} trip{data.count !== 1 ? 's' : ''} / {data.km.toFixed(0)} km</div>
+              </div>
+              <div className="h-[6px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.max(3, (data.count / maxDestCount) * 100)}%`,
+                    background: i === 0 ? 'var(--wc-y)' : `rgb(var(--wc-ink) / ${0.15 - i * 0.02})`,
+                    transition: 'width .5s ease',
+                  }}
+                />
+              </div>
             </div>
           ))}
           {topDestinations.length === 0 && (
@@ -178,22 +373,23 @@ export function StatsScreen() {
         </div>
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Averages</div>
+          <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>Averages</div>
           <div className="grid grid-cols-3 gap-[8px]">
-            <div>
-              <div className="font-heading font-bold text-[18px]" style={{ color: 'var(--wc-y)' }}>{avgTripKm.toFixed(1)}</div>
-              <div className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>km/trip</div>
+            <div className="text-center rounded-[10px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .03)' }}>
+              <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{avgTripKm.toFixed(1)}</div>
+              <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>km / trip</div>
             </div>
-            <div>
-              <div className="font-heading font-bold text-[18px]" style={{ color: 'var(--wc-gr)' }}>{avgBizTripKm.toFixed(1)}</div>
-              <div className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>km/biz trip</div>
+            <div className="text-center rounded-[10px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .03)' }}>
+              <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-gr)' }}>{avgBizTripKm.toFixed(1)}</div>
+              <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>km / biz</div>
             </div>
-            <div>
-              <div className="font-heading font-bold text-[18px]" style={{ color: 'var(--wc-am)' }}>${costPerKm > 0 ? costPerKm.toFixed(2) : '—'}</div>
-              <div className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-t3)' }}>cost/km</div>
+            <div className="text-center rounded-[10px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .03)' }}>
+              <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-am)' }}>${costPerKm > 0 ? costPerKm.toFixed(2) : '—'}</div>
+              <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>cost / km</div>
             </div>
           </div>
         </div>
+
       </div>
 
       <BottomNav />
