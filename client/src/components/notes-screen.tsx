@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ArrowRight, Check, MessageSquarePlus, Lightbulb, Clock, MapPin, User, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, MessageSquarePlus, Lightbulb, Clock, MapPin, User, X, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 
 const PREFIXES = ['Client', 'Site', 'Store', 'Picked up', 'Quote for', 'Meeting with', 'Delivered to', 'Inspected'] as const;
 
@@ -83,6 +83,7 @@ function suggestFromDestination(to: string, toSub: string, purposeLabel: string 
 export function NotesScreen() {
   const { state, dispatch } = useApp();
   const [focusedTrip, setFocusedTrip] = useState<number | null>(null);
+  const [expandedDone, setExpandedDone] = useState<Set<number>>(new Set());
   const [noteTexts, setNoteTexts] = useState<Record<number, string>>(() => {
     const initial: Record<number, string> = {};
     state.trips.forEach((t, i) => {
@@ -190,6 +191,20 @@ export function NotesScreen() {
           const noteText = noteTexts[idx] ?? '';
           const hasNote = noteText.trim().length > 0;
           const isFocused = focusedTrip === idx;
+          const isCollapsed = hasNote && !expandedDone.has(idx);
+
+          const toggleDoneExpand = () => {
+            setExpandedDone(prev => {
+              const next = new Set(prev);
+              if (next.has(idx)) {
+                next.delete(idx);
+                setFocusedTrip(null);
+              } else {
+                next.add(idx);
+              }
+              return next;
+            });
+          };
 
           return (
             <div
@@ -202,7 +217,11 @@ export function NotesScreen() {
               }}
               data-testid={`notes-trip-${idx}`}
             >
-              <div className="flex items-center gap-[8px] p-[12px_14px]">
+              <div
+                className="flex items-center gap-[8px] p-[12px_14px]"
+                style={{ cursor: hasNote ? 'pointer' : 'default' }}
+                onClick={() => hasNote && toggleDoneExpand()}
+              >
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[14px] truncate" style={{ color: 'var(--wc-text)' }}>
                     {trip.from} &rarr; {trip.to}
@@ -211,6 +230,11 @@ export function NotesScreen() {
                     {trip.date} &middot; {trip.km} km
                     {trip.purposeLabel && <span style={{ color: 'var(--wc-y)' }}> &middot; {trip.purposeLabel}</span>}
                   </div>
+                  {isCollapsed && (
+                    <div className="text-[12px] mt-[4px] italic truncate" style={{ color: 'var(--wc-gr)' }}>
+                      {noteText.trim()}
+                    </div>
+                  )}
                 </div>
                 {hasNote ? (
                   <div className="flex items-center gap-[5px] px-[10px] py-[6px] rounded-[8px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
@@ -223,118 +247,129 @@ export function NotesScreen() {
                     <span className="font-data text-[11px] uppercase" style={{ color: 'var(--wc-am)' }}>Required</span>
                   </div>
                 )}
+                {hasNote && (
+                  <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .05)' }}>
+                    {isCollapsed ? (
+                      <ChevronDown className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t3)' }} />
+                    ) : (
+                      <ChevronUp className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t3)' }} />
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="px-[14px] pb-[10px]">
-                {isFocused && smartSuggestion && !noteText && (
-                  <button
-                    className="w-full mb-[8px] rounded-[12px] p-[12px_14px] text-left cursor-pointer transition-all flex items-start gap-[10px]"
-                    style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' }}
-                    onClick={() => useSuggestion(idx)}
-                    data-testid={`notes-suggestion-${idx}`}
-                  >
-                    <Lightbulb className="w-[18px] h-[18px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
-                    <div>
-                      <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>Suggested</div>
-                      <div className="text-[14px]" style={{ color: 'var(--wc-t2)' }}>{smartSuggestion}</div>
-                    </div>
-                  </button>
-                )}
-
-                <textarea
-                  ref={el => { inputRefs.current[idx] = el; }}
-                  className="w-full rounded-[10px] p-[10px] text-[14px] outline-none resize-none font-sans leading-[1.5]"
-                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: isFocused ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid rgb(var(--wc-ink) / .12)', minHeight: '52px', color: 'var(--wc-text)' }}
-                  value={noteText}
-                  onChange={e => updateNoteText(idx, e.target.value)}
-                  onFocus={() => { setFocusedTrip(idx); setActivePrefix(null); }}
-                  onBlur={() => saveNote(idx)}
-                  placeholder="Add a note for this trip..."
-                  data-testid={`notes-input-${idx}`}
-                />
-
-                {isFocused && (
-                  <>
-                    <div className="flex flex-wrap gap-[6px] mt-[8px]">
-                      {PREFIXES.map((s) => {
-                        const names = getStoredNames(s);
-                        const isActive = activePrefix === s;
-                        return (
-                          <button
-                            key={s}
-                            className="rounded-[10px] px-[14px] py-[10px] font-heading font-bold text-[14px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[5px]"
-                            style={{
-                              background: isActive ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .06)',
-                              border: isActive ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
-                              color: isActive ? 'var(--wc-y)' : 'var(--wc-t2)',
-                            }}
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={() => handlePrefixTap(s, idx)}
-                            data-testid={`notes-prefix-${s.replace(/[^a-zA-Z]/g, '').toLowerCase()}-${idx}`}
-                          >
-                            {s}
-                            {names.length > 0 && (
-                              <span className="font-data text-[10px] rounded-full w-[18px] h-[18px] flex items-center justify-center" style={{ background: isActive ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .1)', color: isActive ? 'var(--wc-bg)' : 'var(--wc-t3)' }}>
-                                {names.length}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {activePrefix && prefixNames.length > 0 && (
-                      <div className="mt-[8px] rounded-[12px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
-                        <div className="flex items-center justify-between px-[14px] py-[10px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .1)' }}>
-                          <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
-                            <User className="w-[14px] h-[14px] inline mr-[5px]" />
-                            Your {activePrefix}s
-                          </span>
-                          <button onMouseDown={e => e.preventDefault()} onClick={() => setActivePrefix(null)} className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer" style={{ background: 'rgb(var(--wc-ink) / .06)' }} data-testid={`notes-close-names-${idx}`}>
-                            <X className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
-                          </button>
-                        </div>
-                        {prefixNames.map((name, ni) => (
-                          <button
-                            key={ni}
-                            className="w-full text-left px-[14px] py-[12px] text-[15px] cursor-pointer transition-all flex items-center gap-[10px]"
-                            style={{ color: 'var(--wc-text)', borderBottom: ni < prefixNames.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={() => handleNameSelect(activePrefix, name, idx)}
-                            data-testid={`notes-name-${idx}-${ni}`}
-                          >
-                            <MapPin className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-                            {name}
-                          </button>
-                        ))}
+              {!isCollapsed && (
+                <div className="px-[14px] pb-[10px]">
+                  {isFocused && smartSuggestion && !noteText && (
+                    <button
+                      className="w-full mb-[8px] rounded-[12px] p-[12px_14px] text-left cursor-pointer transition-all flex items-start gap-[10px]"
+                      style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' }}
+                      onClick={() => useSuggestion(idx)}
+                      data-testid={`notes-suggestion-${idx}`}
+                    >
+                      <Lightbulb className="w-[18px] h-[18px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
+                      <div>
+                        <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>Suggested</div>
+                        <div className="text-[14px]" style={{ color: 'var(--wc-t2)' }}>{smartSuggestion}</div>
                       </div>
-                    )}
+                    </button>
+                  )}
 
-                    {recentHistory.length > 0 && !noteText && !activePrefix && (
-                      <div className="mt-[8px]">
-                        <div className="flex items-center gap-[6px] mb-[6px]">
-                          <Clock className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
-                          <span className="font-data text-[11px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Recent</span>
-                        </div>
-                        <div className="flex flex-col gap-[5px]">
-                          {recentHistory.slice(0, 4).map((h, hi) => (
+                  <textarea
+                    ref={el => { inputRefs.current[idx] = el; }}
+                    className="w-full rounded-[10px] p-[10px] text-[14px] outline-none resize-none font-sans leading-[1.5]"
+                    style={{ background: 'rgb(var(--wc-ink) / .05)', border: isFocused ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid rgb(var(--wc-ink) / .12)', minHeight: '52px', color: 'var(--wc-text)' }}
+                    value={noteText}
+                    onChange={e => updateNoteText(idx, e.target.value)}
+                    onFocus={() => { setFocusedTrip(idx); setActivePrefix(null); }}
+                    onBlur={() => saveNote(idx)}
+                    placeholder="Add a note for this trip..."
+                    data-testid={`notes-input-${idx}`}
+                  />
+
+                  {isFocused && (
+                    <>
+                      <div className="flex flex-wrap gap-[6px] mt-[8px]">
+                        {PREFIXES.map((s) => {
+                          const names = getStoredNames(s);
+                          const isActive = activePrefix === s;
+                          return (
                             <button
-                              key={hi}
-                              className="w-full text-left rounded-[10px] px-[14px] py-[12px] text-[14px] cursor-pointer transition-all truncate"
-                              style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                              key={s}
+                              className="rounded-[10px] px-[14px] py-[10px] font-heading font-bold text-[14px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[5px]"
+                              style={{
+                                background: isActive ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .06)',
+                                border: isActive ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
+                                color: isActive ? 'var(--wc-y)' : 'var(--wc-t2)',
+                              }}
                               onMouseDown={e => e.preventDefault()}
-                              onClick={() => handleHistorySelect(h, idx)}
-                              data-testid={`notes-history-${idx}-${hi}`}
+                              onClick={() => handlePrefixTap(s, idx)}
+                              data-testid={`notes-prefix-${s.replace(/[^a-zA-Z]/g, '').toLowerCase()}-${idx}`}
                             >
-                              {h}
+                              {s}
+                              {names.length > 0 && (
+                                <span className="font-data text-[10px] rounded-full w-[18px] h-[18px] flex items-center justify-center" style={{ background: isActive ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .1)', color: isActive ? 'var(--wc-bg)' : 'var(--wc-t3)' }}>
+                                  {names.length}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {activePrefix && prefixNames.length > 0 && (
+                        <div className="mt-[8px] rounded-[12px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
+                          <div className="flex items-center justify-between px-[14px] py-[10px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .1)' }}>
+                            <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
+                              <User className="w-[14px] h-[14px] inline mr-[5px]" />
+                              Your {activePrefix}s
+                            </span>
+                            <button onMouseDown={e => e.preventDefault()} onClick={() => setActivePrefix(null)} className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer" style={{ background: 'rgb(var(--wc-ink) / .06)' }} data-testid={`notes-close-names-${idx}`}>
+                              <X className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                            </button>
+                          </div>
+                          {prefixNames.map((name, ni) => (
+                            <button
+                              key={ni}
+                              className="w-full text-left px-[14px] py-[12px] text-[15px] cursor-pointer transition-all flex items-center gap-[10px]"
+                              style={{ color: 'var(--wc-text)', borderBottom: ni < prefixNames.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}
+                              onMouseDown={e => e.preventDefault()}
+                              onClick={() => handleNameSelect(activePrefix, name, idx)}
+                              data-testid={`notes-name-${idx}-${ni}`}
+                            >
+                              <MapPin className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                              {name}
                             </button>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+                      )}
+
+                      {recentHistory.length > 0 && !noteText && !activePrefix && (
+                        <div className="mt-[8px]">
+                          <div className="flex items-center gap-[6px] mb-[6px]">
+                            <Clock className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                            <span className="font-data text-[11px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Recent</span>
+                          </div>
+                          <div className="flex flex-col gap-[5px]">
+                            {recentHistory.slice(0, 4).map((h, hi) => (
+                              <button
+                                key={hi}
+                                className="w-full text-left rounded-[10px] px-[14px] py-[12px] text-[14px] cursor-pointer transition-all truncate"
+                                style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={() => handleHistorySelect(h, idx)}
+                                data-testid={`notes-history-${idx}-${hi}`}
+                              >
+                                {h}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
