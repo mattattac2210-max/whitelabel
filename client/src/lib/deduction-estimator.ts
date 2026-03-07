@@ -11,6 +11,7 @@ export interface ReadinessCheck {
   depreciationAvailable: boolean;
   vehicleHistorySet: boolean;
   financeInterestAvailable: boolean;
+  basicDetailsComplete: boolean;
 }
 
 export interface MissingItem {
@@ -143,6 +144,14 @@ export function getReadinessChecks(hasBizTrips?: boolean): ReadinessCheck {
 
   const businessUseEstablished = hasBizTrips ?? false;
 
+  let vehicleTypeSet = false;
+  try {
+    const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+    vehicleTypeSet = !!(specs.vehicleCategory || specs.bodyType);
+  } catch {}
+
+  const basicDetailsComplete = purchasePriceEntered && vehicleTypeSet;
+
   return {
     taxProfileComplete,
     vehiclePurchaseComplete,
@@ -153,6 +162,7 @@ export function getReadinessChecks(hasBizTrips?: boolean): ReadinessCheck {
     depreciationAvailable,
     vehicleHistorySet,
     financeInterestAvailable,
+    basicDetailsComplete,
   };
 }
 
@@ -162,7 +172,7 @@ export function getDeductionState(checks: ReadinessCheck, showDeductionEstimates
   const mode = getEstimateMode();
 
   if (mode === 'industry') {
-    return 'partial';
+    return checks.basicDetailsComplete ? 'partial' : 'locked';
   }
 
   const canEstimate = (checks.purchasePriceEntered && checks.depreciationAvailable) || checks.businessUseEstablished;
@@ -183,7 +193,18 @@ export function getDeductionState(checks: ReadinessCheck, showDeductionEstimates
 
 export function getMissingItems(checks: ReadinessCheck): MissingItem[] {
   const mode = getEstimateMode();
-  if (mode === 'industry') return [];
+  if (mode === 'industry') {
+    if (checks.basicDetailsComplete) return [];
+    const items: MissingItem[] = [];
+    if (!checks.purchasePriceEntered) items.push({ label: 'Vehicle purchase price', screen: 'account' });
+    try {
+      const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      if (!specs.vehicleCategory && !specs.bodyType) items.push({ label: 'Vehicle type', screen: 'account' });
+    } catch {
+      items.push({ label: 'Vehicle type', screen: 'account' });
+    }
+    return items;
+  }
 
   const items: MissingItem[] = [];
   if (!checks.taxProfileComplete) items.push({ label: 'Tax profile (income details)', screen: 'account' });
