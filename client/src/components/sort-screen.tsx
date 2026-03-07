@@ -274,16 +274,33 @@ export function SortScreen() {
         {!isComplete ? (
           <>
             {state.trips.slice(state.currentIndex, state.currentIndex + 3).map((trip, offset) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                tripIndex={state.currentIndex + offset}
-                isTop={offset === 0}
-                position={offset}
-                onClassify={handleClassify}
-                onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
-                tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
-              />
+              <div key={trip.id} className="contents">
+                <TripCard
+                  trip={trip}
+                  tripIndex={state.currentIndex + offset}
+                  isTop={offset === 0}
+                  position={offset}
+                  onClassify={handleClassify}
+                  onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
+                  tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
+                />
+                {offset > 0 && (
+                  <div
+                    className="absolute right-[10px] flex items-center gap-[3px] rounded-[6px] px-[6px] py-[2px] pointer-events-none"
+                    style={{
+                      top: offset === 1 ? '4px' : '14px',
+                      zIndex: offset === 1 ? 5 : 0,
+                      background: 'rgba(10,10,10,.85)',
+                      border: '1px solid rgba(245,196,0,.2)',
+                      opacity: offset === 1 ? 0.8 : 0.45,
+                    }}
+                    data-testid={`km-peek-${offset}`}
+                  >
+                    <span className="font-heading font-bold text-[10px]" style={{ color: 'var(--wc-y)' }}>{trip.km}</span>
+                    <span className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
+                  </div>
+                )}
+              </div>
             ))}
           </>
         ) : state.trips.length === 0 ? (
@@ -413,19 +430,9 @@ export function SortScreen() {
             <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-y)' }} />
             <div className="flex items-baseline justify-between">
               <div>
-                <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook Claim Est.*</div>
+                <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Session Claim Est.*</div>
                 {(() => {
-                  const savedDed = state.savedReports
-                    .filter(r => !r.supersedes)
-                    .reduce((sum, r) => {
-                      const rTrips = r.trips || [];
-                      const rBizKm = rTrips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-                      const rTotKm = rTrips.reduce((s, t) => s + t.km, 0);
-                      return sum + calcLogbookDeduction(rBizKm, rTotKm);
-                    }, 0);
-                  const currentSessionHasReport = state.savedReports.some(r => r.sessionId === state.sessionId && !r.supersedes);
-                  const unsavedDed = currentSessionHasReport ? 0 : state.dedTotal;
-                  const runningTotal = Math.round(savedDed + unsavedDed);
+                  const runningTotal = Math.round(state.dedTotal);
 
                   if (deductionState === 'locked') {
                     return (
