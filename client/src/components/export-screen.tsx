@@ -417,7 +417,7 @@ export function ExportScreen() {
                         className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0"
                         style={{ background: isSelected ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)', border: isSelected ? 'none' : '1.5px solid rgb(var(--wc-ink) / .12)' }}
                       >
-                        {isSelected && <Check className="w-[14px] h-[14px] text-black" />}
+                        {isSelected && <Check className="w-[14px] h-[14px]" style={{ color: 'var(--wc-bg)' }} />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-heading font-bold text-[12px] truncate" style={{ color: 'var(--wc-text)' }}>{label}</div>
@@ -570,8 +570,8 @@ export function ExportScreen() {
                 </div>
               ))}
               <div className="flex gap-[8px] mt-[4px]">
-                <button className="flex-1 rounded-[10px] py-[11px] font-heading font-extrabold text-[13px] uppercase tracking-[.05em] cursor-pointer text-black"
-                  style={{ background: 'var(--wc-y)' }}
+                <button className="flex-1 rounded-[10px] py-[11px] font-heading font-extrabold text-[13px] uppercase tracking-[.05em] cursor-pointer"
+                  style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
                   onClick={() => handleVehicleConfirm(vehicleDetails)}
                   data-testid="button-generate-combined-pdf">
                   Generate Combined PDF

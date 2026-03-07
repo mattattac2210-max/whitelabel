@@ -173,8 +173,8 @@ export function OdometerScreen() {
               <p>All adjustments will be <strong style={{ color: 'var(--wc-text)' }}>logged in your audit report</strong>.</p>
             </div>
             <button
-              className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
-              style={{ background: 'var(--wc-y)' }}
+              className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all"
+              style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
               onClick={() => setShowOdoWarning(false)}
               data-testid="button-odo-warning-ok"
             >
@@ -262,8 +262,8 @@ export function OdometerScreen() {
 
             <div className="px-[16px] py-[12px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
               <button
-                className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgb(var(--wc-ink) / .25)' }}
+                className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 2px 12px rgb(var(--wc-ink) / .25)' }}
                 onClick={() => setShowOdoInfoPopup(false)}
                 data-testid="button-got-it-odo-popup"
               >
@@ -274,7 +274,7 @@ export function OdometerScreen() {
         </div>
       )}
 
-      <div className="flex-1 px-[14px] flex flex-col gap-[5px] overflow-y-auto scrollbar-thin pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 px-[14px] flex flex-col gap-[4px] overflow-y-auto scrollbar-thin pb-1 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
         {sorted.map((t) => {
           const i = state.trips.indexOf(t);
           const oStart = Math.round(getTripOdoStart(state.trips, i, state.baseOdo));
@@ -297,7 +297,7 @@ export function OdometerScreen() {
           return (
             <div
               key={i}
-              className="rounded-[12px] transition-all flex-shrink-0"
+              className={`rounded-[12px] transition-all ${isExpanded ? 'flex-shrink-0' : 'flex-1 min-h-0'}`}
               style={{
                 background: verified ? 'rgba(34,197,94,.03)' : 'var(--wc-card)',
                 border: verified ? '1px solid rgba(34,197,94,.35)' : '1px solid var(--wc-border)',
@@ -327,8 +327,8 @@ export function OdometerScreen() {
 
                 {!verified && (
                   <button
-                    className="rounded-[7px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.05em] uppercase text-black cursor-pointer flex items-center gap-[3px] transition-all active:scale-95 flex-shrink-0"
-                    style={{ background: 'var(--wc-y)', boxShadow: '0 1px 6px rgb(var(--wc-ink) / .15)' }}
+                    className="rounded-[7px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.05em] uppercase cursor-pointer flex items-center gap-[3px] transition-all active:scale-95 flex-shrink-0"
+                    style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 1px 6px rgb(var(--wc-ink) / .15)' }}
                     onClick={(e) => {
                       e.stopPropagation();
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
@@ -481,8 +481,8 @@ export function OdometerScreen() {
                     </div>
                     {!verified && (
                       <button
-                        className="rounded-[8px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[3px] transition-all active:scale-95"
-                        style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgb(var(--wc-ink) / .2)' }}
+                        className="rounded-[8px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.06em] uppercase cursor-pointer flex items-center gap-[3px] transition-all active:scale-95"
+                        style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 2px 10px rgb(var(--wc-ink) / .2)' }}
                         onClick={() => {
                           dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
                         }}
@@ -519,7 +519,7 @@ export function OdometerScreen() {
               style={{
                 background: allConfirmed ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .3)',
                 boxShadow: allConfirmed ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
-                color: allConfirmed ? '#000' : 'rgba(0,0,0,.6)',
+                color: allConfirmed ? 'var(--wc-bg)' : 'rgb(var(--wc-ink) / .4)',
                 cursor: allConfirmed ? 'pointer' : 'default',
               }}
               onClick={() => {
@@ -573,8 +573,8 @@ export function OdometerScreen() {
               )}
             </div>
             <button
-              className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-              style={{ background: 'var(--wc-am)', boxShadow: '0 2px 12px rgba(153,153,153,.3)' }}
+              className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              style={{ background: 'var(--wc-am)', color: 'var(--wc-bg)', boxShadow: '0 2px 12px rgba(153,153,153,.3)' }}
               onClick={() => setShowUnconfirmedWarning(false)}
               data-testid="button-dismiss-warning"
             >

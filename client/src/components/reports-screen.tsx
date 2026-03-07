@@ -607,8 +607,8 @@ function VehicleDetailsModal({
           ))}
 
           <div className="flex gap-[8px] mt-[4px]">
-            <button className="flex-1 rounded-[10px] py-[11px] font-heading font-extrabold text-[13px] uppercase tracking-[.05em] cursor-pointer text-black"
-              style={{ background: 'var(--wc-y)' }}
+            <button className="flex-1 rounded-[10px] py-[11px] font-heading font-extrabold text-[13px] uppercase tracking-[.05em] cursor-pointer"
+              style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
               onClick={() => onConfirm(form)}
               data-testid="button-generate-pdf">
               Generate PDF
@@ -958,8 +958,8 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
 
             <div className="px-[16px] py-[12px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
               <button
-                className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgb(var(--wc-ink) / .25)' }}
+                className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 2px 12px rgb(var(--wc-ink) / .25)' }}
                 onClick={() => setShowOdoInfo(false)}
                 data-testid="button-got-it-odo"
               >
@@ -1569,7 +1569,7 @@ export function ReportsScreen() {
                     onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: r.globalIdx })} data-testid={`conflict-select-${r.globalIdx}`}>
                     <div className="flex items-center gap-[6px] mb-[3px]">
                       <div className="w-[15px] h-[15px] rounded-full flex items-center justify-center" style={{ background: !r.supersedes ? 'var(--wc-gr)' : 'transparent', border: `2px solid ${!r.supersedes ? 'var(--wc-gr)' : 'var(--wc-border)'}` }}>
-                        {!r.supersedes && <Check className="w-[9px] h-[9px] text-black" />}
+                        {!r.supersedes && <Check className="w-[9px] h-[9px]" style={{ color: 'var(--wc-bg)' }} />}
                       </div>
                       <span className="font-heading font-bold text-[13px]" style={{ color: 'var(--wc-text)' }}>Rev {r.revision}</span>
                       {!r.supersedes && <span className="font-heading font-bold text-[8px] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(34,197,94,.15)', color: 'var(--wc-gr)' }}>Active</span>}
@@ -1582,7 +1582,7 @@ export function ReportsScreen() {
                   </div>
                 ))}
               </div>
-              <button className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] uppercase cursor-pointer text-black" style={{ background: 'var(--wc-y)' }} onClick={() => setConflictSessionId(null)} data-testid="button-conflict-done">Done</button>
+              <button className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] uppercase cursor-pointer" style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }} onClick={() => setConflictSessionId(null)} data-testid="button-conflict-done">Done</button>
             </div>
           </div>
         );

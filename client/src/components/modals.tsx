@@ -313,8 +313,8 @@ export function EditModal() {
         </div>
 
         <button
-          className="w-full rounded-[10px] py-[11px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all"
-          style={{ background: 'var(--wc-y)' }}
+          className="w-full rounded-[10px] py-[11px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all"
+          style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
           onClick={handleSave}
           data-testid="button-save-edit"
         >
@@ -586,8 +586,8 @@ export function SummaryModal() {
 
         <div className="px-[20px] flex flex-col gap-[8px]">
           <button
-            className="w-full rounded-[12px] py-[16px] font-heading font-black text-[20px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .2)' }}
+            className="w-full rounded-[12px] py-[16px] font-heading font-black text-[20px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
