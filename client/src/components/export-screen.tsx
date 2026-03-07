@@ -176,57 +176,91 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
 
   sectionTitle('Combined Journey List');
 
-  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Biz km'];
-  const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
+  const cols = ['Date','ODO Start','ODO End','Type','Purpose','Notes','km','Biz $'];
+  const colW = [20, 17, 17, 14, 28, 52, 14, 20];
   const hdrH = 6.5;
+  const minRowH = 5.8;
+  const lineH = 3.4;
+  const topPad = 3;
+  const notesIdx = 5;
+  const purposeIdx = 4;
+  const notesCW = colW[notesIdx] - 3;
+  const purposeCW = colW[purposeIdx] - 3;
 
-  doc.setFillColor(240, 240, 240); doc.rect(ML, y, CW, hdrH, 'F');
-  doc.setDrawColor(180, 180, 180); doc.rect(ML, y, CW, hdrH, 'S');
-  let cx = ML;
-  cols.forEach((h, i) => {
-    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
-    doc.text(h, cx + 1.5, y + 4.5); cx += colW[i];
-  });
-  y += hdrH;
+  function drawTableHeader() {
+    doc.setFillColor(240, 240, 240); doc.rect(ML, y, CW, hdrH, 'F');
+    doc.setDrawColor(180, 180, 180); doc.rect(ML, y, CW, hdrH, 'S');
+    let hx = ML;
+    cols.forEach((h, i) => {
+      doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
+      doc.text(h, hx + 1.5, y + 4.5); hx += colW[i];
+    });
+    y += hdrH;
+  }
+
+  function checkYTable(needed: number) {
+    if (y + needed > PH - 16) {
+      addPage();
+      drawTableHeader();
+    }
+  }
+
+  drawTableHeader();
 
   allTrips.forEach((t: any) => {
-    checkY(6);
     const isBiz = t.type === 'business';
-    doc.setFillColor(isBiz ? 255 : 255, isBiz ? 253 : 255, isBiz ? 240 : 255);
-    doc.rect(ML, y, CW, 5.8, 'F');
-    doc.setDrawColor(235, 235, 235); doc.rect(ML, y, CW, 5.8, 'S');
     const purposeStr = isBiz && t.purposeLabel ? t.purposeLabel : '\u2014';
-    const noteStr = t.notes ? (t.notes.length > 14 ? t.notes.slice(0, 13) + '\u2026' : t.notes) : '\u2014';
+    const noteStr = isBiz && t.notes ? t.notes : '\u2014';
+
+    doc.setFontSize(6.5);
+    const wrappedNotes = doc.splitTextToSize(String(noteStr), notesCW);
+    const wrappedPurpose = doc.splitTextToSize(String(purposeStr), purposeCW);
+    const maxLines = Math.max(wrappedNotes.length, wrappedPurpose.length, 1);
+    const rowH = Math.max(minRowH, maxLines * lineH + topPad + 1);
+
+    checkYTable(rowH);
+
+    doc.setFillColor(isBiz ? 255 : 255, isBiz ? 253 : 255, isBiz ? 240 : 255);
+    doc.rect(ML, y, CW, rowH, 'F');
+    doc.setDrawColor(235, 235, 235); doc.rect(ML, y, CW, rowH, 'S');
+
     const cells = [
       t.date,
       t.odoStart?.toLocaleString('en-AU') ?? '\u2014',
       t.odoEnd?.toLocaleString('en-AU') ?? '\u2014',
       isBiz ? 'Business' : 'Personal',
-      purposeStr.length > 10 ? purposeStr.slice(0, 9) + '\u2026' : purposeStr,
-      isBiz ? noteStr : '\u2014',
+      null,
+      null,
       t.km.toFixed(1),
-      isBiz ? t.km.toFixed(1) : '',
       isBiz ? t.km.toFixed(1) : '0',
     ];
     let cx2 = ML;
     cells.forEach((cell, ci) => {
-      doc.setFontSize(7); doc.setFont('helvetica', ci === 3 && isBiz ? 'bold' : 'normal');
+      if (ci === notesIdx || ci === purposeIdx) { cx2 += colW[ci]; return; }
+      doc.setFontSize(6.5); doc.setFont('helvetica', ci === 3 && isBiz ? 'bold' : 'normal');
       if (ci === 3) {
         if (isBiz) doc.setTextColor(...GY); else doc.setTextColor(...GG);
-      } else if (ci === 4 && isBiz) {
-        doc.setTextColor(...GY);
-      } else if (ci === 5 && isBiz && t.notes) {
-        doc.setFont('helvetica', 'italic');
-        doc.setTextColor(...GG);
-      } else if (ci === 8 && isBiz) {
+      } else if (ci === 7 && isBiz) {
         doc.setTextColor(...GR);
       } else {
         doc.setTextColor(...BK);
       }
-      doc.text(String(cell), cx2 + 1.5, y + 4); cx2 += colW[ci];
+      doc.text(String(cell), cx2 + 1.5, y + topPad + 0.8); cx2 += colW[ci];
     });
 
-    y += 5.8;
+    const purposeX = ML + colW.slice(0, purposeIdx).reduce((a, b) => a + b, 0) + 1.5;
+    doc.setFontSize(6.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GY);
+    wrappedPurpose.forEach((line: string, li: number) => {
+      doc.text(line, purposeX, y + topPad + 0.8 + li * lineH);
+    });
+
+    const notesX = ML + colW.slice(0, notesIdx).reduce((a, b) => a + b, 0) + 1.5;
+    doc.setFontSize(6.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
+    wrappedNotes.forEach((line: string, li: number) => {
+      doc.text(line, notesX, y + topPad + 0.8 + li * lineH);
+    });
+
+    y += rowH;
   });
 
   checkY(7);
@@ -234,12 +268,10 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   doc.setDrawColor(180, 180, 180); doc.rect(ML, y, CW, 6.5, 'S');
   doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
   doc.text('Totals', ML + 1.5, y + 4.5);
-  const totStart = colW.slice(0, 6).reduce((a, b) => a + b, 0);
-  doc.text(totalKm.toFixed(1), ML + totStart + 1.5, y + 4.5);
-  doc.setTextColor(...GY);
-  doc.text(bizKm.toFixed(1), ML + totStart + colW[6] + 1.5, y + 4.5);
+  const totKmX = ML + colW.slice(0, 6).reduce((a, b) => a + b, 0);
+  doc.text(totalKm.toFixed(1), totKmX + 1.5, y + 4.5);
   doc.setTextColor(...GR);
-  doc.text(`$${totalEst.toFixed(2)}`, ML + totStart + colW[6] + colW[7] + 1.5, y + 4.5);
+  doc.text(`$${totalEst.toFixed(2)}`, totKmX + colW[6] + 1.5, y + 4.5);
   y += 10;
 
   sectionTitle('Compliance Notes');
