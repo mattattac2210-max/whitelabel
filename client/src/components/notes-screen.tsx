@@ -300,17 +300,32 @@ export function NotesScreen() {
                     </button>
                   )}
 
-                  <textarea
-                    ref={el => { inputRefs.current[idx] = el; }}
-                    className="w-full rounded-[10px] p-[10px] text-[14px] outline-none resize-none font-sans leading-[1.5]"
-                    style={{ background: 'rgb(var(--wc-ink) / .05)', border: isFocused ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid rgb(var(--wc-ink) / .12)', minHeight: '52px', color: 'var(--wc-text)' }}
-                    value={noteText}
-                    onChange={e => updateNoteText(idx, e.target.value)}
-                    onFocus={() => { setFocusedTrip(idx); setActivePrefix(null); }}
-                    onBlur={() => saveNote(idx)}
-                    placeholder="Add a note for this trip..."
-                    data-testid={`notes-input-${idx}`}
-                  />
+                  <div className="flex gap-[8px] items-end">
+                    <textarea
+                      ref={el => { inputRefs.current[idx] = el; }}
+                      className="flex-1 rounded-[10px] p-[10px] text-[14px] outline-none resize-none font-sans leading-[1.5]"
+                      style={{ background: 'rgb(var(--wc-ink) / .05)', border: isFocused ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid rgb(var(--wc-ink) / .12)', minHeight: '52px', color: 'var(--wc-text)' }}
+                      value={noteText}
+                      onChange={e => updateNoteText(idx, e.target.value)}
+                      onFocus={() => { setFocusedTrip(idx); setActivePrefix(null); }}
+                      placeholder="Add a note for this trip..."
+                      data-testid={`notes-input-${idx}`}
+                    />
+                    <button
+                      className="w-[44px] h-[44px] rounded-[10px] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all active:scale-90"
+                      style={{
+                        background: hasNote ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .08)',
+                        border: hasNote ? 'none' : '1px solid var(--wc-border)',
+                        color: hasNote ? 'var(--wc-bg)' : 'var(--wc-t3)',
+                        opacity: hasNote ? 1 : 0.5,
+                      }}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => { if (hasNote) saveNote(idx); }}
+                      data-testid={`notes-done-${idx}`}
+                    >
+                      <Check className="w-[22px] h-[22px]" strokeWidth={2.5} />
+                    </button>
+                  </div>
 
                   {isFocused && (
                     <>
