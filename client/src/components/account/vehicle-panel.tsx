@@ -404,7 +404,7 @@ export function VehiclePanel() {
             <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.12)' }}>
               <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
               <div className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-am)' }}>
-                Using $25,000 default. Enter your vehicle's purchase price for accurate depreciation and per-trip values.
+                Using $45,000 default for a new vehicle. Enter your actual purchase price for accurate depreciation and per-trip values.
               </div>
             </div>
           )}

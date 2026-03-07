@@ -88,7 +88,7 @@ function getIndustryDepreciation(): number {
       return Math.round(capped * DV_RATE * 100) / 100;
     }
   } catch {}
-  return Math.round(25000 * DV_RATE * 100) / 100;
+  return Math.round(45000 * DV_RATE * 100) / 100;
 }
 
 export function getReadinessChecks(hasBizTrips?: boolean): ReadinessCheck {
