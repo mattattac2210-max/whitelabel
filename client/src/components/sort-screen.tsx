@@ -5,7 +5,7 @@ import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
 import { DeductionCard } from './deduction-card';
-import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info } from 'lucide-react';
+import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info, CheckCircle } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -87,6 +87,50 @@ function BusinessDial({ pct }: { pct: number }) {
   );
 }
 
+const BATCH_SIZE = 6;
+
+function BatchCompleteView({ batchNumber, trips, batchStart, batchEnd, remaining, onNext }: {
+  batchNumber: number;
+  trips: { type: string | null }[];
+  batchStart: number;
+  batchEnd: number;
+  remaining: number;
+  onNext: () => void;
+}) {
+  const batchTrips = trips.slice(batchStart, batchEnd);
+  const batchBiz = batchTrips.filter(t => t.type === 'business').length;
+  const batchPer = batchTrips.filter(t => t.type === 'personal').length;
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-[14px] p-7 z-50 animate-pop">
+      <div className="w-[56px] h-[56px] rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,.12)', border: '2px solid rgba(34,197,94,.3)' }}>
+        <CheckCircle className="w-[28px] h-[28px]" style={{ color: 'var(--wc-gr)' }} />
+      </div>
+      <div className="font-heading font-black text-[20px] uppercase text-white text-center">Batch {batchNumber} Sorted</div>
+      <div className="flex items-center gap-[12px]">
+        <div className="flex items-center gap-[4px]">
+          <div className="w-[8px] h-[8px] rounded-full" style={{ background: 'var(--wc-gr)' }} />
+          <span className="font-data text-[12px]" style={{ color: 'var(--wc-t2)' }}>{batchBiz} business</span>
+        </div>
+        <div className="flex items-center gap-[4px]">
+          <div className="w-[8px] h-[8px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
+          <span className="font-data text-[12px]" style={{ color: 'var(--wc-t2)' }}>{batchPer} personal</span>
+        </div>
+      </div>
+      <div className="text-[12px] text-center" style={{ color: 'var(--wc-t3)' }}>
+        {remaining} more trip{remaining !== 1 ? 's' : ''} to sort
+      </div>
+      <button
+        className="rounded-[11px] px-[24px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+        style={{ background: 'var(--wc-yd)', border: '1.5px solid rgba(245,196,0,.35)', color: 'var(--wc-y)' }}
+        onClick={onNext}
+        data-testid="button-next-batch"
+      >
+        Next Batch →
+      </button>
+    </div>
+  );
+}
+
 export function SortScreen() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
@@ -114,6 +158,21 @@ export function SortScreen() {
       setTutorialPhase('done');
     }
   }, [state.currentIndex, tutorialPhase]);
+
+  const [batchOffset, setBatchOffset] = useState(0);
+  const batchStart = batchOffset;
+  const batchEnd = Math.min(batchStart + BATCH_SIZE, state.trips.length);
+  const batchNumber = Math.floor(batchOffset / BATCH_SIZE) + 1;
+  const totalBatches = Math.ceil(state.trips.length / BATCH_SIZE);
+  const remainingInBatch = batchEnd - state.currentIndex;
+  const batchComplete = state.currentIndex >= batchEnd && state.currentIndex < state.trips.length;
+
+  useEffect(() => {
+    if (state.currentIndex === 0) setBatchOffset(0);
+    else if (state.currentIndex < batchOffset) {
+      setBatchOffset(Math.floor(state.currentIndex / BATCH_SIZE) * BATCH_SIZE);
+    }
+  }, [state.currentIndex, batchOffset]);
 
   const currentTrip = state.trips[state.currentIndex];
   const isComplete = state.currentIndex >= state.trips.length;
@@ -207,8 +266,13 @@ export function SortScreen() {
         </div>
 
         <div className="flex items-center gap-[5px] ml-auto">
+          {totalBatches > 1 && (
+            <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}>
+              <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>{batchNumber}/{totalBatches}</span>
+            </div>
+          )}
           <div className="flex items-center gap-[3px] rounded-[20px] px-[7px] py-[2px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
+            <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{batchComplete ? 0 : remainingInBatch}</span>
             <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
           </div>
           {nextScreen && (
@@ -279,9 +343,18 @@ export function SortScreen() {
           </div>
         )}
 
-        {!isComplete ? (
+        {batchComplete && !isComplete ? (
+          <BatchCompleteView
+            batchNumber={batchNumber}
+            trips={state.trips}
+            batchStart={batchStart}
+            batchEnd={batchEnd}
+            remaining={remaining}
+            onNext={() => setBatchOffset(state.currentIndex)}
+          />
+        ) : !isComplete ? (
           <>
-            {state.trips.slice(state.currentIndex, state.currentIndex + 3).map((trip, offset) => (
+            {state.trips.slice(state.currentIndex, Math.min(state.currentIndex + 3, batchEnd)).map((trip, offset) => (
               <TripCard
                 key={trip.id}
                 trip={trip}
