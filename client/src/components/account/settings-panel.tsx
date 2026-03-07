@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, LogOut } from 'lucide-react';
 import { CollapsiblePanel, ToggleRow, FieldInput, ChipSelect } from './collapsible-panel';
+import { useTheme } from '@/lib/theme-provider';
 
 interface AppSettings {
   tripDetectionAlerts: boolean;
@@ -38,6 +39,7 @@ function load(): AppSettings {
 }
 
 export function SettingsPanel() {
+  const { theme, toggleTheme } = useTheme();
   const [s, setS] = useState<AppSettings>(load);
   useEffect(() => {
     localStorage.setItem('wc_settings', JSON.stringify(s));
@@ -56,7 +58,10 @@ export function SettingsPanel() {
   return (
     <CollapsiblePanel title="Settings" icon={Settings} testId="panel-settings">
       <div className="pt-[12px]">
-        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Deduction Estimates</div>
+        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Appearance</div>
+        <ToggleRow label="Dark Mode" value={theme === 'dark'} onChange={() => toggleTheme()} testId="toggle-dark-mode" />
+
+        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Deduction Estimates</div>
         <ToggleRow label="Show Deduction Estimates" value={s.showDeductionEstimates} onChange={updBool('showDeductionEstimates')} testId="toggle-show-deduction-estimates" />
 
         <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Notifications</div>

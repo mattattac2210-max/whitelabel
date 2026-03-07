@@ -60,7 +60,7 @@ export function MyDetailsPanel() {
         </button>
 
         {showAccountant && (
-          <div className="mt-[8px] rounded-[10px] p-[12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid var(--wc-border)' }}>
+          <div className="mt-[8px] rounded-[10px] p-[12px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid var(--wc-border)' }}>
             <FieldInput label="Accountant Name" value={d.accountantName} onChange={upd('accountantName')} placeholder="Jane Doe" testId="input-accountant-name" />
             <FieldInput label="Accountant Email" value={d.accountantEmail} onChange={upd('accountantEmail')} placeholder="jane@accounting.com" type="email" testId="input-accountant-email" />
             <FieldInput label="Accountant Phone" value={d.accountantPhone} onChange={upd('accountantPhone')} placeholder="03 9876 5432" type="tel" testId="input-accountant-phone" />

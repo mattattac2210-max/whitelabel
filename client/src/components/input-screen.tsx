@@ -16,24 +16,24 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-choose"
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Add Trip</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Trip</span>
       </div>
 
       <div className="flex-1 px-[18px] flex flex-col justify-center gap-[14px] pb-[40px]">
         <button
           className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
-          style={{ background: 'rgba(255,255,255,.06)', border: '2px solid rgba(255,255,255,.25)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '2px solid rgb(var(--wc-ink) / .25)' }}
           onClick={() => onSelect('live')}
           data-testid="choose-start-new"
         >
           <div className="flex items-center gap-[14px]">
-            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.3)' }}>
+            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .12)', border: '1px solid rgb(var(--wc-ink) / .3)' }}>
               <Navigation className="w-[24px] h-[24px]" style={{ color: 'var(--wc-y)' }} />
             </div>
             <div>
@@ -45,16 +45,16 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
 
         <button
           className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
-          style={{ background: 'rgba(255,255,255,.03)', border: '2px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .03)', border: '2px solid var(--wc-border)' }}
           onClick={() => onSelect('existing')}
           data-testid="choose-add-existing"
         >
           <div className="flex items-center gap-[14px]">
-            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}>
+            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
               <History className="w-[24px] h-[24px]" style={{ color: 'var(--wc-t2)' }} />
             </div>
             <div>
-              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px] text-white">Add Existing Trip</div>
+              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px]" style={{ color: 'var(--wc-text)' }}>Add Existing Trip</div>
               <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
             </div>
           </div>
@@ -372,17 +372,17 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
           <button
             className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
             onClick={onBack}
             data-testid="button-back-live"
           >
             <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
           </button>
-          <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Start Trip</span>
+          <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Start Trip</span>
         </div>
 
         <div className="flex-1 px-[18px] flex flex-col justify-center pb-[40px]">
-          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
+          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
             <div className="flex items-center gap-[10px] mb-[14px]">
               <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
               <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Where are you starting?</span>
@@ -391,7 +391,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             <button
               className="w-full rounded-[10px] p-[11px_14px] mb-[10px] flex items-center gap-[10px] cursor-pointer transition-all"
               style={{
-                background: geoStatus === 'done' ? 'rgba(34,197,94,.08)' : 'rgba(255,255,255,.05)',
+                background: geoStatus === 'done' ? 'rgba(34,197,94,.08)' : 'rgb(var(--wc-ink) / .05)',
                 border: geoStatus === 'done' ? '1.5px solid rgba(34,197,94,.3)' : '1.5px solid var(--wc-border)',
               }}
               onClick={handleUseCurrentLocation}
@@ -418,8 +418,8 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             </div>
 
             <AddressInput
-              className="w-full rounded-[10px] p-[12px_14px] text-[13px] text-white outline-none transition-all"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
+              className="w-full rounded-[10px] p-[12px_14px] text-[13px] outline-none transition-all"
+              style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)' }}
               value={startAddress}
               onChange={(v) => { setStartAddress(v); if (geoStatus === 'done') setGeoStatus('idle'); startCoordsRef.current = null; }}
               placeholder="Enter starting address"
@@ -433,8 +433,8 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           <button
             className="w-full rounded-[14px] py-[16px] font-heading font-black text-[18px] tracking-[.07em] uppercase flex items-center justify-center gap-[8px] transition-all"
             style={{
-              background: startAddress.length > 3 ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
-              color: startAddress.length > 3 ? 'black' : 'rgba(0,0,0,.4)',
+              background: startAddress.length > 3 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .2)',
+              color: startAddress.length > 3 ? 'var(--wc-bg)' : 'rgb(var(--wc-ink) / .4)',
               cursor: startAddress.length > 3 ? 'pointer' : 'not-allowed',
             }}
             onClick={handleCommence}
@@ -464,7 +464,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="px-[14px] pb-[6px] flex-shrink-0">
-          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
+          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
             <div className="flex items-center gap-[8px]">
               <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
               <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{startAddress.length > 30 ? startAddress.slice(0, 28) + '…' : startAddress}</span>
@@ -476,10 +476,10 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden relative" style={{ border: '1px solid var(--wc-border)', background: '#1a1a2e', minHeight: '200px' }}>
+        <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden relative" style={{ border: '1px solid var(--wc-border)', background: 'var(--wc-card)', minHeight: '200px' }}>
           <div ref={mapRef} className="w-full h-full" data-testid="live-map" />
           {mapError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: '#1a1a2e' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: 'var(--wc-card)' }}>
               <Navigation className="w-[28px] h-[28px]" style={{ color: 'var(--wc-t3)' }} />
               <span className="font-heading text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Map unavailable</span>
               <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Trip still recording — {tripKm.toFixed(1)} km</span>
@@ -514,7 +514,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
               className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
               style={{
                 background: 'var(--wc-re)',
-                color: 'white',
+                color: '#fff',
                 boxShadow: '0 4px 20px rgba(239,68,68,.25)',
               }}
               onClick={handleEndTrip}
@@ -532,7 +532,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col h-full" data-testid="live-ended-screen">
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Trip Complete</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Trip Complete</span>
       </div>
 
       <div className="flex-1 px-[18px] pt-[6px] overflow-y-auto scrollbar-thin">
@@ -542,10 +542,10 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Trip Recorded</span>
           </div>
           <div className="flex flex-col gap-[6px] text-[12px]" style={{ color: 'var(--wc-t2)' }}>
-            <div><strong className="text-white">From:</strong> {startAddress}</div>
-            {endAddress && <div><strong className="text-white">To:</strong> {endAddress}</div>}
-            <div><strong className="text-white">Duration:</strong> {tripDuration}</div>
-            <div><strong className="text-white">Distance:</strong> <span className="font-data font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)} km</span></div>
+            <div><strong style={{ color: 'var(--wc-text)' }}>From:</strong> {startAddress}</div>
+            {endAddress && <div><strong style={{ color: 'var(--wc-text)' }}>To:</strong> {endAddress}</div>}
+            <div><strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {tripDuration}</div>
+            <div><strong style={{ color: 'var(--wc-text)' }}>Distance:</strong> <span className="font-data font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)} km</span></div>
           </div>
         </div>
 
@@ -553,8 +553,8 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           <div className="mb-[10px]">
             <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Destination</label>
             <AddressInput
-              className="w-full rounded-[10px] p-[10px_12px] text-[12px] text-white outline-none transition-all"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1.5px solid var(--wc-border)' }}
+              className="w-full rounded-[10px] p-[10px_12px] text-[12px] outline-none transition-all"
+              style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)' }}
               value={endAddress}
               onChange={setEndAddress}
               placeholder="Enter destination"
@@ -563,14 +563,14 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
-        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(153,153,153,.06)' : 'rgba(255,255,255,.03)', border: tripKm < 1 ? '1px solid rgba(153,153,153,.2)' : '1px solid var(--wc-border)' }}>
+        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(153,153,153,.06)' : 'rgb(var(--wc-ink) / .03)', border: tripKm < 1 ? '1px solid rgba(153,153,153,.2)' : '1px solid var(--wc-border)' }}>
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: tripKm < 1 ? 'var(--wc-am)' : 'var(--wc-t3)' }}>{tripKm < 1 ? 'Enter distance (min 1 km)' : 'Distance (km)'}</label>
           <input
             type="number"
             step="0.1"
             min="1"
-            className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[13px] outline-none font-data"
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={tripKm || ''}
             onChange={e => setTripKm(parseFloat(e.target.value) || 0)}
             placeholder="Min 1"
@@ -592,11 +592,12 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <button
-            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black transition-all flex items-center justify-center gap-[8px]"
+            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase transition-all flex items-center justify-center gap-[8px]"
             style={{
-              background: canSendToSort ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
+              background: canSendToSort ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .2)',
+              color: 'var(--wc-bg)',
               opacity: canSendToSort ? 1 : 0.5,
-              boxShadow: canSendToSort ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
+              boxShadow: canSendToSort ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
               cursor: canSendToSort ? 'pointer' : 'not-allowed',
             }}
             onClick={handleSendToSort}
@@ -732,13 +733,13 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={onBack}
           data-testid="button-back-existing"
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Add Existing</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Existing</span>
         <span className="ml-auto font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sends to sort</span>
       </div>
 
@@ -746,8 +747,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         <div className="mb-[8px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>From</label>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={from}
             onChange={setFrom}
             placeholder="Start address"
@@ -758,8 +759,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         {stops.map((s, i) => (
           <div key={i} className="flex items-center gap-[5px] mb-1">
             <AddressInput
-              className="w-full rounded-[7px] p-[6px_9px] text-[12px] text-white outline-none"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', flex: 1 }}
+              className="w-full rounded-[7px] p-[6px_9px] text-[12px] outline-none"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', flex: 1 }}
               placeholder={`Stop ${i + 1}`}
               value={s}
               onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
@@ -771,7 +772,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         <div className="flex gap-[5px] mb-[8px]">
           <button
             className="flex-1 rounded-[7px] p-[5px_8px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all"
-            style={{ background: 'rgba(255,255,255,.03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => setStops([...stops, ''])}
             data-testid="input-add-stop"
           >
@@ -780,7 +781,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           {from.length > 3 && to.length > 3 && (
             <button
               className="rounded-[7px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
               onClick={calcRoute}
               data-testid="input-calc-route"
             >
@@ -793,8 +794,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         <div className="mb-[8px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>To</label>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={to}
             onChange={setTo}
             placeholder="Destination address"
@@ -809,8 +810,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
               <Calendar className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
               <input
                 type="date"
-                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] text-white outline-none"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', colorScheme: 'dark' }}
+                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 data-testid="input-date"
@@ -823,8 +824,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
               <Clock className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
               <input
                 type="time"
-                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] text-white outline-none"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', colorScheme: 'dark' }}
+                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                 value={time}
                 onChange={e => setTime(e.target.value)}
                 data-testid="input-time"
@@ -839,8 +840,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
             <input
               type="number"
               step="0.1"
-              className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+              className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
               value={km}
               onChange={e => setKm(e.target.value)}
               placeholder="Min 1"
@@ -854,8 +855,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           <div className="flex-1">
             <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Duration</label>
             <input
-              className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+              className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
               value={duration}
               onChange={e => setDuration(e.target.value)}
               placeholder="e.g. 25 min"
@@ -864,7 +865,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)' }}>
+        <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)' }}>
           <div className="flex items-center gap-[6px] mb-[6px]">
             <Gauge className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Odometer (optional)</span>
@@ -874,8 +875,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
               <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Reading</label>
               <input
                 type="number"
-                className="w-full rounded-lg p-[7px_10px] text-[12px] text-white outline-none font-data"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                className="w-full rounded-lg p-[7px_10px] text-[12px] outline-none font-data"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                 value={odoStart}
                 onChange={e => setOdoStart(e.target.value)}
                 placeholder="e.g. 84280"
@@ -886,7 +887,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
               <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Reading</label>
               <div
                 className="w-full rounded-lg p-[7px_10px] text-[12px] font-data"
-                style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: odoStart && parseFloat(km) > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: odoStart && parseFloat(km) > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}
                 data-testid="input-odo-end"
               >
                 {odoStart && parseFloat(km) > 0 ? Math.round(parseFloat(odoStart) + parseFloat(km)).toLocaleString() : '\u2014'}
@@ -896,7 +897,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           {state.trips.length > 0 && (
             <button
               className="mt-[6px] rounded-[6px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
               onClick={() => {
                 const lastOdo = getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo);
                 setOdoStart(Math.round(lastOdo).toString());
@@ -912,8 +913,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Notes</label>
           <textarea
-            className="w-full rounded-lg p-[8px_11px] text-[11px] text-white outline-none resize-none h-[40px]"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[11px] outline-none resize-none h-[40px]"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Optional notes about this trip"
@@ -944,11 +945,12 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <button
-            className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all mb-[6px] flex items-center justify-center gap-[6px]"
+            className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all mb-[6px] flex items-center justify-center gap-[6px]"
             style={{
-              background: canSave ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
+              background: canSave ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .2)',
+              color: 'var(--wc-bg)',
               opacity: canSave ? 1 : 0.5,
-              boxShadow: canSave ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
+              boxShadow: canSave ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
             }}
             onClick={handleSave}
             disabled={!canSave}

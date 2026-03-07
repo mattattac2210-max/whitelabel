@@ -115,9 +115,9 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-function StatCell({ label, value, color = 'white', estimated = false }: { label: string; value: string; color?: string; estimated?: boolean }) {
+function StatCell({ label, value, color = 'var(--wc-text)', estimated = false }: { label: string; value: string; color?: string; estimated?: boolean }) {
   return (
-    <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+    <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
       <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>{label}</div>
       <div className="text-[13px] font-heading font-bold mt-[2px]" style={{ color }}>
         {value}{estimated ? '*' : ''}
@@ -319,7 +319,7 @@ export function VehiclePanel() {
         {/* ═══ BASIC DETAILS (required) ═══ */}
         <div className="rounded-[12px] p-[14px]" style={{ background: basicComplete ? 'rgba(34,197,94,.03)' : 'rgba(153,153,153,.03)', border: basicComplete ? '1.5px solid rgba(34,197,94,.15)' : '1.5px solid rgba(153,153,153,.15)' }}>
           <div className="flex items-center justify-between mb-[10px]">
-            <div className="font-heading font-black text-[13px] uppercase tracking-[.05em] text-white">Basic Details</div>
+            <div className="font-heading font-black text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-text)' }}>Basic Details</div>
             {basicComplete ? (
               <div className="flex items-center gap-[4px]">
                 <CheckCircle2 className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />
@@ -346,7 +346,7 @@ export function VehiclePanel() {
           <FieldInput label="Vehicle Purchase Price ($)" value={purchase.purchasePrice} onChange={updPurch('purchasePrice')} type="number" placeholder="e.g. 55000" testId="input-purchase-price" />
 
           {cappedPrice > 0 && (
-            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)' }}>
+            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .12)' }}>
               <Info className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
               <div>
                 <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>ATO Capped Value</div>
@@ -371,11 +371,11 @@ export function VehiclePanel() {
         {/* ═══ ADVANCED DETAILS (optional) ═══ */}
         <button
           className="w-full flex items-center justify-between rounded-[12px] p-[12px_14px] mt-[10px] cursor-pointer transition-all"
-          style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .015)', border: '1px solid rgb(var(--wc-ink) / .06)' }}
           onClick={() => setShowAdvanced(!showAdvanced)}
           data-testid="button-toggle-advanced"
         >
-          <div className="font-heading font-black text-[13px] uppercase tracking-[.05em] text-white">Advanced Details</div>
+          <div className="font-heading font-black text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-text)' }}>Advanced Details</div>
           <div className="flex items-center gap-[6px]">
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>For personalised estimates</span>
             {showAdvanced ? <ChevronUp className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t3)' }} /> : <ChevronDown className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t3)' }} />}
@@ -386,12 +386,12 @@ export function VehiclePanel() {
           <div className="mt-[2px]">
 
             {/* Rego Lookup */}
-            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)' }}>
-              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white mb-[8px]">Rego Lookup</div>
+            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgb(var(--wc-ink) / .015)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-text)' }}>Rego Lookup</div>
               <div className="flex gap-[6px] mb-[6px]">
                 <input
-                  className="flex-1 rounded-[8px] p-[11px] text-[16px] text-white outline-none font-data uppercase tracking-[.1em]"
-                  style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                  className="flex-1 rounded-[8px] p-[11px] text-[16px] outline-none font-data uppercase tracking-[.1em]"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                   value={regoInput}
                   onChange={e => setRegoInput(e.target.value)}
                   placeholder="e.g. ABC123"
@@ -399,7 +399,7 @@ export function VehiclePanel() {
                 />
                 <button
                   className="rounded-[8px] px-[16px] flex items-center gap-[6px] font-heading font-bold text-[12px] uppercase cursor-pointer transition-all active:scale-[.97]"
-                  style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+                  style={{ background: 'rgb(var(--wc-ink) / .1)', border: '1px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
                   onClick={handleLookup}
                   disabled={!regoInput.trim() || lookupStatus === 'loading'}
                   data-testid="button-rego-lookup"
@@ -427,19 +427,19 @@ export function VehiclePanel() {
             </div>
 
             {/* Vehicle Specs */}
-            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)' }}>
-              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white mb-[8px]">Vehicle Specifications</div>
+            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgb(var(--wc-ink) / .015)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-text)' }}>Vehicle Specifications</div>
               {hasVehicle && !manualEdit ? (
                 <>
                   <div className="grid grid-cols-2 gap-[6px] mb-[8px]">
                     {advancedSpecFields.map(f => (
-                      <div key={f.key} className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                      <div key={f.key} className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
                         <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>{f.label}</div>
-                        <div className="text-[13px] text-white mt-[2px]">{specs[f.key] || '—'}</div>
+                        <div className="text-[13px] mt-[2px]" style={{ color: 'var(--wc-text)' }}>{specs[f.key] || '—'}</div>
                       </div>
                     ))}
                     {specs.rego && (
-                      <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
+                      <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
                         <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Rego</div>
                         <div className="text-[13px] font-data font-bold mt-[2px]" style={{ color: 'var(--wc-y)' }}>{specs.rego}</div>
                       </div>
@@ -474,8 +474,8 @@ export function VehiclePanel() {
             </div>
 
             {/* Purchase, Ownership & Finance */}
-            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)' }}>
-              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white mb-[8px]">Purchase, Ownership & Finance</div>
+            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgb(var(--wc-ink) / .015)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-text)' }}>Purchase, Ownership & Finance</div>
 
               <ChipSelect label="Ownership Type" options={['Owned', 'Financed', 'Leased']} value={purchase.ownershipType} onChange={updPurch('ownershipType')} testId="chip-ownership" />
               <FieldInput label="Purchase Date" value={purchase.purchaseDate} onChange={updPurch('purchaseDate')} type="date" testId="input-purchase-date" />
@@ -536,8 +536,8 @@ export function VehiclePanel() {
             </div>
 
             {/* Depreciation Details */}
-            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)' }}>
-              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white mb-[8px]">Depreciation Details</div>
+            <div className="rounded-[12px] p-[14px] mt-[8px]" style={{ background: 'rgb(var(--wc-ink) / .015)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-text)' }}>Depreciation Details</div>
 
               <ChipSelect
                 label="What best describes this vehicle?"

@@ -134,10 +134,10 @@ export function EditModal() {
     <ModalOverlay open={state.editModalOpen} onClose={() => { setEditFrom(''); setEditTo(''); dispatch({ type: 'CLOSE_EDIT' }); }}>
       <div className="pt-[42px]" />
       <div className="flex items-center justify-between px-[18px] pb-[10px]">
-        <div className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em] text-white">Edit Trip</div>
+        <div className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Edit Trip</div>
         <button
           className="rounded-[7px] px-[11px] py-1 font-heading text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all"
-          style={{ background: 'rgba(255,255,255,.07)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
           onClick={() => { setEditFrom(''); setEditTo(''); dispatch({ type: 'CLOSE_EDIT' }); }}
           data-testid="button-close-edit"
         >
@@ -158,8 +158,8 @@ export function EditModal() {
             <button
               className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
               style={editType === 'business'
-                ? { background: 'rgba(255,255,255,.15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
-                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+                ? { background: 'rgb(var(--wc-ink) / .15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
+                : { background: 'rgb(var(--wc-ink) / .04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
               onClick={() => setEditType('business')}
               data-testid="button-edit-type-business"
             >
@@ -168,8 +168,8 @@ export function EditModal() {
             <button
               className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
               style={editType === 'personal'
-                ? { background: 'rgba(255,255,255,.12)', border: '2px solid rgba(255,255,255,.4)', color: 'white' }
-                : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+                ? { background: 'rgb(var(--wc-ink) / .12)', border: '2px solid rgb(var(--wc-ink) / .4)', color: 'var(--wc-text)' }
+                : { background: 'rgb(var(--wc-ink) / .04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
               onClick={() => setEditType('personal')}
               data-testid="button-edit-type-personal"
             >
@@ -189,8 +189,8 @@ export function EditModal() {
                       key={ci}
                       className="rounded-[7px] p-[6px_2px] cursor-pointer transition-all text-center"
                       style={selected
-                        ? { background: 'rgba(255,255,255,.15)', border: '1.5px solid var(--wc-y)' }
-                        : { background: 'rgba(255,255,255,.03)', border: '1.5px solid var(--wc-border)' }}
+                        ? { background: 'rgb(var(--wc-ink) / .15)', border: '1.5px solid var(--wc-y)' }
+                        : { background: 'rgb(var(--wc-ink) / .03)', border: '1.5px solid var(--wc-border)' }}
                       onClick={() => setEditPurpose(selected ? '' : cat.label)}
                       data-testid={`button-edit-purpose-${ci}`}
                     >
@@ -210,7 +210,7 @@ export function EditModal() {
             { icon: Camera, label: 'Receipt' },
             { icon: MapPin, label: 'Notes' },
           ].map(ev => (
-            <div key={ev.label} className="flex-1 rounded-lg p-[7px_5px] cursor-pointer transition-all text-center" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.2)' }}>
+            <div key={ev.label} className="flex-1 rounded-lg p-[7px_5px] cursor-pointer transition-all text-center" style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
               <ev.icon className="w-[15px] h-[15px] mx-auto mb-[2px]" style={{ color: 'var(--wc-y)' }} />
               <div className="font-heading text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>{ev.label}</div>
             </div>
@@ -220,8 +220,8 @@ export function EditModal() {
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>From Address</label>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={editFrom}
             onChange={setEditFrom}
             data-testid="input-edit-from"
@@ -231,8 +231,8 @@ export function EditModal() {
         {stops.map((s, i) => (
           <div key={i} className="flex items-center gap-[5px] mb-1">
             <AddressInput
-              className="w-full rounded-[7px] p-[6px_9px] text-[12px] text-white outline-none"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', flex: 1 }}
+              className="w-full rounded-[7px] p-[6px_9px] text-[12px] outline-none"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', flex: 1 }}
               placeholder={`Stop ${i + 1} address`}
               value={s}
               onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
@@ -241,11 +241,11 @@ export function EditModal() {
           </div>
         ))}
         <div className="flex gap-[5px] mb-[10px]">
-          <button className="flex-1 rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all" style={{ background: 'rgba(255,255,255,.03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }} onClick={() => setStops([...stops, ''])} data-testid="button-add-stop">+ Add Stop</button>
+          <button className="flex-1 rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }} onClick={() => setStops([...stops, ''])} data-testid="button-add-stop">+ Add Stop</button>
           {(stops.filter(s => s.length > 3).length > 0 || editFrom !== `${trip.from}, ${trip.fromSub}` || editTo !== `${trip.to}, ${trip.toSub}`) && (
             <button
               className="rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
               onClick={calcRoute}
               data-testid="button-calc-route"
             >
@@ -258,8 +258,8 @@ export function EditModal() {
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>To Address</label>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={editTo}
             onChange={setEditTo}
             data-testid="input-edit-to"
@@ -269,25 +269,25 @@ export function EditModal() {
         <div className="flex gap-[7px] mb-[10px]">
           <div className="flex-1">
             <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>Distance (km)</label>
-            <input className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none" type="number" step="0.1" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} value={editKm} onChange={e => setEditKm(e.target.value)} data-testid="input-edit-km" />
+            <input className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none" type="number" step="0.1" style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }} value={editKm} onChange={e => setEditKm(e.target.value)} data-testid="input-edit-km" />
           </div>
           <div className="flex-1">
             <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>Duration</label>
-            <input className="w-full rounded-lg p-[8px_11px] text-[12px] text-white outline-none" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} value={editDur} onChange={e => setEditDur(e.target.value)} />
+            <input className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none" style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }} value={editDur} onChange={e => setEditDur(e.target.value)} />
           </div>
         </div>
 
         <div className="mb-[10px]">
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-1" style={{ color: 'var(--wc-t3)' }}>Purpose / Notes</label>
-          <textarea className="w-full rounded-lg p-[8px_11px] text-[11px] text-white outline-none resize-none h-[50px]" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} value={editPurpose} onChange={e => setEditPurpose(e.target.value)} placeholder="e.g. Tool pickup for client job at Sunshine site" data-testid="input-edit-purpose" />
+          <textarea className="w-full rounded-lg p-[8px_11px] text-[11px] outline-none resize-none h-[50px]" style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }} value={editPurpose} onChange={e => setEditPurpose(e.target.value)} placeholder="e.g. Tool pickup for client job at Sunshine site" data-testid="input-edit-purpose" />
         </div>
 
-        <div className="rounded-lg p-[9px_12px] mb-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)' }}>
+        <div className="rounded-lg p-[9px_12px] mb-[10px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .14)' }}>
           <div className="flex justify-between items-center">
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Total Distance</span>
             <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>{totalKm.toFixed(1)} km</span>
           </div>
-          <div className="h-px my-[5px]" style={{ background: 'rgba(255,255,255,.05)' }} />
+          <div className="h-px my-[5px]" style={{ background: 'rgb(var(--wc-ink) / .05)' }} />
           <div className="flex justify-between items-center">
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business KM</span>
             <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>{totalKm.toFixed(1)} km</span>
@@ -335,14 +335,14 @@ export function ATOModal() {
         <div className="font-heading font-black text-[20px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>ATO Compliance Notice</div>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[13px]" style={{ color: 'var(--wc-t3)' }}>Tax Ruling TR 2021/1 &middot; FY2024-25</div>
         <div className="text-[11px] leading-[1.6] flex flex-col gap-2" style={{ color: 'var(--wc-t2)' }}>
-          <p><strong className="text-white">Logbook method:</strong> Business use % &times; actual vehicle running costs (fuel, rego, insurance, repairs, depreciation, etc). <em>No kilometre cap.</em> This app helps you build the 12-week logbook the ATO requires.</p>
-          <p><strong className="text-white">How it works:</strong> Sort all your trips as business or personal. Your business use percentage is calculated automatically. This percentage is then applied to your total vehicle expenses to determine your deduction.</p>
-          <p><strong className="text-white">Estimates only.</strong> Final amounts depend on your individual tax circumstances and actual vehicle expenses. Confirm with a registered tax agent before lodging.</p>
+          <p><strong style={{ color: 'var(--wc-text)' }}>Logbook method:</strong> Business use % &times; actual vehicle running costs (fuel, rego, insurance, repairs, depreciation, etc). <em>No kilometre cap.</em> This app helps you build the 12-week logbook the ATO requires.</p>
+          <p><strong style={{ color: 'var(--wc-text)' }}>How it works:</strong> Sort all your trips as business or personal. Your business use percentage is calculated automatically. This percentage is then applied to your total vehicle expenses to determine your deduction.</p>
+          <p><strong style={{ color: 'var(--wc-text)' }}>Estimates only.</strong> Final amounts depend on your individual tax circumstances and actual vehicle expenses. Confirm with a registered tax agent before lodging.</p>
           <p style={{ color: 'rgba(239,68,68,.7)', fontWeight: 600 }}>False claims are a serious offence under the Income Tax Assessment Act 1997. This application maintains an immutable, timestamped audit trail of all classifications and edits.</p>
         </div>
         <button
           className="w-full rounded-[9px] py-[9px] font-heading font-bold text-[13px] tracking-[.06em] uppercase cursor-pointer mt-3 transition-all"
-          style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
           onClick={() => dispatch({ type: 'CLOSE_ATO' })}
           data-testid="button-close-ato"
         >
@@ -420,12 +420,12 @@ export function SummaryModal() {
         <div className="flex items-center gap-[14px] px-[20px] mb-4">
           <div
             className="w-[56px] h-[56px] rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(255,255,255,.08)' }}
+            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgb(var(--wc-ink) / .08)' }}
           >
             <span className="font-heading font-black text-[20px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
           </div>
           <div>
-            <div className="font-heading font-black text-[22px] uppercase text-white leading-none">Session Complete</div>
+            <div className="font-heading font-black text-[22px] uppercase leading-none" style={{ color: 'var(--wc-text)' }}>Session Complete</div>
             <div className="text-[13px] mt-[3px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
             <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: scoreCol }}>Audit Score: {score}%</div>
           </div>
@@ -449,15 +449,15 @@ export function SummaryModal() {
         <div className="mx-[20px] mb-4 rounded-[14px] p-[14px_16px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="flex items-center gap-[8px] mb-[10px]">
             <Gauge className="w-[18px] h-[18px]" style={{ color: 'var(--wc-am)' }} />
-            <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white">Odometer</span>
+            <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer</span>
             {state.lastOdoVerifiedAt && (
-              <span className="ml-auto font-data uppercase tracking-[.08em] text-[12px] text-white">
+              <span className="ml-auto font-data uppercase tracking-[.08em] text-[12px]" style={{ color: 'var(--wc-text)' }}>
                 verified {state.lastOdoVerifiedAt}
               </span>
             )}
           </div>
 
-          <div className="rounded-[12px] p-[8px_6px] mb-[10px]" style={{ background: '#0a0a0a', border: '2px solid rgba(255,255,255,.1)', boxShadow: 'inset 0 3px 12px rgba(0,0,0,.7)' }}>
+          <div className="rounded-[12px] p-[8px_6px] mb-[10px]" style={{ background: 'var(--wc-bg)', border: '2px solid rgb(var(--wc-ink) / .1)', boxShadow: 'inset 0 3px 12px rgba(0,0,0,.7)' }}>
             <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => {
                 const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
@@ -467,7 +467,7 @@ export function SummaryModal() {
                   <div key={i} className="flex flex-col items-center" style={{ width: '52px' }}>
                     <button
                       className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-t-[8px] transition-all active:scale-95"
-                      style={{ background: 'rgba(255,255,255,.06)' }}
+                      style={{ background: 'rgb(var(--wc-ink) / .06)' }}
                       onClick={() => spinDigit(i, 1)}
                       data-testid={`button-odo-up-${i}`}
                     >
@@ -477,10 +477,10 @@ export function SummaryModal() {
                       className="w-full h-[56px] overflow-hidden relative"
                       style={{
                         background: i < NUM_DIGITS - 1
-                          ? 'linear-gradient(180deg, #1a1a1a 0%, #222 40%, #222 60%, #1a1a1a 100%)'
+                          ? 'linear-gradient(180deg, var(--wc-bg) 0%, var(--wc-card) 40%, var(--wc-card) 60%, var(--wc-bg) 100%)'
                           : 'linear-gradient(180deg, #2a1800 0%, #3a2000 40%, #3a2000 60%, #2a1800 100%)',
-                        borderTop: '1.5px solid rgba(255,255,255,.08)',
-                        borderBottom: '1.5px solid rgba(255,255,255,.08)',
+                        borderTop: '1.5px solid rgb(var(--wc-ink) / .08)',
+                        borderBottom: '1.5px solid rgb(var(--wc-ink) / .08)',
                         boxShadow: 'inset 0 2px 6px rgba(0,0,0,.5)',
                       }}
                     >
@@ -496,8 +496,8 @@ export function SummaryModal() {
                               key={j}
                               className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none flex-shrink-0"
                               style={{
-                                color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
-                                textShadow: '0 0 12px rgba(255,255,255,.2)',
+                                color: i < NUM_DIGITS - 1 ? 'var(--wc-text)' : 'var(--wc-am)',
+                                textShadow: '0 0 12px rgb(var(--wc-ink) / .2)',
                               }}
                             >
                               {n}
@@ -508,8 +508,8 @@ export function SummaryModal() {
                         <div
                           className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none"
                           style={{
-                            color: i < NUM_DIGITS - 1 ? '#fff' : 'var(--wc-am)',
-                            textShadow: '0 0 12px rgba(255,255,255,.2)',
+                            color: i < NUM_DIGITS - 1 ? 'var(--wc-text)' : 'var(--wc-am)',
+                            textShadow: '0 0 12px rgb(var(--wc-ink) / .2)',
                           }}
                         >
                           {digit}
@@ -518,7 +518,7 @@ export function SummaryModal() {
                     </div>
                     <button
                       className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-b-[8px] transition-all active:scale-95"
-                      style={{ background: 'rgba(255,255,255,.06)' }}
+                      style={{ background: 'rgb(var(--wc-ink) / .06)' }}
                       onClick={() => spinDigit(i, -1)}
                       data-testid={`button-odo-down-${i}`}
                     >
@@ -571,15 +571,15 @@ export function SummaryModal() {
 
         <div className="mx-[20px] mb-4 rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="flex items-baseline justify-between mb-[6px]">
-            <div className="text-[13px] text-white">
+            <div className="text-[13px]" style={{ color: 'var(--wc-text)' }}>
               <span className="font-heading font-black text-[20px]">{weeksDone}</span> / 12 weeks
             </div>
             <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
           </div>
-          <div className="h-[6px] rounded-[3px] overflow-hidden mb-[6px]" style={{ background: 'rgba(255,255,255,.07)' }}>
+          <div className="h-[6px] rounded-[3px] overflow-hidden mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
             <div className="h-full rounded-[3px]" style={{ width: `${Math.min(barFill, pct)}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)', transition: 'width 1.2s cubic-bezier(.25,.8,.25,1)' }} />
           </div>
-          <div className="text-[11px] text-white">
+          <div className="text-[11px]" style={{ color: 'var(--wc-text)' }}>
             Due <strong>{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
           </div>
         </div>
@@ -587,7 +587,7 @@ export function SummaryModal() {
         <div className="px-[20px] flex flex-col gap-[8px]">
           <button
             className="w-full rounded-[12px] py-[16px] font-heading font-black text-[20px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.2)' }}
+            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
@@ -596,7 +596,7 @@ export function SummaryModal() {
           </button>
           <button
             className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[16px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
-            style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => setShowAuditBreakdown(true)}
             data-testid="button-understand-audit"
           >
@@ -636,23 +636,23 @@ export function SummaryModal() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-[8px]">
                 <ShieldCheck className="w-[22px] h-[22px]" style={{ color: scoreCol }} />
-                <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em] text-white">Audit Score</span>
+                <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Audit Score</span>
               </div>
               <button
                 className="w-[30px] h-[30px] rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
                 onClick={() => setShowAuditBreakdown(false)}
                 data-testid="button-close-audit"
               >
-                <X className="w-[14px] h-[14px] text-white" />
+                <X className="w-[14px] h-[14px]" style={{ color: 'var(--wc-text)' }} />
               </button>
             </div>
 
             <div className="flex items-center justify-center gap-[10px] py-[10px]">
               <div className="font-heading font-black text-[56px] leading-none" style={{ color: scoreCol }}>{score}</div>
               <div className="flex flex-col">
-                <span className="font-data text-[11px] uppercase tracking-[.08em] text-white">out of</span>
-                <span className="font-heading font-black text-[28px] leading-none text-white">99</span>
+                <span className="font-data text-[11px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-text)' }}>out of</span>
+                <span className="font-heading font-black text-[28px] leading-none" style={{ color: 'var(--wc-text)' }}>99</span>
               </div>
             </div>
 
@@ -671,13 +671,13 @@ export function SummaryModal() {
                 return items.map((item, i) => {
                   const Icon = item.icon;
                   return (
-                    <div key={i} className="rounded-[10px] p-[10px_12px] flex items-center gap-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }} data-testid={`audit-item-${i}`}>
-                      <div className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.1)' }}>
+                    <div key={i} className="rounded-[10px] p-[10px_12px] flex items-center gap-[10px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }} data-testid={`audit-item-${i}`}>
+                      <div className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .1)' }}>
                         <Icon className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-heading font-bold text-[13px] text-white">{item.label}</div>
-                        <div className="font-data text-[10px] text-white/60">{item.desc}</div>
+                        <div className="font-heading font-bold text-[13px]" style={{ color: 'var(--wc-text)' }}>{item.label}</div>
+                        <div className="font-data text-[10px]" style={{ color: 'var(--wc-t2)' }}>{item.desc}</div>
                       </div>
                       <div className="font-heading font-black text-[18px] flex-shrink-0" style={{ color: item.points > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>+{item.points}</div>
                     </div>
@@ -687,14 +687,14 @@ export function SummaryModal() {
             </div>
 
             <div className="rounded-[10px] p-[10px_14px] flex items-center justify-between" style={{ background: score > 85 ? 'rgba(34,197,94,.08)' : score > 70 ? 'rgba(153,153,153,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${score > 85 ? 'rgba(34,197,94,.2)' : score > 70 ? 'rgba(153,153,153,.2)' : 'rgba(239,68,68,.2)'}` }}>
-              <span className="font-data text-[10px] uppercase tracking-[.08em] text-white">
+              <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-text)' }}>
                 {score > 85 ? 'Strong — ready for ATO review' : score > 70 ? 'Good — add more evidence to strengthen' : 'Needs work — add photos & verify odometers'}
               </span>
             </div>
 
             <button
               className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em]"
-              style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'white' }}
+              style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
               onClick={() => setShowAuditBreakdown(false)}
               data-testid="button-close-audit-bottom"
             >

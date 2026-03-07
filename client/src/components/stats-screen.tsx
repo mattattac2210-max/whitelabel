@@ -57,13 +57,13 @@ export function StatsScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-stats"
         >
           <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">My Stats</span>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>My Stats</span>
         <TrendingUp className="ml-auto w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
       </div>
 
@@ -81,7 +81,7 @@ export function StatsScreen() {
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <TrendingUp className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
-            <div className="font-heading font-black text-[24px] leading-none">{totalKm.toFixed(0)}<span className="text-[14px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
+            <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{totalKm.toFixed(0)}<span className="text-[14px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
             <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Total Distance</div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -93,7 +93,7 @@ export function StatsScreen() {
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>Business vs Personal</div>
-          <div className="h-[10px] rounded-full overflow-hidden flex" style={{ background: 'rgba(255,255,255,.06)' }}>
+          <div className="h-[10px] rounded-full overflow-hidden flex" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
             {bizPct > 0 && <div className="h-full" style={{ width: `${bizPct}%`, background: 'var(--wc-y)' }} />}
             {bizPct < 100 && <div className="h-full" style={{ width: `${100 - bizPct}%`, background: 'rgba(180,180,180,.3)' }} />}
           </div>
@@ -108,7 +108,7 @@ export function StatsScreen() {
           <div className="flex items-end gap-[6px]">
             {dayStats.map(d => (
               <div key={d.name} className="flex-1 flex flex-col items-center">
-                <div className="w-full rounded-[4px] transition-all" style={{ height: `${Math.max(4, (d.trips / maxDayTrips) * 50)}px`, background: d.trips > 0 ? 'var(--wc-y)' : 'rgba(255,255,255,.06)' }} />
+                <div className="w-full rounded-[4px] transition-all" style={{ height: `${Math.max(4, (d.trips / maxDayTrips) * 50)}px`, background: d.trips > 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)' }} />
                 <div className="font-data text-[8px] uppercase mt-[4px]" style={{ color: d.trips > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{d.name}</div>
                 <div className="font-data text-[9px] font-bold" style={{ color: 'var(--wc-t2)' }}>{d.trips}</div>
               </div>
@@ -119,9 +119,9 @@ export function StatsScreen() {
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
           {topDestinations.map(([dest, count], i) => (
-            <div key={dest} className="flex items-center gap-[8px] py-[6px]" style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-              <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center font-data text-[10px] font-bold" style={{ background: 'rgba(255,255,255,.1)', color: 'var(--wc-y)' }}>{i + 1}</div>
-              <div className="flex-1 text-[13px] text-white truncate">{dest}</div>
+            <div key={dest} className="flex items-center gap-[8px] py-[6px]" style={{ borderTop: i > 0 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}>
+              <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center font-data text-[10px] font-bold" style={{ background: 'rgb(var(--wc-ink) / .1)', color: 'var(--wc-y)' }}>{i + 1}</div>
+              <div className="flex-1 text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{dest}</div>
               <div className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{count} trip{count !== 1 ? 's' : ''}</div>
             </div>
           ))}

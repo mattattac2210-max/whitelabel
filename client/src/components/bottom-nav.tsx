@@ -16,7 +16,7 @@ export function BottomNav({ activeOverride }: { activeOverride?: Screen }) {
   return (
     <div
       className="flex justify-around items-center px-[18px] pt-[9px] pb-[20px] border-t flex-shrink-0"
-      style={{ background: 'rgba(10,10,10,.97)', borderColor: 'var(--wc-border)' }}
+      style={{ background: 'var(--wc-nav-bg)', borderColor: 'var(--wc-border)' }}
       data-testid="bottom-nav"
     >
       {navItems.map(item => {

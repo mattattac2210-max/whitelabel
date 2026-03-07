@@ -59,13 +59,13 @@ export function ExpenseReportsScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-expense-reports"
         >
           <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">Expense Reports</span>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Expense Reports</span>
       </div>
 
       <div className="flex gap-[6px] px-[14px] pb-[6px] flex-shrink-0">
@@ -90,10 +90,10 @@ export function ExpenseReportsScreen() {
           return (
             <div key={cat} className="rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
               <div className="flex items-center justify-between mb-[6px]">
-                <div className="font-semibold text-[14px] text-white">{cat}</div>
+                <div className="font-semibold text-[14px]" style={{ color: 'var(--wc-text)' }}>{cat}</div>
                 <div className="font-heading font-bold text-[14px]" style={{ color: 'var(--wc-y)' }}>${data.total.toFixed(2)}</div>
               </div>
-              <div className="h-[6px] rounded-full overflow-hidden mb-[4px]" style={{ background: 'rgba(255,255,255,.06)' }}>
+              <div className="h-[6px] rounded-full overflow-hidden mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--wc-y)' }} />
               </div>
               <div className="flex justify-between text-[11px]" style={{ color: 'var(--wc-t3)' }}>
@@ -111,7 +111,7 @@ export function ExpenseReportsScreen() {
             <div className="text-[12px] text-center mt-[4px]" style={{ color: 'var(--wc-t3)' }}>Add expenses first, then come back for reports.</div>
             <button
               className="mt-[12px] rounded-[10px] px-[20px] py-[10px] font-heading font-bold text-[13px] uppercase cursor-pointer"
-              style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgb(var(--wc-ink) / .1)', border: '1px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
               onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'expenses' })}
               data-testid="button-go-add-expenses"
             >
@@ -124,16 +124,16 @@ export function ExpenseReportsScreen() {
           <div className="rounded-[12px] p-[14px] mt-[4px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>All Expenses</div>
             {expenses.map((exp, i) => (
-              <div key={exp.id} className="flex items-center justify-between py-[8px]" style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+              <div key={exp.id} className="flex items-center justify-between py-[8px]" style={{ borderTop: i > 0 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-white truncate">{exp.description}</div>
+                  <div className="text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{exp.description}</div>
                   <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{exp.date} &middot; {exp.category}{exp.receipt ? ' &middot; ✓' : ''}</div>
                 </div>
                 <div className="font-data font-bold text-[13px] flex-shrink-0" style={{ color: 'var(--wc-y)' }}>${exp.amount.toFixed(2)}</div>
               </div>
             ))}
-            <div className="flex items-center justify-between pt-[10px] mt-[6px]" style={{ borderTop: '1.5px solid rgba(255,255,255,.2)' }}>
-              <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'white' }}>Total</div>
+            <div className="flex items-center justify-between pt-[10px] mt-[6px]" style={{ borderTop: '1.5px solid rgb(var(--wc-ink) / .2)' }}>
+              <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'var(--wc-text)' }}>Total</div>
               <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>${totalAmount.toFixed(2)}</div>
             </div>
           </div>
@@ -143,8 +143,8 @@ export function ExpenseReportsScreen() {
       {expenses.length > 0 && (
         <div className="px-[14px] py-[8px] flex-shrink-0">
           <button
-            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.25)' }}
+            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .25)' }}
             onClick={handleExportCSV}
             data-testid="button-export-expenses"
           >

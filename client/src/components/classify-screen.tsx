@@ -63,7 +63,7 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
 
   if (!url) {
     return (
-      <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.04)' }}>
+      <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
         <div className="w-[14px] h-[14px] border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--wc-y)', borderTopColor: 'transparent' }} />
       </div>
     );
@@ -137,13 +137,13 @@ export function ClassifyScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
           data-testid="button-back-classify"
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">What was this for?</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>What was this for?</span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{classifyStep + 1} of {total}</span>
       </div>
 
@@ -152,7 +152,7 @@ export function ClassifyScreen() {
           <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business trips</span>
           <span className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-y)' }}>{classifyStep + 1} / {total}</span>
         </div>
-        <div className="h-[3px] rounded-[2px] overflow-hidden" style={{ background: 'rgba(255,255,255,.08)' }}>
+        <div className="h-[3px] rounded-[2px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .08)' }}>
           <div className="h-full rounded-[2px] transition-all duration-500" style={{ width: `${fillPct}%`, background: 'var(--wc-y)' }} />
         </div>
       </div>
@@ -161,8 +161,8 @@ export function ClassifyScreen() {
         className="mx-[10px] mb-[10px] rounded-[14px] overflow-hidden flex-shrink-0 transition-all"
         style={{
           background: 'var(--wc-card)',
-          border: justAdvanced ? '1.5px solid rgba(255,255,255,.85)' : '1.5px solid rgba(255,255,255,.5)',
-          boxShadow: justAdvanced ? '0 0 20px rgba(255,255,255,.35), 0 0 40px rgba(255,255,255,.12)' : '0 0 14px rgba(255,255,255,.15), 0 0 30px rgba(255,255,255,.06)',
+          border: justAdvanced ? '1.5px solid rgb(var(--wc-ink) / .85)' : '1.5px solid rgb(var(--wc-ink) / .5)',
+          boxShadow: justAdvanced ? '0 0 20px rgb(var(--wc-ink) / .35), 0 0 40px rgb(var(--wc-ink) / .12)' : '0 0 14px rgb(var(--wc-ink) / .15), 0 0 30px rgb(var(--wc-ink) / .06)',
           transition: 'border .6s ease, box-shadow .6s ease',
         }}
         data-testid="classify-trip-card"
@@ -174,16 +174,16 @@ export function ClassifyScreen() {
                 <MapPin className="w-[11px] h-[11px]" stroke="#22C55E" />
               </div>
               <div className="min-w-0">
-                <div className="font-semibold text-[13px] text-white truncate">{trip.from}</div>
+                <div className="font-semibold text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.from}</div>
                 <div className="font-data text-[9px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
               </div>
             </div>
             <div className="flex items-center gap-[8px]">
               <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[11px] h-[11px]" stroke="#FFFFFF" />
+                <MapPin className="w-[11px] h-[11px]" stroke="var(--wc-text)" />
               </div>
               <div className="min-w-0">
-                <div className="font-semibold text-[13px] text-white truncate">{trip.to}</div>
+                <div className="font-semibold text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.to}</div>
                 <div className="font-data text-[9px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
               </div>
             </div>
@@ -212,20 +212,20 @@ export function ClassifyScreen() {
                 key={i}
                 className="rounded-[13px] p-[10px_10px] cursor-pointer transition-all flex flex-col items-center justify-center gap-[4px] text-center"
                 style={{
-                  background: isArmed ? 'var(--wc-y)' : 'rgba(255,255,255,.04)',
+                  background: isArmed ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .04)',
                   border: isArmed ? '1.5px solid var(--wc-y)' : '1.5px solid var(--wc-border)',
                   transform: isArmed ? 'scale(1.03)' : 'none',
-                  boxShadow: isArmed ? '0 0 22px rgba(255,255,255,.3)' : 'none',
+                  boxShadow: isArmed ? '0 0 22px rgb(var(--wc-ink) / .3)' : 'none',
                 }}
                 onClick={() => handleArm(i)}
                 data-testid={`classify-cat-${i}`}
               >
                 {isArmed ? (
-                  <Check className="w-6 h-6" style={{ color: '#000' }} />
+                  <Check className="w-6 h-6" style={{ color: 'var(--wc-bg)' }} />
                 ) : (
                   <Icon className="w-6 h-6" style={{ color: 'var(--wc-t2)' }} />
                 )}
-                <span className="font-heading font-bold text-[13px] uppercase tracking-[.03em] leading-[1.2]" style={{ color: isArmed ? '#000' : 'var(--wc-t2)' }}>
+                <span className="font-heading font-bold text-[13px] uppercase tracking-[.03em] leading-[1.2]" style={{ color: isArmed ? 'var(--wc-bg)' : 'var(--wc-t2)' }}>
                   {isArmed ? 'Confirm' : cat.label}
                 </span>
               </button>
@@ -233,10 +233,10 @@ export function ClassifyScreen() {
           })}
         </div>
 
-        <div className="flex gap-[7px] items-center rounded-[13px] p-[10px_12px] flex-shrink-0" style={{ background: 'rgba(255,255,255,.03)', border: '1.5px dashed rgba(255,255,255,.1)' }}>
+        <div className="flex gap-[7px] items-center rounded-[13px] p-[10px_12px] flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1.5px dashed rgb(var(--wc-ink) / .1)' }}>
           <input
-            className="flex-1 bg-transparent border-none outline-none text-[13px] text-white"
-            style={{ caretColor: 'var(--wc-y)' }}
+            className="flex-1 bg-transparent border-none outline-none text-[13px]"
+            style={{ color: 'var(--wc-text)', caretColor: 'var(--wc-y)' }}
             placeholder="+ Add your own..."
             value={customText}
             onChange={e => { setCustomText(e.target.value); setCustomArmed(false); }}
@@ -244,7 +244,7 @@ export function ClassifyScreen() {
           />
           <button
             className="rounded-lg px-[10px] py-[5px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer whitespace-nowrap transition-all"
-            style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .1)', border: '1px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
             onClick={handleCustom}
             data-testid="button-use-custom"
           >

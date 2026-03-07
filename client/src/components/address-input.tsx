@@ -157,8 +157,8 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
         top: dropdownPos.top,
         left: dropdownPos.left,
         width: dropdownPos.width,
-        background: '#1a1a1a',
-        border: '1px solid rgba(255,255,255,.15)',
+        background: 'var(--wc-card)',
+        border: '1px solid rgb(var(--wc-ink) / .15)',
         boxShadow: '0 10px 40px rgba(0,0,0,.7)',
       }}
     >
@@ -167,9 +167,9 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
           key={p.placeId || i}
           className="px-3 py-2 cursor-pointer text-[12px] leading-[1.4]"
           style={{
-            background: i === activeIdx ? 'rgba(255,255,255,.12)' : 'transparent',
-            color: 'rgba(255,255,255,.85)',
-            borderTop: i > 0 ? '1px solid rgba(255,255,255,.06)' : 'none',
+            background: i === activeIdx ? 'rgb(var(--wc-ink) / .12)' : 'transparent',
+            color: 'rgb(var(--wc-ink) / .85)',
+            borderTop: i > 0 ? '1px solid rgb(var(--wc-ink) / .06)' : 'none',
           }}
           onMouseEnter={() => setActiveIdx(i)}
           onMouseDown={(e) => { e.preventDefault(); selectPrediction(p); }}

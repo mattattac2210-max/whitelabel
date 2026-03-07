@@ -19,10 +19,10 @@ export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, child
         onClick={() => setOpen(!open)}
         data-testid={`${testId}-toggle`}
       >
-        <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.18)' }}>
+        <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .18)' }}>
           <Icon className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
         </div>
-        <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white flex-1 text-left">{title}</span>
+        <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] flex-1 text-left" style={{ color: 'var(--wc-text)' }}>{title}</span>
         {open
           ? <ChevronUp className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
           : <ChevronDown className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
@@ -45,8 +45,8 @@ export function FieldInput({ label, value, onChange, placeholder, type = 'text',
       <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>{label}</label>
       <input
         type={type}
-        className="w-full rounded-[8px] p-[11px] text-[14px] text-white outline-none"
-        style={{ background: readOnly ? 'rgba(255,255,255,.02)' : 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', opacity: readOnly ? 0.7 : 1 }}
+        className="w-full rounded-[8px] p-[11px] text-[14px] outline-none"
+        style={{ background: readOnly ? 'rgb(var(--wc-ink) / .02)' : 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', opacity: readOnly ? 0.7 : 1, color: 'var(--wc-text)' }}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
@@ -61,11 +61,11 @@ export function ToggleRow({ label, value, onChange, testId }: {
   label: string; value: boolean; onChange: (v: boolean) => void; testId: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-[10px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-      <span className="text-[13px] text-white">{label}</span>
+    <div className="flex items-center justify-between py-[10px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .04)' }}>
+      <span className="text-[13px]" style={{ color: 'var(--wc-text)' }}>{label}</span>
       <button
         className="w-[44px] h-[24px] rounded-full relative cursor-pointer transition-all"
-        style={{ background: value ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)' }}
+        style={{ background: value ? 'rgba(34,197,94,.3)' : 'rgb(var(--wc-ink) / .1)' }}
         onClick={() => onChange(!value)}
         data-testid={testId}
       >
@@ -90,8 +90,8 @@ export function ChipSelect({ label, options, value, onChange, testId }: {
             key={opt}
             className="rounded-[8px] px-[10px] py-[8px] font-heading font-bold text-[11px] uppercase tracking-[.03em] cursor-pointer transition-all"
             style={{
-              background: value === opt ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.04)',
-              border: value === opt ? '1px solid rgba(255,255,255,.4)' : '1px solid var(--wc-border)',
+              background: value === opt ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .04)',
+              border: value === opt ? '1px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
               color: value === opt ? 'var(--wc-y)' : 'var(--wc-t2)',
             }}
             onClick={() => onChange(opt)}

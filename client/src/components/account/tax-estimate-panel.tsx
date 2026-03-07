@@ -133,8 +133,8 @@ export function TaxEstimatePanel() {
 
   const sliderMax = p.incomeMode === 'Weekly' ? 5000 : 250000;
 
-  const readinessColor = deductionState === 'active' ? 'rgba(34,197,94,.15)' : deductionState === 'partial' ? 'rgba(153,153,153,.15)' : 'rgba(255,255,255,.06)';
-  const readinessBorderColor = deductionState === 'active' ? 'rgba(34,197,94,.25)' : deductionState === 'partial' ? 'rgba(153,153,153,.25)' : 'rgba(255,255,255,.08)';
+  const readinessColor = deductionState === 'active' ? 'rgba(34,197,94,.15)' : deductionState === 'partial' ? 'rgba(153,153,153,.15)' : 'rgb(var(--wc-ink) / .06)';
+  const readinessBorderColor = deductionState === 'active' ? 'rgba(34,197,94,.25)' : deductionState === 'partial' ? 'rgba(153,153,153,.25)' : 'rgb(var(--wc-ink) / .08)';
   const readinessTextColor = deductionState === 'active' ? 'var(--wc-gr)' : deductionState === 'partial' ? 'var(--wc-am)' : 'var(--wc-t3)';
 
   return (
@@ -212,13 +212,14 @@ export function TaxEstimatePanel() {
                 step={p.incomeMode === 'Weekly' ? 50 : 1000}
                 value={parseFloat(p.salary) || 0}
                 onChange={e => upd('salary')(e.target.value)}
-                className="w-full mb-[4px] accent-[#FFFFFF]"
+                className="w-full mb-[4px] accent-current"
+                style={{ color: 'var(--wc-text)' }}
                 data-testid="slider-salary"
               />
               <input
                 type="number"
-                className="w-full rounded-[8px] p-[11px] text-[14px] text-white outline-none font-data"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                className="w-full rounded-[8px] p-[11px] text-[14px] outline-none font-data"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                 value={p.salary}
                 onChange={e => upd('salary')(e.target.value)}
                 placeholder={p.incomeMode === 'Weekly' ? 'e.g. 1500' : 'e.g. 85000'}
@@ -238,13 +239,14 @@ export function TaxEstimatePanel() {
                 step={500}
                 value={parseFloat(p.otherDeductions) || 0}
                 onChange={e => upd('otherDeductions')(e.target.value)}
-                className="w-full mb-[4px] accent-[#FFFFFF]"
+                className="w-full mb-[4px] accent-current"
+                style={{ color: 'var(--wc-text)' }}
                 data-testid="slider-other-ded"
               />
               <input
                 type="number"
-                className="w-full rounded-[8px] p-[11px] text-[14px] text-white outline-none font-data"
-                style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                className="w-full rounded-[8px] p-[11px] text-[14px] outline-none font-data"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                 value={p.otherDeductions}
                 onChange={e => upd('otherDeductions')(e.target.value)}
                 placeholder="e.g. 2000"
@@ -266,25 +268,25 @@ export function TaxEstimatePanel() {
                 <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mt-[16px] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Tax Summary (Estimated)</div>
 
                 <div className="grid grid-cols-2 gap-[6px] mb-[6px]">
-                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
                     <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Annual Income</div>
-                    <div className="font-heading font-bold text-[16px] mt-[2px] text-white">${annualIncome.toLocaleString()}</div>
+                    <div className="font-heading font-bold text-[16px] mt-[2px]" style={{ color: 'var(--wc-text)' }}>${annualIncome.toLocaleString()}</div>
                   </div>
-                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
                     <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Taxable Income</div>
                     <div className="font-heading font-bold text-[16px] mt-[2px]" style={{ color: 'var(--wc-y)' }}>${taxableIncome.toLocaleString()}</div>
                   </div>
-                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
                     <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Tax Bracket</div>
                     <div className="font-heading font-bold text-[14px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>{getTaxBracket(taxableIncome)}</div>
                   </div>
-                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                  <div className="rounded-[8px] p-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .04)' }}>
                     <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Medicare Levy</div>
                     <div className="font-heading font-bold text-[14px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>${medicareLevy.toLocaleString()}</div>
                   </div>
                 </div>
 
-                <div className="rounded-[10px] p-[12px] mb-[6px] relative" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.2)' }} data-testid="card-vehicle-deduction">
+                <div className="rounded-[10px] p-[12px] mb-[6px] relative" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid rgb(var(--wc-ink) / .2)' }} data-testid="card-vehicle-deduction">
                   {deductionState === 'locked' && (
                     <div className="absolute inset-0 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 1 }}>
                       <div className="flex items-center gap-[6px]">
@@ -350,17 +352,17 @@ export function TaxEstimatePanel() {
         >
           <div
             className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up"
-            style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
             data-testid="modal-personalised-confirm"
           >
             <div className="flex justify-between items-start mb-[14px]">
-              <div className="font-heading font-black text-[18px] uppercase text-white leading-[1.2]">
+              <div className="font-heading font-black text-[18px] uppercase leading-[1.2]" style={{ color: 'var(--wc-text)' }}>
                 Switch to personalised estimates?
               </div>
               <button
                 className="w-[28px] h-[28px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
                 onClick={cancelPersonalised}
                 data-testid="button-close-personalised-modal"
               >
@@ -388,7 +390,7 @@ export function TaxEstimatePanel() {
             <div className="flex flex-col gap-[8px]">
               <button
                 className="w-full rounded-[11px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
                 onClick={confirmPersonalised}
                 data-testid="button-confirm-personalised"
               >
@@ -396,7 +398,7 @@ export function TaxEstimatePanel() {
               </button>
               <button
                 className="w-full rounded-[11px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
                 onClick={cancelPersonalised}
                 data-testid="button-keep-industry"
               >

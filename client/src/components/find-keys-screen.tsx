@@ -108,25 +108,25 @@ export function FindKeysScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-find-keys"
         >
           <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">Find My Keys</span>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Find My Keys</span>
         <Key className="ml-auto w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
       </div>
 
       <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
-        <div className="rounded-[16px] p-[20px] text-center" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.2)' }}>
-          <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center mx-auto mb-[14px]" style={{ background: 'rgba(255,255,255,.1)', border: '2px solid rgba(255,255,255,.3)' }}>
+        <div className="rounded-[16px] p-[20px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid rgb(var(--wc-ink) / .2)' }}>
+          <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center mx-auto mb-[14px]" style={{ background: 'rgb(var(--wc-ink) / .1)', border: '2px solid rgb(var(--wc-ink) / .3)' }}>
             <Key className="w-[34px] h-[34px]" style={{ color: 'var(--wc-y)' }} />
           </div>
           {lastLocation ? (
             <>
               <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] mb-[4px]" style={{ color: 'var(--wc-y)' }}>Last Known Location</div>
-              <div className="text-[15px] text-white mb-[4px]">{lastLocation.address}</div>
+              <div className="text-[15px] mb-[4px]" style={{ color: 'var(--wc-text)' }}>{lastLocation.address}</div>
               <div className="flex items-center justify-center gap-[6px] text-[12px]" style={{ color: 'var(--wc-t3)' }}>
                 <Clock className="w-[12px] h-[12px]" />
                 {timeSince(lastLocation.timestamp)}
@@ -143,7 +143,7 @@ export function FindKeysScreen() {
         <div className="grid grid-cols-2 gap-[8px]">
           <button
             className="rounded-[14px] p-[16px] flex flex-col items-center gap-[8px] cursor-pointer transition-all active:scale-[.97]"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.3)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgb(var(--wc-ink) / .3)' }}
             onClick={updateLocation}
             data-testid="button-mark-location"
           >
@@ -160,7 +160,7 @@ export function FindKeysScreen() {
 
           <button
             className="rounded-[14px] p-[16px] flex flex-col items-center gap-[8px] cursor-pointer transition-all active:scale-[.97]"
-            style={{ background: ringing ? 'rgba(255,255,255,.12)' : 'var(--wc-card)', border: ringing ? '1.5px solid rgba(255,255,255,.5)' : '1.5px solid var(--wc-border)' }}
+            style={{ background: ringing ? 'rgb(var(--wc-ink) / .12)' : 'var(--wc-card)', border: ringing ? '1.5px solid rgb(var(--wc-ink) / .5)' : '1.5px solid var(--wc-border)' }}
             onClick={toggleRing}
             data-testid="button-ring-keys"
           >
@@ -198,12 +198,12 @@ export function FindKeysScreen() {
               <div
                 key={i}
                 className="flex items-center gap-[8px] py-[8px] cursor-pointer"
-                style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,.04)' : 'none' }}
+                style={{ borderTop: i > 0 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}
                 onClick={() => openInMaps(loc.lat, loc.lng)}
               >
                 <Clock className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-white truncate">{loc.address}</div>
+                  <div className="text-[13px] truncate" style={{ color: 'var(--wc-text)' }}>{loc.address}</div>
                   <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{timeSince(loc.timestamp)}</div>
                 </div>
               </div>

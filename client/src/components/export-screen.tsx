@@ -368,26 +368,26 @@ export function ExportScreen() {
     <div className="flex flex-col h-full" data-testid="export-screen">
       <div className="flex items-center gap-[8px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <Download className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Export</span>
-        <span className="ml-auto text-[11px] text-white">{activeReports.length} active report{activeReports.length !== 1 ? 's' : ''}</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Export</span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t2)' }}>{activeReports.length} active report{activeReports.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
 
         {activeReports.length === 0 ? (
           <div className="py-[40px] text-center">
-            <Layers className="w-[32px] h-[32px] mx-auto mb-[12px]" style={{ color: 'rgba(255,255,255,.15)' }} />
-            <div className="text-[14px] text-white mb-[6px]">No reports to export yet</div>
-            <div className="text-[12px] text-white/50">Complete a sort session and save your report first.</div>
+            <Layers className="w-[32px] h-[32px] mx-auto mb-[12px]" style={{ color: 'rgb(var(--wc-ink) / .15)' }} />
+            <div className="text-[14px] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>No reports to export yet</div>
+            <div className="text-[12px]">Complete a sort session and save your report first.</div>
           </div>
         ) : (
           <>
-            <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
+            <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
               <div className="flex items-center justify-between mb-[8px]">
                 <span className="font-heading font-bold text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Select Reports to Combine</span>
                 <button
                   className="font-heading font-bold text-[11px] uppercase tracking-[.04em] px-[10px] py-[4px] rounded-[6px]"
-                  style={{ background: selected.size === activeReports.length ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.06)', color: selected.size === activeReports.length ? 'var(--wc-y)' : 'white', border: '1px solid rgba(255,255,255,.1)' }}
+                  style={{ background: selected.size === activeReports.length ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .06)', color: selected.size === activeReports.length ? 'var(--wc-y)' : 'white', border: '1px solid rgb(var(--wc-ink) / .1)' }}
                   onClick={selectAll}
                   data-testid="button-select-all"
                 >
@@ -407,25 +407,25 @@ export function ExportScreen() {
                       key={r.globalIdx}
                       className="flex items-center gap-[10px] rounded-[10px] p-[10px_12px] text-left cursor-pointer transition-all"
                       style={{
-                        background: isSelected ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.02)',
-                        border: isSelected ? '1.5px solid rgba(255,255,255,.35)' : '1px solid rgba(255,255,255,.06)',
+                        background: isSelected ? 'rgb(var(--wc-ink) / .08)' : 'rgb(var(--wc-ink) / .02)',
+                        border: isSelected ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid rgb(var(--wc-ink) / .06)',
                       }}
                       onClick={() => toggleReport(r.globalIdx)}
                       data-testid={`select-report-${r.globalIdx}`}
                     >
                       <div
                         className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0"
-                        style={{ background: isSelected ? 'var(--wc-y)' : 'rgba(255,255,255,.06)', border: isSelected ? 'none' : '1.5px solid rgba(255,255,255,.12)' }}
+                        style={{ background: isSelected ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)', border: isSelected ? 'none' : '1.5px solid rgb(var(--wc-ink) / .12)' }}
                       >
                         {isSelected && <Check className="w-[14px] h-[14px] text-black" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-heading font-bold text-[12px] text-white truncate">{label}</div>
-                        <div className="font-data text-[10px] text-white/50">{r.timestamp}</div>
+                        <div className="font-heading font-bold text-[12px] truncate" style={{ color: 'var(--wc-text)' }}>{label}</div>
+                        <div className="font-data text-[10px]">{r.timestamp}</div>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <div className="font-data text-[11px]" style={{ color: 'var(--wc-y)' }}>{bizTrips.length} biz</div>
-                        <div className="font-data text-[10px] text-white/50">{totalKm.toFixed(0)} km</div>
+                        <div className="font-data text-[10px]">{totalKm.toFixed(0)} km</div>
                       </div>
                     </button>
                   );
@@ -445,8 +445,8 @@ export function ExportScreen() {
                     <span className="font-heading font-bold text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Combined Preview</span>
                   </div>
                   {previewOpen
-                    ? <ChevronUp className="w-[16px] h-[16px] text-white" />
-                    : <ChevronDown className="w-[16px] h-[16px] text-white" />
+                    ? <ChevronUp className="w-[16px] h-[16px]" style={{ color: 'var(--wc-text)' }} />
+                    : <ChevronDown className="w-[16px] h-[16px]" style={{ color: 'var(--wc-text)' }} />
                   }
                 </button>
 
@@ -454,35 +454,35 @@ export function ExportScreen() {
                   <div className="px-[16px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
                     <div className="grid grid-cols-3 gap-[8px] mt-[12px]">
                       {[
-                        { label: 'Total Trips', val: `${combined.trips.length}`, color: 'white' },
+                        { label: 'Total Trips', val: `${combined.trips.length}`, color: 'var(--wc-text)' },
                         { label: 'Business', val: `${combined.bizCount}`, color: 'var(--wc-y)' },
-                        { label: 'Personal', val: `${combined.perCount}`, color: 'white' },
-                        { label: 'Total km', val: `${combined.totalKm.toFixed(0)}`, color: 'white' },
+                        { label: 'Personal', val: `${combined.perCount}`, color: 'var(--wc-text)' },
+                        { label: 'Total km', val: `${combined.totalKm.toFixed(0)}`, color: 'var(--wc-text)' },
                         { label: 'Business km', val: `${combined.bizKm.toFixed(0)}`, color: 'var(--wc-y)' },
                         { label: 'Biz %', val: `${combined.bizPct.toFixed(1)}%`, color: 'var(--wc-y)' },
                       ].map((s, i) => (
-                        <div key={i} className="rounded-[8px] p-[8px] text-center" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)' }}>
+                        <div key={i} className="rounded-[8px] p-[8px] text-center" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .05)' }}>
                           <div className="font-heading font-bold text-[18px]" style={{ color: s.color }}>{s.val}</div>
-                          <div className="font-data text-[9px] uppercase tracking-[.08em] text-white/50">{s.label}</div>
+                          <div className="font-data text-[9px] uppercase tracking-[.08em]">{s.label}</div>
                         </div>
                       ))}
                     </div>
 
                     <div className="mt-[12px] rounded-[10px] p-[12px_14px] text-center" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-                      <div className="font-data text-[10px] uppercase tracking-[.08em] text-white/60 mb-[2px]">Estimated Deduction (Logbook Method)</div>
+                      <div className="font-data text-[10px] uppercase tracking-[.08em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Estimated Deduction (Logbook Method)</div>
                       <div className="font-heading font-extrabold text-[28px]" style={{ color: 'var(--wc-gr)' }}>${combined.totalEst.toFixed(2)}</div>
-                      <div className="font-data text-[10px] text-white/40 mt-[2px]">{combined.bizPct.toFixed(1)}% biz use &times; vehicle costs</div>
+                      <div className="font-data text-[10px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{combined.bizPct.toFixed(1)}% biz use &times; vehicle costs</div>
                     </div>
 
                     {combined.odoRangeStart != null && combined.odoRangeEnd != null && (
                       <div className="mt-[10px] flex gap-[10px]">
-                        <div className="flex-1 rounded-[8px] p-[8px] text-center" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)' }}>
-                          <div className="font-data text-[9px] uppercase tracking-[.08em] text-white/50">Odo Start</div>
-                          <div className="font-heading font-bold text-[14px] text-white">{combined.odoRangeStart.toLocaleString('en-AU')} km</div>
+                        <div className="flex-1 rounded-[8px] p-[8px] text-center" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .05)' }}>
+                          <div className="font-data text-[9px] uppercase tracking-[.08em]">Odo Start</div>
+                          <div className="font-heading font-bold text-[14px]" style={{ color: 'var(--wc-text)' }}>{combined.odoRangeStart.toLocaleString('en-AU')} km</div>
                         </div>
-                        <div className="flex-1 rounded-[8px] p-[8px] text-center" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)' }}>
-                          <div className="font-data text-[9px] uppercase tracking-[.08em] text-white/50">Odo End</div>
-                          <div className="font-heading font-bold text-[14px] text-white">{combined.odoRangeEnd.toLocaleString('en-AU')} km</div>
+                        <div className="flex-1 rounded-[8px] p-[8px] text-center" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .05)' }}>
+                          <div className="font-data text-[9px] uppercase tracking-[.08em]">Odo End</div>
+                          <div className="font-heading font-bold text-[14px]" style={{ color: 'var(--wc-text)' }}>{combined.odoRangeEnd.toLocaleString('en-AU')} km</div>
                         </div>
                       </div>
                     )}
@@ -493,11 +493,11 @@ export function ExportScreen() {
 
             {exportLog.length > 0 && (
               <div className="rounded-[12px] p-[10px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[6px] text-white/60">Export History</div>
+                <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[6px]">Export History</div>
                 {exportLog.slice(0, 5).map((e, i) => (
-                  <div key={i} className="flex items-center gap-[7px] py-[4px]" style={{ borderBottom: i < exportLog.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-                    <Clock className="w-[10px] h-[10px] flex-shrink-0 text-white/30" />
-                    <span className="font-data text-[10px] flex-1 text-white/50">{e.ts}</span>
+                  <div key={i} className="flex items-center gap-[7px] py-[4px]" style={{ borderBottom: i < exportLog.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}>
+                    <Clock className="w-[10px] h-[10px] flex-shrink-0" />
+                    <span className="font-data text-[10px] flex-1">{e.ts}</span>
                     <span className="font-heading font-bold text-[11px]" style={{ color: e.type === 'PDF' ? 'var(--wc-y)' : 'var(--wc-gr)' }}>
                       {e.type} \u00B7 {e.count} report{e.count !== 1 ? 's' : ''}
                     </span>
@@ -510,10 +510,10 @@ export function ExportScreen() {
       </div>
 
       {combined && (
-        <div className="flex-shrink-0 px-[14px] py-[10px] flex gap-[8px]" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
+        <div className="flex-shrink-0 px-[14px] py-[10px] flex gap-[8px]" style={{ background: 'var(--wc-nav-bg)', borderTop: '1px solid var(--wc-border)' }}>
           <button
             className="flex-1 flex items-center justify-center gap-[6px] rounded-[12px] py-[14px] font-heading font-extrabold text-[14px] uppercase tracking-[.05em] cursor-pointer"
-            style={{ background: 'var(--wc-y)', color: '#000' }}
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
             onClick={() => handleExport('pdf')}
             data-testid="button-combined-pdf"
           >
@@ -536,18 +536,18 @@ export function ExportScreen() {
 
       {vehicleModal && (
         <div className="fixed inset-0 z-[400] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }} onClick={() => setVehicleModal(false)}>
-          <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.25)' }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgb(var(--wc-ink) / .25)' }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-[16px] py-[13px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
               <div className="flex items-center gap-[8px]">
                 <FileText className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
-                <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em] text-white">Vehicle Details</span>
+                <span className="font-heading font-extrabold text-[15px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Vehicle Details</span>
               </div>
-              <button onClick={() => setVehicleModal(false)} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(255,255,255,.06)' }}>
-                <XCircle className="w-[13px] h-[13px] text-white/40" />
+              <button onClick={() => setVehicleModal(false)} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                <XCircle className="w-[13px] h-[13px]" />
               </button>
             </div>
             <div className="p-[14px_16px] flex flex-col gap-[8px]">
-              <p className="text-[11px] leading-[1.5] text-white/50">
+              <p className="text-[11px] leading-[1.5]">
                 These details appear on your combined ATO logbook PDF.
               </p>
               {[
@@ -558,10 +558,10 @@ export function ExportScreen() {
                 { key: 'year' as const, label: 'Year of manufacture', placeholder: 'e.g. 2022' },
               ].map(f => (
                 <div key={f.key}>
-                  <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[4px] text-white/60">{f.label}</div>
+                  <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>{f.label}</div>
                   <input
-                    className="w-full rounded-[8px] px-[10px] py-[8px] font-heading text-[13px] text-white outline-none"
-                    style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+                    className="w-full rounded-[8px] px-[10px] py-[8px] font-heading text-[13px] outline-none"
+                    style={{ color: 'var(--wc-text)', background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
                     placeholder={f.placeholder}
                     value={vehicleDetails[f.key]}
                     onChange={e => setVehicleDetails(v => ({ ...v, [f.key]: e.target.value }))}
@@ -577,7 +577,7 @@ export function ExportScreen() {
                   Generate Combined PDF
                 </button>
                 <button className="rounded-[10px] px-[14px] py-[11px] font-heading font-bold text-[12px] uppercase cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'white/60' }}
+                  style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
                   onClick={() => setVehicleModal(false)}>
                   Cancel
                 </button>

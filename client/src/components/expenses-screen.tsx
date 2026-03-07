@@ -208,13 +208,13 @@ export function ExpensesScreen() {
         <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
           <button
             className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
             onClick={resetForm}
             data-testid="button-cancel-expense"
           >
             <X className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
           </button>
-          <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">
+          <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>
             {editing ? 'Edit Expense' : 'Add Expense'}
           </span>
         </div>
@@ -248,7 +248,7 @@ export function ExpensesScreen() {
               <div className="flex gap-[8px] mb-[12px]">
                 <button
                   className="flex-1 rounded-[10px] p-[14px] flex flex-col items-center gap-[6px] cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,.04)', border: '1.5px dashed rgba(255,255,255,.3)' }}
+                  style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px dashed rgb(var(--wc-ink) / .3)' }}
                   onClick={() => fileRef.current?.click()}
                   data-testid="expense-upload-receipt"
                 >
@@ -257,7 +257,7 @@ export function ExpensesScreen() {
                 </button>
                 <button
                   className="flex-1 rounded-[10px] p-[14px] flex flex-col items-center gap-[6px] cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,.03)', border: '1.5px dashed var(--wc-border)' }}
+                  style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1.5px dashed var(--wc-border)' }}
                   onClick={() => { if (fileRef.current) { fileRef.current.removeAttribute('capture'); fileRef.current.click(); fileRef.current.setAttribute('capture', 'environment'); } }}
                   data-testid="expense-gallery-receipt"
                 >
@@ -274,8 +274,8 @@ export function ExpensesScreen() {
                   key={cat}
                   className="rounded-[8px] px-[10px] py-[8px] font-heading font-bold text-[12px] uppercase tracking-[.03em] cursor-pointer transition-all"
                   style={{
-                    background: fCat === cat ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.04)',
-                    border: fCat === cat ? '1px solid rgba(255,255,255,.4)' : '1px solid var(--wc-border)',
+                    background: fCat === cat ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .04)',
+                    border: fCat === cat ? '1px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
                     color: fCat === cat ? 'var(--wc-y)' : 'var(--wc-t2)',
                   }}
                   onClick={() => setFCat(cat)}
@@ -293,8 +293,8 @@ export function ExpensesScreen() {
                   type="number"
                   step="0.01"
                   inputMode="decimal"
-                  className="w-full rounded-[8px] p-[12px] text-[16px] text-white outline-none font-data"
-                  style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                  className="w-full rounded-[8px] p-[12px] text-[16px] outline-none font-data"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                   value={fAmount}
                   onChange={e => setFAmount(e.target.value)}
                   placeholder="0.00"
@@ -305,8 +305,8 @@ export function ExpensesScreen() {
                 <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Date</label>
                 <input
                   type="date"
-                  className="w-full rounded-[8px] p-[12px] text-[16px] text-white outline-none"
-                  style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+                  className="w-full rounded-[8px] p-[12px] text-[16px] outline-none"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
                   value={fDate}
                   onChange={e => setFDate(e.target.value)}
                   data-testid="expense-date"
@@ -316,15 +316,15 @@ export function ExpensesScreen() {
 
             <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Vendor (optional)</label>
             <input
-              className="w-full rounded-[8px] p-[12px] text-[16px] text-white outline-none mb-[14px]"
-              style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }}
+              className="w-full rounded-[8px] p-[12px] text-[16px] outline-none mb-[14px]"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
               value={fVendor}
               onChange={e => setFVendor(e.target.value)}
               placeholder="e.g. Repco, NRMA, Shell"
               data-testid="expense-vendor"
             />
 
-            <div className="rounded-[10px] p-[12px] mb-[14px] flex items-start gap-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
+            <div className="rounded-[10px] p-[12px] mb-[14px] flex items-start gap-[10px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
               <Check className="w-[18px] h-[18px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-y)' }} />
               <div>
                 <div className="font-heading font-bold text-[12px] uppercase" style={{ color: 'var(--wc-y)' }}>Verify Before Save</div>
@@ -340,18 +340,19 @@ export function ExpensesScreen() {
         <div className="px-[14px] py-[8px] flex gap-[8px] flex-shrink-0">
           <button
             className="flex-1 py-[14px] rounded-[12px] font-heading font-bold text-[15px] uppercase tracking-[.04em] cursor-pointer"
-            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
             onClick={resetForm}
             data-testid="expense-cancel-btn"
           >
             Cancel
           </button>
           <button
-            className="flex-[2] py-[14px] rounded-[12px] font-heading font-bold text-[15px] uppercase tracking-[.04em] text-black cursor-pointer transition-all active:scale-[.98]"
+            className="flex-[2] py-[14px] rounded-[12px] font-heading font-bold text-[15px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.98]"
             style={{
-              background: parseFloat(fAmount) > 0 ? 'var(--wc-y)' : 'rgba(255,255,255,.3)',
+              background: parseFloat(fAmount) > 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .3)',
+              color: 'var(--wc-bg)',
               opacity: parseFloat(fAmount) > 0 ? 1 : 0.5,
-              boxShadow: parseFloat(fAmount) > 0 ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
+              boxShadow: parseFloat(fAmount) > 0 ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
             }}
             onClick={handleSave}
             data-testid="expense-save-btn"
@@ -369,13 +370,13 @@ export function ExpensesScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-expenses"
         >
           <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">Expenses</span>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Expenses</span>
       </div>
 
       <div className="flex mx-[14px] mb-[8px] rounded-[10px] overflow-hidden flex-shrink-0" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -384,7 +385,7 @@ export function ExpensesScreen() {
             key={t}
             className="flex-1 py-[10px] font-heading font-bold text-[14px] uppercase tracking-[.05em] cursor-pointer transition-all"
             style={{
-              background: tab === t ? 'rgba(255,255,255,.12)' : 'transparent',
+              background: tab === t ? 'rgb(var(--wc-ink) / .12)' : 'transparent',
               color: tab === t ? 'var(--wc-y)' : 'var(--wc-t3)',
               borderBottom: tab === t ? '2px solid var(--wc-y)' : '2px solid transparent',
             }}
@@ -421,12 +422,12 @@ export function ExpensesScreen() {
                   {exp.receiptUri ? (
                     <img src={exp.receiptUri} className="w-[38px] h-[38px] rounded-[8px] object-cover flex-shrink-0" alt="" />
                   ) : (
-                    <div className="w-[38px] h-[38px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
+                    <div className="w-[38px] h-[38px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
                       <Receipt className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[14px] text-white truncate">{exp.category}</div>
+                    <div className="font-semibold text-[14px] truncate" style={{ color: 'var(--wc-text)' }}>{exp.category}</div>
                     <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>
                       {exp.date}{exp.vendor ? ` · ${exp.vendor}` : ''}
                     </div>
@@ -438,7 +439,7 @@ export function ExpensesScreen() {
                   <div className="px-[14px] pb-[12px] flex gap-[8px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
                     <button
                       className="flex-1 flex items-center justify-center gap-[6px] mt-[8px] py-[8px] rounded-[8px] cursor-pointer"
-                      style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)', color: 'var(--wc-y)' }}
+                      style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)', color: 'var(--wc-y)' }}
                       onClick={(e) => { e.stopPropagation(); startEdit(exp); }}
                       data-testid={`expense-edit-${exp.id}`}
                     >
@@ -487,7 +488,7 @@ export function ExpensesScreen() {
               <div key={cat} className="rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
                 <div className="flex items-center justify-between mb-[4px]">
                   <div className="flex items-center gap-[6px]">
-                    <span className="font-semibold text-[14px] text-white">{cat}</span>
+                    <span className="font-semibold text-[14px]" style={{ color: 'var(--wc-text)' }}>{cat}</span>
                     {isEstimated && (
                       <span className="font-data text-[8px] uppercase tracking-[.1em] px-[5px] py-[2px] rounded-[4px]" style={{ background: 'rgba(153,153,153,.1)', color: 'var(--wc-am)', border: '1px solid rgba(153,153,153,.2)' }}>
                         Est.
@@ -499,16 +500,16 @@ export function ExpensesScreen() {
                     {cat === 'Fuel / Electricity' && amt > 0 ? '*' : ''}
                   </div>
                 </div>
-                <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,.04)' }}>
+                <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
                   <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: isEstimated ? 'var(--wc-am)' : 'var(--wc-y)' }} />
                 </div>
               </div>
             );
           })}
 
-          <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.25)' }}>
+          <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid rgb(var(--wc-ink) / .25)' }}>
             <div className="flex items-center justify-between">
-              <span className="font-heading font-bold text-[15px] uppercase text-white">Total Vehicle Expenses</span>
+              <span className="font-heading font-bold text-[15px] uppercase" style={{ color: 'var(--wc-text)' }}>Total Vehicle Expenses</span>
               <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>${reportData.totalVehicle.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between mt-[6px]">
@@ -526,7 +527,7 @@ export function ExpensesScreen() {
 
           <button
             className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[15px] uppercase tracking-[.04em] flex items-center justify-center gap-[8px] cursor-pointer transition-all active:scale-[.98] mb-[4px]"
-            style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
             onClick={handleExportCSV}
             data-testid="button-export-expenses"
           >
@@ -539,8 +540,8 @@ export function ExpensesScreen() {
       {tab === 'entries' && (
         <div className="px-[14px] py-[8px] flex-shrink-0">
           <button
-            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.25)' }}
+            className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .25)' }}
             onClick={() => setAdding(true)}
             data-testid="button-add-expense"
           >

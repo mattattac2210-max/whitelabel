@@ -93,13 +93,13 @@ export function ReviewScreen() {
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
           data-testid="button-back-review"
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Review</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Review</span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{sorted.length} trips</span>
       </div>
 
@@ -114,19 +114,19 @@ export function ReviewScreen() {
           ].map((step, i, arr) => (
             <div key={step.id} className="flex flex-col items-center flex-1 relative">
               {i < arr.length - 1 && (
-                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(255,255,255,.4)' : 'var(--wc-border)' }} />
+                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgb(var(--wc-ink) / .4)' : 'var(--wc-border)' }} />
               )}
               <div
                 className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
                 style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(255,255,255,.5)' : '1.5px solid var(--wc-border)',
-                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgb(var(--wc-ink) / .5)' : '1.5px solid var(--wc-border)',
+                  color: step.active ? 'var(--wc-bg)' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
                 }}
               >
                 {step.done ? '\u2713' : i + 1}
               </div>
-              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.55)' : 'var(--wc-t3)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .55)' : 'var(--wc-t3)' }}>
                 {step.label}
               </div>
             </div>
@@ -135,9 +135,9 @@ export function ReviewScreen() {
       </div>
 
       {unclassified > 0 && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.25)' }}>
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(255,255,255,.9)" />
-          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(255,255,255,.85)' }}>
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid rgb(var(--wc-ink) / .25)' }}>
+          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgb(var(--wc-ink) / .9)" />
+          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgb(var(--wc-ink) / .85)' }}>
             <strong style={{ color: 'var(--wc-y)' }}>{unclassified} business trip{unclassified > 1 ? 's' : ''}</strong> have no purpose set &mdash; tap to expand and classify.
           </div>
         </div>
@@ -206,13 +206,13 @@ export function ReviewScreen() {
                 style={{
                   background: showGapStyle ? 'rgba(153,153,153,.03)' : 'var(--wc-card)',
                   border: showGapStyle ? '1px dashed rgba(153,153,153,.3)' : '1px solid var(--wc-border)',
-                  borderLeft: showGapStyle ? '3px dashed rgba(153,153,153,.5)' : t.type === 'business' ? '3px solid rgba(255,255,255,.6)' : '3px solid rgba(180,180,180,.25)',
+                  borderLeft: showGapStyle ? '3px dashed rgba(153,153,153,.5)' : t.type === 'business' ? '3px solid rgb(var(--wc-ink) / .6)' : '3px solid rgba(180,180,180,.25)',
                 }}
                 data-testid={`review-trip-${origIdx}`}
               >
                 <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-semibold text-[13px] mb-[3px] ${isExpanded ? '' : 'truncate'}`} style={{ color: showGapStyle ? 'var(--wc-am)' : 'white' }}>
+                    <div className={`font-semibold text-[13px] mb-[3px] ${isExpanded ? '' : 'truncate'}`} style={{ color: showGapStyle ? 'var(--wc-am)' : 'var(--wc-text)' }}>
                       {isGap && <span className="font-data text-[8px] uppercase tracking-[.08em] mr-[5px] px-[4px] py-[1px] rounded-[3px]" style={{ background: gapConfirmed ? 'rgba(34,197,94,.1)' : 'rgba(153,153,153,.12)', color: gapConfirmed ? 'var(--wc-gr)' : 'var(--wc-am)', border: gapConfirmed ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.2)' }}>{gapConfirmed ? 'GAP \u2713' : 'GAP'}</span>}
                       {t.from} &rarr; {t.to}
                     </div>
@@ -228,7 +228,7 @@ export function ReviewScreen() {
                     style={{
                       background: t.type === 'business' ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
                       color: t.type === 'business' ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
-                      border: t.type === 'business' ? '1px solid rgba(255,255,255,.22)' : '1px solid rgba(180,180,180,.15)',
+                      border: t.type === 'business' ? '1px solid rgb(var(--wc-ink) / .22)' : '1px solid rgba(180,180,180,.15)',
                     }}
                   >
                     {t.type === 'business' ? 'Business' : 'Personal'}
@@ -277,8 +277,8 @@ export function ReviewScreen() {
                                   type="number"
                                   step="0.1"
                                   min="0"
-                                  className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
-                                  style={{ background: 'rgba(255,255,255,.06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.25)' }}
+                                  className="w-full rounded-lg p-[8px_11px] text-[13px] outline-none font-data"
+                                  style={{ background: 'rgb(var(--wc-ink) / .06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.25)', color: 'var(--wc-text)' }}
                                   value={gapKmInputs[origIdx] ?? ''}
                                   onChange={e => setGapKmInputs(prev => ({ ...prev, [origIdx]: e.target.value }))}
                                   onClick={e => e.stopPropagation()}
@@ -294,27 +294,27 @@ export function ReviewScreen() {
                             <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
                               <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Confirmed &mdash; {t.km} km added to odometer chain</div>
                             </div>
-                            <strong style={{ color: 'white' }}>From:</strong> {t.from}, {t.fromSub}<br />
-                            <strong style={{ color: 'white' }}>To:</strong> {t.to}, {t.toSub}<br />
-                            <strong style={{ color: 'white' }}>Distance:</strong> {t.km} km<br />
+                            <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
+                            <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
+                            <strong style={{ color: 'var(--wc-text)' }}>Distance:</strong> {t.km} km<br />
                           </>
                         )}
-                        <strong style={{ color: gapConfirmed ? 'white' : 'var(--wc-am)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
+                        <strong style={{ color: gapConfirmed ? 'var(--wc-text)' : 'var(--wc-am)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
                       </div>
                     ) : (
                       <div className="text-[12px] leading-[1.8]" style={{ color: 'var(--wc-t2)' }}>
-                        <strong className="text-white">From:</strong> {t.from}, {t.fromSub}<br />
-                        <strong className="text-white">To:</strong> {t.to}, {t.toSub}<br />
-                        <strong className="text-white">Time:</strong> {t.time} &middot; <strong className="text-white">Duration:</strong> {t.duration}<br />
-                        <strong className="text-white">Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km<br />
-                        <strong className="text-white">Deduction est.:</strong> {ded}
+                        <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
+                        <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
+                        <strong style={{ color: 'var(--wc-text)' }}>Time:</strong> {t.time} &middot; <strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {t.duration}<br />
+                        <strong style={{ color: 'var(--wc-text)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km<br />
+                        <strong style={{ color: 'var(--wc-text)' }}>Deduction est.:</strong> {ded}
                       </div>
                     )}
                     {t.purposeLabel && (
                       <div className="text-[12px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
                     )}
                     {t.notes && (
-                      <div className="text-[11px] rounded-[6px] p-[5px_8px]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
+                      <div className="text-[11px] rounded-[6px] p-[5px_8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
                         <span className="font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
                       </div>
                     )}
@@ -366,7 +366,7 @@ export function ReviewScreen() {
                           </button>
                           <button
                             className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                            style={{ borderColor: 'rgba(255,255,255,.4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgba(255,255,255,.4)' }}
+                            style={{ borderColor: 'rgb(var(--wc-ink) / .4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgb(var(--wc-ink) / .4)' }}
                             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
                             data-testid={`reclassify-business-${origIdx}`}
                           >
@@ -374,7 +374,7 @@ export function ReviewScreen() {
                           </button>
                       <button
                         className="py-2 px-3 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                        style={{ border: '1px solid var(--wc-border)', background: 'rgba(255,255,255,.04)', color: 'var(--wc-t2)' }}
+                        style={{ border: '1px solid var(--wc-border)', background: 'rgb(var(--wc-ink) / .04)', color: 'var(--wc-t2)' }}
                         onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: origIdx }); }}
                         data-testid={`edit-trip-${origIdx}`}
                       >
@@ -389,7 +389,7 @@ export function ReviewScreen() {
         </div>
       ) : (
         <div className="flex-1 px-[14px] flex flex-col gap-[6px]">
-          <div className="font-heading font-bold text-[14px] text-white uppercase tracking-[.06em] text-center">February 2026</div>
+          <div className="font-heading font-bold text-[14px] uppercase tracking-[.06em] text-center" style={{ color: 'var(--wc-text)' }}>February 2026</div>
           <div className="grid grid-cols-7 gap-[3px]">
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
               <div key={i} className="font-data text-[8px] text-center py-[2px]" style={{ color: 'var(--wc-t3)' }}>{d}</div>
@@ -428,9 +428,9 @@ export function ReviewScreen() {
         <button
           className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
           style={{
-            background: canContinue ? 'var(--wc-y)' : 'rgba(255,255,255,.25)',
+            background: canContinue ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .25)',
             color: canContinue ? 'black' : 'rgba(0,0,0,.4)',
-            boxShadow: canContinue ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
+            boxShadow: canContinue ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
             cursor: canContinue ? 'pointer' : 'not-allowed',
           }}
           onClick={() => canContinue && dispatch({ type: 'GO_SCREEN', screen: 'notes' })}

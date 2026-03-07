@@ -107,7 +107,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
   if (error || !imgUrl) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#f0f0f0' }}>
+      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'var(--wc-card)' }}>
         <div className="flex flex-col items-center gap-[4px]">
           <MapPin className="w-[18px] h-[18px] opacity-25" style={{ color: 'var(--wc-t3)' }} />
           <span className="font-data text-[8px] uppercase tracking-[.1em] opacity-30" style={{ color: 'var(--wc-t3)' }}>Map</span>
@@ -427,7 +427,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       style={{
         background: 'var(--wc-card)',
         border: '1.5px solid var(--wc-y)',
-        boxShadow: '0 0 18px rgba(255,255,255,.25), 0 0 40px rgba(255,255,255,.1), 0 16px 50px rgba(0,0,0,.7)',
+        boxShadow: '0 0 18px rgb(var(--wc-ink) / .25), 0 0 40px rgb(var(--wc-ink) / .1), 0 16px 50px rgba(0,0,0,.7)',
         transform: getTransform(),
         opacity: getOpacity(),
         transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : isTutorialActive ? 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
@@ -446,7 +446,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <div
             className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
             style={{
-              background: isBizSwipe ? 'linear-gradient(135deg,rgba(255,255,255,0),rgba(255,255,255,.22))' : tutorialPhase === 'right' ? 'rgba(255,255,255,.08)' : 'transparent',
+              background: isBizSwipe ? 'linear-gradient(135deg,rgb(var(--wc-ink) / 0),rgb(var(--wc-ink) / .22))' : tutorialPhase === 'right' ? 'rgb(var(--wc-ink) / .08)' : 'transparent',
               opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 1 : 0,
               transition: 'opacity .5s, background .5s',
             }}
@@ -485,7 +485,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </div>
         </>
       )}
-      <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: '#f0f0f0' }}>
+      <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: 'var(--wc-card)' }}>
         <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}
           onPointerDown={e => {
             longPressTriggered.current = false;
@@ -507,7 +507,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <div className="absolute inset-[-20%_0_0_0]" style={{ transform: 'rotateX(28deg) scale(1.15)', transformOrigin: '50% 55%' }}>
             <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} stops={trip.stops || []} interactive={false} />
           </div>
-          <div className="absolute inset-0 pointer-events-none z-[1]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.15) 100%)' }} />
+          <div className="absolute inset-0 pointer-events-none z-[1]" style={{ background: 'linear-gradient(to bottom, rgb(var(--wc-ink) / 0.1) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.15) 100%)' }} />
           {isTop && tutorialPhase !== 'done' && (
             <div
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
@@ -536,7 +536,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
           <button
             className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
-            style={{ background: '#FFFFFF', border: '1px solid #FFFFFF', color: '#000' }}
+            style={{ background: 'var(--wc-text)', border: '1px solid var(--wc-text)', color: 'var(--wc-bg)' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={() => setShowDetail(true)}
             data-testid="button-see-details"
@@ -545,7 +545,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </button>
           <button
             className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
-            style={{ background: '#999', border: '1px solid #999', color: '#000' }}
+            style={{ background: 'var(--wc-am)', border: '1px solid var(--wc-am)', color: 'var(--wc-bg)' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={onEdit}
             data-testid="button-edit-trip"
@@ -563,8 +563,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <MapPin className="w-[10px] h-[10px]" stroke="#22C55E" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[11px] text-white truncate">{trip.from}</div>
-                <div className="text-[10px] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
+                <div className="font-semibold text-[11px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.from}</div>
+                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
               </div>
             </div>
             {(trip.stops || []).map((stop, i) => (
@@ -573,22 +573,22 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <MapPin className="w-[10px] h-[10px]" stroke="#999999" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[11px] text-white truncate">{stop.split(',')[0]}</div>
+                  <div className="font-semibold text-[11px] truncate" style={{ color: 'var(--wc-text)' }}>{stop.split(',')[0]}</div>
                   <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{stop.split(',').slice(1).join(',').trim()}</div>
                 </div>
               </div>
             ))}
             <div className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
               <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[10px] h-[10px]" stroke="#FFFFFF" />
+                <MapPin className="w-[10px] h-[10px]" stroke="var(--wc-text)" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
-                <div className="text-[#ffffff] text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
+                <div className="font-semibold text-[11px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.to}</div>
+                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
               </div>
             </div>
           </div>
-          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
+          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
             <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
             <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>km</div>
             <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
@@ -626,12 +626,12 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <button
             className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 active:scale-95"
             style={{
-              background: bizBtnHighlight ? 'rgba(255,255,255,.2)' : 'var(--wc-yd)',
-              border: bizBtnHighlight ? '1.5px solid rgba(255,255,255,.7)' : '1.5px solid rgba(255,255,255,.45)',
+              background: bizBtnHighlight ? 'rgb(var(--wc-ink) / .2)' : 'var(--wc-yd)',
+              border: bizBtnHighlight ? '1.5px solid rgb(var(--wc-ink) / .7)' : '1.5px solid rgb(var(--wc-ink) / .45)',
               color: 'var(--wc-y)',
               transition: 'all .4s ease',
               transform: bizBtnHighlight ? 'scale(1.04)' : 'scale(1)',
-              boxShadow: bizBtnHighlight ? '0 0 12px rgba(255,255,255,.3)' : 'none',
+              boxShadow: bizBtnHighlight ? '0 0 12px rgb(var(--wc-ink) / .3)' : 'none',
             }}
             onClick={handleBusiness}
             data-testid="button-business"
@@ -645,10 +645,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(160,160,160,0.55)"><path d="M19 12H5M5 12l7-7M5 12l7 7" /></svg>
             Swipe left
           </div>
-          <div className="font-data text-[7px] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
-          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(255,255,255,.65)' }}>
+          <div className="font-data text-[7px]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
+          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgb(var(--wc-ink) / .65)' }}>
             Swipe right
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgb(var(--wc-ink) / 0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
           </div>
         </div>
       </div>
@@ -663,8 +663,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             className="relative w-[370px] max-h-[800px] rounded-[20px] flex flex-col touch-pan-y"
             style={{
               background: 'var(--wc-card)',
-              border: '1.5px solid #FFFFFF',
-              boxShadow: '0 0 18px rgba(255,255,255,.35), 0 0 40px rgba(255,255,255,.15), 0 16px 50px rgba(0,0,0,.7)',
+              border: '1.5px solid var(--wc-y)',
+              boxShadow: '0 0 18px rgb(var(--wc-ink) / .35), 0 0 40px rgb(var(--wc-ink) / .15), 0 16px 50px rgba(0,0,0,.7)',
               overflow: detailScale > 1 ? 'visible' : 'hidden',
               transition: 'overflow 0s',
             }}
@@ -707,7 +707,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           >
             <button
               className="absolute top-[10px] right-[10px] z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.15)' }}
+              style={{ background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: '1px solid rgb(var(--wc-ink) / .15)' }}
               onClick={() => setShowDetail(false)}
               data-testid="button-close-detail"
             >
@@ -717,13 +717,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               className="relative w-full"
               style={{
                 height: '280px',
-                background: '#f0f0f0',
+                background: 'var(--wc-card)',
                 transform: detailScale > 1 ? `scale(${detailScale})` : 'none',
                 transformOrigin: 'top center',
                 zIndex: detailScale > 1 ? 50 : 0,
                 borderRadius: detailScale > 1 ? '12px' : '0',
                 boxShadow: detailScale > 1
-                  ? `0 ${8 * detailScale}px ${30 * detailScale}px rgba(0,0,0,.8), 0 0 ${16 * detailScale}px rgba(255,255,255,.25)`
+                  ? `0 ${8 * detailScale}px ${30 * detailScale}px rgba(0,0,0,.8), 0 0 ${16 * detailScale}px rgb(var(--wc-ink) / .25)`
                   : 'none',
                 transition: detailScale > 1 ? 'none' : 'transform .3s ease, box-shadow .3s ease, border-radius .3s ease',
               }}
@@ -735,7 +735,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   style={{
                     background: 'rgba(0,0,0,.7)',
                     backdropFilter: 'blur(4px)',
-                    border: '1px solid rgba(255,255,255,.2)',
+                    border: '1px solid rgb(var(--wc-ink) / .2)',
                     transform: `scale(${1 / detailScale})`,
                   }}
                   onClick={() => setDetailScale(1)}
@@ -752,7 +752,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <span className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
                 <button
                   className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em]"
-                  style={{ background: '#999', border: '1px solid #999', color: '#000' }}
+                  style={{ background: 'var(--wc-am)', border: '1px solid var(--wc-am)', color: 'var(--wc-bg)' }}
                   onClick={() => { setShowDetail(false); onEdit(); }}
                   data-testid="button-detail-edit"
                 >
@@ -766,7 +766,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                       <MapPin className="w-[14px] h-[14px]" stroke="#22C55E" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-heading font-semibold text-[14px] text-white truncate">{trip.from}</div>
+                      <div className="font-heading font-semibold text-[14px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.from}</div>
                       <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.fromSub}</div>
                     </div>
                   </div>
@@ -778,7 +778,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                           <MapPin className="w-[14px] h-[14px]" stroke="#999999" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-heading font-semibold text-[14px] text-white truncate">{stop.split(',')[0]}</div>
+                          <div className="font-heading font-semibold text-[14px] truncate" style={{ color: 'var(--wc-text)' }}>{stop.split(',')[0]}</div>
                           <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{stop.split(',').slice(1).join(',').trim()}</div>
                         </div>
                       </div>
@@ -787,10 +787,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
                   <div className="flex items-start gap-[10px]">
                     <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>
-                      <MapPin className="w-[14px] h-[14px]" stroke="#FFFFFF" />
+                      <MapPin className="w-[14px] h-[14px]" stroke="var(--wc-text)" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-heading font-semibold text-[14px] text-white truncate">{trip.to}</div>
+                      <div className="font-heading font-semibold text-[14px] truncate" style={{ color: 'var(--wc-text)' }}>{trip.to}</div>
                       <div className="text-[11px] mt-[1px] truncate" style={{ color: 'var(--wc-t3)' }}>{trip.toSub}</div>
                     </div>
                   </div>
@@ -804,10 +804,10 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   while (cells.length % 7 !== 0) cells.push(null);
                   return (
                     <div className="flex-shrink-0 self-center w-[100px] rounded-[10px] overflow-hidden flex flex-col" style={{ border: '1px solid var(--wc-border)' }} data-testid="detail-mini-calendar">
-                      <div className="py-[3px] text-center font-heading font-bold text-[8px] uppercase tracking-[.1em]" style={{ background: 'var(--wc-y)', color: '#000' }}>
+                      <div className="py-[3px] text-center font-heading font-bold text-[8px] uppercase tracking-[.1em]" style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}>
                         {MONTHS[trip.month]} {trip.year}
                       </div>
-                      <div className="p-[3px_2px_4px]" style={{ background: 'rgba(255,255,255,.04)' }}>
+                      <div className="p-[3px_2px_4px]" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
                         <div className="grid grid-cols-7 gap-0">
                           {['S','M','T','W','T','F','S'].map((l, i) => (
                             <div key={`h${i}`} className="text-center font-data text-[6px] leading-[10px]" style={{ color: 'var(--wc-t3)' }}>{l}</div>
@@ -816,7 +816,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                             <div
                               key={i}
                               className="text-center font-data text-[7px] leading-[13px] rounded-[3px]"
-                              style={d === trip.day ? { background: 'var(--wc-y)', color: '#000', fontWeight: 800 } : { color: d ? 'var(--wc-t2)' : 'transparent' }}
+                              style={d === trip.day ? { background: 'var(--wc-y)', color: 'var(--wc-bg)', fontWeight: 800 } : { color: d ? 'var(--wc-t2)' : 'transparent' }}
                             >
                               {d ?? ''}
                             </div>
@@ -838,7 +838,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 </button>
                 <button
                   className="flex-1 py-[10px] rounded-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
-                  style={{ background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.6)', color: 'var(--wc-y)' }}
+                  style={{ background: 'rgb(var(--wc-ink) / .15)', border: '1.5px solid rgb(var(--wc-ink) / .6)', color: 'var(--wc-y)' }}
                   onClick={() => { setShowDetail(false); flyOut('right'); }}
                   data-testid="button-detail-business"
                 >
@@ -846,12 +846,12 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 </button>
               </div>
               <div className="flex gap-[8px] mt-[4px]">
-                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
                   <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
                   <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>km</div>
                 </div>
-                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
                   <Clock className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }} />
                   <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-t2)' }}>{trip.duration}</div>
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>duration</div>
@@ -865,13 +865,13 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>odometer</div>
                 </div>
               </div>
-              <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
+              <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
                 <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Business KM</span>
                 <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{trip.km.toFixed(1)} km</span>
               </div>
               <button
                 className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em]"
-                style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
                 onClick={() => setShowDetail(false)}
                 data-testid="button-back-to-sorting"
               >

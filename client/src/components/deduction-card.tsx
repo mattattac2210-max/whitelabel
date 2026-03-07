@@ -38,8 +38,8 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
       <div
         className={`flex-1 rounded-xl p-3 relative cursor-pointer transition-all ${className}`}
         style={{
-          background: state === 'locked' ? 'rgba(255,255,255,.02)' : 'var(--wc-card)',
-          border: state === 'locked' ? '1px solid rgba(255,255,255,.06)' : '1px solid var(--wc-border)',
+          background: state === 'locked' ? 'rgb(var(--wc-ink) / .02)' : 'var(--wc-card)',
+          border: state === 'locked' ? '1px solid rgb(var(--wc-ink) / .06)' : '1px solid var(--wc-border)',
         }}
         onClick={handleTap}
         data-testid="dash-stat-ded"
@@ -50,7 +50,7 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
           <>
             <div className="flex items-center gap-[6px] mt-1">
               <Lock className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
-              <div className="font-display text-[28px] leading-none" style={{ color: 'rgba(255,255,255,.15)', filter: 'blur(4px)' }}>
+              <div className="font-display text-[28px] leading-none" style={{ color: 'rgb(var(--wc-ink) / .15)', filter: 'blur(4px)' }}>
                 $—
               </div>
             </div>
@@ -188,13 +188,13 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
     >
       <div
         className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up overflow-y-auto"
-        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)', maxHeight: '85vh' }}
+        style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)', maxHeight: '85vh' }}
         onClick={e => e.stopPropagation()}
         data-testid="modal-deduction-prompt"
       >
         <div className="flex justify-between items-start mb-[14px]">
           <div>
-            <div className="font-heading font-black text-[18px] uppercase text-white leading-[1.1]">
+            <div className="font-heading font-black text-[18px] uppercase leading-[1.1]" style={{ color: 'var(--wc-text)' }}>
               {title}
             </div>
             <div className="text-[11px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
@@ -203,7 +203,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           </div>
           <button
             className="w-[28px] h-[28px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
             onClick={onClose}
             data-testid="button-close-deduction-prompt"
           >
@@ -220,15 +220,15 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           </div>
         )}
 
-        <div className="rounded-[12px] p-[14px] mb-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+        <div className="rounded-[12px] p-[14px] mb-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
           <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: hasPrice ? 'var(--wc-gr)' : 'var(--wc-y)' }}>
             Purchase Price
           </div>
           <div className="relative">
             <span className="absolute left-[12px] top-1/2 -translate-y-1/2 font-data text-[16px] font-bold" style={{ color: hasPrice ? 'var(--wc-y)' : 'var(--wc-t3)' }}>$</span>
             <input
-              className="w-full rounded-[10px] p-[12px_12px_12px_28px] text-[16px] text-white outline-none font-data"
-              style={{ background: 'rgba(255,255,255,.05)', border: hasPrice ? '1.5px solid rgba(255,255,255,.3)' : '1.5px solid rgba(255,255,255,.08)' }}
+              className="w-full rounded-[10px] p-[12px_12px_12px_28px] text-[16px] outline-none font-data"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: hasPrice ? '1.5px solid rgb(var(--wc-ink) / .3)' : '1.5px solid rgb(var(--wc-ink) / .08)', color: 'var(--wc-text)' }}
               type="number"
               inputMode="numeric"
               value={purchasePrice}
@@ -245,7 +245,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           )}
         </div>
 
-        <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+        <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
           <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: hasDep ? 'var(--wc-gr)' : 'var(--wc-y)' }}>
             Depreciation
           </div>
@@ -253,8 +253,8 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             <button
               className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
               style={{
-                background: isNew ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.04)',
-                border: isNew ? '1.5px solid rgba(255,255,255,.4)' : '1px solid rgba(255,255,255,.08)',
+                background: isNew ? 'rgb(var(--wc-ink) / .12)' : 'rgb(var(--wc-ink) / .04)',
+                border: isNew ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1px solid rgb(var(--wc-ink) / .08)',
                 color: isNew ? 'var(--wc-y)' : 'var(--wc-t3)',
               }}
               onClick={() => saveDepYears('new')}
@@ -269,8 +269,8 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
                   key={y}
                   className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
                   style={{
-                    background: active ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.04)',
-                    border: active ? '1.5px solid rgba(255,255,255,.4)' : '1px solid rgba(255,255,255,.08)',
+                    background: active ? 'rgb(var(--wc-ink) / .12)' : 'rgb(var(--wc-ink) / .04)',
+                    border: active ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1px solid rgb(var(--wc-ink) / .08)',
                     color: active ? 'var(--wc-y)' : 'var(--wc-t3)',
                   }}
                   onClick={() => saveDepYears(String(y))}
@@ -282,7 +282,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             })}
           </div>
           {hasPrice && hasDep && (
-            <div className="flex items-center justify-between mt-[10px] pt-[8px]" style={{ borderTop: '1px solid rgba(255,255,255,.06)' }}>
+            <div className="flex items-center justify-between mt-[10px] pt-[8px]" style={{ borderTop: '1px solid rgb(var(--wc-ink) / .06)' }}>
               <span className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>This year's depreciation</span>
               <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-gr)' }}>${depAmount.toLocaleString()}</span>
             </div>
@@ -293,7 +293,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           {(needsBasics || isLocked) && hasPrice && hasDep && (
             <button
               className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-              style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
               onClick={onClose}
               data-testid="button-prompt-done"
             >
@@ -304,7 +304,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
 
           <button
             className="w-full rounded-[11px] py-[10px] flex items-center justify-center gap-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
             onClick={() => onNavigate('account')}
             data-testid="button-prompt-customise"
           >
@@ -357,13 +357,13 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
     >
       <div
         className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up"
-        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
+        style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
         onClick={e => e.stopPropagation()}
         data-testid="modal-deduction-estimator"
       >
         <div className="flex justify-between items-start mb-[14px]">
           <div>
-            <div className="font-heading font-black text-[18px] uppercase text-white">
+            <div className="font-heading font-black text-[18px] uppercase" style={{ color: 'var(--wc-text)' }}>
               {isLocked ? 'Unlock Deduction Estimates' : 'Improve Your Estimate'}
             </div>
             <div className="flex items-center gap-[6px] mt-[4px]">
@@ -378,7 +378,7 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
           </div>
           <button
             className="w-[28px] h-[28px] rounded-full flex items-center justify-center cursor-pointer"
-            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
             onClick={onClose}
             data-testid="button-close-deduction-modal"
           >
@@ -396,7 +396,7 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
           <div className="mb-[12px]">
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-re)' }}>Missing</div>
             {missing.map((item, i) => (
-              <div key={i} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+              <div key={i} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .04)' }}>
                 <AlertCircle className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'rgba(239,68,68,.6)' }} />
                 <span className="text-[12px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
               </div>
@@ -408,7 +408,7 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
           <div className="mb-[14px]">
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-gr)' }}>Included</div>
             {included.map((item, i) => (
-              <div key={i} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+              <div key={i} className="flex items-center gap-[8px] py-[5px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .04)' }}>
                 <CheckCircle2 className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'rgba(34,197,94,.6)' }} />
                 <span className="text-[12px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
               </div>
@@ -426,8 +426,8 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
               key={i}
               className="w-full rounded-[11px] py-[11px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
               style={{
-                background: i === 0 ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.04)',
-                border: i === 0 ? '1.5px solid rgba(255,255,255,.3)' : '1px solid var(--wc-border)',
+                background: i === 0 ? 'rgb(var(--wc-ink) / .08)' : 'rgb(var(--wc-ink) / .04)',
+                border: i === 0 ? '1.5px solid rgb(var(--wc-ink) / .3)' : '1px solid var(--wc-border)',
                 color: i === 0 ? 'var(--wc-y)' : 'var(--wc-t2)',
               }}
               onClick={() => onNavigate(btn.screen)}
@@ -485,7 +485,7 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-bold text-white">Deduction Estimate: {readiness}</div>
+          <div className="text-[12px] font-bold" style={{ color: 'var(--wc-text)' }}>Deduction Estimate: {readiness}</div>
           <div className="text-[10px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
             {missing.length} item{missing.length !== 1 ? 's' : ''} needed &middot; {completedCount}/{totalCount} complete
           </div>
@@ -543,14 +543,14 @@ export function CalculationBreakdown({ className = '' }: { className?: string })
         </div>
       </div>
 
-      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: 'var(--wc-y)' }}>The Formula</div>
         <div className="flex items-center gap-[6px] mb-[6px] flex-wrap">
-          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
           </div>
           <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>&times;</span>
-          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
           </div>
           <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>=</span>
@@ -563,15 +563,15 @@ export function CalculationBreakdown({ className = '' }: { className?: string })
         </div>
       </div>
 
-      <div className="rounded-[10px] p-[12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+      <div className="rounded-[10px] p-[12px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>Vehicle costs breakdown</div>
         {costBreakdown.map((item, i) => (
-          <div key={i} className="flex justify-between items-center py-[5px]" style={{ borderBottom: i < costBreakdown.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+          <div key={i} className="flex justify-between items-center py-[5px]" style={{ borderBottom: i < costBreakdown.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}>
             <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t2)' }}>${item.value.toLocaleString()}</span>
           </div>
         ))}
-        <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgba(255,255,255,.2)' }}>
+        <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgb(var(--wc-ink) / .2)' }}>
           <span className="text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>Total vehicle costs</span>
           <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
         </div>

@@ -9,7 +9,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 ## User Preferences
 
 - Simple, everyday language
-- Dark theme only (no light mode toggle)
+- Light/dark mode with light as default (toggle in Settings panel, stored in localStorage.wc_theme)
 - No emoji in UI -- use Lucide icons instead
 - Australian English conventions (ATO, km, VIC, etc.)
 - Brand-agnostic white label: white, black, and grey palette only (no yellow/brand colors)
@@ -22,7 +22,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 - **Routing**: `wouter` -- only `/` route and 404 fallback
 - **State Management**: React Context + useReducer (`client/src/lib/app-context.tsx`)
 - **UI Library**: shadcn/ui components, Tailwind CSS
-- **Styling**: Dark theme with CSS custom properties. Colors: `--wc-y: #FFFFFF` (white primary), `--wc-gr: #22C55E` (green/success), `--wc-re: #EF4444` (red/error), `--wc-am: #999999` (grey). Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display), Inter (body alt)
+- **Styling**: Light/dark theme via CSS custom properties and `.dark` class on documentElement. ThemeProvider at `client/src/lib/theme-provider.tsx`. Colors use `--wc-*` CSS vars that auto-adapt. `--wc-ink` (0 0 0 light / 255 255 255 dark) used with `rgb(var(--wc-ink) / alpha)` for translucent overlays. Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display), Inter (body alt)
 - **Icons**: Lucide React throughout
 
 ### App Flow

@@ -49,12 +49,12 @@ export function DashboardScreen() {
         <div className="flex items-center gap-3 mb-1">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center ob-glow"
-            style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid rgba(255,255,255,.22)' }}
+            style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1.5px solid rgb(var(--wc-ink) / .22)' }}
           >
             <svg width="22" height="22" viewBox="0 0 52 52" fill="none">
-              <path d="M26 4C15 4 7 13 7 21C7 35 26 48 26 48C26 48 45 35 45 21C45 13 37 4 26 4Z" stroke="#FFFFFF" strokeWidth="2.2" fill="none"/>
-              <circle cx="26" cy="21" r="7" stroke="#FFFFFF" strokeWidth="2.2" fill="none"/>
-              <path d="M19 17L22 25L26 19L30 25L33 17" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M26 4C15 4 7 13 7 21C7 35 26 48 26 48C26 48 45 35 45 21C45 13 37 4 26 4Z" stroke="var(--wc-text)" strokeWidth="2.2" fill="none"/>
+              <circle cx="26" cy="21" r="7" stroke="var(--wc-text)" strokeWidth="2.2" fill="none"/>
+              <path d="M19 17L22 25L26 19L30 25L33 17" stroke="var(--wc-text)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div>
@@ -66,7 +66,7 @@ export function DashboardScreen() {
           <button
             className="ml-auto flex items-center gap-[6px] rounded-[10px] p-[7px_12px] cursor-pointer transition-all active:scale-[.97]"
             style={{
-              background: autoTrack ? 'rgba(34,197,94,.1)' : 'rgba(255,255,255,.04)',
+              background: autoTrack ? 'rgba(34,197,94,.1)' : 'rgb(var(--wc-ink) / .04)',
               border: autoTrack ? '1.5px solid rgba(34,197,94,.3)' : '1.5px solid var(--wc-border)',
             }}
             onClick={() => {
@@ -83,7 +83,7 @@ export function DashboardScreen() {
             <div
               className="w-[30px] h-[16px] rounded-full relative transition-all"
               style={{
-                background: autoTrack ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)',
+                background: autoTrack ? 'rgba(34,197,94,.3)' : 'rgb(var(--wc-ink) / .1)',
               }}
             >
               <div
@@ -143,7 +143,7 @@ export function DashboardScreen() {
                 <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-bold text-white leading-[1.3]">We need a couple of details to run estimates</div>
+                <div className="text-[12px] font-bold leading-[1.3]" style={{ color: 'var(--wc-text)' }}>We need a couple of details to run estimates</div>
                 <div className="text-[10px] mt-[3px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                   Tell us your vehicle type and purchase price so we can show you per-trip deduction values as you sort.
                 </div>
@@ -152,7 +152,7 @@ export function DashboardScreen() {
             <div className="flex gap-[8px]">
               <button
                 className="flex-1 rounded-[10px] py-[10px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
                 onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
                 data-testid="button-fill-basic-details"
               >
@@ -162,7 +162,7 @@ export function DashboardScreen() {
               </button>
               <button
                 className="rounded-[10px] py-[10px] px-[14px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+                style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
                 onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
                 data-testid="button-customise-details"
               >
@@ -189,7 +189,7 @@ export function DashboardScreen() {
               <Info className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-bold text-white leading-[1.3]">Estimates use industry averages</div>
+              <div className="text-[12px] font-bold leading-[1.3]" style={{ color: 'var(--wc-text)' }}>Estimates use industry averages</div>
               <div className="text-[10px] mt-[3px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                 You're good to go! Tap here anytime to customise with your actual expenses for a more accurate figure.
               </div>
@@ -210,8 +210,8 @@ export function DashboardScreen() {
                 key={tile.screen}
                 className="relative flex items-center gap-3 p-4 rounded-xl text-left transition-all active:scale-[.98]"
                 style={{
-                  background: tile.primary ? 'rgba(255,255,255,.06)' : 'var(--wc-card)',
-                  border: tile.primary ? '1.5px solid rgba(255,255,255,.35)' : '1px solid var(--wc-border)',
+                  background: tile.primary ? 'rgb(var(--wc-ink) / .06)' : 'var(--wc-card)',
+                  border: tile.primary ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid var(--wc-border)',
                 }}
                 onClick={() => {
                   if (tile.screen === 'classify') {
@@ -231,10 +231,10 @@ export function DashboardScreen() {
                       borderRadius: 11,
                       padding: '0 6px',
                       background: 'var(--wc-y)',
-                      color: '#000',
+                      color: 'var(--wc-bg)',
                       fontSize: 11,
                       fontWeight: 800,
-                      boxShadow: '0 0 8px rgba(255,255,255,.5)',
+                      boxShadow: '0 0 8px rgb(var(--wc-ink) / .5)',
                     }}
                     data-testid="badge-unsorted-count"
                   >
@@ -244,8 +244,8 @@ export function DashboardScreen() {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: tile.primary ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.04)',
-                    border: tile.primary ? '1.5px solid rgba(255,255,255,.25)' : '1px solid rgba(255,255,255,.06)',
+                    background: tile.primary ? 'rgb(var(--wc-ink) / .1)' : 'rgb(var(--wc-ink) / .04)',
+                    border: tile.primary ? '1.5px solid rgb(var(--wc-ink) / .25)' : '1px solid rgb(var(--wc-ink) / .06)',
                   }}
                 >
                   <Icon
@@ -255,7 +255,7 @@ export function DashboardScreen() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-bold" style={{ color: tile.primary ? '#fff' : 'var(--wc-t2)' }}>
+                  <div className="text-[13px] font-bold" style={{ color: tile.primary ? 'var(--wc-text)' : 'var(--wc-t2)' }}>
                     {tile.label}
                   </div>
                   <div className="text-[9px] mt-[2px]" style={{ color: badgeCount > 0 && tile.primary ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{tile.sub}</div>
