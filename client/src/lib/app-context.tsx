@@ -160,12 +160,12 @@ const initialState: AppState = {
 };
 
 function computeDedTotal(trips: Trip[], upToIndex: number): number {
-  const totalKm = trips.reduce((s, t) => s + t.km, 0);
-  if (totalKm <= 0) return 0;
   const vehicleCosts = getVehicleCosts();
+  const ANNUAL_KM = 15000;
+  const perKmRate = vehicleCosts / ANNUAL_KM;
   const sorted = trips.slice(0, upToIndex);
   const bizKm = sorted.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-  return Math.round((bizKm / totalKm) * vehicleCosts * 100) / 100;
+  return Math.round(bizKm * perKmRate * 100) / 100;
 }
 
 function reducer(state: AppState, action: Action): AppState {

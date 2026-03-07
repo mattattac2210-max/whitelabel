@@ -125,11 +125,11 @@ export function SortScreen() {
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
   const vehicleCosts = getVehicleCosts();
-  const perKmRate = allTripsKm > 0 ? vehicleCosts / allTripsKm : 0;
+  const ANNUAL_KM = 15000;
+  const perKmRate = vehicleCosts / ANNUAL_KM;
   const tripDeductionValue = useCallback((tripKm: number) => {
-    if (allTripsKm <= 0) return 0;
     return Math.round(tripKm * perKmRate);
-  }, [perKmRate, allTripsKm]);
+  }, [perKmRate]);
 
   const hasBizTrips = state.bizCount > 0;
   const checks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
