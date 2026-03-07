@@ -35,17 +35,17 @@ All application logic runs client-side using React state (via useReducer + Conte
    - UserData includes: trade, kmBand, vehicleAge, vehicleType, finance, priceBand, recommendation
 
 2. **Dashboard** (main hub after onboarding):
-   - Quick action tiles: Sort Trips, Driving Reports, Add Trip, Add Expenses, Expense Reports, My Stats, Export, Find My Keys
+   - Quick action tiles: Sort Trips, Driving Reports, Add Trip, Expenses, My Stats, Export, Find My Keys
    - Summary stats: total trips, business km, estimated deduction
    - 12-week logbook progress strip
 
 3. **Logbook Screens** (accessed from dashboard, with bottom nav):
-   - Sort, Classify, Review, Odometer, Reports, Export, Input, Expenses, Expense Reports, Stats, Find Keys
+   - Sort, Classify, Review, Odometer, Reports, Export, Input, Expenses, Stats, Find Keys
    - Bottom nav includes Home button to return to dashboard
 
 ### Screen Flow
 
-12 screens managed by `currentScreen` state:
+11 screens managed by `currentScreen` state:
 1. **Dashboard** -- Main hub with quick action tiles, stats, and 12-week progress
 2. **Sort** -- Swipe/tap to classify trips as business or personal. Business button is single-click. Card fly-out animation on classify.
 3. **Classify** -- Step through business trips, pick purpose category from 10-option grid
@@ -54,10 +54,9 @@ All application logic runs client-side using React state (via useReducer + Conte
 6. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
 7. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
 8. **Input** -- Add Trip screen with a choice gate: "Start New Trip" (live tracking with map, start/end trip flow) or "Add Existing Trip" (manual form for past trips). Both paths create trips with `type: null` (unsorted) and send them to the sort queue. The existing form includes from/to addresses, date/time, distance, duration, odometer, stops, and notes. The live trip flow includes starting address entry, driving phase with map + timer, destination entry, and end trip with distance calculation.
-9. **Expenses** -- Add/delete vehicle expenses with category, description, amount, GST auto-calc, receipt tracking. Data in `localStorage.wc_expenses`.
-10. **Expense Reports** -- Category breakdown with progress bars, totals, GST summary, CSV export of all expenses.
-11. **Stats** -- Trip analytics: business vs personal split, trips by day bar chart, top destinations, averages (km/trip, cost/km), fuel cost integration.
-12. **Find My Keys** -- GPS location save ("Mark Location"), vibrate ring, Google Maps navigation, location history.
+9. **Expenses** -- Unified expense section with two tabs (Entries / Report). Entries tab shows saved expense items with category, amount, date, vendor, receipt thumbnail, edit/delete. Report tab shows ATO-ordered category totals (Fuel/Electricity, Oil, Repairs & Maintenance, Registration, Insurance, Lease Payments, Loan Interest, Depreciation), business use %, deductible estimate, CSV export. Fuel auto-estimated from biz km × consumption × avg price; Depreciation auto-calculated via diminishing value method. Add Expense flow includes category picker, amount, date, vendor, receipt photo upload with AI extraction placeholder, verify before save. Data in `localStorage.wc_expenses`.
+10. **Stats** -- Trip analytics: business vs personal split, trips by day bar chart, top destinations, averages (km/trip, cost/km), fuel cost integration.
+11. **Find My Keys** -- GPS location save ("Mark Location"), vibrate ring, Google Maps navigation, location history.
 
 ### Trip Data
 
@@ -109,8 +108,7 @@ All reducer actions (`UPDATE_TRIP`, `RECLASSIFY`, `UNDO_LAST`) recalculate `dedT
 | `client/src/components/odometer-screen.tsx` | Odometer verification with controlled inputs |
 | `client/src/components/reports-screen.tsx` | Session reports list, Tax Info modal, PDF/CSV export |
 | `client/src/components/export-screen.tsx` | Combined export screen |
-| `client/src/components/expenses-screen.tsx` | Add/delete vehicle expenses with GST |
-| `client/src/components/expense-reports-screen.tsx` | Expense category breakdown + CSV export |
+| `client/src/components/expenses-screen.tsx` | Unified expenses: Entries/Report tabs + Add Expense flow |
 | `client/src/components/stats-screen.tsx` | Trip analytics and stats dashboard |
 | `client/src/components/find-keys-screen.tsx` | GPS key location + vibrate + Maps nav |
 | `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal |

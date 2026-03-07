@@ -1,0 +1,78 @@
+Update the Expenses section of the app to simplify the navigation and reduce the number of buttons.
+
+GOAL
+Create one single “Expenses” section instead of separate sections for Add Expense, See My Expenses, and Expense Reports.
+
+STRUCTURE
+Inside the Expenses section, create two tabs:
+1. Entries
+2. Report
+
+Also include one clear primary action button:
++ Add Expense
+
+BEHAVIOUR
+- The Entries tab shows all saved expense items for the selected vehicle.
+- The Report tab shows the ATO-ordered expense summary and totals for the selected period.
+- The Add Expense button opens the expense capture flow.
+- Do not create a separate top-level “See My Expenses” page unless absolutely necessary.
+- Keep the number of buttons and navigation options to a minimum.
+
+EXPENSE ENTRY FLOW
+When the user taps + Add Expense, show a simple expense capture screen with:
+- Expense category
+- Amount
+- Date
+- Upload / take photo of receipt
+- AI extraction of vendor, date, and amount from receipt image
+- User verification before save
+
+ATO ORDER
+In the Report tab, display expense categories in this exact order:
+1. Fuel / Electricity
+2. Oil
+3. Repairs & Maintenance
+4. Registration
+5. Insurance
+6. Lease Payments
+7. Loan Interest
+8. Depreciation
+
+RULES
+- Fuel should be auto-calculated as an estimate using business kms, vehicle fuel consumption, and current average fuel price.
+- Fuel must display with an asterisk and disclaimer that the tax agent can update the amount at tax time.
+- Depreciation should be calculated automatically by the system, not manually entered by the user.
+- All other categories can be either manually entered or created from receipt photo + AI extraction.
+
+ENTRIES TAB REQUIREMENTS
+Each saved expense card should display:
+- Category
+- Amount
+- Date
+- Vendor if available
+- Receipt thumbnail if available
+- Estimated tag if the item is auto-calculated
+- Ability to tap and edit
+
+REPORT TAB REQUIREMENTS
+Show:
+- Expense category totals in ATO order
+- Total vehicle expenses
+- Business use percentage
+- Estimated deductible amount
+- Export button for accountant / expense report
+
+UI GOALS
+- Keep the UI simple and tradie-friendly
+- Use as few buttons as possible
+- Make the main actions obvious
+- Avoid clutter
+- Prioritise mobile usability and large touch targets
+
+DESIGN DECISION
+Do not add extra navigation layers unless necessary. The Expenses section should act as the single home for:
+- viewing expense entries
+- adding a new expense
+- viewing the expense report
+
+Please implement this as a clean, mobile-first interface and reuse the existing design system where possible.

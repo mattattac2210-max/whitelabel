@@ -10,7 +10,6 @@ import { InputScreen } from '@/components/input-screen';
 import { DashboardScreen } from '@/components/dashboard-screen';
 import { NotesScreen } from '@/components/notes-screen';
 import { ExpensesScreen } from '@/components/expenses-screen';
-import { ExpenseReportsScreen } from '@/components/expense-reports-screen';
 import { StatsScreen } from '@/components/stats-screen';
 import { FindKeysScreen } from '@/components/find-keys-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
@@ -52,7 +51,6 @@ function ScreenContainer() {
     export: <ExportScreen />,
     input: <InputScreen />,
     expenses: <ExpensesScreen />,
-    'expense-reports': <ExpenseReportsScreen />,
     stats: <StatsScreen />,
     'find-keys': <FindKeysScreen />,
   };
