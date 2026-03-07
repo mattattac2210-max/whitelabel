@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, batch2Trips, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips, calcLogbookDeduction } from './trip-data';
+import { type Trip, initialTrips, batch2Trips, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips, calcLogbookDeduction, getVehicleCosts } from './trip-data';
 
 export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'notes' | 'odometer' | 'reports' | 'export' | 'input' | 'expenses' | 'stats' | 'find-keys' | 'account';
 
@@ -160,10 +160,12 @@ const initialState: AppState = {
 };
 
 function computeDedTotal(trips: Trip[], upToIndex: number): number {
-  const slice = trips.slice(0, upToIndex);
-  const bizKm = slice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const totalKm = trips.reduce((s, t) => s + t.km, 0);
-  return calcLogbookDeduction(bizKm, totalKm);
+  if (totalKm <= 0) return 0;
+  const vehicleCosts = getVehicleCosts();
+  const sorted = trips.slice(0, upToIndex);
+  const bizKm = sorted.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+  return Math.round((bizKm / totalKm) * vehicleCosts * 100) / 100;
 }
 
 function reducer(state: AppState, action: Action): AppState {

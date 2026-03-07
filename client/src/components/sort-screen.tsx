@@ -133,8 +133,8 @@ export function SortScreen() {
 
   const sortedSlice = state.trips.slice(0, state.currentIndex);
   const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-  const sortedTotKm = sortedSlice.reduce((s, t) => s + t.km, 0);
-  const logbookPct = sortedTotKm > 0 ? Math.round(sortedBizKm / sortedTotKm * 100) : 0;
+  const allTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
+  const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
   const vehicleCosts = useMemo(() => getVehicleCosts(), []);
   const tripDeductionValue = useCallback((tripKm: number) => {
