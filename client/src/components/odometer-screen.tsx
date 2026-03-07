@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useApp, useComputedStats, calcAuditScore, INDUSTRY_BIZ_AVG } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
@@ -12,7 +12,7 @@ export function OdometerScreen() {
   const [odoInputs, setOdoInputs] = useState<Record<string, string>>({});
   const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-  const [expandedVerified, setExpandedVerified] = useState<Set<number>>(new Set());
+  const [expandedTrips, setExpandedTrips] = useState<Set<number>>(new Set());
   const [showUnconfirmedWarning, setShowUnconfirmedWarning] = useState(false);
   const [showOdoInfoPopup, setShowOdoInfoPopup] = useState(false);
 
@@ -20,51 +20,57 @@ export function OdometerScreen() {
   const score = stats.auditScore;
   const scoreFill = score > 80 ? 'linear-gradient(90deg,var(--wc-gr),#22ff88)' : score > 65 ? 'linear-gradient(90deg,var(--wc-am),var(--wc-gr))' : 'linear-gradient(90deg,var(--wc-re),var(--wc-am))';
 
+  const toggleExpand = (i: number) => {
+    setExpandedTrips(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full" data-testid="odometer-screen">
-      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+      <div className="flex items-center gap-[8px] px-[14px] pt-[6px] pb-[4px] flex-shrink-0">
         <button
-          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          className="w-[28px] h-[28px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'notes' })}
           data-testid="button-back-odo"
         >
-          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.verifiedSet.size} of {sorted.length} verified</span>
+        <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer</span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{state.verifiedSet.size}/{sorted.length} verified</span>
       </div>
 
       <div
-        className="mx-[14px] mb-2 rounded-[12px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
+        className="mx-[14px] mb-[6px] rounded-[10px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
         style={{ background: 'var(--wc-card)', border: '1px solid rgb(var(--wc-ink) / .2)' }}
         onClick={() => setHeroCollapsed(!heroCollapsed)}
         data-testid="odo-hero-card"
       >
-        <div className="flex items-center gap-2 p-[10px_13px]">
-          <Shield className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-          <span className="font-heading font-bold text-[14px] flex-1 tracking-[.01em]" style={{ color: 'var(--wc-text)' }}>Audit Score</span>
-          <div className="flex items-center gap-[5px] flex-shrink-0">
-            <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-gr)' }} data-testid="text-audit-score">{score}%</span>
-            <ChevronRight
-              className="w-4 h-4 transition-transform"
-              style={{ color: 'var(--wc-t3)', transform: heroCollapsed ? 'none' : 'rotate(90deg)' }}
-            />
-          </div>
+        <div className="flex items-center gap-2 p-[8px_12px]">
+          <Shield className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[13px] flex-1 tracking-[.01em]" style={{ color: 'var(--wc-text)' }}>Audit Score</span>
+          <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-gr)' }} data-testid="text-audit-score">{score}%</span>
+          <ChevronRight
+            className="w-[14px] h-[14px] transition-transform"
+            style={{ color: 'var(--wc-t3)', transform: heroCollapsed ? 'none' : 'rotate(90deg)' }}
+          />
         </div>
         {!heroCollapsed && (
-          <div className="px-[13px] pb-3 border-t pt-[10px]" style={{ borderColor: 'rgb(var(--wc-ink) / .06)' }}>
-            <div className="text-[12px] leading-[1.55] mb-[10px]" style={{ color: 'var(--wc-t2)' }}>
+          <div className="px-[12px] pb-3 border-t pt-[8px]" style={{ borderColor: 'rgb(var(--wc-ink) / .06)' }}>
+            <div className="text-[11px] leading-[1.55] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>
               Your audit score is an independent review of the information you have provided. It measures how well your logbook aligns with ATO compliance documentation requirements.
             </div>
-            <div className="flex items-baseline justify-between mb-[5px]">
+            <div className="flex items-baseline justify-between mb-[4px]">
               <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Audit readiness</span>
-              <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-gr)' }}>{score}%</span>
+              <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-gr)' }}>{score}%</span>
             </div>
-            <div className="h-[5px] rounded-[3px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
+            <div className="h-[4px] rounded-[3px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
               <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${score}%`, background: scoreFill }} />
             </div>
-            <div className="text-[10px] mt-[5px] mb-[8px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
+            <div className="text-[9px] mt-[4px] mb-[6px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
 
             {(() => {
               const sortedTripsArr = state.trips.filter(t => t.type !== null);
@@ -87,12 +93,12 @@ export function OdometerScreen() {
               const deviationColor = deviation <= 10 ? 'var(--wc-gr)' : deviation <= 25 ? 'var(--wc-am)' : 'var(--wc-re)';
               return (
                 <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgb(var(--wc-ink) / .15)' }}>
-                  <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                    <Shield className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
-                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>How We Calculate This</span>
+                  <div className="flex items-center gap-[6px] px-[10px] py-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                    <Shield className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
+                    <span className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>How We Calculate This</span>
                   </div>
-                  <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
-                    <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
+                  <div className="px-[10px] py-[6px] flex flex-col gap-[4px]">
+                    <div className="text-[9px] leading-[1.5] mb-[2px]" style={{ color: 'var(--wc-t2)' }}>
                       Your audit score is a weighted percentage based on five categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong style={{ color: 'var(--wc-text)' }}>99%</strong>.
                     </div>
                     <div className="flex flex-col gap-[3px]">
@@ -103,37 +109,37 @@ export function OdometerScreen() {
                         { label: 'Photo evidence', weight: '10%', desc: `${photoCount} of ${totalTrips} trips with photos (bonus)`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
                         { label: 'Business use ratio', weight: '24%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
                       ].map((row, ri) => (
-                        <div key={ri} className="rounded-[7px] px-[8px] py-[5px]" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
-                          <div className="flex items-center justify-between mb-[3px]">
-                            <div className="flex items-center gap-[5px]">
-                              <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: row.color }} />
-                              <span className="font-heading font-bold text-[10px]" style={{ color: 'var(--wc-text)' }}>{row.label}</span>
-                              <span className="font-data text-[8px] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgb(var(--wc-ink) / .06)', color: 'var(--wc-t3)' }}>weight {row.weight}</span>
+                        <div key={ri} className="rounded-[6px] px-[7px] py-[4px]" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
+                          <div className="flex items-center justify-between mb-[2px]">
+                            <div className="flex items-center gap-[4px]">
+                              <div className="w-[5px] h-[5px] rounded-full flex-shrink-0" style={{ background: row.color }} />
+                              <span className="font-heading font-bold text-[9px]" style={{ color: 'var(--wc-text)' }}>{row.label}</span>
+                              <span className="font-data text-[7px] px-[3px] py-[1px] rounded-[3px]" style={{ background: 'rgb(var(--wc-ink) / .06)', color: 'var(--wc-t3)' }}>weight {row.weight}</span>
                             </div>
-                            <span className="font-heading font-black text-[12px] flex-shrink-0" style={{ color: row.color }}>+{row.contrib}</span>
+                            <span className="font-heading font-black text-[11px] flex-shrink-0" style={{ color: row.color }}>+{row.contrib}</span>
                           </div>
-                          <div className="flex items-center gap-[6px]">
-                            <div className="flex-1 h-[4px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                          <div className="flex items-center gap-[5px]">
+                            <div className="flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
                               <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(row.pct, 100)}%`, background: row.color }} />
                             </div>
-                            <span className="font-data text-[8px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }}>{Math.round(row.pct)}%</span>
+                            <span className="font-data text-[7px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }}>{Math.round(row.pct)}%</span>
                           </div>
-                          <div className="text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{row.desc}</div>
+                          <div className="text-[7px] mt-[1px]" style={{ color: 'var(--wc-t3)' }}>{row.desc}</div>
                         </div>
                       ))}
                     </div>
-                    <div className="rounded-[7px] px-[8px] py-[4px] mt-[1px]" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
-                      <div className="flex items-center gap-[5px]">
-                        <div className="w-[6px] h-[6px] rounded-full flex-shrink-0" style={{ background: deviationColor }} />
-                        <span className="font-data text-[8px]" style={{ color: deviationColor }}>{deviationLabel}</span>
-                        <span className="text-[8px]" style={{ color: 'var(--wc-t3)' }}>{deviation <= 10 ? 'Your business use aligns with ATO industry benchmarks for tradies.' : deviation <= 25 ? 'Some deviation from industry average — ensure you can justify if audited.' : 'Significant deviation from industry norms — strong documentation recommended.'}</span>
+                    <div className="rounded-[6px] px-[7px] py-[3px] mt-[1px]" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
+                      <div className="flex items-center gap-[4px]">
+                        <div className="w-[5px] h-[5px] rounded-full flex-shrink-0" style={{ background: deviationColor }} />
+                        <span className="font-data text-[7px]" style={{ color: deviationColor }}>{deviationLabel}</span>
+                        <span className="text-[7px]" style={{ color: 'var(--wc-t3)' }}>{deviation <= 10 ? 'Your business use aligns with ATO industry benchmarks for tradies.' : deviation <= 25 ? 'Some deviation from industry average — ensure you can justify if audited.' : 'Significant deviation from industry norms — strong documentation recommended.'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-[7px] px-[8px] py-[5px] mt-[2px]" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
-                      <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Total Score</span>
-                      <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{result.total}%</span>
+                    <div className="flex items-center justify-between rounded-[6px] px-[7px] py-[4px] mt-[1px]" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
+                      <span className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Total Score</span>
+                      <span className="font-heading font-black text-[14px]" style={{ color: 'var(--wc-y)' }}>{result.total}%</span>
                     </div>
-                    <div className="text-[9px] leading-[1.45] mt-[3px] rounded-[6px] px-[7px] py-[5px]" style={{ color: 'var(--wc-t3)', background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+                    <div className="text-[8px] leading-[1.45] mt-[2px] rounded-[5px] px-[6px] py-[4px]" style={{ color: 'var(--wc-t3)', background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
                       This is an independent review of the information you have provided. It does not replace financial or institutional recommendations and does not guarantee compliance. This score aligns with the integrity of what the ATO requires for compliance documentation. Industry average ({INDUSTRY_BIZ_AVG}%) is based on ATO benchmarks for trades and construction. Please seek certified financial advice if you require further assistance.
                     </div>
                   </div>
@@ -268,12 +274,13 @@ export function OdometerScreen() {
         </div>
       )}
 
-      <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
+      <div className="flex-1 px-[14px] flex flex-col gap-[5px] overflow-y-auto scrollbar-thin pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
         {sorted.map((t) => {
           const i = state.trips.indexOf(t);
           const oStart = Math.round(getTripOdoStart(state.trips, i, state.baseOdo));
           const oEnd = Math.round(getTripOdoEnd(state.trips, i, state.baseOdo));
           const verified = state.verifiedSet.has(i);
+          const isExpanded = expandedTrips.has(i);
 
           const startKey = `${i}-start`;
           const endKey = `${i}-end`;
@@ -290,195 +297,210 @@ export function OdometerScreen() {
           return (
             <div
               key={i}
-              className="rounded-[14px] transition-all"
+              className="rounded-[12px] transition-all flex-shrink-0"
               style={{
-                background: t.autoGenerated ? 'rgba(153,153,153,.03)' : verified ? 'rgba(34,197,94,.03)' : 'var(--wc-card)',
-                border: t.autoGenerated ? '1.5px dashed rgba(153,153,153,.3)' : verified ? '1.5px solid rgba(34,197,94,.45)' : '1.5px solid var(--wc-border)',
+                background: verified ? 'rgba(34,197,94,.03)' : 'var(--wc-card)',
+                border: verified ? '1px solid rgba(34,197,94,.35)' : '1px solid var(--wc-border)',
               }}
               data-testid={`odo-trip-${i}`}
             >
-              <div
-                className="flex items-center gap-3 p-[12px_14px]"
-                style={{ cursor: verified ? 'pointer' : 'default' }}
-                onClick={() => {
-                  if (!verified) return;
-                  setExpandedVerified(prev => {
-                    const next = new Set(prev);
-                    if (next.has(i)) next.delete(i); else next.add(i);
-                    return next;
-                  });
-                }}
-              >
+              <div className="flex items-center gap-[8px] p-[8px_10px]">
                 <div
-                  className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 font-heading font-extrabold text-[12px] transition-all"
+                  className="w-[24px] h-[24px] rounded-full flex items-center justify-center flex-shrink-0 font-heading font-extrabold text-[10px] transition-all"
                   style={{
                     background: verified ? 'rgba(34,197,94,.18)' : 'transparent',
-                    border: verified ? '2px solid var(--wc-gr)' : '2px solid var(--wc-border)',
+                    border: verified ? '2px solid var(--wc-gr)' : '1.5px solid var(--wc-border)',
                     color: verified ? 'var(--wc-gr)' : 'var(--wc-t3)',
-                    fontSize: verified ? '16px' : '12px',
                   }}
                 >
-                  {verified ? <Check className="w-4 h-4" /> : i + 1}
+                  {verified ? <Check className="w-[12px] h-[12px]" /> : i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-bold text-[13px] truncate" style={{ color: t.autoGenerated ? 'var(--wc-am)' : 'var(--wc-text)' }}>
-                    {t.autoGenerated && <span className="font-data text-[7px] uppercase tracking-[.08em] mr-[4px] px-[3px] py-[1px] rounded-[2px]" style={{ background: 'rgba(153,153,153,.12)', color: 'var(--wc-am)', border: '1px solid rgba(153,153,153,.2)' }}>GAP</span>}
+                  <div className="font-semibold text-[13px] truncate leading-tight" style={{ color: 'var(--wc-text)' }}>
                     {t.from} &rarr; {t.to}
                   </div>
-                  <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
-                    {t.autoGenerated
-                      ? `Connector · ${t.km > 0 ? t.km + ' km' : '? km'}`
-                      : `${t.date} · ${t.km} km · ${t.duration}`}
-                    {verified && <span style={{ color: 'var(--wc-am)' }}> &middot; {curStart.toLocaleString('en-AU')}→{curEnd.toLocaleString('en-AU')}</span>}
+                  <div className="text-[10px] leading-tight" style={{ color: 'var(--wc-t3)' }}>
+                    {t.km} km &middot; {curStart.toLocaleString('en-AU')}→{curEnd.toLocaleString('en-AU')}
+                    {t.photo && <span style={{ color: 'var(--wc-gr)' }}> &middot; 📷</span>}
                   </div>
                 </div>
-                {t.photo && <Image className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />}
-                {!t.photo && verified && <Clock className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />}
-                {verified && (
-                  <ChevronRight
-                    className="w-4 h-4 flex-shrink-0 transition-transform"
-                    style={{ color: 'var(--wc-t3)', transform: expandedVerified.has(i) ? 'rotate(90deg)' : 'none' }}
-                  />
-                )}
-              </div>
 
-              {(!verified || expandedVerified.has(i)) && <div className="px-[14px] pb-[10px] flex flex-col gap-[6px]">
-                <div className="flex gap-[8px]">
-                  <div className="flex-1">
-                    <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Odo</div>
-                    <div className="flex items-center gap-[4px]">
-                      <button
-                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
-                        style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
-                        onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart - 1) }))}
-                        data-testid={`odo-start-minus-${i}`}
-                      >
-                        &minus;
-                      </button>
-                      <div
-                        className="flex-1 rounded-[8px] py-[5px] text-center font-heading font-black text-[16px] tracking-[.02em]"
-                        style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
-                        data-testid={`odo-start-${i}`}
-                      >
-                        {curStart.toLocaleString('en-AU')}
-                      </div>
-                      <button
-                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
-                        style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
-                        onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart + 1) }))}
-                        data-testid={`odo-start-plus-${i}`}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Odo</div>
-                    <div className="flex items-center gap-[4px]">
-                      <button
-                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
-                        style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
-                        onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd - 1) }))}
-                        data-testid={`odo-minus-${i}`}
-                      >
-                        &minus;
-                      </button>
-                      <div
-                        className="flex-1 rounded-[8px] py-[5px] text-center font-heading font-black text-[16px] tracking-[.02em]"
-                        style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
-                        data-testid={`odo-input-${i}`}
-                      >
-                        {curEnd.toLocaleString('en-AU')}
-                      </div>
-                      <button
-                        className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center font-heading font-black text-[18px] cursor-pointer transition-all active:scale-90"
-                        style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
-                        onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd + 1) }))}
-                        data-testid={`odo-plus-${i}`}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="font-data text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>
-                  Distance: <span style={{ color: 'var(--wc-y)' }}>{(curEnd - curStart).toLocaleString('en-AU')} km</span>
-                </div>
-                {hasMismatch && (
-                  <div className="flex items-center gap-[6px] rounded-[8px] px-[10px] py-[5px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.25)' }}>
-                    <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
-                    <span className="font-data text-[9px] flex-1" style={{ color: 'var(--wc-am)' }}>
-                      Start ({curStart.toLocaleString('en-AU')}) doesn't match previous trip end ({prevEndLocal!.toLocaleString('en-AU')})
-                    </span>
-                    <button
-                      className="rounded-[6px] px-[8px] py-[3px] font-heading font-bold text-[9px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-95"
-                      style={{ background: 'rgba(153,153,153,.15)', border: '1px solid rgba(153,153,153,.3)', color: 'var(--wc-am)' }}
-                      onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(prevEndLocal) }))}
-                      data-testid={`odo-fix-${i}`}
-                    >
-                      Fix
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-[6px]">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      ref={el => { fileInputRefs.current[i] = el; }}
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = ev => {
-                            setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
-                            dispatch({ type: 'ADD_PHOTO', tripIndex: i });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                        e.target.value = '';
-                      }}
-                      data-testid={`photo-file-${i}`}
-                    />
-                    <button
-                      className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
-                      style={{
-                        background: photoThumbs[i] ? 'transparent' : 'rgb(var(--wc-ink) / .07)',
-                        border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgb(var(--wc-ink) / .25)',
-                        color: 'var(--wc-y)',
-                      }}
-                      onClick={() => fileInputRefs.current[i]?.click()}
-                      data-testid={`photo-btn-${i}`}
-                    >
-                      {photoThumbs[i] ? (
-                        <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[7px]" />
-                      ) : (
-                        <Camera className="w-[14px] h-[14px]" />
-                      )}
-                    </button>
-                    <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
-                      {t.photo ? (
-                        <><Check className="w-3 h-3 inline mr-1" />Photo +2 pts</>
-                      ) : (
-                        'Add photo +2 pts'
-                      )}
-                    </div>
-                  </div>
+                {!verified && (
                   <button
-                    className="rounded-[9px] px-[12px] py-[5px] font-heading font-extrabold text-[11px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[4px] transition-all active:scale-95"
-                    style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgb(var(--wc-ink) / .2)' }}
-                    onClick={() => {
+                    className="rounded-[7px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.05em] uppercase text-black cursor-pointer flex items-center gap-[3px] transition-all active:scale-95 flex-shrink-0"
+                    style={{ background: 'var(--wc-y)', boxShadow: '0 1px 6px rgb(var(--wc-ink) / .15)' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
                     }}
                     data-testid={`confirm-odo-${i}`}
                   >
-                    <Check className="w-3 h-3" strokeWidth={2.5} />
+                    <Check className="w-[10px] h-[10px]" strokeWidth={2.5} />
                     Confirm
                   </button>
+                )}
+
+                <button
+                  className="w-[24px] h-[24px] rounded-[6px] flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)' }}
+                  onClick={() => toggleExpand(i)}
+                  data-testid={`odo-expand-${i}`}
+                >
+                  {isExpanded ? (
+                    <ChevronUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                  ) : (
+                    <ChevronDown className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                  )}
+                </button>
+              </div>
+
+              {isExpanded && (
+                <div className="px-[10px] pb-[10px] flex flex-col gap-[6px] border-t" style={{ borderColor: 'rgb(var(--wc-ink) / .08)' }}>
+                  <div className="flex gap-[8px] mt-[8px]">
+                    <div className="flex-1">
+                      <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Odo</div>
+                      <div className="flex items-center gap-[4px]">
+                        <button
+                          className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center font-heading font-black text-[16px] cursor-pointer transition-all active:scale-90"
+                          style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
+                          onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart - 1) }))}
+                          data-testid={`odo-start-minus-${i}`}
+                        >
+                          &minus;
+                        </button>
+                        <div
+                          className="flex-1 rounded-[7px] py-[4px] text-center font-heading font-black text-[14px] tracking-[.02em]"
+                          style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
+                          data-testid={`odo-start-${i}`}
+                        >
+                          {curStart.toLocaleString('en-AU')}
+                        </div>
+                        <button
+                          className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center font-heading font-black text-[16px] cursor-pointer transition-all active:scale-90"
+                          style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
+                          onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(curStart + 1) }))}
+                          data-testid={`odo-start-plus-${i}`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-data text-[7px] uppercase tracking-[.09em] mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Odo</div>
+                      <div className="flex items-center gap-[4px]">
+                        <button
+                          className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center font-heading font-black text-[16px] cursor-pointer transition-all active:scale-90"
+                          style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
+                          onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd - 1) }))}
+                          data-testid={`odo-minus-${i}`}
+                        >
+                          &minus;
+                        </button>
+                        <div
+                          className="flex-1 rounded-[7px] py-[4px] text-center font-heading font-black text-[14px] tracking-[.02em]"
+                          style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid var(--wc-border)', color: 'var(--wc-am)' }}
+                          data-testid={`odo-input-${i}`}
+                        >
+                          {curEnd.toLocaleString('en-AU')}
+                        </div>
+                        <button
+                          className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center font-heading font-black text-[16px] cursor-pointer transition-all active:scale-90"
+                          style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: 'var(--wc-gr)' }}
+                          onClick={() => setOdoInputs(prev => ({ ...prev, [endKey]: String(curEnd + 1) }))}
+                          data-testid={`odo-plus-${i}`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="font-data text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>
+                    Distance: <span style={{ color: 'var(--wc-y)' }}>{(curEnd - curStart).toLocaleString('en-AU')} km</span>
+                  </div>
+                  {hasMismatch && (
+                    <div className="flex items-center gap-[5px] rounded-[7px] px-[8px] py-[4px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.25)' }}>
+                      <AlertTriangle className="w-[11px] h-[11px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
+                      <span className="font-data text-[8px] flex-1" style={{ color: 'var(--wc-am)' }}>
+                        Start ({curStart.toLocaleString('en-AU')}) ≠ prev end ({prevEndLocal!.toLocaleString('en-AU')})
+                      </span>
+                      <button
+                        className="rounded-[5px] px-[6px] py-[2px] font-heading font-bold text-[8px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-95"
+                        style={{ background: 'rgba(153,153,153,.15)', border: '1px solid rgba(153,153,153,.3)', color: 'var(--wc-am)' }}
+                        onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(prevEndLocal) }))}
+                        data-testid={`odo-fix-${i}`}
+                      >
+                        Fix
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-[6px]">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        ref={el => { fileInputRefs.current[i] = el; }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = ev => {
+                              setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
+                              dispatch({ type: 'ADD_PHOTO', tripIndex: i });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                          e.target.value = '';
+                        }}
+                        data-testid={`photo-file-${i}`}
+                      />
+                      <button
+                        className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
+                        style={{
+                          background: photoThumbs[i] ? 'transparent' : 'rgb(var(--wc-ink) / .07)',
+                          border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgb(var(--wc-ink) / .25)',
+                          color: 'var(--wc-y)',
+                        }}
+                        onClick={() => fileInputRefs.current[i]?.click()}
+                        data-testid={`photo-btn-${i}`}
+                      >
+                        {photoThumbs[i] ? (
+                          <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[6px]" />
+                        ) : (
+                          <Camera className="w-[12px] h-[12px]" />
+                        )}
+                      </button>
+                      <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
+                        {t.photo ? (
+                          <><Check className="w-[10px] h-[10px] inline mr-1" />Photo +2 pts</>
+                        ) : (
+                          'Add photo +2 pts'
+                        )}
+                      </div>
+                    </div>
+                    {!verified && (
+                      <button
+                        className="rounded-[8px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[3px] transition-all active:scale-95"
+                        style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgb(var(--wc-ink) / .2)' }}
+                        onClick={() => {
+                          dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
+                        }}
+                        data-testid={`confirm-odo-expanded-${i}`}
+                      >
+                        <Check className="w-[10px] h-[10px]" strokeWidth={2.5} />
+                        Confirm
+                      </button>
+                    )}
+                    {verified && (
+                      <div className="flex items-center gap-[3px] px-[8px] py-[4px] rounded-[7px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
+                        <Check className="w-[10px] h-[10px]" style={{ color: 'var(--wc-gr)' }} />
+                        <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-gr)' }}>Verified</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>}
+              )}
             </div>
           );
         })}
@@ -493,11 +515,12 @@ export function OdometerScreen() {
           const unconfirmedCount = sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).length;
           return (
             <button
-              className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+              className="w-full rounded-[12px] py-[12px] font-heading font-black text-[15px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
               style={{
                 background: allConfirmed ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .3)',
                 boxShadow: allConfirmed ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
                 color: allConfirmed ? '#000' : 'rgba(0,0,0,.6)',
+                cursor: allConfirmed ? 'pointer' : 'default',
               }}
               onClick={() => {
                 if (allConfirmed) {
@@ -508,7 +531,7 @@ export function OdometerScreen() {
               }}
               data-testid="button-save-finish"
             >
-              <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <Check className="w-[16px] h-[16px]" strokeWidth={2.5} />
               {allConfirmed ? 'Save & Finish' : `Save & Finish (${unconfirmedCount} unconfirmed)`}
             </button>
           );
