@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
-import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle } from 'lucide-react';
-import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
+import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle, Info } from 'lucide-react';
+import { getReadinessChecks, getDeductionState, getEstimateDisclaimer, getEstimateMode } from '@/lib/deduction-estimator';
 import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
 
 export function DashboardScreen() {
@@ -25,6 +25,7 @@ export function DashboardScreen() {
     }
   }, []);
 
+  const estimateMode = useMemo(() => getEstimateMode(), []);
   const readinessChecks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
   const deductionState = useMemo(() => getDeductionState(readinessChecks, showDeductionEstimates), [readinessChecks, showDeductionEstimates]);
   const disclaimer = useMemo(() => getEstimateDisclaimer(deductionState), [deductionState]);
@@ -124,6 +125,31 @@ export function DashboardScreen() {
           checks={readinessChecks}
         />
       </div>
+
+      {estimateMode === 'industry' && (
+        <div className="ob-a2b mb-4">
+          <button
+            className="w-full rounded-xl p-[12px_14px] flex items-start gap-[10px] text-left cursor-pointer transition-all active:scale-[.99]"
+            style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.18)' }}
+            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
+            data-testid="card-industry-averages-banner"
+          >
+            <div
+              className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0 mt-[1px]"
+              style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}
+            >
+              <Info className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-bold text-white leading-[1.3]">Deductions are estimated</div>
+              <div className="text-[10px] mt-[3px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                Using industry averages for the quickest setup. Tap to customise with your own figures for a more accurate estimate.
+              </div>
+            </div>
+            <ChevronRight className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
+          </button>
+        </div>
+      )}
 
       <div className="ob-a3 mb-4">
         <div className="text-[11px] font-bold uppercase tracking-[.07em] mb-3" style={{ color: 'var(--wc-t3)' }}>Quick Actions</div>
