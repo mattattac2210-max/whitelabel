@@ -289,18 +289,23 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           )}
         </div>
 
+        <div className="rounded-[10px] p-[10px_12px] mb-[12px] flex items-start gap-[8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+          <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+          <span className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>
+            These figures are estimates only, based on limited personal information. For accurate tax advice, consult a registered tax agent.
+          </span>
+        </div>
+
         <div className="flex flex-col gap-[8px]">
-          {(needsBasics || isLocked) && hasPrice && hasDep && (
-            <button
-              className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
-              onClick={onClose}
-              data-testid="button-prompt-done"
-            >
-              <CheckCircle2 className="w-[14px] h-[14px]" />
-              Done
-            </button>
-          )}
+          <button
+            className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
+            onClick={onClose}
+            data-testid="button-prompt-done"
+          >
+            <CheckCircle2 className="w-[14px] h-[14px]" />
+            {hasPrice && hasDep ? 'Apply & Go Back' : 'Done'}
+          </button>
 
           <button
             className="w-full rounded-[11px] py-[10px] flex items-center justify-center gap-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
@@ -311,15 +316,6 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             <Settings className="w-[12px] h-[12px]" />
             More Options
             <ChevronRight className="w-[12px] h-[12px]" />
-          </button>
-
-          <button
-            className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-            style={{ color: 'var(--wc-t3)' }}
-            onClick={onClose}
-            data-testid="button-prompt-dismiss"
-          >
-            Close
           </button>
         </div>
       </div>
