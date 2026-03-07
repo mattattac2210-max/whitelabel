@@ -120,7 +120,7 @@ export function StatsScreen() {
           <div className="font-heading font-bold text-[13px] uppercase tracking-[.04em] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
           {topDestinations.map(([dest, count], i) => (
             <div key={dest} className="flex items-center gap-[8px] py-[6px]" style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-              <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center font-data text-[10px] font-bold" style={{ background: 'rgba(245,196,0,.1)', color: 'var(--wc-y)' }}>{i + 1}</div>
+              <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center font-data text-[10px] font-bold" style={{ background: 'rgba(255,255,255,.1)', color: 'var(--wc-y)' }}>{i + 1}</div>
               <div className="flex-1 text-[13px] text-white truncate">{dest}</div>
               <div className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{count} trip{count !== 1 ? 's' : ''}</div>
             </div>

@@ -49,19 +49,19 @@ export function DashboardScreen() {
         <div className="flex items-center gap-3 mb-1">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center ob-glow"
-            style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.22)' }}
+            style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid rgba(255,255,255,.22)' }}
           >
             <svg width="22" height="22" viewBox="0 0 52 52" fill="none">
-              <path d="M26 4C15 4 7 13 7 21C7 35 26 48 26 48C26 48 45 35 45 21C45 13 37 4 26 4Z" stroke="#F5C400" strokeWidth="2.2" fill="none"/>
-              <circle cx="26" cy="21" r="7" stroke="#F5C400" strokeWidth="2.2" fill="none"/>
-              <path d="M19 17L22 25L26 19L30 25L33 17" stroke="#F5C400" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M26 4C15 4 7 13 7 21C7 35 26 48 26 48C26 48 45 35 45 21C45 13 37 4 26 4Z" stroke="#FFFFFF" strokeWidth="2.2" fill="none"/>
+              <circle cx="26" cy="21" r="7" stroke="#FFFFFF" strokeWidth="2.2" fill="none"/>
+              <path d="M19 17L22 25L26 19L30 25L33 17" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div>
             <div className="font-display text-[28px] leading-none" data-testid="dashboard-title">
-              WORK<span style={{ color: 'var(--wc-y)' }}>CAR</span>
+              Smart Logbook
             </div>
-            <div className="font-data text-[9px] tracking-[.15em] uppercase" style={{ color: 'var(--wc-t3)' }}>Smart Logbook</div>
+            <div className="font-data text-[9px] tracking-[.15em] uppercase" style={{ color: 'var(--wc-t3)' }}>Trip Tracker</div>
           </div>
           <button
             className="ml-auto flex items-center gap-[6px] rounded-[10px] p-[7px_12px] cursor-pointer transition-all active:scale-[.97]"
@@ -132,13 +132,13 @@ export function DashboardScreen() {
         <div className="ob-a2b mb-4">
           <div
             className="w-full rounded-xl p-[14px] text-left"
-            style={{ background: 'rgba(245,158,11,.04)', border: '1.5px solid rgba(245,158,11,.2)' }}
+            style={{ background: 'rgba(153,153,153,.04)', border: '1.5px solid rgba(153,153,153,.2)' }}
             data-testid="card-basic-details-prompt"
           >
             <div className="flex items-start gap-[10px] mb-[10px]">
               <div
                 className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0 mt-[1px]"
-                style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}
+                style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}
               >
                 <AlertTriangle className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
               </div>
@@ -152,7 +152,7 @@ export function DashboardScreen() {
             <div className="flex gap-[8px]">
               <button
                 className="flex-1 rounded-[10px] py-[10px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
                 onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
                 data-testid="button-fill-basic-details"
               >
@@ -178,13 +178,13 @@ export function DashboardScreen() {
         <div className="ob-a2b mb-4">
           <button
             className="w-full rounded-xl p-[12px_14px] flex items-start gap-[10px] text-left cursor-pointer transition-all active:scale-[.99]"
-            style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.18)' }}
+            style={{ background: 'rgba(153,153,153,.04)', border: '1px solid rgba(153,153,153,.18)' }}
             onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
             data-testid="card-industry-averages-banner"
           >
             <div
               className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0 mt-[1px]"
-              style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}
+              style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}
             >
               <Info className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
             </div>
@@ -210,8 +210,8 @@ export function DashboardScreen() {
                 key={tile.screen}
                 className="relative flex items-center gap-3 p-4 rounded-xl text-left transition-all active:scale-[.98]"
                 style={{
-                  background: tile.primary ? 'rgba(245,196,0,.06)' : 'var(--wc-card)',
-                  border: tile.primary ? '1.5px solid rgba(245,196,0,.35)' : '1px solid var(--wc-border)',
+                  background: tile.primary ? 'rgba(255,255,255,.06)' : 'var(--wc-card)',
+                  border: tile.primary ? '1.5px solid rgba(255,255,255,.35)' : '1px solid var(--wc-border)',
                 }}
                 onClick={() => {
                   if (tile.screen === 'classify') {
@@ -234,7 +234,7 @@ export function DashboardScreen() {
                       color: '#000',
                       fontSize: 11,
                       fontWeight: 800,
-                      boxShadow: '0 0 8px rgba(245,196,0,.5)',
+                      boxShadow: '0 0 8px rgba(255,255,255,.5)',
                     }}
                     data-testid="badge-unsorted-count"
                   >
@@ -244,8 +244,8 @@ export function DashboardScreen() {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: tile.primary ? 'rgba(245,196,0,.1)' : 'rgba(255,255,255,.04)',
-                    border: tile.primary ? '1.5px solid rgba(245,196,0,.25)' : '1px solid rgba(255,255,255,.06)',
+                    background: tile.primary ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.04)',
+                    border: tile.primary ? '1.5px solid rgba(255,255,255,.25)' : '1px solid rgba(255,255,255,.06)',
                   }}
                 >
                   <Icon

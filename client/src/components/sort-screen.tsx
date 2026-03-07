@@ -53,7 +53,7 @@ function MiniCalendar({ day, month, year }: { day: number; month: number; year: 
 function BusinessDial({ pct }: { pct: number }) {
   const arcLen = 84.82;
   const offset = arcLen - (arcLen * pct / 100);
-  const strokeColor = pct >= 55 && pct <= 75 ? '#22C55E' : pct > 85 ? '#EF4444' : '#F5C400';
+  const strokeColor = pct >= 55 && pct <= 75 ? '#22C55E' : pct > 85 ? '#EF4444' : '#FFFFFF';
 
   return (
     <div className="flex-1 rounded-[11px] p-[7px_9px] flex flex-col items-center gap-[2px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -81,7 +81,7 @@ function BusinessDial({ pct }: { pct: number }) {
       <div className="flex justify-between w-full font-data text-[6px]" style={{ color: 'var(--wc-t3)' }}>
         <span>0%</span><span>100%</span>
       </div>
-      <div className="text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>Avg: <span className="font-semibold" style={{ color: 'rgba(245,196,0,.65)' }}>55&ndash;75%</span></div>
+      <div className="text-[8px] text-center" style={{ color: 'var(--wc-t3)' }}>Avg: <span className="font-semibold" style={{ color: 'rgba(255,255,255,.65)' }}>55&ndash;75%</span></div>
       <div className="text-[6px] text-center mt-[-1px] leading-[1.3]" style={{ color: 'var(--wc-t3)', opacity: 0.6 }}>Based on ATO statistics for tradies-based roles. Varies by profession.</div>
     </div>
   );
@@ -190,18 +190,18 @@ export function SortScreen() {
               <div
                 className="w-[14px] h-[14px] rounded-full flex items-center justify-center font-heading text-[7px] font-bold transition-all"
                 style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(255,255,255,.5)' : '1.5px solid var(--wc-border)',
                   color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
                 }}
               >
                 {step.done ? '\u2713' : i + 1}
               </div>
-              <span className="font-data text-[7px] uppercase tracking-[.04em]" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
+              <span className="font-data text-[7px] uppercase tracking-[.04em]" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.55)' : 'var(--wc-t3)' }}>
                 {step.label}
               </span>
               {i < arr.length - 1 && (
-                <div className="w-[6px] h-px" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
+                <div className="w-[6px] h-px" style={{ background: step.done ? 'rgba(255,255,255,.4)' : 'var(--wc-border)' }} />
               )}
             </div>
           ))}
@@ -213,14 +213,14 @@ export function SortScreen() {
               <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>+{queuedCount} queued</span>
             </div>
           )}
-          <div className="flex items-center gap-[3px] rounded-[20px] px-[7px] py-[2px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
+          <div className="flex items-center gap-[3px] rounded-[20px] px-[7px] py-[2px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(255,255,255,.2)' }}>
             <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
-            <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
+            <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(255,255,255,.6)' }}>left</span>
           </div>
           {nextScreen && (
             <button
               className="flex items-center gap-[2px] rounded-[20px] px-[7px] py-[2px] cursor-pointer transition-all"
-              style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.35)' }}
+              style={{ background: 'var(--wc-yd)', border: '1px solid rgba(255,255,255,.35)' }}
               onClick={() => nextScreen === 'classify' ? dispatch({ type: 'INIT_CLASSIFY' }) : dispatch({ type: 'GO_SCREEN', screen: nextScreen })}
               data-testid="button-next-step"
             >
@@ -238,7 +238,7 @@ export function SortScreen() {
         <div className="h-1 rounded-[2px] overflow-hidden" style={{ background: 'rgba(255,255,255,.07)' }}>
           <div
             className="h-full rounded-[2px] transition-all duration-500"
-            style={{ width: `${stats.progress}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)' }}
+            style={{ width: `${stats.progress}%`, background: 'linear-gradient(90deg,var(--wc-y),#FFFFFF)' }}
             data-testid="progress-bar"
           />
         </div>
@@ -250,7 +250,7 @@ export function SortScreen() {
             style={{ background: 'rgba(10,10,10,.94)', backdropFilter: 'blur(4px)' }}
             data-testid="overlay-pending-finalise"
           >
-            <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+            <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(153,153,153,.12)', border: '2px solid rgba(153,153,153,.35)' }}>
               <Lock className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
             </div>
             <div className="font-heading font-black text-[17px] uppercase text-white text-center leading-[1.2]">Sorting Paused</div>
@@ -368,10 +368,10 @@ export function SortScreen() {
                 return (
                   <>
                     {hasExisting && (
-                      <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)' }} data-testid="warning-existing-report">
+                      <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.3)' }} data-testid="warning-existing-report">
                         <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" stroke="var(--wc-am)" />
                         <div className="text-[11px] leading-[1.5]" style={{ color: 'var(--wc-am)' }}>
-                          <strong style={{ color: '#F59E0B' }}>Report already exists.</strong> A report (Rev {sessionReports[0].revision}) was saved on {sessionReports[0].timestamp}. Continuing will create <strong>Rev {sessionReports.length + 1}</strong> and mark the previous as superseded.
+                          <strong style={{ color: '#999999' }}>Report already exists.</strong> A report (Rev {sessionReports[0].revision}) was saved on {sessionReports[0].timestamp}. Continuing will create <strong>Rev {sessionReports.length + 1}</strong> and mark the previous as superseded.
                         </div>
                       </div>
                     )}
@@ -502,16 +502,16 @@ export function SortScreen() {
             )}
             {deductionState === 'active' && (
               <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO Logbook Method</button> &middot; Biz% &times; vehicle costs &middot; Estimates only
+                *<button className="border-b" style={{ color: 'rgba(255,255,255,.55)', borderColor: 'rgba(255,255,255,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO Logbook Method</button> &middot; Biz% &times; vehicle costs &middot; Estimates only
               </div>
             )}
             <div className="mt-[6px]">
               <div className="h-1 rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.07)' }}>
-                <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#ffe066)' }} />
+                <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#FFFFFF)' }} />
               </div>
               <div className="flex justify-between mt-[3px]">
                 <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Business use: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
-                <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgba(245,196,0,.55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
+                <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgba(255,255,255,.55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
               </div>
             </div>
           </div>
@@ -526,7 +526,7 @@ export function SortScreen() {
             <button
               className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[5px]"
               style={queuedCount > 0
-                ? { background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.35)', color: 'var(--wc-y)' }
+                ? { background: 'var(--wc-yd)', border: '1px solid rgba(255,255,255,.35)', color: 'var(--wc-y)' }
                 : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }
               }
               onClick={() => setConfirmDelete(true)}
@@ -548,7 +548,7 @@ export function SortScreen() {
 
           <div className="py-[2px]">
             <div className="text-[9px] text-center leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-              <span style={{ color: 'rgba(239,68,68,.55)' }}>False or inflated claims are a serious offence.</span> WorkCar logs all classifications with timestamps to an immutable audit trail.
+              <span style={{ color: 'rgba(239,68,68,.55)' }}>False or inflated claims are a serious offence.</span> This app logs all classifications with timestamps to an immutable audit trail.
             </div>
           </div>
         </div>
@@ -563,21 +563,21 @@ export function SortScreen() {
         >
           <div
             className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
-            style={{ background: 'var(--wc-card)', border: queuedCount > 0 ? '1.5px solid rgba(245,196,0,.35)' : '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: queuedCount > 0 ? '1.5px solid rgba(255,255,255,.35)' : '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
             data-testid="modal-delete-confirm"
           >
             <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={queuedCount > 0 ? { background: 'rgba(245,196,0,.12)', border: '2px solid rgba(245,196,0,.3)' } : { background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={queuedCount > 0 ? { background: 'rgba(255,255,255,.12)', border: '2px solid rgba(255,255,255,.3)' } : { background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
                 {queuedCount > 0 ? <ChevronRight className="w-[22px] h-[22px]" style={{ color: 'var(--wc-y)' }} /> : <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />}
               </div>
               <div className="font-heading font-black text-[18px] uppercase text-white text-center">
                 {queuedCount > 0 ? 'Clear & Load Next Batch?' : 'Delete All Sort Cards?'}
               </div>
             </div>
-            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={queuedCount > 0 ? { background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' } : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={queuedCount > 0 ? { background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)' } : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
               <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: queuedCount > 0 ? 'var(--wc-y)' : 'var(--wc-re)' }} />
-              <span className="text-[12px] leading-[1.5]" style={{ color: queuedCount > 0 ? 'rgba(245,196,0,.85)' : 'rgba(239,68,68,.85)' }}>
+              <span className="text-[12px] leading-[1.5]" style={{ color: queuedCount > 0 ? 'rgba(255,255,255,.85)' : 'rgba(239,68,68,.85)' }}>
                 {queuedCount > 0 ? (
                   <><strong>Current sort cards will be cleared</strong> and the next {Math.min(queuedCount, 6)} trip{Math.min(queuedCount, 6) !== 1 ? 's' : ''} will be loaded. Make sure you've saved your report first.</>
                 ) : (
@@ -589,7 +589,7 @@ export function SortScreen() {
               <button
                 className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
                 style={queuedCount > 0
-                  ? { background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.4)', color: 'var(--wc-y)' }
+                  ? { background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.4)', color: 'var(--wc-y)' }
                   : { background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }
                 }
                 onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}

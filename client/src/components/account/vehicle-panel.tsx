@@ -317,7 +317,7 @@ export function VehiclePanel() {
       <div className="pt-[12px]">
 
         {/* ═══ BASIC DETAILS (required) ═══ */}
-        <div className="rounded-[12px] p-[14px]" style={{ background: basicComplete ? 'rgba(34,197,94,.03)' : 'rgba(245,158,11,.03)', border: basicComplete ? '1.5px solid rgba(34,197,94,.15)' : '1.5px solid rgba(245,158,11,.15)' }}>
+        <div className="rounded-[12px] p-[14px]" style={{ background: basicComplete ? 'rgba(34,197,94,.03)' : 'rgba(153,153,153,.03)', border: basicComplete ? '1.5px solid rgba(34,197,94,.15)' : '1.5px solid rgba(153,153,153,.15)' }}>
           <div className="flex items-center justify-between mb-[10px]">
             <div className="font-heading font-black text-[13px] uppercase tracking-[.05em] text-white">Basic Details</div>
             {basicComplete ? (
@@ -334,7 +334,7 @@ export function VehiclePanel() {
           </div>
 
           {!basicComplete && (
-            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.15)' }}>
               <Info className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
               <div className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-am)' }}>
                 These fields are needed before deduction estimates can run. Fill them in to see per-trip values when sorting.
@@ -346,7 +346,7 @@ export function VehiclePanel() {
           <FieldInput label="Vehicle Purchase Price ($)" value={purchase.purchasePrice} onChange={updPurch('purchasePrice')} type="number" placeholder="e.g. 55000" testId="input-purchase-price" />
 
           {cappedPrice > 0 && (
-            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.12)' }}>
+            <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)' }}>
               <Info className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
               <div>
                 <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>ATO Capped Value</div>
@@ -399,7 +399,7 @@ export function VehiclePanel() {
                 />
                 <button
                   className="rounded-[8px] px-[16px] flex items-center gap-[6px] font-heading font-bold text-[12px] uppercase cursor-pointer transition-all active:scale-[.97]"
-                  style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                  style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
                   onClick={handleLookup}
                   disabled={!regoInput.trim() || lookupStatus === 'loading'}
                   data-testid="button-rego-lookup"
@@ -419,7 +419,7 @@ export function VehiclePanel() {
                 </div>
               )}
               {lookupStatus === 'notfound' && (
-                <div className="rounded-[8px] p-[8px_10px] flex items-center gap-[6px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+                <div className="rounded-[8px] p-[8px_10px] flex items-center gap-[6px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.2)' }}>
                   <AlertTriangle className="w-[12px] h-[12px]" style={{ color: 'var(--wc-am)' }} />
                   <span className="text-[11px]" style={{ color: 'var(--wc-am)' }}>Not found. Try: ABC123, XYZ789, DEF456</span>
                 </div>
@@ -439,7 +439,7 @@ export function VehiclePanel() {
                       </div>
                     ))}
                     {specs.rego && (
-                      <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.15)' }}>
+                      <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
                         <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Rego</div>
                         <div className="text-[13px] font-data font-bold mt-[2px]" style={{ color: 'var(--wc-y)' }}>{specs.rego}</div>
                       </div>
@@ -509,7 +509,7 @@ export function VehiclePanel() {
                       )}
                     </>
                   )}
-                  <div className="rounded-[8px] p-[8px_10px] flex items-start gap-[6px]" style={{ background: 'rgba(245,158,11,.03)', border: '1px solid rgba(245,158,11,.1)' }}>
+                  <div className="rounded-[8px] p-[8px_10px] flex items-start gap-[6px]" style={{ background: 'rgba(153,153,153,.03)', border: '1px solid rgba(153,153,153,.1)' }}>
                     <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
                     <div className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                       Only loan interest is deductible. Principal repayments are not a claimable expense.
@@ -624,7 +624,7 @@ export function VehiclePanel() {
                     </div>
                   )}
                   {depCalc.isEstimated && (
-                    <div className="rounded-[8px] p-[8px_10px] mt-[8px] flex items-start gap-[6px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.12)' }}>
+                    <div className="rounded-[8px] p-[8px_10px] mt-[8px] flex items-start gap-[6px]" style={{ background: 'rgba(153,153,153,.04)', border: '1px solid rgba(153,153,153,.12)' }}>
                       <AlertTriangle className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
                       <div className="text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                         *Estimated using purchase timing and prior-use inputs. Review with your tax agent.

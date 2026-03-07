@@ -19,7 +19,7 @@ export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, child
         onClick={() => setOpen(!open)}
         data-testid={`${testId}-toggle`}
       >
-        <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.18)' }}>
+        <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.18)' }}>
           <Icon className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
         </div>
         <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] text-white flex-1 text-left">{title}</span>
@@ -90,8 +90,8 @@ export function ChipSelect({ label, options, value, onChange, testId }: {
             key={opt}
             className="rounded-[8px] px-[10px] py-[8px] font-heading font-bold text-[11px] uppercase tracking-[.03em] cursor-pointer transition-all"
             style={{
-              background: value === opt ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.04)',
-              border: value === opt ? '1px solid rgba(245,196,0,.4)' : '1px solid var(--wc-border)',
+              background: value === opt ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.04)',
+              border: value === opt ? '1px solid rgba(255,255,255,.4)' : '1px solid var(--wc-border)',
               color: value === opt ? 'var(--wc-y)' : 'var(--wc-t2)',
             }}
             onClick={() => onChange(opt)}

@@ -37,7 +37,7 @@ export function OdometerScreen() {
 
       <div
         className="mx-[14px] mb-2 rounded-[12px] overflow-hidden flex-shrink-0 cursor-pointer transition-all"
-        style={{ background: 'var(--wc-card)', border: '1px solid rgba(245,196,0,.2)' }}
+        style={{ background: 'var(--wc-card)', border: '1px solid rgba(255,255,255,.2)' }}
         onClick={() => setHeroCollapsed(!heroCollapsed)}
         data-testid="odo-hero-card"
       >
@@ -86,10 +86,10 @@ export function OdometerScreen() {
               const deviationLabel = deviation <= 10 ? 'Within range' : deviation <= 25 ? 'Moderate deviation' : 'High deviation';
               const deviationColor = deviation <= 10 ? 'var(--wc-gr)' : deviation <= 25 ? 'var(--wc-am)' : 'var(--wc-re)';
               return (
-                <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(245,196,0,.15)' }}>
-                  <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgba(245,196,0,.06)' }}>
+                <div className="rounded-[10px] overflow-hidden" style={{ border: '1px solid rgba(255,255,255,.15)' }}>
+                  <div className="flex items-center gap-[6px] px-[10px] py-[8px]" style={{ background: 'rgba(255,255,255,.06)' }}>
                     <Shield className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
-                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>How We Calculate This at WorkCar</span>
+                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>How We Calculate This</span>
                   </div>
                   <div className="px-[10px] py-[8px] flex flex-col gap-[5px]">
                     <div className="text-[10px] leading-[1.5] mb-[3px]" style={{ color: 'var(--wc-t2)' }}>
@@ -129,7 +129,7 @@ export function OdometerScreen() {
                         <span className="text-[8px]" style={{ color: 'var(--wc-t3)' }}>{deviation <= 10 ? 'Your business use aligns with ATO industry benchmarks for tradies.' : deviation <= 25 ? 'Some deviation from industry average — ensure you can justify if audited.' : 'Significant deviation from industry norms — strong documentation recommended.'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-[7px] px-[8px] py-[5px] mt-[2px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+                    <div className="flex items-center justify-between rounded-[7px] px-[8px] py-[5px] mt-[2px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
                       <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em] text-white">Total Score</span>
                       <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{result.total}%</span>
                     </div>
@@ -151,11 +151,11 @@ export function OdometerScreen() {
         >
           <div
             className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.4)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(153,153,153,.4)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
             data-testid="modal-odo-warning"
           >
             <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.35)' }}>
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(153,153,153,.12)', border: '2px solid rgba(153,153,153,.35)' }}>
                 <AlertTriangle className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
               </div>
               <div className="font-heading font-black text-[18px] uppercase text-white text-center">Accuracy Required</div>
@@ -195,7 +195,7 @@ export function OdometerScreen() {
         >
           <div
             className="w-[360px] max-h-[80vh] rounded-[18px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.3)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-[16px] py-[14px] flex-shrink-0" style={{ borderBottom: '1px solid var(--wc-border)' }}>
@@ -214,7 +214,7 @@ export function OdometerScreen() {
             </div>
 
             <div className="overflow-y-auto p-[16px] flex flex-col gap-[14px]">
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}>
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Camera className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
                   <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>About Photo Evidence</span>
@@ -234,7 +234,7 @@ export function OdometerScreen() {
                 </p>
               </div>
 
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.15)' }}>
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(153,153,153,.05)', border: '1px solid rgba(153,153,153,.15)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Clock className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
                   <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-am)' }}>Periodic Odometer Updates</span>
@@ -248,7 +248,7 @@ export function OdometerScreen() {
                 <div className="flex items-start gap-[6px]">
                   <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[2px]" style={{ color: 'rgba(239,68,68,.7)' }} />
                   <p className="text-[11px] leading-[1.55]" style={{ color: 'rgba(239,68,68,.8)' }}>
-                    <strong style={{ color: 'rgba(239,68,68,.95)' }}>Your responsibility.</strong> WorkCar is not liable for keeping odometer readings accurate. You must verify the readings for all trips you wish to disclose to the ATO to calculate your logbook deductions. Always ensure the information you provide is truthful and complete.
+                    <strong style={{ color: 'rgba(239,68,68,.95)' }}>Your responsibility.</strong> This application is not liable for keeping odometer readings accurate. You must verify the readings for all trips you wish to disclose to the ATO to calculate your logbook deductions. Always ensure the information you provide is truthful and complete.
                   </p>
                 </div>
               </div>
@@ -257,7 +257,7 @@ export function OdometerScreen() {
             <div className="px-[16px] py-[12px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
               <button
                 className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(245,196,0,.25)' }}
+                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(255,255,255,.25)' }}
                 onClick={() => setShowOdoInfoPopup(false)}
                 data-testid="button-got-it-odo-popup"
               >
@@ -292,8 +292,8 @@ export function OdometerScreen() {
               key={i}
               className="rounded-[14px] transition-all"
               style={{
-                background: t.autoGenerated ? 'rgba(245,158,11,.03)' : verified ? 'rgba(34,197,94,.03)' : 'var(--wc-card)',
-                border: t.autoGenerated ? '1.5px dashed rgba(245,158,11,.3)' : verified ? '1.5px solid rgba(34,197,94,.45)' : '1.5px solid var(--wc-border)',
+                background: t.autoGenerated ? 'rgba(153,153,153,.03)' : verified ? 'rgba(34,197,94,.03)' : 'var(--wc-card)',
+                border: t.autoGenerated ? '1.5px dashed rgba(153,153,153,.3)' : verified ? '1.5px solid rgba(34,197,94,.45)' : '1.5px solid var(--wc-border)',
               }}
               data-testid={`odo-trip-${i}`}
             >
@@ -322,7 +322,7 @@ export function OdometerScreen() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-[13px] truncate" style={{ color: t.autoGenerated ? 'var(--wc-am)' : 'white' }}>
-                    {t.autoGenerated && <span className="font-data text-[7px] uppercase tracking-[.08em] mr-[4px] px-[3px] py-[1px] rounded-[2px]" style={{ background: 'rgba(245,158,11,.12)', color: 'var(--wc-am)', border: '1px solid rgba(245,158,11,.2)' }}>GAP</span>}
+                    {t.autoGenerated && <span className="font-data text-[7px] uppercase tracking-[.08em] mr-[4px] px-[3px] py-[1px] rounded-[2px]" style={{ background: 'rgba(153,153,153,.12)', color: 'var(--wc-am)', border: '1px solid rgba(153,153,153,.2)' }}>GAP</span>}
                     {t.from} &rarr; {t.to}
                   </div>
                   <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
@@ -405,14 +405,14 @@ export function OdometerScreen() {
                   Distance: <span style={{ color: 'var(--wc-y)' }}>{(curEnd - curStart).toLocaleString('en-AU')} km</span>
                 </div>
                 {hasMismatch && (
-                  <div className="flex items-center gap-[6px] rounded-[8px] px-[10px] py-[5px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)' }}>
+                  <div className="flex items-center gap-[6px] rounded-[8px] px-[10px] py-[5px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.25)' }}>
                     <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
                     <span className="font-data text-[9px] flex-1" style={{ color: 'var(--wc-am)' }}>
                       Start ({curStart.toLocaleString('en-AU')}) doesn't match previous trip end ({prevEndLocal!.toLocaleString('en-AU')})
                     </span>
                     <button
                       className="rounded-[6px] px-[8px] py-[3px] font-heading font-bold text-[9px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-95"
-                      style={{ background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
+                      style={{ background: 'rgba(153,153,153,.15)', border: '1px solid rgba(153,153,153,.3)', color: 'var(--wc-am)' }}
                       onClick={() => setOdoInputs(prev => ({ ...prev, [startKey]: String(prevEndLocal) }))}
                       data-testid={`odo-fix-${i}`}
                     >
@@ -445,8 +445,8 @@ export function OdometerScreen() {
                     <button
                       className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
                       style={{
-                        background: photoThumbs[i] ? 'transparent' : 'rgba(245,196,0,.07)',
-                        border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgba(245,196,0,.25)',
+                        background: photoThumbs[i] ? 'transparent' : 'rgba(255,255,255,.07)',
+                        border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgba(255,255,255,.25)',
                         color: 'var(--wc-y)',
                       }}
                       onClick={() => fileInputRefs.current[i]?.click()}
@@ -468,7 +468,7 @@ export function OdometerScreen() {
                   </div>
                   <button
                     className="rounded-[9px] px-[12px] py-[5px] font-heading font-extrabold text-[11px] tracking-[.06em] uppercase text-black cursor-pointer flex items-center gap-[4px] transition-all active:scale-95"
-                    style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(245,196,0,.2)' }}
+                    style={{ background: 'var(--wc-y)', boxShadow: '0 2px 10px rgba(255,255,255,.2)' }}
                     onClick={() => {
                       dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
                     }}
@@ -495,8 +495,8 @@ export function OdometerScreen() {
             <button
               className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
               style={{
-                background: allConfirmed ? 'var(--wc-y)' : 'rgba(245,196,0,.3)',
-                boxShadow: allConfirmed ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+                background: allConfirmed ? 'var(--wc-y)' : 'rgba(255,255,255,.3)',
+                boxShadow: allConfirmed ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
                 color: allConfirmed ? '#000' : 'rgba(0,0,0,.6)',
               }}
               onClick={() => {
@@ -524,10 +524,10 @@ export function OdometerScreen() {
         >
           <div
             className="w-[340px] rounded-[18px] p-[24px] flex flex-col items-center gap-[16px]"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.4)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(153,153,153,.4)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,.12)', border: '2px solid rgba(245,158,11,.4)' }}>
+            <div className="w-[52px] h-[52px] rounded-full flex items-center justify-center" style={{ background: 'rgba(153,153,153,.12)', border: '2px solid rgba(153,153,153,.4)' }}>
               <AlertTriangle className="w-[26px] h-[26px]" style={{ color: 'var(--wc-am)' }} />
             </div>
             <div className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em] text-white text-center">
@@ -538,7 +538,7 @@ export function OdometerScreen() {
             </div>
             <div className="w-full flex flex-col gap-[8px] mt-[4px]">
               {sorted.filter((_, idx) => !state.verifiedSet.has(state.trips.indexOf(sorted[idx]))).slice(0, 5).map((t, idx) => (
-                <div key={idx} className="flex items-center gap-[8px] rounded-[10px] px-[12px] py-[8px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                <div key={idx} className="flex items-center gap-[8px] rounded-[10px] px-[12px] py-[8px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.15)' }}>
                   <AlertTriangle className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
                   <span className="font-bold text-[12px] text-white truncate flex-1">{t.from} &rarr; {t.to}</span>
                 </div>
@@ -551,7 +551,7 @@ export function OdometerScreen() {
             </div>
             <button
               className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-              style={{ background: 'var(--wc-am)', boxShadow: '0 2px 12px rgba(245,158,11,.3)' }}
+              style={{ background: 'var(--wc-am)', boxShadow: '0 2px 12px rgba(153,153,153,.3)' }}
               onClick={() => setShowUnconfirmedWarning(false)}
               data-testid="button-dismiss-warning"
             >

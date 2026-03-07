@@ -119,8 +119,8 @@ export function FindKeysScreen() {
       </div>
 
       <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
-        <div className="rounded-[16px] p-[20px] text-center" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.2)' }}>
-          <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center mx-auto mb-[14px]" style={{ background: 'rgba(245,196,0,.1)', border: '2px solid rgba(245,196,0,.3)' }}>
+        <div className="rounded-[16px] p-[20px] text-center" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.2)' }}>
+          <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center mx-auto mb-[14px]" style={{ background: 'rgba(255,255,255,.1)', border: '2px solid rgba(255,255,255,.3)' }}>
             <Key className="w-[34px] h-[34px]" style={{ color: 'var(--wc-y)' }} />
           </div>
           {lastLocation ? (
@@ -143,7 +143,7 @@ export function FindKeysScreen() {
         <div className="grid grid-cols-2 gap-[8px]">
           <button
             className="rounded-[14px] p-[16px] flex flex-col items-center gap-[8px] cursor-pointer transition-all active:scale-[.97]"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.3)' }}
             onClick={updateLocation}
             data-testid="button-mark-location"
           >
@@ -160,7 +160,7 @@ export function FindKeysScreen() {
 
           <button
             className="rounded-[14px] p-[16px] flex flex-col items-center gap-[8px] cursor-pointer transition-all active:scale-[.97]"
-            style={{ background: ringing ? 'rgba(245,196,0,.12)' : 'var(--wc-card)', border: ringing ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)' }}
+            style={{ background: ringing ? 'rgba(255,255,255,.12)' : 'var(--wc-card)', border: ringing ? '1.5px solid rgba(255,255,255,.5)' : '1.5px solid var(--wc-border)' }}
             onClick={toggleRing}
             data-testid="button-ring-keys"
           >

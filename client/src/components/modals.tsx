@@ -158,7 +158,7 @@ export function EditModal() {
             <button
               className="flex-1 rounded-[8px] py-[9px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all"
               style={editType === 'business'
-                ? { background: 'rgba(245,196,0,.15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
+                ? { background: 'rgba(255,255,255,.15)', border: '2px solid var(--wc-y)', color: 'var(--wc-y)' }
                 : { background: 'rgba(255,255,255,.04)', border: '2px solid var(--wc-border)', color: 'var(--wc-t3)' }}
               onClick={() => setEditType('business')}
               data-testid="button-edit-type-business"
@@ -189,7 +189,7 @@ export function EditModal() {
                       key={ci}
                       className="rounded-[7px] p-[6px_2px] cursor-pointer transition-all text-center"
                       style={selected
-                        ? { background: 'rgba(245,196,0,.15)', border: '1.5px solid var(--wc-y)' }
+                        ? { background: 'rgba(255,255,255,.15)', border: '1.5px solid var(--wc-y)' }
                         : { background: 'rgba(255,255,255,.03)', border: '1.5px solid var(--wc-border)' }}
                       onClick={() => setEditPurpose(selected ? '' : cat.label)}
                       data-testid={`button-edit-purpose-${ci}`}
@@ -210,7 +210,7 @@ export function EditModal() {
             { icon: Camera, label: 'Receipt' },
             { icon: MapPin, label: 'Notes' },
           ].map(ev => (
-            <div key={ev.label} className="flex-1 rounded-lg p-[7px_5px] cursor-pointer transition-all text-center" style={{ background: 'rgba(245,196,0,.05)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <div key={ev.label} className="flex-1 rounded-lg p-[7px_5px] cursor-pointer transition-all text-center" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.2)' }}>
               <ev.icon className="w-[15px] h-[15px] mx-auto mb-[2px]" style={{ color: 'var(--wc-y)' }} />
               <div className="font-heading text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>{ev.label}</div>
             </div>
@@ -245,7 +245,7 @@ export function EditModal() {
           {(stops.filter(s => s.length > 3).length > 0 || editFrom !== `${trip.from}, ${trip.fromSub}` || editTo !== `${trip.to}, ${trip.toSub}`) && (
             <button
               className="rounded-[7px] p-[6px_10px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
               onClick={calcRoute}
               data-testid="button-calc-route"
             >
@@ -282,7 +282,7 @@ export function EditModal() {
           <textarea className="w-full rounded-lg p-[8px_11px] text-[11px] text-white outline-none resize-none h-[50px]" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)' }} value={editPurpose} onChange={e => setEditPurpose(e.target.value)} placeholder="e.g. Tool pickup for client job at Sunshine site" data-testid="input-edit-purpose" />
         </div>
 
-        <div className="rounded-lg p-[9px_12px] mb-[10px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.14)' }}>
+        <div className="rounded-lg p-[9px_12px] mb-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)' }}>
           <div className="flex justify-between items-center">
             <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Total Distance</span>
             <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>{totalKm.toFixed(1)} km</span>
@@ -335,10 +335,10 @@ export function ATOModal() {
         <div className="font-heading font-black text-[20px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>ATO Compliance Notice</div>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[13px]" style={{ color: 'var(--wc-t3)' }}>Tax Ruling TR 2021/1 &middot; FY2024-25</div>
         <div className="text-[11px] leading-[1.6] flex flex-col gap-2" style={{ color: 'var(--wc-t2)' }}>
-          <p><strong className="text-white">Logbook method:</strong> Business use % &times; actual vehicle running costs (fuel, rego, insurance, repairs, depreciation, etc). <em>No kilometre cap.</em> WorkCar helps you build the 12-week logbook the ATO requires.</p>
+          <p><strong className="text-white">Logbook method:</strong> Business use % &times; actual vehicle running costs (fuel, rego, insurance, repairs, depreciation, etc). <em>No kilometre cap.</em> This app helps you build the 12-week logbook the ATO requires.</p>
           <p><strong className="text-white">How it works:</strong> Sort all your trips as business or personal. Your business use percentage is calculated automatically. This percentage is then applied to your total vehicle expenses to determine your deduction.</p>
           <p><strong className="text-white">Estimates only.</strong> Final amounts depend on your individual tax circumstances and actual vehicle expenses. Confirm with a registered tax agent before lodging.</p>
-          <p style={{ color: 'rgba(239,68,68,.7)', fontWeight: 600 }}>False claims are a serious offence under the Income Tax Assessment Act 1997. WorkCar maintains an immutable, timestamped audit trail of all classifications and edits.</p>
+          <p style={{ color: 'rgba(239,68,68,.7)', fontWeight: 600 }}>False claims are a serious offence under the Income Tax Assessment Act 1997. This application maintains an immutable, timestamped audit trail of all classifications and edits.</p>
         </div>
         <button
           className="w-full rounded-[9px] py-[9px] font-heading font-bold text-[13px] tracking-[.06em] uppercase cursor-pointer mt-3 transition-all"
@@ -420,7 +420,7 @@ export function SummaryModal() {
         <div className="flex items-center gap-[14px] px-[20px] mb-4">
           <div
             className="w-[56px] h-[56px] rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(245,196,0,.08)' }}
+            style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgba(255,255,255,.08)' }}
           >
             <span className="font-heading font-black text-[20px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
           </div>
@@ -554,7 +554,7 @@ export function SummaryModal() {
           ) : (
             <button
               className="w-full rounded-[8px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
-              style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.3)', color: 'var(--wc-am)' }}
+              style={{ background: 'rgba(153,153,153,.12)', border: '1.5px solid rgba(153,153,153,.3)', color: 'var(--wc-am)' }}
               onClick={() => {
                 const val = digitsToNum(odoDigits);
                 if (val > 0) {
@@ -587,7 +587,7 @@ export function SummaryModal() {
         <div className="px-[20px] flex flex-col gap-[8px]">
           <button
             className="w-full rounded-[12px] py-[16px] font-heading font-black text-[20px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.2)' }}
+            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
@@ -672,7 +672,7 @@ export function SummaryModal() {
                   const Icon = item.icon;
                   return (
                     <div key={i} className="rounded-[10px] p-[10px_12px] flex items-center gap-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }} data-testid={`audit-item-${i}`}>
-                      <div className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.1)' }}>
+                      <div className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.1)' }}>
                         <Icon className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -686,7 +686,7 @@ export function SummaryModal() {
               })()}
             </div>
 
-            <div className="rounded-[10px] p-[10px_14px] flex items-center justify-between" style={{ background: score > 85 ? 'rgba(34,197,94,.08)' : score > 70 ? 'rgba(245,158,11,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${score > 85 ? 'rgba(34,197,94,.2)' : score > 70 ? 'rgba(245,158,11,.2)' : 'rgba(239,68,68,.2)'}` }}>
+            <div className="rounded-[10px] p-[10px_14px] flex items-center justify-between" style={{ background: score > 85 ? 'rgba(34,197,94,.08)' : score > 70 ? 'rgba(153,153,153,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${score > 85 ? 'rgba(34,197,94,.2)' : score > 70 ? 'rgba(153,153,153,.2)' : 'rgba(239,68,68,.2)'}` }}>
               <span className="font-data text-[10px] uppercase tracking-[.08em] text-white">
                 {score > 85 ? 'Strong — ready for ATO review' : score > 70 ? 'Good — add more evidence to strengthen' : 'Needs work — add photos & verify odometers'}
               </span>

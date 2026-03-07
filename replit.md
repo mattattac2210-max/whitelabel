@@ -1,8 +1,8 @@
-# WorkCar -- Sort it at Smoko
+# Trip Logbook (White Label)
 
 ## Overview
 
-WorkCar is a mobile-first web app designed to help Australian tradespeople classify their car trips for ATO tax deduction purposes. Users sort trips as "business" or "personal," classify business trips by purpose category, review/verify odometer readings, and generate session reports. The app renders inside a phone frame (390x844px) centered on screen, mimicking a native mobile experience.
+A brand-agnostic, white-label mobile-first web app designed to help Australian tradespeople classify their car trips for ATO tax deduction purposes. Users sort trips as "business" or "personal," classify business trips by purpose category, review/verify odometer readings, and generate session reports. The app renders inside a phone frame (390x844px) centered on screen, mimicking a native mobile experience. No onboarding/signup flow -- app launches directly to the dashboard.
 
 All application logic runs client-side using React state (via useReducer + Context). The backend serves as a scaffold with no active API routes.
 
@@ -12,6 +12,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 - Dark theme only (no light mode toggle)
 - No emoji in UI -- use Lucide icons instead
 - Australian English conventions (ATO, km, VIC, etc.)
+- Brand-agnostic white label: white, black, and grey palette only (no yellow/brand colors)
 
 ## System Architecture
 
@@ -21,25 +22,17 @@ All application logic runs client-side using React state (via useReducer + Conte
 - **Routing**: `wouter` -- only `/` route and 404 fallback
 - **State Management**: React Context + useReducer (`client/src/lib/app-context.tsx`)
 - **UI Library**: shadcn/ui components, Tailwind CSS
-- **Styling**: Dark theme with CSS custom properties. Colors: `--wc-y: #F5C400` (yellow primary), `--wc-gr: #22C55E` (green), `--wc-re: #EF4444` (red), `--wc-am: #F59E0B` (amber). Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display/onboarding), Inter (onboarding body)
+- **Styling**: Dark theme with CSS custom properties. Colors: `--wc-y: #FFFFFF` (white primary), `--wc-gr: #22C55E` (green/success), `--wc-re: #EF4444` (red/error), `--wc-am: #999999` (grey). Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display), Inter (body alt)
 - **Icons**: Lucide React throughout
 
 ### App Flow
 
-1. **Onboarding** (first visit only, stored in `localStorage.wc_onboarded`):
-   - Splash → Q1 Trade → Q2 KM Band → Q3 Vehicle Details → Recommendation → Signup → OTP Verify → Vehicle Setup → Tax Settings → Tracking Method → Motion Permission → Location Permission → All Set → Plan Select → Mates Rates
-   - Self-contained in `client/src/components/onboarding/` with local state
-   - Q2 KM Band uses slider + tap-to-select band tiles, plus a secondary personal km slider. Both business and personal weekly km are passed through to calcLogbook as `effectiveTotal = businessKm + personalAnnualKm`
-   - Q3 Vehicle Details has 4 questions: age (6 options), type, finance, purchase price band (4 options)
-   - Algorithm uses IAWO-aware depreciation engine with RUNNING segment costs (ute-4x4: $12,900, ute-4x2: $9,700, suv-medium: $9,700, suv-small: $5,900), calcDepreciation (DV method or instant write-off), INT_RATE=8% finance interest, profession-based business use % for logbook calculation
-   - UserData includes: trade, kmBand, vehicleAge, vehicleType, finance, priceBand, recommendation
-
-2. **Dashboard** (main hub after onboarding):
+1. **Dashboard** (main hub, app entry point):
    - Quick action tiles: Sort Trips, Driving Reports, Add Trip, Expenses, My Stats, Export, Find My Keys, Account
    - Summary stats: total trips, business km, estimated deduction
    - 12-week logbook progress strip
 
-3. **Logbook Screens** (accessed from dashboard, with bottom nav):
+2. **Logbook Screens** (accessed from dashboard, with bottom nav):
    - Sort, Classify, Review, Odometer, Reports, Export, Input, Expenses, Stats, Find Keys, Account
    - Bottom nav includes Home button to return to dashboard
 
@@ -99,14 +92,6 @@ All reducer actions (`UPDATE_TRIP`, `RECLASSIFY`, `UNDO_LAST`) recalculate `dedT
 | `client/src/lib/trip-data.ts` | Trip data constants, categories, helper functions |
 | `client/src/lib/deduction-estimator.ts` | Deduction estimator: readiness checks, state logic, vehicle cost breakdown |
 | `client/src/components/deduction-card.tsx` | DeductionCard (locked/partial/active), LockedModal, ReadinessCard |
-| `client/src/components/onboarding/index.tsx` | Onboarding flow wrapper with step management |
-| `client/src/components/onboarding/splash.tsx` | Splash screen |
-| `client/src/components/onboarding/trade-select.tsx` | Q1 trade selection |
-| `client/src/components/onboarding/km-band.tsx` | Q2 km band selection |
-| `client/src/components/onboarding/vehicle-details.tsx` | Q3 vehicle age/type/finance |
-| `client/src/components/onboarding/recommendation.tsx` | Algorithm + recommendation with interactive slider |
-| `client/src/components/onboarding/auth-screens.tsx` | Signup, Login, Verify, Forgot, PIN screens |
-| `client/src/components/onboarding/setup-screens.tsx` | Vehicle setup, Tax, Tracking, Plans, Mates Rates |
 | `client/src/components/dashboard-screen.tsx` | Dashboard main hub |
 | `client/src/components/sort-screen.tsx` | Sort screen with card deck, deduction tracker, dial, calendar |
 | `client/src/components/trip-card.tsx` | Swipeable trip card with pointer events, fly-out animation |

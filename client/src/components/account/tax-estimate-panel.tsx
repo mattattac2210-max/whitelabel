@@ -133,8 +133,8 @@ export function TaxEstimatePanel() {
 
   const sliderMax = p.incomeMode === 'Weekly' ? 5000 : 250000;
 
-  const readinessColor = deductionState === 'active' ? 'rgba(34,197,94,.15)' : deductionState === 'partial' ? 'rgba(245,158,11,.15)' : 'rgba(255,255,255,.06)';
-  const readinessBorderColor = deductionState === 'active' ? 'rgba(34,197,94,.25)' : deductionState === 'partial' ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.08)';
+  const readinessColor = deductionState === 'active' ? 'rgba(34,197,94,.15)' : deductionState === 'partial' ? 'rgba(153,153,153,.15)' : 'rgba(255,255,255,.06)';
+  const readinessBorderColor = deductionState === 'active' ? 'rgba(34,197,94,.25)' : deductionState === 'partial' ? 'rgba(153,153,153,.25)' : 'rgba(255,255,255,.08)';
   const readinessTextColor = deductionState === 'active' ? 'var(--wc-gr)' : deductionState === 'partial' ? 'var(--wc-am)' : 'var(--wc-t3)';
 
   return (
@@ -150,7 +150,7 @@ export function TaxEstimatePanel() {
         {useIndustry ? (
           <>
             <CalculationBreakdown className="mb-[10px]" />
-            <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
+            <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(153,153,153,.04)', border: '1px solid rgba(153,153,153,.15)' }}>
               <BarChart3 className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
               <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                 Based on industry average running costs for your vehicle type. Switch off the toggle above to enter your own financial details.
@@ -192,7 +192,7 @@ export function TaxEstimatePanel() {
               )}
             </div>
 
-            <div className="rounded-[10px] p-[10px_12px] mb-[12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
+            <div className="rounded-[10px] p-[10px_12px] mb-[12px] flex items-start gap-[8px]" style={{ background: 'rgba(153,153,153,.04)', border: '1px solid rgba(153,153,153,.15)' }}>
               <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
               <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                 {disclaimer}
@@ -212,7 +212,7 @@ export function TaxEstimatePanel() {
                 step={p.incomeMode === 'Weekly' ? 50 : 1000}
                 value={parseFloat(p.salary) || 0}
                 onChange={e => upd('salary')(e.target.value)}
-                className="w-full mb-[4px] accent-[#F5C400]"
+                className="w-full mb-[4px] accent-[#FFFFFF]"
                 data-testid="slider-salary"
               />
               <input
@@ -238,7 +238,7 @@ export function TaxEstimatePanel() {
                 step={500}
                 value={parseFloat(p.otherDeductions) || 0}
                 onChange={e => upd('otherDeductions')(e.target.value)}
-                className="w-full mb-[4px] accent-[#F5C400]"
+                className="w-full mb-[4px] accent-[#FFFFFF]"
                 data-testid="slider-other-ded"
               />
               <input
@@ -284,7 +284,7 @@ export function TaxEstimatePanel() {
                   </div>
                 </div>
 
-                <div className="rounded-[10px] p-[12px] mb-[6px] relative" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.2)' }} data-testid="card-vehicle-deduction">
+                <div className="rounded-[10px] p-[12px] mb-[6px] relative" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.2)' }} data-testid="card-vehicle-deduction">
                   {deductionState === 'locked' && (
                     <div className="absolute inset-0 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 1 }}>
                       <div className="flex items-center gap-[6px]">
@@ -379,7 +379,7 @@ export function TaxEstimatePanel() {
                 'Produces a more realistic estimate',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-[8px] py-[4px]">
-                  <ChevronRight className="w-[12px] h-[12px] flex-shrink-0 mt-[3px]" style={{ color: 'var(--wc-y)' }} />
+                  <ChevronRight className="w-[12px] h-[12px] flex-shrink-0 mt-[3px]" style={{ color: 'var(--wc-t2)' }} />
                   <span className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>{item}</span>
                 </div>
               ))}
@@ -388,7 +388,7 @@ export function TaxEstimatePanel() {
             <div className="flex flex-col gap-[8px]">
               <button
                 className="w-full rounded-[11px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
                 onClick={confirmPersonalised}
                 data-testid="button-confirm-personalised"
               >

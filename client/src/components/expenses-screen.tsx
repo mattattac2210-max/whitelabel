@@ -197,7 +197,7 @@ export function ExpensesScreen() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `workcar-expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -248,7 +248,7 @@ export function ExpensesScreen() {
               <div className="flex gap-[8px] mb-[12px]">
                 <button
                   className="flex-1 rounded-[10px] p-[14px] flex flex-col items-center gap-[6px] cursor-pointer"
-                  style={{ background: 'rgba(245,196,0,.04)', border: '1.5px dashed rgba(245,196,0,.3)' }}
+                  style={{ background: 'rgba(255,255,255,.04)', border: '1.5px dashed rgba(255,255,255,.3)' }}
                   onClick={() => fileRef.current?.click()}
                   data-testid="expense-upload-receipt"
                 >
@@ -274,8 +274,8 @@ export function ExpensesScreen() {
                   key={cat}
                   className="rounded-[8px] px-[10px] py-[8px] font-heading font-bold text-[12px] uppercase tracking-[.03em] cursor-pointer transition-all"
                   style={{
-                    background: fCat === cat ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.04)',
-                    border: fCat === cat ? '1px solid rgba(245,196,0,.4)' : '1px solid var(--wc-border)',
+                    background: fCat === cat ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.04)',
+                    border: fCat === cat ? '1px solid rgba(255,255,255,.4)' : '1px solid var(--wc-border)',
                     color: fCat === cat ? 'var(--wc-y)' : 'var(--wc-t2)',
                   }}
                   onClick={() => setFCat(cat)}
@@ -324,7 +324,7 @@ export function ExpensesScreen() {
               data-testid="expense-vendor"
             />
 
-            <div className="rounded-[10px] p-[12px] mb-[14px] flex items-start gap-[10px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.15)' }}>
+            <div className="rounded-[10px] p-[12px] mb-[14px] flex items-start gap-[10px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
               <Check className="w-[18px] h-[18px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-y)' }} />
               <div>
                 <div className="font-heading font-bold text-[12px] uppercase" style={{ color: 'var(--wc-y)' }}>Verify Before Save</div>
@@ -349,9 +349,9 @@ export function ExpensesScreen() {
           <button
             className="flex-[2] py-[14px] rounded-[12px] font-heading font-bold text-[15px] uppercase tracking-[.04em] text-black cursor-pointer transition-all active:scale-[.98]"
             style={{
-              background: parseFloat(fAmount) > 0 ? 'var(--wc-y)' : 'rgba(245,196,0,.3)',
+              background: parseFloat(fAmount) > 0 ? 'var(--wc-y)' : 'rgba(255,255,255,.3)',
               opacity: parseFloat(fAmount) > 0 ? 1 : 0.5,
-              boxShadow: parseFloat(fAmount) > 0 ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+              boxShadow: parseFloat(fAmount) > 0 ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
             }}
             onClick={handleSave}
             data-testid="expense-save-btn"
@@ -384,7 +384,7 @@ export function ExpensesScreen() {
             key={t}
             className="flex-1 py-[10px] font-heading font-bold text-[14px] uppercase tracking-[.05em] cursor-pointer transition-all"
             style={{
-              background: tab === t ? 'rgba(245,196,0,.12)' : 'transparent',
+              background: tab === t ? 'rgba(255,255,255,.12)' : 'transparent',
               color: tab === t ? 'var(--wc-y)' : 'var(--wc-t3)',
               borderBottom: tab === t ? '2px solid var(--wc-y)' : '2px solid transparent',
             }}
@@ -421,7 +421,7 @@ export function ExpensesScreen() {
                   {exp.receiptUri ? (
                     <img src={exp.receiptUri} className="w-[38px] h-[38px] rounded-[8px] object-cover flex-shrink-0" alt="" />
                   ) : (
-                    <div className="w-[38px] h-[38px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+                    <div className="w-[38px] h-[38px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
                       <Receipt className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
                   )}
@@ -438,7 +438,7 @@ export function ExpensesScreen() {
                   <div className="px-[14px] pb-[12px] flex gap-[8px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
                     <button
                       className="flex-1 flex items-center justify-center gap-[6px] mt-[8px] py-[8px] rounded-[8px] cursor-pointer"
-                      style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)', color: 'var(--wc-y)' }}
+                      style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)', color: 'var(--wc-y)' }}
                       onClick={(e) => { e.stopPropagation(); startEdit(exp); }}
                       data-testid={`expense-edit-${exp.id}`}
                     >
@@ -489,7 +489,7 @@ export function ExpensesScreen() {
                   <div className="flex items-center gap-[6px]">
                     <span className="font-semibold text-[14px] text-white">{cat}</span>
                     {isEstimated && (
-                      <span className="font-data text-[8px] uppercase tracking-[.1em] px-[5px] py-[2px] rounded-[4px]" style={{ background: 'rgba(245,158,11,.1)', color: 'var(--wc-am)', border: '1px solid rgba(245,158,11,.2)' }}>
+                      <span className="font-data text-[8px] uppercase tracking-[.1em] px-[5px] py-[2px] rounded-[4px]" style={{ background: 'rgba(153,153,153,.1)', color: 'var(--wc-am)', border: '1px solid rgba(153,153,153,.2)' }}>
                         Est.
                       </span>
                     )}
@@ -506,7 +506,7 @@ export function ExpensesScreen() {
             );
           })}
 
-          <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.25)' }}>
+          <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(255,255,255,.04)', border: '1.5px solid rgba(255,255,255,.25)' }}>
             <div className="flex items-center justify-between">
               <span className="font-heading font-bold text-[15px] uppercase text-white">Total Vehicle Expenses</span>
               <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>${reportData.totalVehicle.toFixed(2)}</span>
@@ -517,7 +517,7 @@ export function ExpensesScreen() {
             </div>
           </div>
 
-          <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
+          <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(153,153,153,.04)', border: '1px solid rgba(153,153,153,.15)' }}>
             <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
             <div className="text-[11px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
               * Fuel estimate is based on {bizKm.toFixed(0)} business km, {litresPer100}L/100km consumption, and ${avgFuelPrice.toFixed(2)}/L avg price. Your tax agent can update these figures at tax time.
@@ -526,7 +526,7 @@ export function ExpensesScreen() {
 
           <button
             className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[15px] uppercase tracking-[.04em] flex items-center justify-center gap-[8px] cursor-pointer transition-all active:scale-[.98] mb-[4px]"
-            style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+            style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
             onClick={handleExportCSV}
             data-testid="button-export-expenses"
           >
@@ -540,7 +540,7 @@ export function ExpensesScreen() {
         <div className="px-[14px] py-[8px] flex-shrink-0">
           <button
             className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
+            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.25)' }}
             onClick={() => setAdding(true)}
             data-testid="button-add-expense"
           >

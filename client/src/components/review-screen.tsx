@@ -114,19 +114,19 @@ export function ReviewScreen() {
           ].map((step, i, arr) => (
             <div key={step.id} className="flex flex-col items-center flex-1 relative">
               {i < arr.length - 1 && (
-                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
+                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(255,255,255,.4)' : 'var(--wc-border)' }} />
               )}
               <div
                 className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
                 style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
+                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.15)' : 'var(--wc-bg)',
+                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(255,255,255,.5)' : '1.5px solid var(--wc-border)',
                   color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
                 }}
               >
                 {step.done ? '\u2713' : i + 1}
               </div>
-              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(255,255,255,.55)' : 'var(--wc-t3)' }}>
                 {step.label}
               </div>
             </div>
@@ -135,18 +135,18 @@ export function ReviewScreen() {
       </div>
 
       {unclassified > 0 && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(245,196,0,.07)', border: '1px solid rgba(245,196,0,.25)' }}>
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(245,196,0,.9)" />
-          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(245,196,0,.85)' }}>
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.25)' }}>
+          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(255,255,255,.9)" />
+          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(255,255,255,.85)' }}>
             <strong style={{ color: 'var(--wc-y)' }}>{unclassified} business trip{unclassified > 1 ? 's' : ''}</strong> have no purpose set &mdash; tap to expand and classify.
           </div>
         </div>
       )}
 
       {unconfirmedGaps > 0 && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(245,158,11,.07)', border: '1px solid rgba(245,158,11,.25)' }}>
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(245,158,11,.9)" />
-          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(245,158,11,.85)' }}>
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(153,153,153,.07)', border: '1px solid rgba(153,153,153,.25)' }}>
+          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(153,153,153,.9)" />
+          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(153,153,153,.85)' }}>
             <strong style={{ color: 'var(--wc-am)' }}>{unconfirmedGaps} gap trip{unconfirmedGaps > 1 ? 's' : ''}</strong> need confirmation before continuing &mdash; expand each gap and tap Confirm.
           </div>
         </div>
@@ -204,16 +204,16 @@ export function ReviewScreen() {
                 key={origIdx}
                 className="rounded-[13px] cursor-pointer transition-all"
                 style={{
-                  background: showGapStyle ? 'rgba(245,158,11,.03)' : 'var(--wc-card)',
-                  border: showGapStyle ? '1px dashed rgba(245,158,11,.3)' : '1px solid var(--wc-border)',
-                  borderLeft: showGapStyle ? '3px dashed rgba(245,158,11,.5)' : t.type === 'business' ? '3px solid rgba(245,196,0,.6)' : '3px solid rgba(180,180,180,.25)',
+                  background: showGapStyle ? 'rgba(153,153,153,.03)' : 'var(--wc-card)',
+                  border: showGapStyle ? '1px dashed rgba(153,153,153,.3)' : '1px solid var(--wc-border)',
+                  borderLeft: showGapStyle ? '3px dashed rgba(153,153,153,.5)' : t.type === 'business' ? '3px solid rgba(255,255,255,.6)' : '3px solid rgba(180,180,180,.25)',
                 }}
                 data-testid={`review-trip-${origIdx}`}
               >
                 <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
                   <div className="flex-1 min-w-0">
                     <div className={`font-semibold text-[13px] mb-[3px] ${isExpanded ? '' : 'truncate'}`} style={{ color: showGapStyle ? 'var(--wc-am)' : 'white' }}>
-                      {isGap && <span className="font-data text-[8px] uppercase tracking-[.08em] mr-[5px] px-[4px] py-[1px] rounded-[3px]" style={{ background: gapConfirmed ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.12)', color: gapConfirmed ? 'var(--wc-gr)' : 'var(--wc-am)', border: gapConfirmed ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(245,158,11,.2)' }}>{gapConfirmed ? 'GAP \u2713' : 'GAP'}</span>}
+                      {isGap && <span className="font-data text-[8px] uppercase tracking-[.08em] mr-[5px] px-[4px] py-[1px] rounded-[3px]" style={{ background: gapConfirmed ? 'rgba(34,197,94,.1)' : 'rgba(153,153,153,.12)', color: gapConfirmed ? 'var(--wc-gr)' : 'var(--wc-am)', border: gapConfirmed ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.2)' }}>{gapConfirmed ? 'GAP \u2713' : 'GAP'}</span>}
                       {t.from} &rarr; {t.to}
                     </div>
                     <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
@@ -228,7 +228,7 @@ export function ReviewScreen() {
                     style={{
                       background: t.type === 'business' ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
                       color: t.type === 'business' ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
-                      border: t.type === 'business' ? '1px solid rgba(245,196,0,.22)' : '1px solid rgba(180,180,180,.15)',
+                      border: t.type === 'business' ? '1px solid rgba(255,255,255,.22)' : '1px solid rgba(180,180,180,.15)',
                     }}
                   >
                     {t.type === 'business' ? 'Business' : 'Personal'}
@@ -236,14 +236,14 @@ export function ReviewScreen() {
                   <div className="text-[14px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>&or;</div>
                 </div>
                 {isExpanded && (
-                  <div className="p-[10px_14px_13px] flex flex-col gap-2 border-t" style={{ borderColor: showGapStyle ? 'rgba(245,158,11,.15)' : 'var(--wc-border)' }}>
+                  <div className="p-[10px_14px_13px] flex flex-col gap-2 border-t" style={{ borderColor: showGapStyle ? 'rgba(153,153,153,.15)' : 'var(--wc-border)' }}>
                     {isGap ? (
                       <div className="text-[11px] leading-[1.6]" style={{ color: 'var(--wc-t3)' }}>
                         {!gapConfirmed && (() => {
                           const status = gapCalcStatus[origIdx] || 'idle';
                           return (
                             <>
-                              <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                              <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.15)' }}>
                                 <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em] mb-[3px]" style={{ color: 'var(--wc-am)' }}>Auto-generated connector</div>
                                 {status === 'loading' && (
                                   <div className="flex items-center gap-[6px] text-[10px]" style={{ color: 'var(--wc-am)' }}>
@@ -278,7 +278,7 @@ export function ReviewScreen() {
                                   step="0.1"
                                   min="0"
                                   className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
-                                  style={{ background: 'rgba(255,255,255,.06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(245,158,11,.25)' }}
+                                  style={{ background: 'rgba(255,255,255,.06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.25)' }}
                                   value={gapKmInputs[origIdx] ?? ''}
                                   onChange={e => setGapKmInputs(prev => ({ ...prev, [origIdx]: e.target.value }))}
                                   onClick={e => e.stopPropagation()}
@@ -323,8 +323,8 @@ export function ReviewScreen() {
                         <button
                           className="flex-1 py-[10px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
                           style={{
-                            background: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'rgba(245,158,11,.15)' : 'rgba(245,158,11,.06)',
-                            border: '1.5px solid rgba(245,158,11,.35)',
+                            background: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'rgba(153,153,153,.15)' : 'rgba(153,153,153,.06)',
+                            border: '1.5px solid rgba(153,153,153,.35)',
                             color: 'var(--wc-am)',
                             opacity: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 1 : 0.5,
                             cursor: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'pointer' : 'not-allowed',
@@ -366,7 +366,7 @@ export function ReviewScreen() {
                           </button>
                           <button
                             className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                            style={{ borderColor: 'rgba(245,196,0,.4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgba(245,196,0,.4)' }}
+                            style={{ borderColor: 'rgba(255,255,255,.4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgba(255,255,255,.4)' }}
                             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
                             data-testid={`reclassify-business-${origIdx}`}
                           >
@@ -428,9 +428,9 @@ export function ReviewScreen() {
         <button
           className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
           style={{
-            background: canContinue ? 'var(--wc-y)' : 'rgba(245,196,0,.25)',
+            background: canContinue ? 'var(--wc-y)' : 'rgba(255,255,255,.25)',
             color: canContinue ? 'black' : 'rgba(0,0,0,.4)',
-            boxShadow: canContinue ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+            boxShadow: canContinue ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
             cursor: canContinue ? 'pointer' : 'not-allowed',
           }}
           onClick={() => canContinue && dispatch({ type: 'GO_SCREEN', screen: 'notes' })}

@@ -49,7 +49,7 @@ export function ExpenseReportsScreen() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `workcar-expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -111,7 +111,7 @@ export function ExpenseReportsScreen() {
             <div className="text-[12px] text-center mt-[4px]" style={{ color: 'var(--wc-t3)' }}>Add expenses first, then come back for reports.</div>
             <button
               className="mt-[12px] rounded-[10px] px-[20px] py-[10px] font-heading font-bold text-[13px] uppercase cursor-pointer"
-              style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
               onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'expenses' })}
               data-testid="button-go-add-expenses"
             >
@@ -132,7 +132,7 @@ export function ExpenseReportsScreen() {
                 <div className="font-data font-bold text-[13px] flex-shrink-0" style={{ color: 'var(--wc-y)' }}>${exp.amount.toFixed(2)}</div>
               </div>
             ))}
-            <div className="flex items-center justify-between pt-[10px] mt-[6px]" style={{ borderTop: '1.5px solid rgba(245,196,0,.2)' }}>
+            <div className="flex items-center justify-between pt-[10px] mt-[6px]" style={{ borderTop: '1.5px solid rgba(255,255,255,.2)' }}>
               <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'white' }}>Total</div>
               <div className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>${totalAmount.toFixed(2)}</div>
             </div>
@@ -144,7 +144,7 @@ export function ExpenseReportsScreen() {
         <div className="px-[14px] py-[8px] flex-shrink-0">
           <button
             className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-[.98]"
-            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
+            style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.25)' }}
             onClick={handleExportCSV}
             data-testid="button-export-expenses"
           >

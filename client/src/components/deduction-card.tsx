@@ -212,7 +212,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
         </div>
 
         {!isLocked && !needsBasics && (
-          <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: isIndustryReady ? 'rgba(245,158,11,.04)' : 'rgba(34,197,94,.04)', border: isIndustryReady ? '1.5px solid rgba(245,158,11,.15)' : '1.5px solid rgba(34,197,94,.15)' }}>
+          <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: isIndustryReady ? 'rgba(153,153,153,.04)' : 'rgba(34,197,94,.04)', border: isIndustryReady ? '1.5px solid rgba(153,153,153,.15)' : '1.5px solid rgba(34,197,94,.15)' }}>
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Estimated Deduction</div>
             <div className="font-display text-[32px] leading-none" style={{ color: isIndustryReady ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
               ${value.toFixed(0)}{isIndustryReady ? '*' : ''}
@@ -228,7 +228,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             <span className="absolute left-[12px] top-1/2 -translate-y-1/2 font-data text-[16px] font-bold" style={{ color: hasPrice ? 'var(--wc-y)' : 'var(--wc-t3)' }}>$</span>
             <input
               className="w-full rounded-[10px] p-[12px_12px_12px_28px] text-[16px] text-white outline-none font-data"
-              style={{ background: 'rgba(255,255,255,.05)', border: hasPrice ? '1.5px solid rgba(245,196,0,.3)' : '1.5px solid rgba(255,255,255,.08)' }}
+              style={{ background: 'rgba(255,255,255,.05)', border: hasPrice ? '1.5px solid rgba(255,255,255,.3)' : '1.5px solid rgba(255,255,255,.08)' }}
               type="number"
               inputMode="numeric"
               value={purchasePrice}
@@ -253,8 +253,8 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             <button
               className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
               style={{
-                background: isNew ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.04)',
-                border: isNew ? '1.5px solid rgba(245,196,0,.4)' : '1px solid rgba(255,255,255,.08)',
+                background: isNew ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.04)',
+                border: isNew ? '1.5px solid rgba(255,255,255,.4)' : '1px solid rgba(255,255,255,.08)',
                 color: isNew ? 'var(--wc-y)' : 'var(--wc-t3)',
               }}
               onClick={() => saveDepYears('new')}
@@ -269,8 +269,8 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
                   key={y}
                   className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
                   style={{
-                    background: active ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.04)',
-                    border: active ? '1.5px solid rgba(245,196,0,.4)' : '1px solid rgba(255,255,255,.08)',
+                    background: active ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.04)',
+                    border: active ? '1.5px solid rgba(255,255,255,.4)' : '1px solid rgba(255,255,255,.08)',
                     color: active ? 'var(--wc-y)' : 'var(--wc-t3)',
                   }}
                   onClick={() => saveDepYears(String(y))}
@@ -293,7 +293,7 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
           {(needsBasics || isLocked) && hasPrice && hasDep && (
             <button
               className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-              style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgba(255,255,255,.08)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
               onClick={onClose}
               data-testid="button-prompt-done"
             >
@@ -426,8 +426,8 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
               key={i}
               className="w-full rounded-[11px] py-[11px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
               style={{
-                background: i === 0 ? 'rgba(245,196,0,.08)' : 'rgba(255,255,255,.04)',
-                border: i === 0 ? '1.5px solid rgba(245,196,0,.3)' : '1px solid var(--wc-border)',
+                background: i === 0 ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.04)',
+                border: i === 0 ? '1.5px solid rgba(255,255,255,.3)' : '1px solid var(--wc-border)',
                 color: i === 0 ? 'var(--wc-y)' : 'var(--wc-t2)',
               }}
               onClick={() => onNavigate(btn.screen)}
@@ -465,8 +465,8 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
       <button
         className="w-full rounded-xl p-[12px_14px] flex items-center gap-[10px] text-left cursor-pointer transition-all active:scale-[.99]"
         style={{
-          background: state === 'locked' ? 'rgba(239,68,68,.03)' : 'rgba(245,158,11,.03)',
-          border: state === 'locked' ? '1px solid rgba(239,68,68,.15)' : '1px solid rgba(245,158,11,.15)',
+          background: state === 'locked' ? 'rgba(239,68,68,.03)' : 'rgba(153,153,153,.03)',
+          border: state === 'locked' ? '1px solid rgba(239,68,68,.15)' : '1px solid rgba(153,153,153,.15)',
         }}
         onClick={() => setShowModal(true)}
         data-testid="card-deduction-readiness"
@@ -474,8 +474,8 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
         <div
           className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0"
           style={{
-            background: state === 'locked' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.08)',
-            border: state === 'locked' ? '1px solid rgba(239,68,68,.2)' : '1px solid rgba(245,158,11,.2)',
+            background: state === 'locked' ? 'rgba(239,68,68,.08)' : 'rgba(153,153,153,.08)',
+            border: state === 'locked' ? '1px solid rgba(239,68,68,.2)' : '1px solid rgba(153,153,153,.2)',
           }}
         >
           {state === 'locked' ? (
@@ -536,7 +536,7 @@ export function CalculationBreakdown({ className = '' }: { className?: string })
 
   return (
     <div className={className}>
-      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(245,158,11,.04)', border: '1.5px solid rgba(245,158,11,.15)' }}>
+      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(153,153,153,.04)', border: '1.5px solid rgba(153,153,153,.15)' }}>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Estimated Deduction</div>
         <div className="font-display text-[28px] leading-none" style={{ color: 'var(--wc-am)' }}>
           ${deduction.toLocaleString()}*
@@ -546,15 +546,15 @@ export function CalculationBreakdown({ className = '' }: { className?: string })
       <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: 'var(--wc-y)' }}>The Formula</div>
         <div className="flex items-center gap-[6px] mb-[6px] flex-wrap">
-          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
           </div>
           <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>&times;</span>
-          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
           </div>
           <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>=</span>
-          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}>
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-am)' }}>${deduction.toLocaleString()}</span>
           </div>
         </div>
@@ -571,7 +571,7 @@ export function CalculationBreakdown({ className = '' }: { className?: string })
             <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t2)' }}>${item.value.toLocaleString()}</span>
           </div>
         ))}
-        <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgba(245,196,0,.2)' }}>
+        <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgba(255,255,255,.2)' }}>
           <span className="text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>Total vehicle costs</span>
           <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
         </div>

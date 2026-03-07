@@ -92,9 +92,9 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   const CW = PW - ML - MR;
   let y = MT;
 
-  const Y: [number, number, number] = [245, 196, 0];
+  const Y: [number, number, number] = [120, 120, 120];
   const GR: [number, number, number] = [26, 107, 58];
-  const GY: [number, number, number] = [160, 120, 10];
+  const GY: [number, number, number] = [100, 100, 100];
   const BK: [number, number, number] = [17, 17, 17];
   const GG: [number, number, number] = [120, 120, 120];
 
@@ -110,7 +110,7 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   function checkY(needed: number) { if (y + needed > PH - 16) addPage(); }
   function addFooter() {
     doc.setFontSize(7); doc.setTextColor(...GG);
-    doc.text(`WorkCar \u00B7 workcar.com.au \u00B7 ATO FY 2024\u20132025 \u00B7 Combined (${combined.sessionCount} sessions) \u00B7 Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
+    doc.text(`Trip Logbook \u00B7 ATO FY 2024\u20132025 \u00B7 Combined (${combined.sessionCount} sessions) \u00B7 Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
     doc.setDrawColor(230, 230, 230);
     doc.line(ML, PH - 11, PW - MR, PH - 11);
   }
@@ -123,11 +123,9 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
 
   doc.setFillColor(...Y); doc.rect(ML, y, CW, 1.2, 'F'); y += 4;
   doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
-  doc.text('Work', ML, y + 6);
-  const workW = doc.getTextWidth('Work');
-  doc.setTextColor(...GY); doc.text('Car', ML + workW, y + 6);
+  doc.text('Trip Logbook', ML, y + 6);
   doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
-  doc.text('workcar.com.au  \u00B7  ATO Compliant Vehicle Logbook', ML, y + 11);
+  doc.text('ATO Compliant Vehicle Logbook', ML, y + 11);
   doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GR);
   doc.text(`COMBINED REPORT \u00B7 ${combined.sessionCount} SESSIONS`, ML, y + 16);
 
@@ -182,8 +180,8 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
   const hdrH = 6.5;
 
-  doc.setFillColor(250, 246, 220); doc.rect(ML, y, CW, hdrH, 'F');
-  doc.setDrawColor(210, 190, 80); doc.rect(ML, y, CW, hdrH, 'S');
+  doc.setFillColor(240, 240, 240); doc.rect(ML, y, CW, hdrH, 'F');
+  doc.setDrawColor(180, 180, 180); doc.rect(ML, y, CW, hdrH, 'S');
   let cx = ML;
   cols.forEach((h, i) => {
     doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
@@ -232,8 +230,8 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   });
 
   checkY(7);
-  doc.setFillColor(250, 246, 220); doc.rect(ML, y, CW, 6.5, 'F');
-  doc.setDrawColor(210, 190, 80); doc.rect(ML, y, CW, 6.5, 'S');
+  doc.setFillColor(240, 240, 240); doc.rect(ML, y, CW, 6.5, 'F');
+  doc.setDrawColor(180, 180, 180); doc.rect(ML, y, CW, 6.5, 'S');
   doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
   doc.text('Totals', ML + 1.5, y + 4.5);
   const totStart = colW.slice(0, 6).reduce((a, b) => a + b, 0);
@@ -265,7 +263,7 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   checkY(30);
   sectionTitle('Legal Disclaimer');
   doc.setFillColor(255, 248, 248); doc.setDrawColor(220, 180, 180);
-  const discText = 'This report is produced by WorkCar (workcar.com.au) as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. Consult a registered tax agent (RTA) or licensed accountant for advice specific to your circumstances. All data is user-provided.';
+  const discText = 'This report is produced as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. Consult a registered tax agent (RTA) or licensed accountant for advice specific to your circumstances. All data is user-provided.';
   const discLines = doc.splitTextToSize(discText, CW - 8);
   checkY(discLines.length * 4 + 10);
   doc.rect(ML, y - 2, CW, discLines.length * 4 + 8, 'FD');
@@ -274,7 +272,7 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   y += discLines.length * 4 + 12;
 
   addFooter();
-  const filename = `workcar-combined-logbook-${new Date().toISOString().slice(0,10)}.pdf`;
+  const filename = `combined-logbook-${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
 }
 
@@ -308,7 +306,7 @@ function exportCombinedCSV(combined: any) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `workcar-combined-logbook-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `combined-logbook-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -384,12 +382,12 @@ export function ExportScreen() {
           </div>
         ) : (
           <>
-            <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.15)' }}>
+            <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
               <div className="flex items-center justify-between mb-[8px]">
                 <span className="font-heading font-bold text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Select Reports to Combine</span>
                 <button
                   className="font-heading font-bold text-[11px] uppercase tracking-[.04em] px-[10px] py-[4px] rounded-[6px]"
-                  style={{ background: selected.size === activeReports.length ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.06)', color: selected.size === activeReports.length ? 'var(--wc-y)' : 'white', border: '1px solid rgba(255,255,255,.1)' }}
+                  style={{ background: selected.size === activeReports.length ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.06)', color: selected.size === activeReports.length ? 'var(--wc-y)' : 'white', border: '1px solid rgba(255,255,255,.1)' }}
                   onClick={selectAll}
                   data-testid="button-select-all"
                 >
@@ -409,8 +407,8 @@ export function ExportScreen() {
                       key={r.globalIdx}
                       className="flex items-center gap-[10px] rounded-[10px] p-[10px_12px] text-left cursor-pointer transition-all"
                       style={{
-                        background: isSelected ? 'rgba(245,196,0,.08)' : 'rgba(255,255,255,.02)',
-                        border: isSelected ? '1.5px solid rgba(245,196,0,.35)' : '1px solid rgba(255,255,255,.06)',
+                        background: isSelected ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.02)',
+                        border: isSelected ? '1.5px solid rgba(255,255,255,.35)' : '1px solid rgba(255,255,255,.06)',
                       }}
                       onClick={() => toggleReport(r.globalIdx)}
                       data-testid={`select-report-${r.globalIdx}`}
@@ -538,7 +536,7 @@ export function ExportScreen() {
 
       {vehicleModal && (
         <div className="fixed inset-0 z-[400] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }} onClick={() => setVehicleModal(false)}>
-          <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.25)' }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.25)' }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-[16px] py-[13px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
               <div className="flex items-center gap-[8px]">
                 <FileText className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />

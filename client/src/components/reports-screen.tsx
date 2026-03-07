@@ -39,7 +39,7 @@ async function loadJsPDF(): Promise<any> {
 }
 
 function InfoBlock({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  const borderColor = color === 'y' ? 'rgba(245,196,0,.2)' : color === 'gr' ? 'rgba(34,197,94,.15)' : color === 'am' ? 'rgba(245,158,11,.2)' : color === 're' ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.07)';
+  const borderColor = color === 'y' ? 'rgba(255,255,255,.2)' : color === 'gr' ? 'rgba(34,197,94,.15)' : color === 'am' ? 'rgba(153,153,153,.2)' : color === 're' ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.07)';
   const titleColor = color === 'y' ? 'var(--wc-y)' : color === 'gr' ? 'var(--wc-gr)' : color === 'am' ? 'var(--wc-am)' : color === 're' ? '#EF4444' : 'white';
   return (
     <div className="rounded-[12px] p-[14px_16px]" style={{ background: 'rgba(255,255,255,.02)', border: `1px solid ${borderColor}` }}>
@@ -68,7 +68,7 @@ function TableRow({ label, val, highlight, tip }: { label: string; val: string; 
       </div>
       <span className="text-[14px] font-data text-white" style={{ color: highlight ? 'var(--wc-y)' : 'white', fontWeight: highlight ? 700 : 400 }}>{val}</span>
       {showTip && tip && (
-        <div className="mt-[4px] rounded-[8px] p-[8px_10px] text-[11px] leading-[1.5] text-white/80" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.15)' }}>
+        <div className="mt-[4px] rounded-[8px] p-[8px_10px] text-[11px] leading-[1.5] text-white/80" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)' }}>
           {tip}
         </div>
       )}
@@ -86,9 +86,9 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const CW = PW - ML - MR;
   let y = MT;
 
-  const Y: [number, number, number] = [245, 196, 0];
+  const Y: [number, number, number] = [120, 120, 120];
   const GR: [number, number, number] = [26, 107, 58];
-  const GY: [number, number, number] = [160, 120, 10];
+  const GY: [number, number, number] = [100, 100, 100];
   const BK: [number, number, number] = [17, 17, 17];
   const GG: [number, number, number] = [120, 120, 120];
 
@@ -113,7 +113,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   function addFooter() {
     doc.setFontSize(7);
     doc.setTextColor(...GG);
-    doc.text(`WorkCar \u00B7 workcar.com.au \u00B7 ATO FY 2024\u20132025 \u00B7 Rev ${report.revision} \u00B7 Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
+    doc.text(`Trip Logbook \u00B7 ATO FY 2024\u20132025 \u00B7 Rev ${report.revision} \u00B7 Generated ${generatedAt}`, PW / 2, PH - 8, { align: 'center' });
     doc.setDrawColor(230, 230, 230);
     doc.line(ML, PH - 11, PW - MR, PH - 11);
   }
@@ -138,15 +138,12 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...BK);
-  doc.text('Work', ML, y + 6);
-  const workW = doc.getTextWidth('Work');
-  doc.setTextColor(...GY);
-  doc.text('Car', ML + workW, y + 6);
+  doc.text('Trip Logbook', ML, y + 6);
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GG);
-  doc.text('workcar.com.au  \u00B7  ATO Compliant Vehicle Logbook', ML, y + 11);
+  doc.text('ATO Compliant Vehicle Logbook', ML, y + 11);
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
@@ -214,9 +211,9 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
   const hdrH = 6.5;
 
-  doc.setFillColor(250, 246, 220);
+  doc.setFillColor(240, 240, 240);
   doc.rect(ML, y, CW, hdrH, 'F');
-  doc.setDrawColor(210, 190, 80);
+  doc.setDrawColor(180, 180, 180);
   doc.rect(ML, y, CW, hdrH, 'S');
   let cx = ML;
   cols.forEach((h, i) => {
@@ -272,9 +269,9 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   });
 
   checkY(7);
-  doc.setFillColor(250, 246, 220);
+  doc.setFillColor(240, 240, 240);
   doc.rect(ML, y, CW, 6.5, 'F');
-  doc.setDrawColor(210, 190, 80);
+  doc.setDrawColor(180, 180, 180);
   doc.rect(ML, y, CW, 6.5, 'S');
   doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BK);
   doc.text('Totals', ML + 1.5, y + 4.5);
@@ -286,14 +283,14 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.text(`$${totalEst.toFixed(2)}`, ML + totStart + colW[6] + colW[7] + 1.5, y + 4.5);
   y += 10;
 
-  sectionTitle('WorkCar Audit Score & Compliance Notes');
+  sectionTitle('Audit Score & Compliance Notes');
   checkY(30);
 
   doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GY);
   doc.text(`${report.auditScore}%`, ML, y + 7);
   const scoreW = doc.getTextWidth(`${report.auditScore}%`);
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
-  doc.text('WorkCar Pre-Audit Score', ML + scoreW + 3, y + 6);
+  doc.text('Pre-Audit Score', ML + scoreW + 3, y + 6);
 
   y += 10;
   (report.areasToCheck || ['All clear \u2014 looking good for ATO compliance']).forEach((a: string) => {
@@ -342,7 +339,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   doc.setFillColor(255, 248, 248);
   doc.setDrawColor(220, 180, 180);
-  const discText = 'This report is produced by WorkCar (workcar.com.au) as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. For advice specific to your circumstances \u2014 including pro-rata adjustments, depreciation schedules, and edge cases \u2014 consult a registered tax agent (RTA) or licensed accountant. False or inflated deduction claims are a serious offence under the Income Tax Assessment Act 1997 and may result in penalties, interest charges, or prosecution. WorkCar does not warrant that this report satisfies all ATO record-keeping obligations. All data is user-provided.';
+  const discText = 'This report is produced as a vehicle logbook record-keeping tool only. It does not constitute financial, tax, or legal advice. The accuracy of all trip classifications, odometer readings, business purposes, and deduction amounts is the sole legal responsibility of the taxpayer. For advice specific to your circumstances \u2014 including pro-rata adjustments, depreciation schedules, and edge cases \u2014 consult a registered tax agent (RTA) or licensed accountant. False or inflated deduction claims are a serious offence under the Income Tax Assessment Act 1997 and may result in penalties, interest charges, or prosecution. This application does not warrant that this report satisfies all ATO record-keeping obligations. All data is user-provided.';
   const discLines = doc.splitTextToSize(discText, CW - 8);
   checkY(discLines.length * 4 + 10);
   doc.rect(ML, y - 2, CW, discLines.length * 4 + 8, 'FD');
@@ -352,7 +349,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   addFooter();
 
-  const filename = `workcar-logbook-rev${report.revision}-${new Date().toISOString().slice(0,10)}.pdf`;
+  const filename = `logbook-rev${report.revision}-${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(filename);
 }
 
@@ -386,7 +383,7 @@ function exportCSV(report: any) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `workcar-logbook-rev${report.revision}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `logbook-rev${report.revision}-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -485,15 +482,15 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
             <div key={i} className="flex-1 rounded-[4px] overflow-hidden relative"
               style={{
                 height: '32px',
-                background: isCurrent && !covered ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.05)',
-                border: isCurrent ? '1.5px solid rgba(245,196,0,.35)' : 'none',
+                background: isCurrent && !covered ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.05)',
+                border: isCurrent ? '1.5px solid rgba(255,255,255,.35)' : 'none',
               }}>
               {covered && (
                 <div className="absolute left-0 top-0 bottom-0 rounded-[4px]"
                   style={{
                     width: `${fillPct}%`,
                     background: 'var(--wc-y)',
-                    boxShadow: '0 0 8px rgba(245,196,0,.2)',
+                    boxShadow: '0 0 8px rgba(255,255,255,.2)',
                   }}
                 />
               )}
@@ -512,7 +509,7 @@ function TwelveWeekTimeline({ savedReports }: { savedReports: any[] }) {
         {[
           { label: 'Full week', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'var(--wc-y)' }} /> },
           { label: 'Partial', custom: <div className="w-[12px] h-[12px] rounded-[3px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.05)' }}><div className="absolute left-0 top-0 bottom-0" style={{ width: '50%', background: 'var(--wc-y)' }} /></div> },
-          { label: 'This week', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'rgba(245,196,0,.12)', border: '1.5px solid rgba(245,196,0,.35)' }} /> },
+          { label: 'This week', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.12)', border: '1.5px solid rgba(255,255,255,.35)' }} /> },
           { label: 'No data', custom: <div className="w-[12px] h-[12px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.05)' }} /> },
         ].map((l, i) => (
           <div key={i} className="flex items-center gap-[6px]">
@@ -579,7 +576,7 @@ function VehicleDetailsModal({
 
   return (
     <div className="fixed inset-0 z-[400] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }} onClick={onClose}>
-      <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.25)' }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.25)' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-[16px] py-[13px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
           <div className="flex items-center gap-[8px]">
             <FileText className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
@@ -657,8 +654,8 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
     return {
       start: new Date(Math.min(...dates.map(d => d.getTime()))),
       end: new Date(Math.max(...dates.map(d => d.getTime()))),
-      color: ri % 2 === 0 ? 'rgba(245,196,0,.18)' : 'rgba(34,197,94,.14)',
-      borderColor: ri % 2 === 0 ? 'rgba(245,196,0,.45)' : 'rgba(34,197,94,.35)',
+      color: ri % 2 === 0 ? 'rgba(255,255,255,.18)' : 'rgba(34,197,94,.14)',
+      borderColor: ri % 2 === 0 ? 'rgba(255,255,255,.45)' : 'rgba(34,197,94,.35)',
     };
   }).filter(Boolean);
 
@@ -732,9 +729,9 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
               if (isRangeStart || isRangeEnd) cellBorder = `1px solid ${inCoverage.borderColor}`;
             }
             if (tod) {
-              cellBg = 'rgba(245,196,0,.2)';
+              cellBg = 'rgba(255,255,255,.2)';
               borderRadius = '6px';
-              cellBorder = '1.5px solid rgba(245,196,0,.55)';
+              cellBorder = '1.5px solid rgba(255,255,255,.55)';
             }
 
             return (
@@ -756,7 +753,7 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
 
                 {hasTrips && (
                   <div className="flex gap-[2px] mt-[2px]">
-                    {biz > 0 && <div className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-y)', boxShadow: '0 0 3px rgba(245,196,0,.6)' }} />}
+                    {biz > 0 && <div className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-y)', boxShadow: '0 0 3px rgba(255,255,255,.6)' }} />}
                     {per > 0 && <div className="w-[4px] h-[4px] rounded-full" style={{ background: 'rgba(255,255,255,.3)' }} />}
                   </div>
                 )}
@@ -768,11 +765,11 @@ function CalendarView({ savedReports, exportLog }: { savedReports: any[]; export
 
       <div className="px-[12px] py-[8px] mt-[4px] flex flex-wrap gap-x-[10px] gap-y-[4px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
         {[
-          { el: <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-y)', boxShadow: '0 0 3px rgba(245,196,0,.5)' }} />, label: 'Business trip' },
+          { el: <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-y)', boxShadow: '0 0 3px rgba(255,255,255,.5)' }} />, label: 'Business trip' },
           { el: <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'rgba(255,255,255,.3)' }} />, label: 'Personal trip' },
-          { el: <div className="w-[14px] h-[8px] rounded-[2px]" style={{ background: 'rgba(245,196,0,.18)', border: '1px solid rgba(245,196,0,.45)' }} />, label: 'Report coverage' },
+          { el: <div className="w-[14px] h-[8px] rounded-[2px]" style={{ background: 'rgba(255,255,255,.18)', border: '1px solid rgba(255,255,255,.45)' }} />, label: 'Report coverage' },
           { el: <div className="w-[7px] h-[7px] rounded-full flex items-center justify-center" style={{ background: 'var(--wc-gr)' }}><Download style={{ width: '4px', height: '4px', color: '#fff' }} /></div>, label: 'Exported' },
-          { el: <div className="w-[10px] h-[10px] rounded-[3px]" style={{ background: 'rgba(245,196,0,.2)', border: '1.5px solid rgba(245,196,0,.55)' }} />, label: 'Today' },
+          { el: <div className="w-[10px] h-[10px] rounded-[3px]" style={{ background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.55)' }} />, label: 'Today' },
         ].map((l, i) => (
           <div key={i} className="flex items-center gap-[4px]">
             {l.el}
@@ -799,7 +796,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
     { label: 'Business trip purposes labelled', desc: `${withPurpose} of ${bizTrips.length} have a purpose`, pass: withPurpose === bizTrips.length && bizTrips.length > 0, required: true },
     { label: 'Business trip notes added', desc: `${withNotes} of ${bizTrips.length} have notes (client/site details)`, pass: withNotes === bizTrips.length && bizTrips.length > 0, required: false },
     { label: 'Odometer reading recorded', desc: hasOdo ? `${report.lastOdoReading?.toLocaleString('en-AU')} km verified` : 'No odometer reading saved', pass: hasOdo, required: true },
-    { label: 'Logbook covers a continuous period', desc: 'WorkCar records trips as they occur in real-time', pass: true, required: true },
+    { label: 'Logbook covers a continuous period', desc: 'Trips are recorded as they occur in real-time', pass: true, required: true },
     { label: 'Odometer verified on business trips', desc: `${verified} of ${bizTrips.length} trips odometer-verified`, pass: verified === bizTrips.length && bizTrips.length > 0, required: false },
     { label: 'Photo evidence attached to trips', desc: `${withPhoto} of ${bizTrips.length} trips have photos`, pass: withPhoto > 0, required: false },
     { label: 'Vehicle details on file', desc: 'Make, model, registration — add in your tax return', pass: false, required: false },
@@ -810,7 +807,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
 
   return (
     <div className="fixed inset-0 z-[300] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(6px)' }} onClick={onClose}>
-      <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.2)', maxHeight: '88vh' }} onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.2)', maxHeight: '88vh' }} onClick={e => e.stopPropagation()}>
 
         <div className="flex items-center justify-between px-[16px] py-[13px]" style={{ borderBottom: '1px solid var(--wc-border)' }}>
           <div className="flex items-center gap-[8px]">
@@ -824,11 +821,11 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
 
         <div className="overflow-y-auto p-[12px_16px] flex flex-col gap-[8px]" style={{ maxHeight: 'calc(88vh - 58px)' }}>
 
-          <div className="rounded-[10px] p-[10px_12px]" style={{ background: requiredFails > 0 ? 'rgba(245,158,11,.06)' : 'rgba(34,197,94,.05)', border: `1px solid ${requiredFails > 0 ? 'rgba(245,158,11,.25)' : 'rgba(34,197,94,.2)'}` }}>
+          <div className="rounded-[10px] p-[10px_12px]" style={{ background: requiredFails > 0 ? 'rgba(153,153,153,.06)' : 'rgba(34,197,94,.05)', border: `1px solid ${requiredFails > 0 ? 'rgba(153,153,153,.25)' : 'rgba(34,197,94,.2)'}` }}>
             <div className="flex items-center justify-between mb-[5px]">
               <span className="font-heading font-bold text-[13px] text-white">{passCount}/{checks.length} checks passed</span>
               <span className="font-heading font-bold text-[10px] px-[7px] py-[2px] rounded-[5px]"
-                style={{ background: requiredFails > 0 ? 'rgba(245,158,11,.15)' : 'rgba(34,197,94,.12)', color: requiredFails > 0 ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
+                style={{ background: requiredFails > 0 ? 'rgba(153,153,153,.15)' : 'rgba(34,197,94,.12)', color: requiredFails > 0 ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
                 {requiredFails > 0 ? `${requiredFails} required issue${requiredFails > 1 ? 's' : ''}` : 'Ready to export'}
               </span>
             </div>
@@ -850,7 +847,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
                 <div className="flex items-center gap-[5px] flex-wrap">
                   <span className="font-heading font-bold text-[11px] text-white">{c.label}</span>
                   {c.required && !c.pass && (
-                    <span className="font-data text-[7px] uppercase tracking-[.06em] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(245,158,11,.15)', color: 'var(--wc-am)' }}>Required</span>
+                    <span className="font-data text-[7px] uppercase tracking-[.06em] px-[4px] py-[1px] rounded-[3px]" style={{ background: 'rgba(153,153,153,.15)', color: 'var(--wc-am)' }}>Required</span>
                   )}
                 </div>
                 <div className="flex items-center gap-[6px]">
@@ -858,7 +855,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
                   {(c.label === 'Photo evidence attached to trips' || c.label === 'Odometer verified on business trips') && (
                     <button
                       className="font-heading font-bold text-[8px] uppercase tracking-[.05em] px-[6px] py-[2px] rounded-[4px] flex-shrink-0 cursor-pointer transition-all active:scale-95"
-                      style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+                      style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
                       onClick={() => setShowOdoInfo(true)}
                       data-testid="button-see-more-odo"
                     >
@@ -884,7 +881,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             <div className="flex items-start gap-[5px]">
               <AlertTriangle className="w-[11px] h-[11px] flex-shrink-0 mt-[1px]" style={{ color: 'rgba(239,68,68,.6)' }} />
               <p className="text-[9px] leading-[1.55]" style={{ color: 'rgba(239,68,68,.7)' }}>
-                <strong style={{ color: 'rgba(239,68,68,.9)' }}>Legal responsibility.</strong> You are solely responsible for the accuracy of all claims. WorkCar provides record-keeping tools only — not tax advice. For discretionary or edge-case deductions, seek advice from a <strong style={{ color: 'rgba(239,68,68,.9)' }}>registered tax agent (RTA)</strong> or licensed accountant. Refer to ATO TR 2021/1 and PCG 2021/3. False or inflated claims are a serious offence under the <em>Income Tax Assessment Act 1997</em>.
+                <strong style={{ color: 'rgba(239,68,68,.9)' }}>Legal responsibility.</strong> You are solely responsible for the accuracy of all claims. This application provides record-keeping tools only — not tax advice. For discretionary or edge-case deductions, seek advice from a <strong style={{ color: 'rgba(239,68,68,.9)' }}>registered tax agent (RTA)</strong> or licensed accountant. Refer to ATO TR 2021/1 and PCG 2021/3. False or inflated claims are a serious offence under the <em>Income Tax Assessment Act 1997</em>.
               </p>
             </div>
           </div>
@@ -900,7 +897,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
         >
           <div
             className="w-[360px] max-h-[80vh] rounded-[18px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.3)', boxShadow: '0 8px 40px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-[16px] py-[14px] flex-shrink-0" style={{ borderBottom: '1px solid var(--wc-border)' }}>
@@ -919,7 +916,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             </div>
 
             <div className="overflow-y-auto p-[16px] flex flex-col gap-[14px]">
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}>
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Camera className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
                   <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>About Photo Evidence</span>
@@ -939,7 +936,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
                 </p>
               </div>
 
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.15)' }}>
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(153,153,153,.05)', border: '1px solid rgba(153,153,153,.15)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Clock className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
                   <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-am)' }}>Periodic Odometer Updates</span>
@@ -953,7 +950,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
                 <div className="flex items-start gap-[6px]">
                   <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[2px]" style={{ color: 'rgba(239,68,68,.7)' }} />
                   <p className="text-[11px] leading-[1.55]" style={{ color: 'rgba(239,68,68,.8)' }}>
-                    <strong style={{ color: 'rgba(239,68,68,.95)' }}>Your responsibility.</strong> WorkCar is not liable for keeping odometer readings accurate. You must verify the readings for all trips you wish to disclose to the ATO to calculate your logbook deductions. Always ensure the information you provide is truthful and complete.
+                    <strong style={{ color: 'rgba(239,68,68,.95)' }}>Your responsibility.</strong> This application is not liable for keeping odometer readings accurate. You must verify the readings for all trips you wish to disclose to the ATO to calculate your logbook deductions. Always ensure the information you provide is truthful and complete.
                   </p>
                 </div>
               </div>
@@ -962,7 +959,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             <div className="px-[16px] py-[12px] flex-shrink-0" style={{ borderTop: '1px solid var(--wc-border)' }}>
               <button
                 className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[14px] tracking-[.05em] uppercase text-black cursor-pointer transition-all active:scale-[.97]"
-                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(245,196,0,.25)' }}
+                style={{ background: 'var(--wc-y)', boxShadow: '0 2px 12px rgba(255,255,255,.25)' }}
                 onClick={() => setShowOdoInfo(false)}
                 data-testid="button-got-it-odo"
               >
@@ -1029,7 +1026,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               s.25-10 ITAA 1997 — Motor vehicle expenses
             </InfoBlock>
             <InfoBlock title="Always seek professional advice" color="am">
-              WorkCar calculates estimates using the logbook method (business use % &times; total vehicle running costs). Provide this report as logbook evidence to your registered tax agent or accountant for final deduction calculation.
+              This app calculates estimates using the logbook method (business use % &times; total vehicle running costs). Provide this report as logbook evidence to your registered tax agent or accountant for final deduction calculation.
             </InfoBlock>
           </>)}
 
@@ -1038,8 +1035,8 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               Pro-rata applies when you didn't hold the vehicle for the full income year (1 Jul – 30 Jun): purchased mid-year, sold mid-year, car written off, or used only part of the year.
             </InfoBlock>
 
-            <div className="rounded-[12px]" style={{ border: '1px solid rgba(245,196,0,.2)' }}>
-              <div className="px-[14px] py-[10px] rounded-t-[12px]" style={{ background: 'rgba(245,196,0,.07)', borderBottom: '1px solid rgba(245,196,0,.2)' }}>
+            <div className="rounded-[12px]" style={{ border: '1px solid rgba(255,255,255,.2)' }}>
+              <div className="px-[14px] py-[10px] rounded-t-[12px]" style={{ background: 'rgba(255,255,255,.07)', borderBottom: '1px solid rgba(255,255,255,.2)' }}>
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>Example — Mid-Year Purchase</span>
               </div>
               <div className="p-[14px_16px] flex flex-col gap-[3px] overflow-y-auto" style={{ maxHeight: '320px' }}>
@@ -1199,8 +1196,8 @@ export function ReportsScreen() {
           <button key={id}
             className="flex items-center gap-[4px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold uppercase tracking-[.04em] transition-all text-[18px]"
             style={{
-              background: view === id ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.03)',
-              border: `1px solid ${view === id ? 'rgba(245,196,0,.35)' : 'var(--wc-border)'}`,
+              background: view === id ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.03)',
+              border: `1px solid ${view === id ? 'rgba(255,255,255,.35)' : 'var(--wc-border)'}`,
               color: view === id ? 'var(--wc-y)' : 'var(--wc-t3)',
             }}
             onClick={() => setView(id)}
@@ -1235,7 +1232,7 @@ export function ReportsScreen() {
               return (
                 <div key={group.sessionId}
                   className={isLinked ? 'rounded-[16px] p-[8px] flex flex-col gap-[6px]' : 'flex flex-col gap-[6px]'}
-                  style={isLinked ? { border: '2px solid rgba(245,196,0,.4)', background: 'rgba(245,196,0,.03)' } : {}}
+                  style={isLinked ? { border: '2px solid rgba(255,255,255,.4)', background: 'rgba(255,255,255,.03)' } : {}}
                   data-testid={`session-group-${group.sessionId}`}>
 
                   {isLinked && (
@@ -1247,7 +1244,7 @@ export function ReportsScreen() {
                       </div>
                       <button
                         className="flex items-center gap-[6px] rounded-[8px] p-[5px_8px] cursor-pointer text-left"
-                        style={{ background: hasActive ? 'rgba(34,197,94,.06)' : 'rgba(245,158,11,.1)', border: `1px solid ${hasActive ? 'rgba(34,197,94,.2)' : 'rgba(245,158,11,.3)'}` }}
+                        style={{ background: hasActive ? 'rgba(34,197,94,.06)' : 'rgba(153,153,153,.1)', border: `1px solid ${hasActive ? 'rgba(34,197,94,.2)' : 'rgba(153,153,153,.3)'}` }}
                         onClick={() => setConflictSessionId(group.sessionId)}
                         data-testid={`button-resolve-${group.sessionId}`}>
                         {hasActive
@@ -1274,7 +1271,7 @@ export function ReportsScreen() {
                           background: 'var(--wc-card)',
                           border: isLinked
                             ? `1.5px solid ${!r.supersedes ? 'rgba(34,197,94,.35)' : 'var(--wc-border)'}`
-                            : `1px solid ${isOpen ? 'rgba(245,196,0,.25)' : 'var(--wc-border)'}`,
+                            : `1px solid ${isOpen ? 'rgba(255,255,255,.25)' : 'var(--wc-border)'}`,
                           opacity: r.supersedes ? 0.62 : 1,
                         }}
                         data-testid={`report-${i}`}>
@@ -1292,7 +1289,7 @@ export function ReportsScreen() {
                               )}
                               {r.supersedes && isLinked && (
                                 <span className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px] cursor-pointer"
-                                  style={{ background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.4)', color: 'var(--wc-y)' }}
+                                  style={{ background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.4)', color: 'var(--wc-y)' }}
                                   onClick={e => { e.stopPropagation(); dispatch({ type: 'PROMOTE_REPORT', reportIndex: i }); }}
                                   data-testid={`badge-make-active-${i}`}>
                                   <ArrowUpCircle className="w-[11px] h-[11px]" />Make Active
@@ -1338,7 +1335,7 @@ export function ReportsScreen() {
                             {!r.supersedes && (
                               <div className="flex gap-[5px] mt-[10px] mb-[8px]">
                                 <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
-                                  style={{ background: 'rgba(245,196,0,.1)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+                                  style={{ background: 'rgba(255,255,255,.1)', border: '1.5px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
                                   onClick={() => handleExportPDF(r)}
                                   data-testid={`button-export-pdf-${i}`}>
                                   <FileText className="w-[12px] h-[12px]" />PDF
@@ -1393,7 +1390,7 @@ export function ReportsScreen() {
                             <div className="rounded-[8px] overflow-x-auto mb-[10px]" style={{ border: '1px solid var(--wc-border)' }}>
                               <table className="w-full font-data text-[8px]" style={{ borderCollapse: 'collapse', minWidth: '420px' }}>
                                 <thead>
-                                  <tr style={{ background: 'rgba(245,196,0,.07)' }}>
+                                  <tr style={{ background: 'rgba(255,255,255,.07)' }}>
                                     {['Date','ODO Start','ODO End','Type','km','Biz km','Est $'].map(h => (
                                       <th key={h} className="p-[4px_6px] text-left font-bold" style={{ color: 'var(--wc-y)', borderBottom: '1px solid var(--wc-border)' }}>{h}</th>
                                     ))}
@@ -1403,7 +1400,7 @@ export function ReportsScreen() {
                                   {allTrips.map((t: any, ti: number) => {
                                     const isBiz = t.type === 'business';
                                     return (
-                                      <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', background: isBiz ? 'rgba(245,196,0,.025)' : 'transparent' }}>
+                                      <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', background: isBiz ? 'rgba(255,255,255,.025)' : 'transparent' }}>
                                         <td className="p-[3px_6px] text-white">{t.date}</td>
                                         <td className="p-[3px_6px] text-white">{t.odoStart?.toLocaleString('en-AU') ?? '\u2014'}</td>
                                         <td className="p-[3px_6px] text-white">{t.odoEnd?.toLocaleString('en-AU') ?? '\u2014'}</td>
@@ -1414,7 +1411,7 @@ export function ReportsScreen() {
                                       </tr>
                                     );
                                   })}
-                                  <tr style={{ borderTop: '1px solid var(--wc-border)', background: 'rgba(245,196,0,.06)' }}>
+                                  <tr style={{ borderTop: '1px solid var(--wc-border)', background: 'rgba(255,255,255,.06)' }}>
                                     <td colSpan={4} className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-y)' }}>Totals</td>
                                     <td className="p-[4px_6px] font-bold text-white">{totalKm.toFixed(1)}</td>
                                     <td className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizKm.toFixed(1)}</td>
@@ -1425,7 +1422,7 @@ export function ReportsScreen() {
                             </div>
 
                             {r.areasToCheck && r.areasToCheck.length > 0 && (
-                              <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.14)' }}>
+                              <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(153,153,153,.05)', border: '1px solid rgba(153,153,153,.14)' }}>
                                 <div className="flex items-center gap-[5px] mb-[5px]">
                                   <AlertTriangle className="w-[11px] h-[11px]" style={{ color: 'var(--wc-am)' }} />
                                   <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Compliance Notes</span>
@@ -1459,7 +1456,7 @@ export function ReportsScreen() {
 
                             {isLinked && r.supersedes && (
                               <button className="w-full rounded-[8px] py-[7px] mb-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-[5px]"
-                                style={{ background: 'rgba(245,196,0,.07)', border: '1.5px solid rgba(245,196,0,.28)', color: 'var(--wc-y)' }}
+                                style={{ background: 'rgba(255,255,255,.07)', border: '1.5px solid rgba(255,255,255,.28)', color: 'var(--wc-y)' }}
                                 onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: i })}
                                 data-testid={`button-promote-${i}`}>
                                 <ArrowUpCircle className="w-[12px] h-[12px]" />
@@ -1499,10 +1496,10 @@ export function ReportsScreen() {
 
             {actionMenuOpen && (
               <div className="absolute bottom-full left-0 right-0 mb-[6px] rounded-[12px] overflow-hidden animate-pop"
-                style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,196,0,.3)', boxShadow: '0 -10px 40px rgba(0,0,0,.5)' }}
+                style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(255,255,255,.3)', boxShadow: '0 -10px 40px rgba(0,0,0,.5)' }}
                 data-testid="action-menu-dropdown">
                 {[
-                  { Icon: Plus, label: 'Create Another Report', desc: 'Re-sort trips and save a new revision', color: 'var(--wc-y)', bg: 'rgba(245,196,0,.1)', action: () => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'review' }); } },
+                  { Icon: Plus, label: 'Create Another Report', desc: 'Re-sort trips and save a new revision', color: 'var(--wc-y)', bg: 'rgba(255,255,255,.1)', action: () => { setActionMenuOpen(false); dispatch({ type: 'GO_SCREEN', screen: 'review' }); } },
                   { Icon: Pause, label: 'Come Back Later', desc: 'Session stays active. No other cards sortable until finalised.', color: 'white', bg: 'rgba(255,255,255,.04)', action: () => { setActionMenuOpen(false); dispatch({ type: 'COME_BACK_LATER' }); } },
                   { Icon: Trash2, label: 'Done — Delete Sort Cards', desc: 'Locks reports. No further revisions. Reports are kept.', color: 'white', bg: '#fff', action: () => { setActionMenuOpen(false); setConfirmDelete(true); } },
                 ].map(({ Icon, label, desc, color, bg, action }) => (
@@ -1560,7 +1557,7 @@ export function ReportsScreen() {
         if (groupReports.length < 2) return null;
         return (
           <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.8)', backdropFilter: 'blur(6px)' }} onClick={() => setConflictSessionId(null)}>
-            <div className="mx-5 w-full max-w-[360px] rounded-[16px] p-[20px_16px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-conflict">
+            <div className="mx-5 w-full max-w-[360px] rounded-[16px] p-[20px_16px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(153,153,153,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-conflict">
               <div className="flex flex-col items-center gap-[8px] mb-[14px]">
                 <ShieldAlert className="w-[26px] h-[26px]" style={{ color: 'var(--wc-am)' }} />
                 <div className="font-heading font-black text-[18px] uppercase text-white text-center">Select Active Report</div>
@@ -1617,7 +1614,7 @@ export function ReportsScreen() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }} onClick={() => setConfirmDeleteSession(null)}>
           <div className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop" style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }} onClick={e => e.stopPropagation()} data-testid="modal-delete-session">
             <div className="font-heading font-black text-[18px] uppercase text-white text-center mb-[10px]">Delete {SESSION_LABELS[confirmDeleteSession] || confirmDeleteSession}?</div>
-            <div className="flex items-start gap-[8px] rounded-[10px] p-[9px_12px] mb-[14px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[9px_12px] mb-[14px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.2)' }}>
               <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
               <span className="text-[11px] leading-[1.5] text-white">This deletes all saved reports for this session. Trip data reloads so you can re-sort anytime. <br /><br /><span style={{ color: 'var(--wc-t3)' }}>Recommended: create a new revision and set it as active instead.</span></span>
             </div>

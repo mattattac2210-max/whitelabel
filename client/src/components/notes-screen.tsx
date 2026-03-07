@@ -196,8 +196,8 @@ export function NotesScreen() {
               className="rounded-[14px] transition-all"
               style={{
                 background: 'var(--wc-card)',
-                border: isEditing ? '1.5px solid rgba(245,196,0,.5)' : hasNote ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(245,158,11,.3)',
-                borderLeft: isEditing ? '4px solid var(--wc-y)' : hasNote ? '4px solid rgba(34,197,94,.5)' : '4px solid rgba(245,158,11,.5)',
+                border: isEditing ? '1.5px solid rgba(255,255,255,.5)' : hasNote ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.3)',
+                borderLeft: isEditing ? '4px solid var(--wc-y)' : hasNote ? '4px solid rgba(34,197,94,.5)' : '4px solid rgba(153,153,153,.5)',
               }}
               data-testid={`notes-trip-${idx}`}
             >
@@ -228,7 +228,7 @@ export function NotesScreen() {
                 )}
 
                 {!hasNote && !isEditing && (
-                  <div className="flex items-center gap-[5px] px-[8px] py-[4px] rounded-[6px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
+                  <div className="flex items-center gap-[5px] px-[8px] py-[4px] rounded-[6px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}>
                     <MessageSquarePlus className="w-[12px] h-[12px]" style={{ color: 'var(--wc-am)' }} />
                     <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-am)' }}>Add</span>
                   </div>
@@ -242,11 +242,11 @@ export function NotesScreen() {
               </div>
 
               {isEditing && (
-                <div className="px-[14px] pb-[12px] border-t" style={{ borderColor: 'rgba(245,196,0,.15)' }}>
+                <div className="px-[14px] pb-[12px] border-t" style={{ borderColor: 'rgba(255,255,255,.15)' }}>
                   {smartSuggestion && !noteText && (
                     <button
                       className="w-full mt-[10px] rounded-[10px] p-[10px_14px] text-left cursor-pointer transition-all flex items-start gap-[10px]"
-                      style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}
+                      style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.2)' }}
                       onClick={useSuggestion}
                       data-testid="notes-smart-suggestion"
                     >
@@ -265,7 +265,7 @@ export function NotesScreen() {
                   <textarea
                     ref={inputRef}
                     className="w-full rounded-[10px] p-[12px] text-[15px] text-white outline-none resize-none mt-[10px] font-sans leading-[1.5]"
-                    style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(245,196,0,.25)', minHeight: '70px' }}
+                    style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.25)', minHeight: '70px' }}
                     value={noteText}
                     onChange={e => { setNoteText(e.target.value); setActivePrefix(null); }}
                     placeholder="Tap a chip below or type a note..."
@@ -281,8 +281,8 @@ export function NotesScreen() {
                           key={s}
                           className="rounded-[8px] px-[10px] py-[6px] font-heading font-bold text-[12px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[4px]"
                           style={{
-                            background: isActive ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.06)',
-                            border: isActive ? '1px solid rgba(245,196,0,.4)' : '1px solid var(--wc-border)',
+                            background: isActive ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.06)',
+                            border: isActive ? '1px solid rgba(255,255,255,.4)' : '1px solid var(--wc-border)',
                             color: isActive ? 'var(--wc-y)' : 'var(--wc-t2)',
                           }}
                           onClick={() => handlePrefixTap(s)}
@@ -300,8 +300,8 @@ export function NotesScreen() {
                   </div>
 
                   {activePrefix && prefixNames.length > 0 && (
-                    <div className="mt-[6px] rounded-[10px] overflow-hidden" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(245,196,0,.2)' }}>
-                      <div className="flex items-center justify-between px-[12px] py-[6px]" style={{ borderBottom: '1px solid rgba(245,196,0,.1)' }}>
+                    <div className="mt-[6px] rounded-[10px] overflow-hidden" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.2)' }}>
+                      <div className="flex items-center justify-between px-[12px] py-[6px]" style={{ borderBottom: '1px solid rgba(255,255,255,.1)' }}>
                         <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
                           <User className="w-[12px] h-[12px] inline mr-[4px]" />
                           Your {activePrefix}s
@@ -383,7 +383,7 @@ export function NotesScreen() {
       <div className="px-[14px] py-[8px] flex-shrink-0">
         <button
           className="w-full rounded-[14px] py-[15px] font-heading font-black text-[18px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all"
-          style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
+          style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(255,255,255,.25)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'odometer' })}
           data-testid="button-done-notes"
         >

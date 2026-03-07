@@ -28,12 +28,12 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
       <div className="flex-1 px-[18px] flex flex-col justify-center gap-[14px] pb-[40px]">
         <button
           className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
-          style={{ background: 'rgba(245,196,0,.06)', border: '2px solid rgba(245,196,0,.25)' }}
+          style={{ background: 'rgba(255,255,255,.06)', border: '2px solid rgba(255,255,255,.25)' }}
           onClick={() => onSelect('live')}
           data-testid="choose-start-new"
         >
           <div className="flex items-center gap-[14px]">
-            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.12)', border: '1px solid rgba(245,196,0,.3)' }}>
+            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.3)' }}>
               <Navigation className="w-[24px] h-[24px]" style={{ color: 'var(--wc-y)' }} />
             </div>
             <div>
@@ -144,7 +144,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
         scale: 8,
-        fillColor: '#F5C400',
+        fillColor: '#FFFFFF',
         fillOpacity: 1,
         strokeColor: '#000',
         strokeWeight: 2,
@@ -155,7 +155,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     const polyline = new window.google.maps.Polyline({
       path: [pos],
       geodesic: true,
-      strokeColor: '#F5C400',
+      strokeColor: '#FFFFFF',
       strokeOpacity: 0.8,
       strokeWeight: 3,
       map,
@@ -382,7 +382,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="flex-1 px-[18px] flex flex-col justify-center pb-[40px]">
-          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgba(245,196,0,.04)', border: '1px solid rgba(245,196,0,.15)' }}>
+          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.15)' }}>
             <div className="flex items-center gap-[10px] mb-[14px]">
               <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
               <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Where are you starting?</span>
@@ -433,7 +433,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           <button
             className="w-full rounded-[14px] py-[16px] font-heading font-black text-[18px] tracking-[.07em] uppercase flex items-center justify-center gap-[8px] transition-all"
             style={{
-              background: startAddress.length > 3 ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
+              background: startAddress.length > 3 ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
               color: startAddress.length > 3 ? 'black' : 'rgba(0,0,0,.4)',
               cursor: startAddress.length > 3 ? 'pointer' : 'not-allowed',
             }}
@@ -464,7 +464,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="px-[14px] pb-[6px] flex-shrink-0">
-          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
             <div className="flex items-center gap-[8px]">
               <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
               <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{startAddress.length > 30 ? startAddress.slice(0, 28) + '…' : startAddress}</span>
@@ -487,7 +487,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           )}
           {isPaused && (
             <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,.5)' }}>
-              <div className="rounded-[12px] p-[16px_24px] text-center" style={{ background: 'rgba(245,158,11,.1)', border: '1.5px solid rgba(245,158,11,.3)' }}>
+              <div className="rounded-[12px] p-[16px_24px] text-center" style={{ background: 'rgba(153,153,153,.1)', border: '1.5px solid rgba(153,153,153,.3)' }}>
                 <Pause className="w-[24px] h-[24px] mx-auto mb-[6px]" style={{ color: 'var(--wc-am)' }} />
                 <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'var(--wc-am)' }}>Paused</div>
               </div>
@@ -500,8 +500,8 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             <button
               className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
               style={{
-                background: isPaused ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.1)',
-                border: isPaused ? '2px solid rgba(34,197,94,.3)' : '2px solid rgba(245,158,11,.3)',
+                background: isPaused ? 'rgba(34,197,94,.12)' : 'rgba(153,153,153,.1)',
+                border: isPaused ? '2px solid rgba(34,197,94,.3)' : '2px solid rgba(153,153,153,.3)',
                 color: isPaused ? 'var(--wc-gr)' : 'var(--wc-am)',
               }}
               onClick={isPaused ? handleResume : handlePause}
@@ -563,7 +563,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
-        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(245,158,11,.06)' : 'rgba(255,255,255,.03)', border: tripKm < 1 ? '1px solid rgba(245,158,11,.2)' : '1px solid var(--wc-border)' }}>
+        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(153,153,153,.06)' : 'rgba(255,255,255,.03)', border: tripKm < 1 ? '1px solid rgba(153,153,153,.2)' : '1px solid var(--wc-border)' }}>
           <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: tripKm < 1 ? 'var(--wc-am)' : 'var(--wc-t3)' }}>{tripKm < 1 ? 'Enter distance (min 1 km)' : 'Distance (km)'}</label>
           <input
             type="number"
@@ -594,9 +594,9 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           <button
             className="w-full rounded-[14px] py-[15px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black transition-all flex items-center justify-center gap-[8px]"
             style={{
-              background: canSendToSort ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
+              background: canSendToSort ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
               opacity: canSendToSort ? 1 : 0.5,
-              boxShadow: canSendToSort ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+              boxShadow: canSendToSort ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
               cursor: canSendToSort ? 'pointer' : 'not-allowed',
             }}
             onClick={handleSendToSort}
@@ -780,7 +780,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           {from.length > 3 && to.length > 3 && (
             <button
               className="rounded-[7px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
               onClick={calcRoute}
               data-testid="input-calc-route"
             >
@@ -896,7 +896,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           {state.trips.length > 0 && (
             <button
               className="mt-[6px] rounded-[6px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.25)', color: 'var(--wc-y)' }}
+              style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.25)', color: 'var(--wc-y)' }}
               onClick={() => {
                 const lastOdo = getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo);
                 setOdoStart(Math.round(lastOdo).toString());
@@ -946,9 +946,9 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           <button
             className="w-full rounded-[12px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase text-black cursor-pointer transition-all mb-[6px] flex items-center justify-center gap-[6px]"
             style={{
-              background: canSave ? 'var(--wc-y)' : 'rgba(245,196,0,.2)',
+              background: canSave ? 'var(--wc-y)' : 'rgba(255,255,255,.2)',
               opacity: canSave ? 1 : 0.5,
-              boxShadow: canSave ? '0 4px 20px rgba(245,196,0,.25)' : 'none',
+              boxShadow: canSave ? '0 4px 20px rgba(255,255,255,.25)' : 'none',
             }}
             onClick={handleSave}
             disabled={!canSave}

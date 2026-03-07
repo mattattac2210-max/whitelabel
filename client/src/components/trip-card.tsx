@@ -37,7 +37,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     const fromEnc = encodeURIComponent(from);
     const toEnc = encodeURIComponent(to);
     const mapStyles = 'style=feature:all|element:geometry|color:0xffffff&style=feature:all|element:labels|visibility:off&style=feature:administrative.locality|element:labels.text|visibility:on&style=feature:administrative.locality|element:labels.text.fill|color:0x999999&style=feature:administrative.locality|element:labels.text.stroke|color:0xffffff&style=feature:administrative.neighborhood|element:labels.text|visibility:on&style=feature:administrative.neighborhood|element:labels.text.fill|color:0xbbbbbb&style=feature:administrative.neighborhood|element:labels.text.stroke|color:0xffffff&style=feature:road|element:geometry.fill|color:0x222222&style=feature:road|element:geometry.stroke|color:0xdddddd&style=feature:road.highway|element:geometry.fill|color:0x111111&style=feature:road.highway|element:geometry.stroke|color:0xcccccc&style=feature:water|element:geometry|color:0xe0e8ef&style=feature:poi|visibility:off&style=feature:transit|visibility:off&style=feature:landscape.man_made|element:geometry|color:0xf4f4f4&style=feature:landscape.natural|element:geometry|color:0xeef2e8';
-    const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xF5C400|label:B|${toEnc}`;
+    const markers = `markers=color:0x22C55E|label:A|${fromEnc}&markers=color:0xFFFFFF|label:B|${toEnc}`;
 
     const buildUrl = (polyPart?: string, bounds?: {n:number,s:number,e:number,w:number}) => {
       let visibleParam = `&visible=${fromEnc}%7C${toEnc}`;
@@ -52,7 +52,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
       }
       if (polyPart) {
         const safePoly = polyPart.replace(/\|/g, '%7C').replace(/\\/g, '%5C');
-        return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xF5C400CC|enc:${safePoly}${visibleParam}&key=${MAPS_KEY}`;
+        return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:4|color:0xFFFFFFCC|enc:${safePoly}${visibleParam}&key=${MAPS_KEY}`;
       }
       return `https://maps.googleapis.com/maps/api/staticmap?size=640x640&scale=2&maptype=roadmap&${mapStyles}&${markers}${visibleParam}&key=${MAPS_KEY}`;
     };
@@ -183,7 +183,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
         new g.Polyline({
           path,
           map,
-          strokeColor: '#F5C400',
+          strokeColor: '#FFFFFF',
           strokeWeight: 7,
           strokeOpacity: 0.9,
           zIndex: 1,
@@ -192,7 +192,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
         new g.Polyline({
           path,
           map,
-          strokeColor: '#FFF0A0',
+          strokeColor: '#FFFFFF',
           strokeWeight: 2,
           strokeOpacity: 0.4,
           zIndex: 2,
@@ -206,7 +206,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
             scale: 6,
             fillColor: '#ffffff',
             fillOpacity: 0.9,
-            strokeColor: '#F5C400',
+            strokeColor: '#FFFFFF',
             strokeWeight: 3,
           },
           zIndex: 10,
@@ -247,7 +247,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
             scale: pulseScale,
             fillColor: '#ffffff',
             fillOpacity: pulseOpacity,
-            strokeColor: '#F5C400',
+            strokeColor: '#FFFFFF',
             strokeWeight: 2,
           });
 
@@ -279,7 +279,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
               icon: {
                 path: g.SymbolPath.CIRCLE,
                 scale: 8,
-                fillColor: '#F59E0B',
+                fillColor: '#999999',
                 fillOpacity: 1,
                 strokeColor: '#fff',
                 strokeWeight: 2,
@@ -296,7 +296,7 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
             icon: {
               path: g.SymbolPath.CIRCLE,
               scale: 9,
-              fillColor: '#F5C400',
+              fillColor: '#FFFFFF',
               fillOpacity: 1,
               strokeColor: '#fff',
               strokeWeight: 2.5,
@@ -427,7 +427,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
       style={{
         background: 'var(--wc-card)',
         border: '1.5px solid var(--wc-y)',
-        boxShadow: '0 0 18px rgba(245,196,0,.25), 0 0 40px rgba(245,196,0,.1), 0 16px 50px rgba(0,0,0,.7)',
+        boxShadow: '0 0 18px rgba(255,255,255,.25), 0 0 40px rgba(255,255,255,.1), 0 16px 50px rgba(0,0,0,.7)',
         transform: getTransform(),
         opacity: getOpacity(),
         transition: isDragging ? 'none' : isFlying ? 'transform .32s cubic-bezier(.4,0,.6,1), opacity .28s' : isTutorialActive ? 'transform .55s cubic-bezier(.4,0,.2,1), opacity .3s' : 'transform .4s cubic-bezier(.34,1.3,.64,1), opacity .3s',
@@ -446,7 +446,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <div
             className="absolute inset-0 rounded-[20px] pointer-events-none z-20 flex items-center justify-center"
             style={{
-              background: isBizSwipe ? 'linear-gradient(135deg,rgba(245,196,0,0),rgba(245,196,0,.22))' : tutorialPhase === 'right' ? 'rgba(245,196,0,.08)' : 'transparent',
+              background: isBizSwipe ? 'linear-gradient(135deg,rgba(255,255,255,0),rgba(255,255,255,.22))' : tutorialPhase === 'right' ? 'rgba(255,255,255,.08)' : 'transparent',
               opacity: isBizSwipe ? swipeRatio * 0.8 : tutorialPhase === 'right' ? 1 : 0,
               transition: 'opacity .5s, background .5s',
             }}
@@ -536,7 +536,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
           <button
             className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
-            style={{ background: '#F5C400', border: '1px solid #F5C400', color: '#000' }}
+            style={{ background: '#FFFFFF', border: '1px solid #FFFFFF', color: '#000' }}
             onPointerDown={e => e.stopPropagation()}
             onClick={() => setShowDetail(true)}
             data-testid="button-see-details"
@@ -569,8 +569,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             </div>
             {(trip.stops || []).map((stop, i) => (
               <div key={i} className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
-                <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,.14)' }}>
-                  <MapPin className="w-[10px] h-[10px]" stroke="#F59E0B" />
+                <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(153,153,153,.14)' }}>
+                  <MapPin className="w-[10px] h-[10px]" stroke="#999999" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[11px] text-white truncate">{stop.split(',')[0]}</div>
@@ -580,7 +580,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             ))}
             <div className="flex items-center gap-[7px] py-[2px] border-t" style={{ borderColor: 'var(--wc-border)' }}>
               <div className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[10px] h-[10px]" stroke="#F5C400" />
+                <MapPin className="w-[10px] h-[10px]" stroke="#FFFFFF" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[11px] text-white truncate">{trip.to}</div>
@@ -588,7 +588,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
               </div>
             </div>
           </div>
-          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+          <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center rounded-[10px] px-[10px]" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
             <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
             <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>km</div>
             <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
@@ -626,12 +626,12 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           <button
             className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1 active:scale-95"
             style={{
-              background: bizBtnHighlight ? 'rgba(245,196,0,.2)' : 'var(--wc-yd)',
-              border: bizBtnHighlight ? '1.5px solid rgba(245,196,0,.7)' : '1.5px solid rgba(245,196,0,.45)',
+              background: bizBtnHighlight ? 'rgba(255,255,255,.2)' : 'var(--wc-yd)',
+              border: bizBtnHighlight ? '1.5px solid rgba(255,255,255,.7)' : '1.5px solid rgba(255,255,255,.45)',
               color: 'var(--wc-y)',
               transition: 'all .4s ease',
               transform: bizBtnHighlight ? 'scale(1.04)' : 'scale(1)',
-              boxShadow: bizBtnHighlight ? '0 0 12px rgba(245,196,0,.3)' : 'none',
+              boxShadow: bizBtnHighlight ? '0 0 12px rgba(255,255,255,.3)' : 'none',
             }}
             onClick={handleBusiness}
             data-testid="button-business"
@@ -646,9 +646,9 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             Swipe left
           </div>
           <div className="font-data text-[7px] text-[#ffffff]" style={{ color: 'var(--wc-t3)' }}>or tap</div>
-          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(245,196,0,.65)' }}>
+          <div className="flex items-center gap-[3px] font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'rgba(255,255,255,.65)' }}>
             Swipe right
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(245,196,0,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,0.65)"><path d="M5 12h14M14 5l7 7-7 7" /></svg>
           </div>
         </div>
       </div>
@@ -663,8 +663,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             className="relative w-[370px] max-h-[800px] rounded-[20px] flex flex-col touch-pan-y"
             style={{
               background: 'var(--wc-card)',
-              border: '1.5px solid #F5C400',
-              boxShadow: '0 0 18px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.15), 0 16px 50px rgba(0,0,0,.7)',
+              border: '1.5px solid #FFFFFF',
+              boxShadow: '0 0 18px rgba(255,255,255,.35), 0 0 40px rgba(255,255,255,.15), 0 16px 50px rgba(0,0,0,.7)',
               overflow: detailScale > 1 ? 'visible' : 'hidden',
               transition: 'overflow 0s',
             }}
@@ -723,7 +723,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 zIndex: detailScale > 1 ? 50 : 0,
                 borderRadius: detailScale > 1 ? '12px' : '0',
                 boxShadow: detailScale > 1
-                  ? `0 ${8 * detailScale}px ${30 * detailScale}px rgba(0,0,0,.8), 0 0 ${16 * detailScale}px rgba(245,196,0,.25)`
+                  ? `0 ${8 * detailScale}px ${30 * detailScale}px rgba(0,0,0,.8), 0 0 ${16 * detailScale}px rgba(255,255,255,.25)`
                   : 'none',
                 transition: detailScale > 1 ? 'none' : 'transform .3s ease, box-shadow .3s ease, border-radius .3s ease',
               }}
@@ -774,8 +774,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                     <div key={i}>
                       <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
                       <div className="flex items-start gap-[10px]">
-                        <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(245,158,11,.14)' }}>
-                          <MapPin className="w-[14px] h-[14px]" stroke="#F59E0B" />
+                        <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'rgba(153,153,153,.14)' }}>
+                          <MapPin className="w-[14px] h-[14px]" stroke="#999999" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-heading font-semibold text-[14px] text-white truncate">{stop.split(',')[0]}</div>
@@ -787,7 +787,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <div className="ml-[14px] w-[1px] h-[12px]" style={{ background: 'var(--wc-border)' }} />
                   <div className="flex items-start gap-[10px]">
                     <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0 mt-[2px]" style={{ background: 'var(--wc-yd)' }}>
-                      <MapPin className="w-[14px] h-[14px]" stroke="#F5C400" />
+                      <MapPin className="w-[14px] h-[14px]" stroke="#FFFFFF" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-heading font-semibold text-[14px] text-white truncate">{trip.to}</div>
@@ -838,7 +838,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 </button>
                 <button
                   className="flex-1 py-[10px] rounded-[12px] font-heading font-extrabold text-[14px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
-                  style={{ background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.6)', color: 'var(--wc-y)' }}
+                  style={{ background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.6)', color: 'var(--wc-y)' }}
                   onClick={() => { setShowDetail(false); flyOut('right'); }}
                   data-testid="button-detail-business"
                 >
@@ -846,7 +846,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 </button>
               </div>
               <div className="flex gap-[8px] mt-[4px]">
-                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.2)' }}>
                   <Route className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-y)' }} />
                   <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>km</div>
@@ -856,7 +856,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <div className="font-heading font-black text-[22px] leading-none" style={{ color: 'var(--wc-t2)' }}>{trip.duration}</div>
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>duration</div>
                 </div>
-                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)' }}>
+                <div className="flex-1 rounded-[12px] p-[10px] flex flex-col items-center" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.2)' }}>
                   <Gauge className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-am)' }} />
                   <div className="font-heading font-bold text-[13px] leading-tight text-center" style={{ color: 'var(--wc-am)' }}>
                     {Math.round(oStart).toLocaleString('en-AU')}
@@ -865,7 +865,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                   <div className="font-data text-[9px] uppercase tracking-[.06em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>odometer</div>
                 </div>
               </div>
-              <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
+              <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)' }}>
                 <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Business KM</span>
                 <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{trip.km.toFixed(1)} km</span>
               </div>

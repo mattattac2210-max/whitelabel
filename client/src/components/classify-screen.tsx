@@ -41,7 +41,7 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
       'style=feature:road|element:geometry|color:0x000000',
       'style=feature:water|element:geometry|color:0xd4e8f0',
     ].join('&');
-    const markers = `markers=size:small|color:0x22C55E|${encodeURIComponent(from)}&markers=size:small|color:0xF5C400|${encodeURIComponent(to)}`;
+    const markers = `markers=size:small|color:0x22C55E|${encodeURIComponent(from)}&markers=size:small|color:0xFFFFFF|${encodeURIComponent(to)}`;
 
     loadGMaps().then(() => {
       const ds = new google.maps.DirectionsService();
@@ -50,7 +50,7 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
           const poly = result.routes?.[0]?.overview_polyline;
           if (poly) {
             const safePoly = poly.replace(/\|/g, '%7C');
-            setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:8|color:0xF5C400CC|enc:${safePoly}&key=${MAPS_KEY}`);
+            setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&path=weight:8|color:0xFFFFFFCC|enc:${safePoly}&key=${MAPS_KEY}`);
           } else {
             setUrl(`https://maps.googleapis.com/maps/api/staticmap?size=300x300&scale=2&maptype=roadmap&${mapStyles}&${markers}&key=${MAPS_KEY}`);
           }
@@ -161,8 +161,8 @@ export function ClassifyScreen() {
         className="mx-[10px] mb-[10px] rounded-[14px] overflow-hidden flex-shrink-0 transition-all"
         style={{
           background: 'var(--wc-card)',
-          border: justAdvanced ? '1.5px solid rgba(245,196,0,.85)' : '1.5px solid rgba(245,196,0,.5)',
-          boxShadow: justAdvanced ? '0 0 20px rgba(245,196,0,.35), 0 0 40px rgba(245,196,0,.12)' : '0 0 14px rgba(245,196,0,.15), 0 0 30px rgba(245,196,0,.06)',
+          border: justAdvanced ? '1.5px solid rgba(255,255,255,.85)' : '1.5px solid rgba(255,255,255,.5)',
+          boxShadow: justAdvanced ? '0 0 20px rgba(255,255,255,.35), 0 0 40px rgba(255,255,255,.12)' : '0 0 14px rgba(255,255,255,.15), 0 0 30px rgba(255,255,255,.06)',
           transition: 'border .6s ease, box-shadow .6s ease',
         }}
         data-testid="classify-trip-card"
@@ -180,7 +180,7 @@ export function ClassifyScreen() {
             </div>
             <div className="flex items-center gap-[8px]">
               <div className="w-[22px] h-[22px] rounded-[6px] flex items-center justify-center flex-shrink-0" style={{ background: 'var(--wc-yd)' }}>
-                <MapPin className="w-[11px] h-[11px]" stroke="#F5C400" />
+                <MapPin className="w-[11px] h-[11px]" stroke="#FFFFFF" />
               </div>
               <div className="min-w-0">
                 <div className="font-semibold text-[13px] text-white truncate">{trip.to}</div>
@@ -215,7 +215,7 @@ export function ClassifyScreen() {
                   background: isArmed ? 'var(--wc-y)' : 'rgba(255,255,255,.04)',
                   border: isArmed ? '1.5px solid var(--wc-y)' : '1.5px solid var(--wc-border)',
                   transform: isArmed ? 'scale(1.03)' : 'none',
-                  boxShadow: isArmed ? '0 0 22px rgba(245,196,0,.3)' : 'none',
+                  boxShadow: isArmed ? '0 0 22px rgba(255,255,255,.3)' : 'none',
                 }}
                 onClick={() => handleArm(i)}
                 data-testid={`classify-cat-${i}`}
@@ -244,7 +244,7 @@ export function ClassifyScreen() {
           />
           <button
             className="rounded-lg px-[10px] py-[5px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer whitespace-nowrap transition-all"
-            style={{ background: 'rgba(245,196,0,.1)', border: '1px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+            style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', color: 'var(--wc-y)' }}
             onClick={handleCustom}
             data-testid="button-use-custom"
           >
