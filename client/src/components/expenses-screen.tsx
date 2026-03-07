@@ -220,7 +220,7 @@ export function ExpensesScreen() {
           </span>
         </div>
 
-        <div className="flex-1 px-[14px] pb-2 overflow-y-auto scrollbar-thin">
+        <div className="flex-1 px-[14px] pb-[20px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
           <div className="rounded-[14px] p-[16px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
 
             <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Receipt Photo</label>
@@ -398,7 +398,7 @@ export function ExpensesScreen() {
       </div>
 
       {tab === 'entries' && (
-        <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
+        <div className="flex-1 px-[14px] pb-[20px] flex flex-col gap-[6px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
           {userExpenses.length === 0 && (
             <div className="flex flex-col items-center justify-center py-[40px]">
               <Receipt className="w-[40px] h-[40px] mb-[12px]" style={{ color: 'var(--wc-t3)' }} />
@@ -464,7 +464,7 @@ export function ExpensesScreen() {
       )}
 
       {tab === 'report' && (
-        <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[8px] overflow-y-auto scrollbar-thin">
+        <div className="flex-1 px-[14px] pb-[20px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
           <div className="flex gap-[6px]">
             <div className="flex-1 rounded-[10px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
               <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Total Vehicle</div>

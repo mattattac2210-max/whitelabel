@@ -118,7 +118,7 @@ export function FindKeysScreen() {
         <Key className="ml-auto w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
       </div>
 
-      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[8px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
         <div className="rounded-[16px] p-[20px] text-center" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.2)' }}>
           <div className="w-[70px] h-[70px] rounded-full flex items-center justify-center mx-auto mb-[14px]" style={{ background: 'rgba(245,196,0,.1)', border: '2px solid rgba(245,196,0,.3)' }}>
             <Key className="w-[34px] h-[34px]" style={{ color: 'var(--wc-y)' }} />

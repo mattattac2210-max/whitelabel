@@ -13,7 +13,7 @@ export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, child
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-[14px] overflow-hidden transition-all" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid={testId}>
+    <div className="rounded-[14px] transition-all" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid={testId}>
       <button
         className="w-full flex items-center gap-[10px] p-[14px_16px] cursor-pointer"
         onClick={() => setOpen(!open)}

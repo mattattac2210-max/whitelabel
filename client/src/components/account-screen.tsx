@@ -23,7 +23,7 @@ export function AccountScreen() {
         <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">Account</span>
       </div>
 
-      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[8px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
         <MyDetailsPanel />
         <VehiclePanel />
         <TaxEstimatePanel />

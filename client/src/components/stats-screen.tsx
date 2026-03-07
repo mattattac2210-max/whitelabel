@@ -67,7 +67,7 @@ export function StatsScreen() {
         <TrendingUp className="ml-auto w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
       </div>
 
-      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[8px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
         <div className="grid grid-cols-2 gap-[6px]">
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <MapPin className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
