@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft } from 'lucide-react';
@@ -5,9 +6,12 @@ import { MyDetailsPanel } from './account/my-details-panel';
 import { VehiclePanel } from './account/vehicle-panel';
 import { TaxEstimatePanel } from './account/tax-estimate-panel';
 import { SettingsPanel } from './account/settings-panel';
+import { getEstimateMode } from '@/lib/deduction-estimator';
 
 export function AccountScreen() {
   const { dispatch } = useApp();
+  const mode = useMemo(() => getEstimateMode(), []);
+  const isIndustry = mode === 'industry';
 
   return (
     <div className="flex flex-col h-full" data-testid="account-screen">
@@ -26,7 +30,7 @@ export function AccountScreen() {
       <div className="flex-1 px-[14px] pb-[80px] flex flex-col gap-[8px] overflow-y-auto scrollbar-thin" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as any}>
         <MyDetailsPanel />
         <VehiclePanel />
-        <TaxEstimatePanel />
+        {!isIndustry && <TaxEstimatePanel />}
         <SettingsPanel />
       </div>
 

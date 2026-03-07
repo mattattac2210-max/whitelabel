@@ -75,7 +75,16 @@ export function SettingsPanel() {
   return (
     <CollapsiblePanel title="Settings" icon={Settings} testId="panel-settings">
       <div className="pt-[12px]">
-        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Notifications</div>
+        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Deduction Estimates</div>
+        <ToggleRow label="Use industry averages for estimates" value={s.useIndustryAverages} onChange={handleIndustryToggle} testId="toggle-industry-averages" />
+        <div className="text-[10px] leading-[1.4] mt-[-4px] mb-[10px] pl-[2px]" style={{ color: 'var(--wc-t3)' }}>
+          {s.useIndustryAverages
+            ? 'Fast setup using typical costs based on your vehicle and usage.'
+            : 'Using your personalised financial and expense data for estimates.'}
+        </div>
+        <ToggleRow label="Show Deduction Estimates" value={s.showDeductionEstimates} onChange={updBool('showDeductionEstimates')} testId="toggle-show-deduction-estimates" />
+
+        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Notifications</div>
         <ToggleRow label="Trip Detection Alerts" value={s.tripDetectionAlerts} onChange={updBool('tripDetectionAlerts')} testId="toggle-trip-detect" />
         <ToggleRow label="Missing Trip Alerts" value={s.missingTripAlerts} onChange={updBool('missingTripAlerts')} testId="toggle-missing-trip" />
         <ToggleRow label="EOFY Reminder" value={s.eofyReminder} onChange={updBool('eofyReminder')} testId="toggle-eofy" />
@@ -92,18 +101,6 @@ export function SettingsPanel() {
         <ChipSelect label="Fuel Price Source" options={['National Average', 'State Average', 'Manual']} value={s.fuelPriceSource} onChange={updStr('fuelPriceSource')} testId="chip-fuel-source" />
         <FieldInput label="Current Avg Fuel Price ($/L)" value={s.avgFuelPrice} onChange={updStr('avgFuelPrice')} type="number" placeholder="1.95" testId="input-fuel-price" />
         <ToggleRow label="Receipt AI Detection" value={s.receiptAI} onChange={updBool('receiptAI')} testId="toggle-receipt-ai" />
-
-        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Deduction Estimate Mode</div>
-        <ToggleRow label="Show Deduction Estimates" value={s.showDeductionEstimates} onChange={updBool('showDeductionEstimates')} testId="toggle-show-deduction-estimates" />
-
-        <div className="mt-[6px]">
-          <ToggleRow label="Use industry averages for estimates" value={s.useIndustryAverages} onChange={handleIndustryToggle} testId="toggle-industry-averages" />
-          <div className="text-[10px] leading-[1.4] mt-[-4px] mb-[8px] pl-[2px]" style={{ color: 'var(--wc-t3)' }}>
-            {s.useIndustryAverages
-              ? 'Fast setup using typical costs based on your vehicle and usage.'
-              : 'Using your personalised financial and expense data for estimates.'}
-          </div>
-        </div>
 
         <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Reports</div>
         <ChipSelect label="Default Tax Year" options={['2024-25', '2025-26']} value={s.defaultTaxYear} onChange={updStr('defaultTaxYear')} testId="chip-tax-year" />
