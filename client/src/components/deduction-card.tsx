@@ -124,6 +124,13 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
     } catch { return ''; }
   });
 
+  const [weeklyKm, setWeeklyKm] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      return s.estimatedWeeklyKm || 200;
+    } catch { return 200; }
+  });
+
   const ATO_CAR_LIMIT = 68108;
   const DV_RATE = 0.25;
 
@@ -166,6 +173,17 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
       localStorage.setItem('wc_vehicle_purchase', JSON.stringify(p));
     } catch {}
   };
+
+  const saveWeeklyKm = (val: number) => {
+    setWeeklyKm(val);
+    try {
+      const s = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      s.estimatedWeeklyKm = val;
+      localStorage.setItem('wc_settings', JSON.stringify(s));
+    } catch {}
+  };
+
+  const yearlyKm = weeklyKm * 52;
 
   const hasPrice = rawPrice > 0;
   const hasDep = depYears !== '';
@@ -287,6 +305,36 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
               <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-gr)' }}>${depAmount.toLocaleString()}</span>
             </div>
           )}
+        </div>
+
+        <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: 'rgb(var(--wc-ink) / .02)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[4px]" style={{ color: 'var(--wc-y)' }}>
+            Estimated Weekly Driving
+          </div>
+          <div className="text-[10px] mb-[10px]" style={{ color: 'var(--wc-t3)' }}>
+            How many kms do you typically drive per week?
+          </div>
+          <input
+            type="range"
+            min={50}
+            max={1500}
+            step={25}
+            value={weeklyKm}
+            onChange={e => saveWeeklyKm(Number(e.target.value))}
+            className="w-full accent-current"
+            style={{ accentColor: 'var(--wc-y)' }}
+            data-testid="slider-weekly-km"
+          />
+          <div className="flex items-center justify-between mt-[8px]">
+            <div className="flex items-center gap-[6px]">
+              <span className="font-data text-[18px] font-bold" style={{ color: 'var(--wc-text)' }}>{weeklyKm.toLocaleString()}</span>
+              <span className="font-data text-[10px] uppercase" style={{ color: 'var(--wc-t3)' }}>km/week</span>
+            </div>
+            <div className="flex items-center gap-[6px]">
+              <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-t2)' }}>{yearlyKm.toLocaleString()}</span>
+              <span className="font-data text-[10px] uppercase" style={{ color: 'var(--wc-t3)' }}>km/year</span>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-[10px] p-[10px_12px] mb-[12px] flex items-start gap-[8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
