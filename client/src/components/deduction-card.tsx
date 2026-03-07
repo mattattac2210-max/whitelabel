@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, X, ChevronRight, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Lock, X, ChevronRight, CheckCircle2, AlertCircle, Info, BarChart3 } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import {
   type DeductionState,
@@ -24,9 +24,13 @@ interface DeductionCardProps {
 export function DeductionCard({ value, state, label = 'Deduction', sublabel, animate, className = '', checks }: DeductionCardProps) {
   const { dispatch } = useApp();
   const [showModal, setShowModal] = useState(false);
+  const [showIndustryModal, setShowIndustryModal] = useState(false);
+  const mode = getEstimateMode();
 
   const handleTap = () => {
-    if (state === 'locked' || state === 'partial') {
+    if (mode === 'industry') {
+      setShowIndustryModal(true);
+    } else if (state === 'locked' || state === 'partial') {
       setShowModal(true);
     }
   };
@@ -61,7 +65,7 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
             </div>
             <div className="text-[9px] mt-1 flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
               <Info className="w-[8px] h-[8px]" />
-              {getEstimateMode() === 'industry' ? 'based on industry averages' : 'partial estimate'}
+              {mode === 'industry' ? 'based on industry averages' : 'partial estimate'}
             </div>
           </>
         ) : (
@@ -85,7 +89,135 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
           }}
         />
       )}
+
+      {showIndustryModal && (
+        <IndustryAveragesModal
+          value={value}
+          checks={checks}
+          onClose={() => setShowIndustryModal(false)}
+          onSwitchToPersonalised={() => {
+            setShowIndustryModal(false);
+            dispatch({ type: 'GO_SCREEN', screen: 'account' as any });
+          }}
+        />
+      )}
     </>
+  );
+}
+
+interface IndustryAveragesModalProps {
+  value: number;
+  checks?: ReadinessCheck;
+  onClose: () => void;
+  onSwitchToPersonalised: () => void;
+}
+
+function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised }: IndustryAveragesModalProps) {
+  const included = checks ? getIncludedItems(checks) : [];
+  const disclaimer = getEstimateDisclaimer('partial');
+
+  const handleSwitchToPersonalised = () => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      settings.useIndustryAverages = false;
+      localStorage.setItem('wc_settings', JSON.stringify(settings));
+    } catch {}
+    onSwitchToPersonalised();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-end justify-center"
+      style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up"
+        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
+        onClick={e => e.stopPropagation()}
+        data-testid="modal-industry-averages"
+      >
+        <div className="flex justify-between items-start mb-[12px]">
+          <div className="flex items-center gap-[10px]">
+            <div
+              className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}
+            >
+              <BarChart3 className="w-[18px] h-[18px]" style={{ color: 'var(--wc-am)' }} />
+            </div>
+            <div>
+              <div className="font-heading font-black text-[17px] uppercase text-white leading-[1.1]">
+                Industry Average Estimate
+              </div>
+              <div className="flex items-center gap-[5px] mt-[3px]">
+                <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-am)' }} />
+                <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-am)' }}>
+                  Based on averages
+                </span>
+              </div>
+            </div>
+          </div>
+          <button
+            className="w-[28px] h-[28px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
+            onClick={onClose}
+            data-testid="button-close-industry-modal"
+          >
+            <X className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t3)' }} />
+          </button>
+        </div>
+
+        <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: 'rgba(245,158,11,.04)', border: '1.5px solid rgba(245,158,11,.15)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Estimated Deduction</div>
+          <div className="font-display text-[32px] leading-none" style={{ color: 'var(--wc-am)' }}>
+            ${value.toFixed(0)}*
+          </div>
+          <div className="text-[10px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
+            Based on industry averages for your vehicle and usage
+          </div>
+        </div>
+
+        <div className="text-[12px] leading-[1.5] mb-[12px]" style={{ color: 'var(--wc-t2)' }}>
+          This estimate uses typical running costs for your vehicle type. It gives you a quick idea of potential deductions before entering detailed financial info.
+        </div>
+
+        {included.length > 0 && (
+          <div className="mb-[12px]">
+            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-am)' }}>What's included</div>
+            {included.map((item, i) => (
+              <div key={i} className="flex items-center gap-[8px] py-[4px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+                <CheckCircle2 className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'rgba(245,158,11,.6)' }} />
+                <span className="text-[12px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="text-[10px] leading-[1.4] mb-[14px] px-[2px]" style={{ color: 'var(--wc-t3)' }}>
+          {disclaimer}
+        </div>
+
+        <div className="flex flex-col gap-[8px]">
+          <button
+            className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
+            onClick={handleSwitchToPersonalised}
+            data-testid="button-switch-personalised"
+          >
+            Switch to Personalised Estimates
+            <ChevronRight className="w-[14px] h-[14px]" />
+          </button>
+          <button
+            className="w-full rounded-[11px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            onClick={onClose}
+            data-testid="button-close-industry-ok"
+          >
+            Got It
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
