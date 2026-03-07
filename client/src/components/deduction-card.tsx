@@ -125,15 +125,14 @@ interface IndustryAveragesModalProps {
 }
 
 function IndustryAveragesModal({ value, onClose, onExploreMaths, onSwitchToPersonalised }: IndustryAveragesModalProps) {
-  const costs = useMemo(() => getVehicleCostsDetailed(), []);
+  const costs = getVehicleCostsDetailed();
   const disclaimer = getEstimateDisclaimer('partial');
 
   let bizPct = 0;
   try {
     const trips = JSON.parse(localStorage.getItem('wc_app_state') || '{}').trips || [];
-    const sorted = trips.filter((t: any) => t.type !== null);
-    const bizKm = sorted.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
-    const totKm = sorted.reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const bizKm = trips.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const totKm = trips.reduce((s: number, t: any) => s + (t.km || 0), 0);
     if (totKm > 0) bizPct = Math.round(bizKm / totKm * 100);
   } catch {}
 
@@ -449,26 +448,26 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
 }
 
 export function CalculationBreakdown({ className = '' }: { className?: string }) {
-  const costs = useMemo(() => getVehicleCostsDetailed(), []);
+  const costs = getVehicleCostsDetailed();
 
   let bizPct = 0;
   let deduction = 0;
   try {
     const appState = JSON.parse(localStorage.getItem('wc_app_state') || '{}');
     const trips = appState.trips || [];
-    const sorted = trips.filter((t: any) => t.type !== null);
-    const bizKm = sorted.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
-    const totKm = sorted.reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const bizKm = trips.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const totKm = trips.reduce((s: number, t: any) => s + (t.km || 0), 0);
     if (totKm > 0) {
       bizPct = Math.round(bizKm / totKm * 100);
       deduction = Math.round(bizPct / 100 * costs.total);
     }
   } catch {}
 
+  const mode = getEstimateMode();
   const costBreakdown = [
-    { label: 'Running costs (industry avg)', value: costs.manual },
+    { label: mode === 'industry' ? 'Running costs (industry avg)' : 'Your vehicle expenses', value: costs.manual },
     { label: 'Fuel estimate', value: costs.fuelEstimate },
-    { label: 'Depreciation', value: costs.depreciation },
+    { label: costs.isDepreciationEstimated ? 'Depreciation (estimated)' : 'Depreciation', value: costs.depreciation },
   ].filter(c => c.value > 0);
   if (costs.financeInterest > 0) costBreakdown.push({ label: 'Finance interest', value: costs.financeInterest });
   if (costs.leasePayments > 0) costBreakdown.push({ label: 'Lease payments', value: costs.leasePayments });

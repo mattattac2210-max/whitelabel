@@ -124,7 +124,7 @@ export function SortScreen() {
   const allTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
-  const vehicleCosts = useMemo(() => getVehicleCosts(), []);
+  const vehicleCosts = getVehicleCosts();
   const perKmRate = allTripsKm > 0 ? vehicleCosts / allTripsKm : 0;
   const tripDeductionValue = useCallback((tripKm: number) => {
     if (allTripsKm <= 0) return 0;
