@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { calcLogbookDeduction } from '@/lib/trip-data';
+import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
@@ -135,6 +135,13 @@ export function SortScreen() {
   const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const sortedTotKm = sortedSlice.reduce((s, t) => s + t.km, 0);
   const logbookPct = sortedTotKm > 0 ? Math.round(sortedBizKm / sortedTotKm * 100) : 0;
+
+  const vehicleCosts = useMemo(() => getVehicleCosts(), []);
+  const tripDeductionValue = useCallback((tripKm: number) => {
+    const totalTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
+    if (totalTripsKm <= 0) return 0;
+    return Math.round((tripKm / totalTripsKm) * vehicleCosts);
+  }, [vehicleCosts, state.trips]);
 
   const hasBizTrips = state.bizCount > 0;
   const checks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
@@ -274,33 +281,17 @@ export function SortScreen() {
         {!isComplete ? (
           <>
             {state.trips.slice(state.currentIndex, state.currentIndex + 3).map((trip, offset) => (
-              <div key={trip.id} className="contents">
-                <TripCard
-                  trip={trip}
-                  tripIndex={state.currentIndex + offset}
-                  isTop={offset === 0}
-                  position={offset}
-                  onClassify={handleClassify}
-                  onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
-                  tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
-                />
-                {offset > 0 && (
-                  <div
-                    className="absolute right-[10px] flex items-center gap-[3px] rounded-[6px] px-[6px] py-[2px] pointer-events-none"
-                    style={{
-                      top: offset === 1 ? '4px' : '14px',
-                      zIndex: offset === 1 ? 5 : 0,
-                      background: 'rgba(10,10,10,.85)',
-                      border: '1px solid rgba(245,196,0,.2)',
-                      opacity: offset === 1 ? 0.8 : 0.45,
-                    }}
-                    data-testid={`km-peek-${offset}`}
-                  >
-                    <span className="font-heading font-bold text-[10px]" style={{ color: 'var(--wc-y)' }}>{trip.km}</span>
-                    <span className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
-                  </div>
-                )}
-              </div>
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                tripIndex={state.currentIndex + offset}
+                isTop={offset === 0}
+                position={offset}
+                onClassify={handleClassify}
+                onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
+                tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
+                tripValue={deductionState !== 'locked' ? tripDeductionValue(trip.km) : undefined}
+              />
             ))}
           </>
         ) : state.trips.length === 0 ? (

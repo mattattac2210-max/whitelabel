@@ -325,9 +325,10 @@ interface TripCardProps {
   onClassify: (type: 'business' | 'personal') => void;
   onEdit: () => void;
   tutorialPhase?: 'idle' | 'left' | 'right' | 'done';
+  tripValue?: number;
 }
 
-export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, tutorialPhase = 'done' }: TripCardProps) {
+export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, tutorialPhase = 'done', tripValue }: TripCardProps) {
   const { state } = useApp();
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragX, setDragX] = useState(0);
@@ -591,6 +592,11 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             <div className="font-heading font-black text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{trip.km}</div>
             <div className="font-data text-[8px] uppercase tracking-[.06em] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>km</div>
             <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{trip.time}</div>
+            {tripValue != null && tripValue > 0 && (
+              <div className="font-data text-[9px] font-bold mt-[3px] px-[4px] py-[1px] rounded-[4px]" style={{ background: 'rgba(34,197,94,.1)', color: 'var(--wc-gr)' }} data-testid="text-trip-value">
+                +${tripValue}
+              </div>
+            )}
           </div>
         </div>
 
