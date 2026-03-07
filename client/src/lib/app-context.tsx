@@ -162,7 +162,7 @@ const initialState: AppState = {
 function computeDedTotal(trips: Trip[], upToIndex: number): number {
   const slice = trips.slice(0, upToIndex);
   const bizKm = slice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-  const totalKm = slice.reduce((s, t) => s + t.km, 0);
+  const totalKm = trips.reduce((s, t) => s + t.km, 0);
   return calcLogbookDeduction(bizKm, totalKm);
 }
 
