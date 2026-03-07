@@ -123,7 +123,8 @@ type Action =
   | { type: 'COME_BACK_LATER' }
   | { type: 'RESUME_SORTING' }
   | { type: 'ADD_TRIP'; trip: Trip }
-  | { type: 'CONFIRM_GAP'; tripIndex: number };
+  | { type: 'CONFIRM_GAP'; tripIndex: number; km: number }
+  | { type: 'DELETE_GAP'; tripIndex: number };
 
 
 function nowStr(): string {
@@ -548,9 +549,21 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'CONFIRM_GAP': {
       const newTrips = state.trips.map((t, i) =>
-        i === action.tripIndex ? { ...t, gapConfirmed: true } : t
+        i === action.tripIndex ? { ...t, gapConfirmed: true, km: action.km } : t
       );
-      return { ...state, trips: newTrips };
+      return {
+        ...state,
+        trips: newTrips,
+        auditLog: [{ time: nowStr(), desc: `Gap confirmed: ${state.trips[action.tripIndex].from} → ${state.trips[action.tripIndex].to} (${action.km} km)`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
+    case 'DELETE_GAP': {
+      const newTrips = state.trips.filter((_, i) => i !== action.tripIndex);
+      return {
+        ...state,
+        trips: newTrips,
+        auditLog: [{ time: nowStr(), desc: `Gap deleted: ${state.trips[action.tripIndex].from} → ${state.trips[action.tripIndex].to}`, hasPhoto: false }, ...state.auditLog],
+      };
     }
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;

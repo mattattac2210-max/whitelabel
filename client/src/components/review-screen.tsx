@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE, getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, AlertTriangle, Check } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Check, Trash2 } from 'lucide-react';
 
 export function ReviewScreen() {
   const { state, dispatch } = useApp();
   const [tab, setTab] = useState<'list' | 'cal'>('list');
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
+  const [gapKmInputs, setGapKmInputs] = useState<Record<number, string>>({});
 
   const sorted = state.trips.filter(t => t.type !== null);
   const biz = sorted.filter(t => t.type === 'business');
@@ -179,18 +180,39 @@ export function ReviewScreen() {
                           <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
                             <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em] mb-[3px]" style={{ color: 'var(--wc-am)' }}>Auto-generated connector</div>
                             <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
-                              This trip was created to bridge the gap between two logged trips. It connects the odometer chain so readings stay continuous. You can edit the distance once you know it, or leave it for your accountant.
+                              Enter the gap distance to fix the odometer chain. This km will be added to all onward readings.
                             </div>
                           </div>
                         )}
                         {gapConfirmed && (
                           <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
-                            <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Confirmed &mdash; gap acknowledged</div>
+                            <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Confirmed &mdash; {t.km} km added to odometer chain</div>
                           </div>
                         )}
                         <strong style={{ color: gapConfirmed ? 'white' : 'var(--wc-am)' }}>From:</strong> {t.from}, {t.fromSub}<br />
                         <strong style={{ color: gapConfirmed ? 'white' : 'var(--wc-am)' }}>To:</strong> {t.to}, {t.toSub}<br />
-                        <strong style={{ color: gapConfirmed ? 'white' : 'var(--wc-am)' }}>Distance:</strong> {t.km > 0 ? `${t.km} km` : 'Unknown — edit to set'}<br />
+                        {!gapConfirmed && (
+                          <div className="mt-[6px] mb-[2px]">
+                            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-am)' }}>Gap distance (km)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              className="w-full rounded-lg p-[8px_11px] text-[13px] text-white outline-none font-data"
+                              style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(245,158,11,.25)' }}
+                              value={gapKmInputs[origIdx] ?? ''}
+                              onChange={e => setGapKmInputs(prev => ({ ...prev, [origIdx]: e.target.value }))}
+                              onClick={e => e.stopPropagation()}
+                              placeholder="Enter km"
+                              data-testid={`gap-km-input-${origIdx}`}
+                            />
+                          </div>
+                        )}
+                        {gapConfirmed && (
+                          <>
+                            <strong style={{ color: 'white' }}>Distance:</strong> {t.km} km<br />
+                          </>
+                        )}
                         <strong style={{ color: gapConfirmed ? 'white' : 'var(--wc-am)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
                       </div>
                     ) : (
@@ -211,15 +233,41 @@ export function ReviewScreen() {
                       </div>
                     )}
                     {isGap && !gapConfirmed && (
-                      <button
-                        className="w-full py-[10px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                        style={{ background: 'rgba(245,158,11,.12)', border: '1.5px solid rgba(245,158,11,.35)', color: 'var(--wc-am)' }}
-                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'CONFIRM_GAP', tripIndex: origIdx }); }}
-                        data-testid={`confirm-gap-${origIdx}`}
-                      >
-                        <Check className="w-[14px] h-[14px] inline mr-[5px]" strokeWidth={2.5} />
-                        Confirm Gap
-                      </button>
+                      <div className="flex gap-[6px]">
+                        <button
+                          className="flex-1 py-[10px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                          style={{
+                            background: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'rgba(245,158,11,.15)' : 'rgba(245,158,11,.06)',
+                            border: '1.5px solid rgba(245,158,11,.35)',
+                            color: 'var(--wc-am)',
+                            opacity: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 1 : 0.5,
+                            cursor: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'pointer' : 'not-allowed',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const km = parseFloat(gapKmInputs[origIdx] || '0');
+                            if (km <= 0) return;
+                            dispatch({ type: 'CONFIRM_GAP', tripIndex: origIdx, km });
+                          }}
+                          data-testid={`confirm-gap-${origIdx}`}
+                        >
+                          <Check className="w-[14px] h-[14px] inline mr-[5px]" strokeWidth={2.5} />
+                          Confirm Gap
+                        </button>
+                        <button
+                          className="py-[10px] px-[14px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                          style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: 'DELETE_GAP', tripIndex: origIdx });
+                            setExpandedTrip(null);
+                          }}
+                          data-testid={`delete-gap-${origIdx}`}
+                        >
+                          <Trash2 className="w-[14px] h-[14px] inline mr-[5px]" strokeWidth={2.5} />
+                          Delete
+                        </button>
+                      </div>
                     )}
                     <div className="flex gap-[6px] flex-wrap">
                           <button
