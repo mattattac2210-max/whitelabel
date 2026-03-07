@@ -1,4 +1,5 @@
 export type DeductionState = 'locked' | 'partial' | 'active';
+export type EstimateMode = 'industry' | 'personalised';
 
 export interface ReadinessCheck {
   taxProfileComplete: boolean;
@@ -34,6 +35,61 @@ export interface VehicleCostsDetailed {
 
 const ATO_CAR_LIMIT = 68108;
 const DV_RATE = 0.25;
+
+const INDUSTRY_RUNNING_COSTS: Record<string, number> = {
+  'ute-4x4': 12900,
+  'ute-4x2': 9700,
+  'suv-medium': 9700,
+  'suv-small': 5900,
+  'sedan': 7200,
+  'van': 10500,
+  'default': 9200,
+};
+
+export function getEstimateMode(): EstimateMode {
+  try {
+    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+    if (settings.useIndustryAverages === false) return 'personalised';
+  } catch {}
+  return 'industry';
+}
+
+function getVehicleCategory(): string {
+  try {
+    const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+    const cat = (specs.vehicleCategory || '').toLowerCase();
+    if (cat.includes('4x4') || cat.includes('4wd')) return 'ute-4x4';
+    if (cat.includes('4x2') || cat.includes('2wd')) return 'ute-4x2';
+    if (cat.includes('suv') && cat.includes('small')) return 'suv-small';
+    if (cat.includes('suv')) return 'suv-medium';
+    if (cat.includes('van')) return 'van';
+    if (cat.includes('sedan')) return 'sedan';
+
+    const body = (specs.bodyType || '').toLowerCase();
+    if (body.includes('util') || body.includes('ute')) return 'ute-4x4';
+    if (body.includes('van')) return 'van';
+    if (body.includes('suv') || body.includes('wagon')) return 'suv-medium';
+    if (body.includes('sedan') || body.includes('hatch')) return 'sedan';
+  } catch {}
+  return 'default';
+}
+
+function getIndustryRunningCost(): number {
+  const cat = getVehicleCategory();
+  return INDUSTRY_RUNNING_COSTS[cat] || INDUSTRY_RUNNING_COSTS['default'];
+}
+
+function getIndustryDepreciation(): number {
+  try {
+    const purchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+    const price = parseFloat(purchase.purchasePrice) || 0;
+    if (price > 0) {
+      const capped = Math.min(price, ATO_CAR_LIMIT);
+      return Math.round(capped * DV_RATE * 100) / 100;
+    }
+  } catch {}
+  return Math.round(45000 * DV_RATE * 100) / 100;
+}
 
 export function getReadinessChecks(hasBizTrips?: boolean): ReadinessCheck {
   let taxProfileComplete = false;
@@ -103,6 +159,12 @@ export function getReadinessChecks(hasBizTrips?: boolean): ReadinessCheck {
 export function getDeductionState(checks: ReadinessCheck, showDeductionEstimates: boolean): DeductionState {
   if (!showDeductionEstimates) return 'locked';
 
+  const mode = getEstimateMode();
+
+  if (mode === 'industry') {
+    return 'partial';
+  }
+
   const canEstimate = (checks.purchasePriceEntered && checks.depreciationAvailable) || checks.businessUseEstablished;
   if (!canEstimate) return 'locked';
 
@@ -120,35 +182,36 @@ export function getDeductionState(checks: ReadinessCheck, showDeductionEstimates
 }
 
 export function getMissingItems(checks: ReadinessCheck): MissingItem[] {
+  const mode = getEstimateMode();
+  if (mode === 'industry') return [];
+
   const items: MissingItem[] = [];
-  if (!checks.taxProfileComplete) {
-    items.push({ label: 'Tax profile (income details)', screen: 'account' });
-  }
-  if (!checks.vehiclePurchaseComplete) {
-    items.push({ label: 'Vehicle purchase details', screen: 'account' });
-  }
-  if (!checks.purchasePriceEntered) {
-    items.push({ label: 'Vehicle purchase price', screen: 'account' });
-  }
-  if (!checks.vehicleHistorySet) {
-    items.push({ label: 'Vehicle history status', screen: 'account' });
-  }
-  if (!checks.depreciationAvailable) {
-    items.push({ label: 'Depreciation details (WDV, purchase date, or estimate)', screen: 'account' });
-  }
-  if (!checks.financeInterestAvailable) {
-    items.push({ label: 'Finance / lease interest details', screen: 'account' });
-  }
-  if (!checks.businessUseEstablished) {
-    items.push({ label: 'Classify trips to establish business use', screen: 'sort' });
-  }
-  if (!checks.someExpensesEntered) {
-    items.push({ label: 'Vehicle running expenses', screen: 'expenses' });
-  }
+  if (!checks.taxProfileComplete) items.push({ label: 'Tax profile (income details)', screen: 'account' });
+  if (!checks.vehiclePurchaseComplete) items.push({ label: 'Vehicle purchase details', screen: 'account' });
+  if (!checks.purchasePriceEntered) items.push({ label: 'Vehicle purchase price', screen: 'account' });
+  if (!checks.vehicleHistorySet) items.push({ label: 'Vehicle history status', screen: 'account' });
+  if (!checks.depreciationAvailable) items.push({ label: 'Depreciation details (WDV, purchase date, or estimate)', screen: 'account' });
+  if (!checks.financeInterestAvailable) items.push({ label: 'Finance / lease interest details', screen: 'account' });
+  if (!checks.businessUseEstablished) items.push({ label: 'Classify trips to establish business use', screen: 'sort' });
+  if (!checks.someExpensesEntered) items.push({ label: 'Vehicle running expenses', screen: 'expenses' });
   return items;
 }
 
 export function getIncludedItems(checks: ReadinessCheck): IncludedItem[] {
+  const mode = getEstimateMode();
+
+  if (mode === 'industry') {
+    const items: IncludedItem[] = [{ label: 'Industry average running costs' }];
+    if (checks.businessUseEstablished) items.push({ label: 'Business use from your trips' });
+    if (checks.purchasePriceEntered) items.push({ label: 'Your purchase price for depreciation' });
+    try {
+      const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      if (specs.vehicleCategory || specs.bodyType) items.push({ label: 'Vehicle type used for cost estimate' });
+      if (specs.fuelConsumption) items.push({ label: 'Your fuel consumption data' });
+    } catch {}
+    return items;
+  }
+
   const items: IncludedItem[] = [];
   if (checks.taxProfileComplete) items.push({ label: 'Tax profile complete' });
   if (checks.vehiclePurchaseComplete) items.push({ label: 'Vehicle purchase details entered' });
@@ -163,6 +226,12 @@ export function getIncludedItems(checks: ReadinessCheck): IncludedItem[] {
 }
 
 export function getEstimateDisclaimer(state: DeductionState): string {
+  const mode = getEstimateMode();
+
+  if (mode === 'industry') {
+    return '*Estimate based on industry averages and current usage only. This is not a full representation of your tax situation.';
+  }
+
   switch (state) {
     case 'locked':
       return 'Complete your profile to unlock deduction estimates.';
@@ -174,13 +243,19 @@ export function getEstimateDisclaimer(state: DeductionState): string {
 }
 
 export function getReadinessLabel(state: DeductionState): string {
+  const mode = getEstimateMode();
+
+  if (mode === 'industry') {
+    return 'Industry average estimate';
+  }
+
   switch (state) {
     case 'locked':
       return 'Incomplete';
     case 'partial':
       return 'Basic estimate available';
     case 'active':
-      return 'More accurate estimate available';
+      return 'Personalised estimate';
   }
 }
 
@@ -306,6 +381,48 @@ function getLeasePayments(): number {
 }
 
 export function getVehicleCostsDetailed(): VehicleCostsDetailed {
+  const mode = getEstimateMode();
+
+  if (mode === 'industry') {
+    return getIndustryAverageCosts();
+  }
+
+  return getPersonalisedCosts();
+}
+
+function getIndustryAverageCosts(): VehicleCostsDetailed {
+  const industryRunning = getIndustryRunningCost();
+  const industryDep = getIndustryDepreciation();
+
+  let fuelConsumption = 10;
+  try {
+    const fc = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
+    if (fc > 0) fuelConsumption = fc;
+  } catch {}
+
+  let avgFuelPrice = 1.95;
+  try {
+    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+    const p = parseFloat(settings.avgFuelPrice);
+    if (p > 0) avgFuelPrice = p;
+  } catch {}
+
+  const fuelEstimate = Math.round(15000 / 100 * fuelConsumption * avgFuelPrice * 100) / 100;
+  const total = industryRunning + industryDep + fuelEstimate;
+
+  return {
+    manual: industryRunning,
+    fuelEstimate,
+    depreciation: industryDep,
+    financeInterest: 0,
+    leasePayments: 0,
+    total,
+    missingCategories: [],
+    isDepreciationEstimated: true,
+  };
+}
+
+function getPersonalisedCosts(): VehicleCostsDetailed {
   const missingCategories: string[] = [];
 
   let manual = 0;

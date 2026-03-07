@@ -1,0 +1,120 @@
+Update the deduction estimator settings and setup flow to use “Industry averages” as the default estimation mode.
+
+GOAL
+Make deduction estimates available immediately with low friction by defaulting to industry averages, while allowing users to switch to a more personalised estimate mode if they want greater accuracy.
+
+SETTINGS CHANGE
+
+Inside Settings, add a section:
+
+Deduction Estimate Mode
+
+Add a toggle:
+Use industry averages for deduction estimates
+
+Default state:
+ON
+
+Helper text:
+Fast setup using typical costs based on your vehicle and usage.
+
+MODE LOGIC
+
+WHEN TOGGLE IS ON
+- deduction estimator uses industry average assumptions
+- show estimated deduction values with an asterisk
+- do not require full tax profile, finance, expense, or depreciation detail to begin showing an estimate
+- still use real trip/logbook usage and vehicle data where available
+- mark estimate clearly as based on averages
+
+WHEN TOGGLE IS OFF
+- switch app into personalised estimate mode
+- personalised estimate mode should require more detailed user inputs
+- reveal or unlock the following setup layers:
+  - Tax Estimate Profile
+  - Purchase, Ownership & Finance
+  - Depreciation Details
+  - Expenses
+- if enough data is not yet available, show locked or partial estimate states instead of confident values
+
+TOGGLE OFF CONFIRMATION
+
+When the user turns OFF “Use industry averages for deduction estimates”, show a confirmation modal.
+
+Title:
+Switch to personalised estimates?
+
+Body:
+Tailor deduction estimates to your finances, expenses and vehicle ownership details.
+
+Bullet points:
+- Takes around 10–15 minutes to complete
+- Uses your financial and expense information
+- Produces a more realistic estimate
+
+Buttons:
+- Continue
+- Keep industry averages
+
+If user selects Continue:
+- turn toggle OFF
+- begin personalised estimate setup flow
+
+If user selects Keep industry averages:
+- leave toggle ON
+
+CARD DISPLAY RULES
+
+If industry averages mode is ON:
+- show deduction values with an asterisk
+- supporting text:
+  “Based on industry averages for your vehicle and usage.”
+
+If industry averages mode is OFF and personalised data is incomplete:
+- show lock icon or partial estimate state
+- do not animate rising deduction values
+- tapping the card explains what information is missing
+
+If industry averages mode is OFF and personalised data is sufficiently complete:
+- show personalised estimate normally
+- still label it as a planning estimate only
+
+PERSONALISED MODE REQUIREMENTS
+
+When personalised mode is active, use:
+- business use percentage from trips/logbook
+- entered expenses
+- finance interest if applicable
+- depreciation details
+- tax estimate profile
+- vehicle purchase timing and WDV logic
+
+INDUSTRY AVERAGE MODE REQUIREMENTS
+
+When industry average mode is active, estimate deductions using:
+- business use percentage from trips/logbook
+- vehicle type
+- payload/category if available
+- fuel consumption
+- purchase date if available
+- purchase price if available
+- average running cost assumptions
+- estimated depreciation assumptions
+
+In industry average mode, show a disclaimer:
+*Estimate based on industry averages and current usage only. This is not a full representation of your tax situation.
+
+UI RULES
+- keep this simple and mobile-first
+- use large toggles and clear explanatory text
+- avoid technical wording like “advanced mode” or “custom mode”
+- use “industry averages” and “personalised estimates” consistently
+- minimise extra navigation and keep flows intuitive
+
+DISCLAIMERS
+
+Industry average mode:
+*Estimate based on industry averages and current usage only. This is not a full representation of your tax situation.
+
+Personalised mode:
+Planning estimate only. Final outcomes depend on your full tax position and should be reviewed by a registered tax agent.

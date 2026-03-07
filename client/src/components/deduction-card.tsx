@@ -8,6 +8,7 @@ import {
   getIncludedItems,
   getEstimateDisclaimer,
   getReadinessLabel,
+  getEstimateMode,
 } from '@/lib/deduction-estimator';
 
 interface DeductionCardProps {
@@ -55,12 +56,12 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
           </>
         ) : state === 'partial' ? (
           <>
-            <div className={`font-display text-[28px] leading-none mt-1 ${animate ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-am)' }}>
+            <div className={`font-display text-[28px] leading-none mt-1`} style={{ color: 'var(--wc-am)' }}>
               ${value.toFixed(0)}*
             </div>
             <div className="text-[9px] mt-1 flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
               <Info className="w-[8px] h-[8px]" />
-              partial estimate
+              {getEstimateMode() === 'industry' ? 'based on industry averages' : 'partial estimate'}
             </div>
           </>
         ) : (
@@ -212,12 +213,14 @@ interface ReadinessCardProps {
 export function ReadinessCard({ state, checks }: ReadinessCardProps) {
   const { dispatch } = useApp();
   const [showModal, setShowModal] = useState(false);
+  const mode = getEstimateMode();
   const readiness = getReadinessLabel(state);
   const missing = getMissingItems(checks);
   const completedCount = Object.values(checks).filter(Boolean).length;
   const totalCount = Object.keys(checks).length;
 
   if (state === 'active') return null;
+  if (mode === 'industry') return null;
 
   return (
     <>
