@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, AlertTriangle, Check, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Check, Trash2, Loader2, ChevronDown } from 'lucide-react';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
@@ -47,7 +47,6 @@ function calcGapDistance(from: string, fromSub: string, to: string, toSub: strin
 
 export function ReviewScreen() {
   const { state, dispatch } = useApp();
-  const [tab, setTab] = useState<'list' | 'cal'>('list');
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null);
   const [gapKmInputs, setGapKmInputs] = useState<Record<number, string>>({});
   const [gapCalcStatus, setGapCalcStatus] = useState<Record<number, 'idle' | 'loading' | 'done' | 'error'>>({});
@@ -81,355 +80,255 @@ export function ReviewScreen() {
     });
   }, [state.trips, calcedGaps]);
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const MONTH = 1;
-  const YEAR = 2026;
-  const first = new Date(YEAR, MONTH, 1).getDay();
-  const off = first === 0 ? 6 : first - 1;
-  const dim = new Date(YEAR, MONTH + 1, 0).getDate();
-
   return (
     <div className="flex flex-col h-full" data-testid="review-screen">
-      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+      <div className="flex items-center gap-[10px] px-4 pt-[8px] pb-[6px] flex-shrink-0">
         <button
-          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          className="w-[32px] h-[32px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })}
           data-testid="button-back-review"
         >
-          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Review</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{sorted.length} trips</span>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Review</span>
+        <span className="ml-auto font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{sorted.length} trips</span>
       </div>
 
-      <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
-        <div className="flex items-center gap-[10px]">
-          {[
-            { id: 'step1', label: 'Sort', done: true },
-            { id: 'step2', label: 'Classify', done: unclassified === 0 },
-            { id: 'step3', label: 'Review', active: true },
-            { id: 'step4', label: 'Notes' },
-            { id: 'step5', label: 'Odometer' },
-          ].map((step, i, arr) => (
-            <div key={step.id} className="flex flex-col items-center flex-1 relative">
-              {i < arr.length - 1 && (
-                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgb(var(--wc-ink) / .4)' : 'var(--wc-border)' }} />
-              )}
-              <div
-                className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
-                style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgb(var(--wc-ink) / .5)' : '1.5px solid var(--wc-border)',
-                  color: step.active ? 'var(--wc-bg)' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
-                }}
-              >
-                {step.done ? '\u2713' : i + 1}
-              </div>
-              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .55)' : 'var(--wc-t3)' }}>
-                {step.label}
-              </div>
-            </div>
-          ))}
+      <div className="flex gap-[6px] px-[14px] pb-[8px] flex-shrink-0">
+        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
+          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-y)' }} data-testid="text-review-biz">{biz.length}</div>
+        </div>
+        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Personal</div>
+          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-t2)' }}>{per.length}</div>
+        </div>
+        <div className="flex-1 rounded-[12px] p-[10px_12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction*</div>
+          <div className="font-heading font-black text-[20px] leading-[1.2]" style={{ color: 'var(--wc-gr)' }}>${Math.round(state.dedTotal).toLocaleString('en-AU')}</div>
         </div>
       </div>
 
       {unclassified > 0 && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid rgb(var(--wc-ink) / .25)' }}>
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgb(var(--wc-ink) / .9)" />
-          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgb(var(--wc-ink) / .85)' }}>
-            <strong style={{ color: 'var(--wc-y)' }}>{unclassified} business trip{unclassified > 1 ? 's' : ''}</strong> have no purpose set &mdash; tap to expand and classify.
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[10px_14px] flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1px solid rgb(var(--wc-ink) / .25)' }}>
+          <AlertTriangle className="w-[15px] h-[15px] flex-shrink-0" stroke="rgb(var(--wc-ink) / .9)" />
+          <div className="text-[12px] leading-[1.4]" style={{ color: 'rgb(var(--wc-ink) / .85)' }}>
+            <strong style={{ color: 'var(--wc-y)' }}>{unclassified} business trip{unclassified > 1 ? 's' : ''}</strong> need a purpose — tap to expand.
           </div>
         </div>
       )}
 
       {unconfirmedGaps > 0 && (
-        <div className="mx-[14px] mb-[6px] flex items-center gap-[7px] rounded-[10px] p-[8px_12px] flex-shrink-0" style={{ background: 'rgba(153,153,153,.07)', border: '1px solid rgba(153,153,153,.25)' }}>
-          <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0" stroke="rgba(153,153,153,.9)" />
-          <div className="text-[11px] leading-[1.4]" style={{ color: 'rgba(153,153,153,.85)' }}>
-            <strong style={{ color: 'var(--wc-am)' }}>{unconfirmedGaps} gap trip{unconfirmedGaps > 1 ? 's' : ''}</strong> need confirmation before continuing &mdash; expand each gap and tap Confirm.
+        <div className="mx-[14px] mb-[6px] flex items-center gap-[8px] rounded-[10px] p-[10px_14px] flex-shrink-0" style={{ background: 'rgba(153,153,153,.07)', border: '1px solid rgba(153,153,153,.25)' }}>
+          <AlertTriangle className="w-[15px] h-[15px] flex-shrink-0" stroke="rgba(153,153,153,.9)" />
+          <div className="text-[12px] leading-[1.4]" style={{ color: 'rgba(153,153,153,.85)' }}>
+            <strong style={{ color: 'var(--wc-am)' }}>{unconfirmedGaps} gap{unconfirmedGaps > 1 ? 's' : ''}</strong> need confirmation — expand each and tap Confirm.
           </div>
         </div>
       )}
 
-      <div className="flex gap-[5px] px-[14px] pb-[5px] flex-shrink-0">
-        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business</div>
-          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-y)' }} data-testid="text-review-biz">{biz.length} trips</div>
-        </div>
-        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Personal</div>
-          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-t2)' }}>{per.length} trips</div>
-        </div>
-        <div className="flex-1 rounded-[10px] p-[6px_10px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deduction*</div>
-          <div className="font-heading font-black text-[17px] leading-[1.2]" style={{ color: 'var(--wc-gr)' }}>${Math.round(state.dedTotal).toLocaleString('en-AU')}</div>
-        </div>
-      </div>
+      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[8px] overflow-y-auto scrollbar-thin">
+        {sorted.map((t) => {
+          const origIdx = state.trips.indexOf(t);
+          const baseOdo = state.lastOdoReading || state.baseOdo;
+          const oStart = Math.round(getTripOdoStart(state.trips, origIdx, baseOdo));
+          const oEnd = Math.round(getTripOdoEnd(state.trips, origIdx, baseOdo));
+          const isExpanded = expandedTrip === origIdx;
+          const isGap = !!t.autoGenerated;
+          const gapConfirmed = isGap && !!t.gapConfirmed;
+          const showGapStyle = isGap && !gapConfirmed;
 
-      <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
-        <button
-          className="flex-1 py-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase text-center cursor-pointer transition-all"
-          style={{ borderBottom: tab === 'list' ? '2px solid var(--wc-y)' : '2px solid var(--wc-border)', color: tab === 'list' ? 'var(--wc-y)' : 'var(--wc-t3)' }}
-          onClick={() => setTab('list')}
-          data-testid="tab-list"
-        >
-          List View
-        </button>
-        <button
-          className="flex-1 py-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase text-center cursor-pointer transition-all"
-          style={{ borderBottom: tab === 'cal' ? '2px solid var(--wc-y)' : '2px solid var(--wc-border)', color: tab === 'cal' ? 'var(--wc-y)' : 'var(--wc-t3)' }}
-          onClick={() => setTab('cal')}
-          data-testid="tab-calendar"
-        >
-          Calendar
-        </button>
-      </div>
-
-      {tab === 'list' ? (
-        <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
-          {sorted.map((t) => {
-            const origIdx = state.trips.indexOf(t);
-            const baseOdo = state.lastOdoReading || state.baseOdo;
-            const oStart = Math.round(getTripOdoStart(state.trips, origIdx, baseOdo));
-            const oEnd = Math.round(getTripOdoEnd(state.trips, origIdx, baseOdo));
-            const ded = t.type === 'business' ? t.km.toFixed(1) + ' km' : '\u2014';
-            const isExpanded = expandedTrip === origIdx;
-            const isGap = !!t.autoGenerated;
-            const gapConfirmed = isGap && !!t.gapConfirmed;
-            const showGapStyle = isGap && !gapConfirmed;
-
-            return (
-              <div
-                key={origIdx}
-                className="rounded-[13px] cursor-pointer transition-all"
-                style={{
-                  background: showGapStyle ? 'rgba(153,153,153,.03)' : 'var(--wc-card)',
-                  border: showGapStyle ? '1px dashed rgba(153,153,153,.3)' : '1px solid var(--wc-border)',
-                  borderLeft: showGapStyle ? '3px dashed rgba(153,153,153,.5)' : t.type === 'business' ? '3px solid rgb(var(--wc-ink) / .6)' : '3px solid rgba(180,180,180,.25)',
-                }}
-                data-testid={`review-trip-${origIdx}`}
-              >
-                <div className="flex items-center gap-[10px] p-[12px_14px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
-                  <div className="flex-1 min-w-0">
-                    <div className={`font-semibold text-[13px] mb-[3px] ${isExpanded ? '' : 'truncate'}`} style={{ color: showGapStyle ? 'var(--wc-am)' : 'var(--wc-text)' }}>
-                      {isGap && <span className="font-data text-[8px] uppercase tracking-[.08em] mr-[5px] px-[4px] py-[1px] rounded-[3px]" style={{ background: gapConfirmed ? 'rgba(34,197,94,.1)' : 'rgba(153,153,153,.12)', color: gapConfirmed ? 'var(--wc-gr)' : 'var(--wc-am)', border: gapConfirmed ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.2)' }}>{gapConfirmed ? 'GAP \u2713' : 'GAP'}</span>}
-                      {t.from} &rarr; {t.to}
-                    </div>
-                    <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
-                      {isGap ? (gapConfirmed ? `Confirmed gap · ${t.km > 0 ? t.km + ' km' : 'unknown km'}` : (gapKmInputs[origIdx] ? `Calculated: ${gapKmInputs[origIdx]} km — tap to confirm` : 'Unlogged gap — tap to calculate')) : `${t.date} · ${t.km} km · ${t.duration}`}
-                    </div>
+          return (
+            <div
+              key={origIdx}
+              className="rounded-[14px] cursor-pointer transition-all"
+              style={{
+                background: showGapStyle ? 'rgba(153,153,153,.03)' : 'var(--wc-card)',
+                border: showGapStyle ? '1px dashed rgba(153,153,153,.3)' : '1px solid var(--wc-border)',
+                borderLeft: showGapStyle ? '3px dashed rgba(153,153,153,.5)' : t.type === 'business' ? '3px solid rgb(var(--wc-ink) / .6)' : '3px solid rgba(180,180,180,.25)',
+              }}
+              data-testid={`review-trip-${origIdx}`}
+            >
+              <div className="flex items-center gap-[10px] p-[14px_16px]" onClick={() => setExpandedTrip(isExpanded ? null : origIdx)}>
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold text-[15px] mb-[4px] leading-[1.3] ${isExpanded ? '' : 'truncate'}`} style={{ color: showGapStyle ? 'var(--wc-am)' : 'var(--wc-text)' }}>
+                    {isGap && <span className="font-data text-[9px] uppercase tracking-[.08em] mr-[6px] px-[5px] py-[2px] rounded-[4px]" style={{ background: gapConfirmed ? 'rgba(34,197,94,.1)' : 'rgba(153,153,153,.12)', color: gapConfirmed ? 'var(--wc-gr)' : 'var(--wc-am)', border: gapConfirmed ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.2)' }}>{gapConfirmed ? 'GAP \u2713' : 'GAP'}</span>}
+                    {t.from} &rarr; {t.to}
                   </div>
-                  <div className="font-heading font-bold text-[14px] flex-shrink-0" style={{ color: showGapStyle ? 'var(--wc-am)' : 'var(--wc-t2)' }}>
-                    {t.km > 0 ? `${t.km} km` : isGap && gapKmInputs[origIdx] ? `${gapKmInputs[origIdx]} km` : isGap ? '? km' : `${t.km} km`}
+                  <div className="text-[12px]" style={{ color: 'var(--wc-t3)' }}>
+                    {isGap ? (gapConfirmed ? `Confirmed · ${t.km > 0 ? t.km + ' km' : ''}` : (gapKmInputs[origIdx] ? `${gapKmInputs[origIdx]} km — tap to confirm` : 'Unlogged gap')) : `${t.date} · ${t.km} km · ${t.duration}`}
                   </div>
-                  <span
-                    className="font-heading font-bold text-[11px] px-2 py-[3px] rounded-[6px] uppercase tracking-[.04em] flex-shrink-0"
-                    style={{
-                      background: t.type === 'business' ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
-                      color: t.type === 'business' ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
-                      border: t.type === 'business' ? '1px solid rgb(var(--wc-ink) / .22)' : '1px solid rgba(180,180,180,.15)',
-                    }}
-                  >
-                    {t.type === 'business' ? 'Business' : 'Personal'}
-                  </span>
-                  <div className="text-[14px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>&or;</div>
                 </div>
-                {isExpanded && (
-                  <div className="p-[10px_14px_13px] flex flex-col gap-2 border-t" style={{ borderColor: showGapStyle ? 'rgba(153,153,153,.15)' : 'var(--wc-border)' }}>
-                    {isGap ? (
-                      <div className="text-[11px] leading-[1.6]" style={{ color: 'var(--wc-t3)' }}>
-                        {!gapConfirmed && (() => {
-                          const status = gapCalcStatus[origIdx] || 'idle';
-                          return (
-                            <>
-                              <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.15)' }}>
-                                <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em] mb-[3px]" style={{ color: 'var(--wc-am)' }}>Auto-generated connector</div>
-                                {status === 'loading' && (
-                                  <div className="flex items-center gap-[6px] text-[10px]" style={{ color: 'var(--wc-am)' }}>
-                                    <Loader2 className="w-[12px] h-[12px] animate-spin" />
-                                    Calculating route distance...
-                                  </div>
-                                )}
-                                {status === 'done' && (
-                                  <div className="text-[10px]" style={{ color: 'var(--wc-gr)' }}>
-                                    Route calculated: {gapKmInputs[origIdx]} km — confirm to add to odometer chain
-                                  </div>
-                                )}
-                                {status === 'error' && (
-                                  <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
-                                    Could not auto-calculate route. Enter distance manually below.
-                                  </div>
-                                )}
-                                {status === 'idle' && (
-                                  <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
-                                    Preparing to calculate route distance...
-                                  </div>
-                                )}
-                              </div>
-                              <strong style={{ color: 'var(--wc-am)' }}>From:</strong> {t.from}, {t.fromSub}<br />
-                              <strong style={{ color: 'var(--wc-am)' }}>To:</strong> {t.to}, {t.toSub}<br />
-                              <div className="mt-[6px] mb-[2px]">
-                                <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: status === 'done' ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
-                                  {status === 'done' ? 'Calculated distance (editable)' : 'Gap distance (km)'}
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  min="0"
-                                  className="w-full rounded-lg p-[8px_11px] text-[13px] outline-none font-data"
-                                  style={{ background: 'rgb(var(--wc-ink) / .06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.25)', color: 'var(--wc-text)' }}
-                                  value={gapKmInputs[origIdx] ?? ''}
-                                  onChange={e => setGapKmInputs(prev => ({ ...prev, [origIdx]: e.target.value }))}
-                                  onClick={e => e.stopPropagation()}
-                                  placeholder={status === 'loading' ? 'Calculating...' : 'Enter km'}
-                                  data-testid={`gap-km-input-${origIdx}`}
-                                />
-                              </div>
-                            </>
-                          );
-                        })()}
-                        {gapConfirmed && (
+                <span
+                  className="font-heading font-bold text-[12px] px-[10px] py-[5px] rounded-[8px] uppercase tracking-[.04em] flex-shrink-0"
+                  style={{
+                    background: t.type === 'business' ? 'var(--wc-yd)' : 'rgba(180,180,180,.08)',
+                    color: t.type === 'business' ? 'var(--wc-y)' : 'rgba(180,180,180,.7)',
+                    border: t.type === 'business' ? '1px solid rgb(var(--wc-ink) / .22)' : '1px solid rgba(180,180,180,.15)',
+                  }}
+                >
+                  {t.type === 'business' ? 'Biz' : 'Per'}
+                </span>
+                <ChevronDown className="w-[16px] h-[16px] flex-shrink-0 transition-transform" style={{ color: 'var(--wc-t3)', transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
+              </div>
+              {isExpanded && (
+                <div className="p-[12px_16px_14px] flex flex-col gap-[8px] border-t" style={{ borderColor: showGapStyle ? 'rgba(153,153,153,.15)' : 'var(--wc-border)' }}>
+                  {isGap ? (
+                    <div className="text-[12px] leading-[1.6]" style={{ color: 'var(--wc-t3)' }}>
+                      {!gapConfirmed && (() => {
+                        const status = gapCalcStatus[origIdx] || 'idle';
+                        return (
                           <>
-                            <div className="rounded-[8px] px-[10px] py-[7px] mb-[6px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
-                              <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Confirmed &mdash; {t.km} km added to odometer chain</div>
+                            <div className="rounded-[10px] px-[12px] py-[8px] mb-[8px]" style={{ background: 'rgba(153,153,153,.06)', border: '1px solid rgba(153,153,153,.15)' }}>
+                              <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[3px]" style={{ color: 'var(--wc-am)' }}>Auto-generated connector</div>
+                              {status === 'loading' && (
+                                <div className="flex items-center gap-[6px] text-[11px]" style={{ color: 'var(--wc-am)' }}>
+                                  <Loader2 className="w-[13px] h-[13px] animate-spin" />
+                                  Calculating route distance...
+                                </div>
+                              )}
+                              {status === 'done' && (
+                                <div className="text-[11px]" style={{ color: 'var(--wc-gr)' }}>
+                                  Route calculated: {gapKmInputs[origIdx]} km
+                                </div>
+                              )}
+                              {status === 'error' && (
+                                <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+                                  Could not auto-calculate. Enter distance manually.
+                                </div>
+                              )}
+                              {status === 'idle' && (
+                                <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+                                  Preparing to calculate...
+                                </div>
+                              )}
                             </div>
-                            <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
-                            <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
-                            <strong style={{ color: 'var(--wc-text)' }}>Distance:</strong> {t.km} km<br />
+                            <strong style={{ color: 'var(--wc-am)' }}>From:</strong> {t.from}, {t.fromSub}<br />
+                            <strong style={{ color: 'var(--wc-am)' }}>To:</strong> {t.to}, {t.toSub}<br />
+                            <div className="mt-[8px]">
+                              <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: status === 'done' ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                                {status === 'done' ? 'Calculated distance (editable)' : 'Gap distance (km)'}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                className="w-full rounded-[10px] p-[10px_12px] text-[14px] outline-none font-data"
+                                style={{ background: 'rgb(var(--wc-ink) / .06)', border: status === 'done' ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(153,153,153,.25)', color: 'var(--wc-text)' }}
+                                value={gapKmInputs[origIdx] ?? ''}
+                                onChange={e => setGapKmInputs(prev => ({ ...prev, [origIdx]: e.target.value }))}
+                                onClick={e => e.stopPropagation()}
+                                placeholder={status === 'loading' ? 'Calculating...' : 'Enter km'}
+                                data-testid={`gap-km-input-${origIdx}`}
+                              />
+                            </div>
                           </>
-                        )}
-                        <strong style={{ color: gapConfirmed ? 'var(--wc-text)' : 'var(--wc-am)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
-                      </div>
-                    ) : (
-                      <div className="text-[12px] leading-[1.8]" style={{ color: 'var(--wc-t2)' }}>
-                        <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
-                        <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
-                        <strong style={{ color: 'var(--wc-text)' }}>Time:</strong> {t.time} &middot; <strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {t.duration}<br />
-                        <strong style={{ color: 'var(--wc-text)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km<br />
-                        <strong style={{ color: 'var(--wc-text)' }}>Deduction est.:</strong> {ded}
-                      </div>
-                    )}
-                    {t.purposeLabel && (
-                      <div className="text-[12px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
-                    )}
-                    {t.notes && (
-                      <div className="text-[11px] rounded-[6px] p-[5px_8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
-                        <span className="font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
-                      </div>
-                    )}
-                    {isGap && !gapConfirmed && (
-                      <div className="flex gap-[6px]">
-                        <button
-                          className="flex-1 py-[10px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                          style={{
-                            background: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'rgba(153,153,153,.15)' : 'rgba(153,153,153,.06)',
-                            border: '1.5px solid rgba(153,153,153,.35)',
-                            color: 'var(--wc-am)',
-                            opacity: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 1 : 0.5,
-                            cursor: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'pointer' : 'not-allowed',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const km = parseFloat(gapKmInputs[origIdx] || '0');
-                            if (km <= 0) return;
-                            dispatch({ type: 'CONFIRM_GAP', tripIndex: origIdx, km });
-                          }}
-                          data-testid={`confirm-gap-${origIdx}`}
-                        >
-                          <Check className="w-[14px] h-[14px] inline mr-[5px]" strokeWidth={2.5} />
-                          Confirm Gap
-                        </button>
-                        <button
-                          className="py-[10px] px-[14px] rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                          style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            dispatch({ type: 'DELETE_GAP', tripIndex: origIdx });
-                            setExpandedTrip(null);
-                          }}
-                          data-testid={`delete-gap-${origIdx}`}
-                        >
-                          <Trash2 className="w-[14px] h-[14px] inline mr-[5px]" strokeWidth={2.5} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                    <div className="flex gap-[6px] flex-wrap">
-                          <button
-                            className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                            style={{ color: 'rgba(180,180,180,.7)', background: t.type === 'personal' ? 'rgba(180,180,180,.1)' : 'transparent', border: '1.5px solid rgba(180,180,180,.25)' }}
-                            onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'personal' }); }}
-                            data-testid={`reclassify-personal-${origIdx}`}
-                          >
-                            &larr; Personal
-                          </button>
-                          <button
-                            className="flex-1 min-w-[80px] py-2 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                            style={{ borderColor: 'rgb(var(--wc-ink) / .4)', color: 'var(--wc-y)', background: t.type === 'business' ? 'var(--wc-yd)' : 'var(--wc-yd)', border: '1.5px solid rgb(var(--wc-ink) / .4)' }}
-                            onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
-                            data-testid={`reclassify-business-${origIdx}`}
-                          >
-                            Business &rarr;
-                          </button>
+                        );
+                      })()}
+                      {gapConfirmed && (
+                        <>
+                          <div className="rounded-[10px] px-[12px] py-[8px] mb-[8px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+                            <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Confirmed &mdash; {t.km} km added to odometer chain</div>
+                          </div>
+                          <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
+                          <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
+                        </>
+                      )}
+                      <strong style={{ color: gapConfirmed ? 'var(--wc-text)' : 'var(--wc-am)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
+                    </div>
+                  ) : (
+                    <div className="text-[13px] leading-[1.8]" style={{ color: 'var(--wc-t2)' }}>
+                      <strong style={{ color: 'var(--wc-text)' }}>From:</strong> {t.from}, {t.fromSub}<br />
+                      <strong style={{ color: 'var(--wc-text)' }}>To:</strong> {t.to}, {t.toSub}<br />
+                      <strong style={{ color: 'var(--wc-text)' }}>Time:</strong> {t.time} &middot; <strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {t.duration}<br />
+                      <strong style={{ color: 'var(--wc-text)' }}>Odometer:</strong> {oStart.toLocaleString('en-AU')} &rarr; {oEnd.toLocaleString('en-AU')} km
+                    </div>
+                  )}
+                  {t.purposeLabel && (
+                    <div className="text-[13px] italic" style={{ color: 'var(--wc-gr)' }}>Purpose: {t.purposeLabel}</div>
+                  )}
+                  {t.notes && (
+                    <div className="text-[12px] rounded-[8px] p-[6px_10px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
+                      <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Notes: </span>{t.notes}
+                    </div>
+                  )}
+                  {isGap && !gapConfirmed && (
+                    <div className="flex gap-[8px]">
                       <button
-                        className="py-2 px-3 rounded-[9px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                        style={{ border: '1px solid var(--wc-border)', background: 'rgb(var(--wc-ink) / .04)', color: 'var(--wc-t2)' }}
-                        onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: origIdx }); }}
-                        data-testid={`edit-trip-${origIdx}`}
+                        className="flex-1 py-[12px] rounded-[10px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+                        style={{
+                          background: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'rgba(153,153,153,.15)' : 'rgba(153,153,153,.06)',
+                          border: '1.5px solid rgba(153,153,153,.35)',
+                          color: 'var(--wc-am)',
+                          opacity: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 1 : 0.5,
+                          cursor: (parseFloat(gapKmInputs[origIdx] || '0') > 0) ? 'pointer' : 'not-allowed',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const km = parseFloat(gapKmInputs[origIdx] || '0');
+                          if (km <= 0) return;
+                          dispatch({ type: 'CONFIRM_GAP', tripIndex: origIdx, km });
+                        }}
+                        data-testid={`confirm-gap-${origIdx}`}
                       >
-                        Edit &rsaquo;
+                        <Check className="w-[15px] h-[15px]" strokeWidth={2.5} />
+                        Confirm Gap
+                      </button>
+                      <button
+                        className="py-[12px] px-[16px] rounded-[10px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+                        style={{ background: 'rgba(239,68,68,.08)', border: '1.5px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dispatch({ type: 'DELETE_GAP', tripIndex: origIdx });
+                          setExpandedTrip(null);
+                        }}
+                        data-testid={`delete-gap-${origIdx}`}
+                      >
+                        <Trash2 className="w-[15px] h-[15px]" strokeWidth={2.5} />
+                        Delete
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex-1 px-[14px] flex flex-col gap-[6px]">
-          <div className="font-heading font-bold text-[14px] uppercase tracking-[.06em] text-center" style={{ color: 'var(--wc-text)' }}>February 2026</div>
-          <div className="grid grid-cols-7 gap-[3px]">
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <div key={i} className="font-data text-[8px] text-center py-[2px]" style={{ color: 'var(--wc-t3)' }}>{d}</div>
-            ))}
-            {Array.from({ length: off }).map((_, i) => (
-              <div key={`e${i}`} className="text-transparent text-center text-[13px]">.</div>
-            ))}
-            {Array.from({ length: dim }).map((_, i) => {
-              const d = i + 1;
-              const dayTrips = sorted.filter(t => t.day === d && t.month === MONTH && t.year === YEAR);
-              const hasBiz = dayTrips.some(t => t.type === 'business');
-              const hasPer = dayTrips.some(t => t.type === 'personal');
-
-              return (
-                <div key={d} className="font-heading font-semibold text-[13px] text-center py-[5px] rounded-[6px] cursor-default leading-none relative" style={{ color: dayTrips.length ? 'var(--wc-t2)' : 'var(--wc-t3)' }}>
-                  {d}
-                  {dayTrips.length > 0 && (
-                    <div className="w-[5px] h-[5px] rounded-full absolute bottom-[1px] left-1/2 -translate-x-1/2" style={{ background: hasBiz ? 'var(--wc-y)' : hasPer ? 'var(--wc-t3)' : 'var(--wc-re)' }} />
                   )}
+                  <div className="flex gap-[8px]">
+                    <button
+                      className="flex-1 py-[10px] rounded-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      style={{ color: 'rgba(180,180,180,.7)', background: t.type === 'personal' ? 'rgba(180,180,180,.1)' : 'transparent', border: '1.5px solid rgba(180,180,180,.25)' }}
+                      onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'personal' }); }}
+                      data-testid={`reclassify-personal-${origIdx}`}
+                    >
+                      &larr; Personal
+                    </button>
+                    <button
+                      className="flex-1 py-[10px] rounded-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      style={{ color: 'var(--wc-y)', background: 'var(--wc-yd)', border: '1.5px solid rgb(var(--wc-ink) / .4)' }}
+                      onClick={(e) => { e.stopPropagation(); dispatch({ type: 'RECLASSIFY', tripIndex: origIdx, tripType: 'business' }); }}
+                      data-testid={`reclassify-business-${origIdx}`}
+                    >
+                      Business &rarr;
+                    </button>
+                    <button
+                      className="py-[10px] px-[14px] rounded-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                      style={{ border: '1px solid var(--wc-border)', background: 'rgb(var(--wc-ink) / .04)', color: 'var(--wc-t2)' }}
+                      onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_EDIT', tripIndex: origIdx }); }}
+                      data-testid={`edit-trip-${origIdx}`}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-          <div className="flex gap-[10px] justify-center flex-shrink-0">
-            {[{ color: 'var(--wc-y)', label: 'Business' }, { color: 'var(--wc-t3)', label: 'Personal' }, { color: 'var(--wc-re)', label: 'Unsorted' }].map(l => (
-              <div key={l.label} className="flex items-center gap-1 text-[9px]" style={{ color: 'var(--wc-t2)' }}>
-                <div className="w-[6px] h-[6px] rounded-full" style={{ background: l.color }} />
-                {l.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-      <div className="px-[14px] py-[6px] flex-shrink-0">
+      <div className="px-[14px] py-[8px] flex-shrink-0">
         <button
-          className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
+          className="w-full rounded-[14px] py-[14px] font-heading font-black text-[17px] tracking-[.07em] uppercase flex items-center justify-center gap-2 transition-all"
           style={{
             background: canContinue ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .25)',
-            color: canContinue ? 'black' : 'rgba(0,0,0,.4)',
+            color: canContinue ? 'var(--wc-bg)' : 'rgb(var(--wc-ink) / .4)',
             boxShadow: canContinue ? '0 4px 20px rgb(var(--wc-ink) / .25)' : 'none',
             cursor: canContinue ? 'pointer' : 'not-allowed',
           }}
