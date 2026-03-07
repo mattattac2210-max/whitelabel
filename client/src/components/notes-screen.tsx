@@ -167,12 +167,12 @@ export function NotesScreen() {
     <div className="flex flex-col h-full" data-testid="notes-screen">
       <div className="flex items-center gap-[8px] px-[14px] pt-[6px] pb-[4px] flex-shrink-0">
         <button
-          className="w-[28px] h-[28px] rounded-lg flex items-center justify-center"
+          className="w-[36px] h-[36px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'review' })}
           data-testid="button-back-notes"
         >
-          <ArrowLeft className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
         <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Trip Notes</span>
         <div className="ml-auto flex gap-[6px] items-center">
@@ -213,14 +213,14 @@ export function NotesScreen() {
                   </div>
                 </div>
                 {hasNote ? (
-                  <div className="flex items-center gap-[4px] px-[7px] py-[3px] rounded-[6px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
-                    <Check className="w-[11px] h-[11px]" style={{ color: 'var(--wc-gr)' }} />
-                    <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-gr)' }}>Done</span>
+                  <div className="flex items-center gap-[5px] px-[10px] py-[6px] rounded-[8px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
+                    <Check className="w-[14px] h-[14px]" style={{ color: 'var(--wc-gr)' }} />
+                    <span className="font-data text-[11px] uppercase" style={{ color: 'var(--wc-gr)' }}>Done</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-[4px] px-[7px] py-[3px] rounded-[6px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}>
-                    <MessageSquarePlus className="w-[11px] h-[11px]" style={{ color: 'var(--wc-am)' }} />
-                    <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-am)' }}>Required</span>
+                  <div className="flex items-center gap-[5px] px-[10px] py-[6px] rounded-[8px]" style={{ background: 'rgba(153,153,153,.08)', border: '1px solid rgba(153,153,153,.2)' }}>
+                    <MessageSquarePlus className="w-[14px] h-[14px]" style={{ color: 'var(--wc-am)' }} />
+                    <span className="font-data text-[11px] uppercase" style={{ color: 'var(--wc-am)' }}>Required</span>
                   </div>
                 )}
               </div>
@@ -228,15 +228,15 @@ export function NotesScreen() {
               <div className="px-[14px] pb-[10px]">
                 {isFocused && smartSuggestion && !noteText && (
                   <button
-                    className="w-full mb-[8px] rounded-[10px] p-[8px_12px] text-left cursor-pointer transition-all flex items-start gap-[8px]"
+                    className="w-full mb-[8px] rounded-[12px] p-[12px_14px] text-left cursor-pointer transition-all flex items-start gap-[10px]"
                     style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' }}
                     onClick={() => useSuggestion(idx)}
                     data-testid={`notes-suggestion-${idx}`}
                   >
-                    <Lightbulb className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
+                    <Lightbulb className="w-[18px] h-[18px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
                     <div>
-                      <div className="font-heading font-bold text-[10px] uppercase tracking-[.04em] mb-[1px]" style={{ color: 'var(--wc-y)' }}>Suggested</div>
-                      <div className="text-[12px]" style={{ color: 'var(--wc-t2)' }}>{smartSuggestion}</div>
+                      <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>Suggested</div>
+                      <div className="text-[14px]" style={{ color: 'var(--wc-t2)' }}>{smartSuggestion}</div>
                     </div>
                   </button>
                 )}
@@ -255,17 +255,17 @@ export function NotesScreen() {
 
                 {isFocused && (
                   <>
-                    <div className="flex flex-wrap gap-[4px] mt-[6px]">
+                    <div className="flex flex-wrap gap-[6px] mt-[8px]">
                       {PREFIXES.map((s) => {
                         const names = getStoredNames(s);
                         const isActive = activePrefix === s;
                         return (
                           <button
                             key={s}
-                            className="rounded-[7px] px-[8px] py-[5px] font-heading font-bold text-[11px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[3px]"
+                            className="rounded-[10px] px-[14px] py-[10px] font-heading font-bold text-[14px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[5px]"
                             style={{
                               background: isActive ? 'rgb(var(--wc-ink) / .15)' : 'rgb(var(--wc-ink) / .06)',
-                              border: isActive ? '1px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
+                              border: isActive ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1px solid var(--wc-border)',
                               color: isActive ? 'var(--wc-y)' : 'var(--wc-t2)',
                             }}
                             onMouseDown={e => e.preventDefault()}
@@ -274,7 +274,7 @@ export function NotesScreen() {
                           >
                             {s}
                             {names.length > 0 && (
-                              <span className="font-data text-[8px] rounded-full w-[14px] h-[14px] flex items-center justify-center" style={{ background: isActive ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .1)', color: isActive ? 'var(--wc-bg)' : 'var(--wc-t3)' }}>
+                              <span className="font-data text-[10px] rounded-full w-[18px] h-[18px] flex items-center justify-center" style={{ background: isActive ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .1)', color: isActive ? 'var(--wc-bg)' : 'var(--wc-t3)' }}>
                                 {names.length}
                               </span>
                             )}
@@ -284,26 +284,26 @@ export function NotesScreen() {
                     </div>
 
                     {activePrefix && prefixNames.length > 0 && (
-                      <div className="mt-[5px] rounded-[10px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
-                        <div className="flex items-center justify-between px-[10px] py-[5px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .1)' }}>
-                          <span className="font-heading font-bold text-[10px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
-                            <User className="w-[11px] h-[11px] inline mr-[3px]" />
+                      <div className="mt-[8px] rounded-[12px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
+                        <div className="flex items-center justify-between px-[14px] py-[10px]" style={{ borderBottom: '1px solid rgb(var(--wc-ink) / .1)' }}>
+                          <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
+                            <User className="w-[14px] h-[14px] inline mr-[5px]" />
                             Your {activePrefix}s
                           </span>
-                          <button onMouseDown={e => e.preventDefault()} onClick={() => setActivePrefix(null)} className="cursor-pointer" data-testid={`notes-close-names-${idx}`}>
-                            <X className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                          <button onMouseDown={e => e.preventDefault()} onClick={() => setActivePrefix(null)} className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center cursor-pointer" style={{ background: 'rgb(var(--wc-ink) / .06)' }} data-testid={`notes-close-names-${idx}`}>
+                            <X className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
                           </button>
                         </div>
                         {prefixNames.map((name, ni) => (
                           <button
                             key={ni}
-                            className="w-full text-left px-[10px] py-[8px] text-[13px] cursor-pointer transition-all flex items-center gap-[6px]"
+                            className="w-full text-left px-[14px] py-[12px] text-[15px] cursor-pointer transition-all flex items-center gap-[10px]"
                             style={{ color: 'var(--wc-text)', borderBottom: ni < prefixNames.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none' }}
                             onMouseDown={e => e.preventDefault()}
                             onClick={() => handleNameSelect(activePrefix, name, idx)}
                             data-testid={`notes-name-${idx}-${ni}`}
                           >
-                            <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                            <MapPin className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
                             {name}
                           </button>
                         ))}
@@ -311,16 +311,16 @@ export function NotesScreen() {
                     )}
 
                     {recentHistory.length > 0 && !noteText && !activePrefix && (
-                      <div className="mt-[6px]">
-                        <div className="flex items-center gap-[4px] mb-[4px]">
-                          <Clock className="w-[10px] h-[10px]" style={{ color: 'var(--wc-t3)' }} />
-                          <span className="font-data text-[8px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Recent</span>
+                      <div className="mt-[8px]">
+                        <div className="flex items-center gap-[6px] mb-[6px]">
+                          <Clock className="w-[13px] h-[13px]" style={{ color: 'var(--wc-t3)' }} />
+                          <span className="font-data text-[11px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Recent</span>
                         </div>
-                        <div className="flex flex-col gap-[3px]">
+                        <div className="flex flex-col gap-[5px]">
                           {recentHistory.slice(0, 4).map((h, hi) => (
                             <button
                               key={hi}
-                              className="w-full text-left rounded-[7px] px-[8px] py-[6px] text-[12px] cursor-pointer transition-all truncate"
+                              className="w-full text-left rounded-[10px] px-[14px] py-[12px] text-[14px] cursor-pointer transition-all truncate"
                               style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
                               onMouseDown={e => e.preventDefault()}
                               onClick={() => handleHistorySelect(h, idx)}
