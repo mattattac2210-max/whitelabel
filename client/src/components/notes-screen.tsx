@@ -1,23 +1,90 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ArrowRight, Check, MessageSquarePlus, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, MessageSquarePlus, Lightbulb, ChevronDown, ChevronUp, Clock, MapPin, User, X } from 'lucide-react';
 
-const SUGGESTIONS = [
-  'Client: ',
-  'Site: ',
-  'Store: ',
-  'Picked up ',
-  'Quote for ',
-  'Meeting with ',
-  'Delivered to ',
-  'Inspected ',
-];
+const PREFIXES = ['Client', 'Site', 'Store', 'Picked up', 'Quote for', 'Meeting with', 'Delivered to', 'Inspected'] as const;
+
+const KNOWN_PLACES: Record<string, string> = {
+  bunnings: 'Store: Bunnings — picked up ',
+  reece: 'Store: Reece Plumbing — picked up ',
+  'trade depot': 'Store: Trade Depot — picked up ',
+  officeworks: 'Store: Officeworks — ',
+  mitre: 'Store: Mitre 10 — picked up ',
+  tradelink: 'Store: Tradelink — picked up ',
+  'total tools': 'Store: Total Tools — picked up ',
+  sydneytools: 'Store: Sydney Tools — picked up ',
+  'masters': 'Store: Masters — picked up ',
+  coles: 'Store: Coles — ',
+  woolworths: 'Store: Woolworths — ',
+};
+
+function getStoredHistory(): string[] {
+  try {
+    const raw = localStorage.getItem('wc_note_history');
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function addToHistory(note: string) {
+  if (!note || note.length < 3) return;
+  const history = getStoredHistory();
+  const clean = note.trim();
+  const filtered = history.filter(h => h !== clean);
+  filtered.unshift(clean);
+  localStorage.setItem('wc_note_history', JSON.stringify(filtered.slice(0, 100)));
+}
+
+function getStoredNames(prefix: string): string[] {
+  try {
+    const raw = localStorage.getItem('wc_names_' + prefix.toLowerCase());
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function addToNames(prefix: string, name: string) {
+  if (!name || name.length < 2) return;
+  const names = getStoredNames(prefix);
+  const clean = name.trim();
+  const filtered = names.filter(n => n !== clean);
+  filtered.unshift(clean);
+  localStorage.setItem('wc_names_' + prefix.toLowerCase(), JSON.stringify(filtered.slice(0, 50)));
+}
+
+function extractNamesFromNote(note: string) {
+  for (const prefix of PREFIXES) {
+    const pattern = new RegExp(`^${prefix}:\\s*(.+?)(?:\\s*[—–-]|$)`, 'i');
+    const match = note.match(pattern);
+    if (match && match[1]?.trim()) {
+      addToNames(prefix, match[1].trim());
+    }
+  }
+}
+
+function suggestFromDestination(to: string, toSub: string, purposeLabel: string | null): string | null {
+  const dest = (to + ' ' + toSub).toLowerCase();
+  for (const [key, template] of Object.entries(KNOWN_PLACES)) {
+    if (dest.includes(key)) return template;
+  }
+  if (purposeLabel) {
+    const label = purposeLabel.toLowerCase();
+    if (label.includes('client') || label.includes('site visit')) {
+      return `Client: — ${purposeLabel.toLowerCase()} at ${to}`;
+    }
+    if (label.includes('supplier') || label.includes('materials')) {
+      return `Store: ${to} — picked up `;
+    }
+    return `${purposeLabel} — ${to}`;
+  }
+  if (dest.includes('home') || dest.includes('gym') || dest.includes('school')) return null;
+  return `Site: ${to} — `;
+}
 
 export function NotesScreen() {
   const { state, dispatch } = useApp();
   const [editingTrip, setEditingTrip] = useState<number | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [activePrefix, setActivePrefix] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const bizTrips = state.trips
@@ -26,6 +93,15 @@ export function NotesScreen() {
 
   const withNotes = bizTrips.filter(({ trip }) => trip.notes && trip.notes.length > 0).length;
   const withoutNotes = bizTrips.length - withNotes;
+
+  const recentHistory = useMemo(() => getStoredHistory().slice(0, 8), [editingTrip]);
+  const prefixNames = useMemo(() => activePrefix ? getStoredNames(activePrefix) : [], [activePrefix, editingTrip]);
+
+  const currentTrip = editingTrip !== null ? state.trips[editingTrip] : null;
+  const smartSuggestion = useMemo(() => {
+    if (!currentTrip) return null;
+    return suggestFromDestination(currentTrip.to, currentTrip.toSub, currentTrip.purposeLabel);
+  }, [currentTrip?.to, currentTrip?.toSub, currentTrip?.purposeLabel]);
 
   useEffect(() => {
     if (editingTrip !== null && inputRef.current) {
@@ -36,94 +112,80 @@ export function NotesScreen() {
   const startEditing = (tripIdx: number) => {
     setEditingTrip(tripIdx);
     setNoteText(state.trips[tripIdx].notes || '');
+    setActivePrefix(null);
   };
 
   const saveNote = () => {
     if (editingTrip === null) return;
-    dispatch({ type: 'UPDATE_TRIP', tripIndex: editingTrip, updates: { notes: noteText.trim() } });
+    const trimmed = noteText.trim();
+    dispatch({ type: 'UPDATE_TRIP', tripIndex: editingTrip, updates: { notes: trimmed } });
+    if (trimmed) {
+      addToHistory(trimmed);
+      extractNamesFromNote(trimmed);
+    }
     setEditingTrip(null);
     setNoteText('');
+    setActivePrefix(null);
   };
 
-  const applySuggestion = (suggestion: string) => {
-    setNoteText(prev => prev + suggestion);
+  const handlePrefixTap = (prefix: string) => {
+    const names = getStoredNames(prefix);
+    if (names.length > 0) {
+      setActivePrefix(activePrefix === prefix ? null : prefix);
+    } else {
+      setNoteText(prev => prev + prefix + ': ');
+      setActivePrefix(null);
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleNameSelect = (prefix: string, name: string) => {
+    setNoteText(prev => prev + `${prefix}: ${name} — `);
+    setActivePrefix(null);
     inputRef.current?.focus();
+  };
+
+  const handleHistorySelect = (note: string) => {
+    setNoteText(note);
+    setActivePrefix(null);
+  };
+
+  const useSuggestion = () => {
+    if (smartSuggestion) {
+      setNoteText(smartSuggestion);
+      inputRef.current?.focus();
+    }
   };
 
   return (
     <div className="flex flex-col h-full" data-testid="notes-screen">
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
         <button
-          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,.06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'review' })}
           data-testid="button-back-notes"
         >
-          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em] text-white">Trip Notes</span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t3)' }}>{bizTrips.length} business</span>
-      </div>
-
-      <div className="flex px-[14px] pb-[5px] flex-shrink-0 gap-0">
-        <div className="flex items-center gap-[10px]">
-          {[
-            { id: 'step1', label: 'Sort', done: true },
-            { id: 'step2', label: 'Classify', done: true },
-            { id: 'step3', label: 'Review', done: true },
-            { id: 'step4', label: 'Notes', active: true },
-            { id: 'step5', label: 'Odometer' },
-          ].map((step, i, arr) => (
-            <div key={step.id} className="flex flex-col items-center flex-1 relative">
-              {i < arr.length - 1 && (
-                <div className="absolute top-[8px] left-1/2 right-[-50%] h-px z-0" style={{ background: step.done ? 'rgba(245,196,0,.4)' : 'var(--wc-border)' }} />
-              )}
-              <div
-                className="w-4 h-4 rounded-full flex items-center justify-center font-heading text-[9px] font-bold relative z-[1] transition-all"
-                style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgba(245,196,0,.5)' : '1.5px solid var(--wc-border)',
-                  color: step.active ? '#000' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
-                }}
-              >
-                {step.done ? '\u2713' : i + 1}
-              </div>
-              <div className="font-data text-[7px] uppercase tracking-[.07em] mt-[3px] text-center" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgba(245,196,0,.55)' : 'var(--wc-t3)' }}>
-                {step.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mx-[14px] mb-[6px] rounded-[10px] p-[10px_12px] flex-shrink-0" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}>
-        <div className="flex items-start gap-[8px]">
-          <Lightbulb className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
-          <div>
-            <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>
-              Add trip details for the ATO
-            </div>
-            <div className="text-[10px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
-              The ATO likes to see context on business trips. Add client names, store names, job site details, or what you picked up. It strengthens your claim.
-            </div>
-          </div>
-        </div>
+        <span className="font-heading font-extrabold text-[22px] uppercase tracking-[.04em] text-white">Trip Notes</span>
+        <span className="ml-auto text-[12px]" style={{ color: 'var(--wc-t3)' }}>{withNotes}/{bizTrips.length}</span>
       </div>
 
       {withoutNotes > 0 && (
-        <div className="mx-[14px] mb-[4px] flex items-center gap-[6px] flex-shrink-0">
-          <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-am)' }} />
-          <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-am)' }}>
-            {withoutNotes} trip{withoutNotes !== 1 ? 's' : ''} without notes
+        <div className="mx-[14px] mb-[5px] flex items-center gap-[6px] flex-shrink-0">
+          <div className="w-[7px] h-[7px] rounded-full" style={{ background: 'var(--wc-am)' }} />
+          <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-am)' }}>
+            {withoutNotes} need notes
           </span>
           <div className="flex-1 h-px" style={{ background: 'var(--wc-border)' }} />
-          <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-gr)' }}>
+          <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-gr)' }}>
             {withNotes} done
           </span>
         </div>
       )}
 
-      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[5px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[14px] pb-1 flex flex-col gap-[6px] overflow-y-auto scrollbar-thin">
         {bizTrips.map(({ trip, idx }) => {
           const isEditing = editingTrip === idx;
           const hasNote = trip.notes && trip.notes.length > 0;
@@ -131,86 +193,171 @@ export function NotesScreen() {
           return (
             <div
               key={idx}
-              className="rounded-[12px] transition-all"
+              className="rounded-[14px] transition-all"
               style={{
                 background: 'var(--wc-card)',
                 border: isEditing ? '1.5px solid rgba(245,196,0,.5)' : hasNote ? '1px solid rgba(34,197,94,.25)' : '1px solid rgba(245,158,11,.3)',
-                borderLeft: isEditing ? '3px solid var(--wc-y)' : hasNote ? '3px solid rgba(34,197,94,.5)' : '3px solid rgba(245,158,11,.5)',
+                borderLeft: isEditing ? '4px solid var(--wc-y)' : hasNote ? '4px solid rgba(34,197,94,.5)' : '4px solid rgba(245,158,11,.5)',
               }}
               data-testid={`notes-trip-${idx}`}
             >
               <div
-                className="flex items-center gap-[8px] p-[10px_12px] cursor-pointer"
+                className="flex items-center gap-[10px] p-[14px_14px] cursor-pointer"
                 onClick={() => isEditing ? saveNote() : startEditing(idx)}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[12px] text-white truncate">
+                  <div className="font-semibold text-[15px] text-white truncate">
                     {trip.from} &rarr; {trip.to}
                   </div>
-                  <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
+                  <div className="text-[12px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
                     {trip.date} &middot; {trip.km} km
                     {trip.purposeLabel && <span style={{ color: 'var(--wc-y)' }}> &middot; {trip.purposeLabel}</span>}
                   </div>
+                  {hasNote && !isEditing && (
+                    <div className="text-[12px] mt-[4px] italic truncate" style={{ color: 'var(--wc-gr)' }}>
+                      {trip.notes}
+                    </div>
+                  )}
                 </div>
 
                 {hasNote && !isEditing && (
-                  <div className="flex items-center gap-[4px] px-[6px] py-[2px] rounded-[5px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
-                    <Check className="w-[10px] h-[10px]" style={{ color: 'var(--wc-gr)' }} />
-                    <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-gr)' }}>Noted</span>
+                  <div className="flex items-center gap-[5px] px-[8px] py-[4px] rounded-[6px]" style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.2)' }}>
+                    <Check className="w-[12px] h-[12px]" style={{ color: 'var(--wc-gr)' }} />
+                    <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-gr)' }}>Done</span>
                   </div>
                 )}
 
                 {!hasNote && !isEditing && (
-                  <div className="flex items-center gap-[4px] px-[6px] py-[2px] rounded-[5px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
-                    <MessageSquarePlus className="w-[10px] h-[10px]" style={{ color: 'var(--wc-am)' }} />
-                    <span className="font-data text-[8px] uppercase" style={{ color: 'var(--wc-am)' }}>Add</span>
+                  <div className="flex items-center gap-[5px] px-[8px] py-[4px] rounded-[6px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
+                    <MessageSquarePlus className="w-[12px] h-[12px]" style={{ color: 'var(--wc-am)' }} />
+                    <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-am)' }}>Add</span>
                   </div>
                 )}
 
                 {isEditing ? (
-                  <ChevronUp className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                  <ChevronUp className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
                 ) : (
-                  <ChevronDown className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                  <ChevronDown className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
                 )}
               </div>
 
               {isEditing && (
-                <div className="px-[12px] pb-[10px] border-t" style={{ borderColor: 'rgba(245,196,0,.15)' }}>
+                <div className="px-[14px] pb-[12px] border-t" style={{ borderColor: 'rgba(245,196,0,.15)' }}>
+                  {smartSuggestion && !noteText && (
+                    <button
+                      className="w-full mt-[10px] rounded-[10px] p-[10px_14px] text-left cursor-pointer transition-all flex items-start gap-[10px]"
+                      style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' }}
+                      onClick={useSuggestion}
+                      data-testid="notes-smart-suggestion"
+                    >
+                      <Lightbulb className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-y)' }} />
+                      <div>
+                        <div className="font-heading font-bold text-[11px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>
+                          Suggested
+                        </div>
+                        <div className="text-[13px]" style={{ color: 'var(--wc-t2)' }}>
+                          {smartSuggestion}
+                        </div>
+                      </div>
+                    </button>
+                  )}
+
                   <textarea
                     ref={inputRef}
-                    className="w-full rounded-lg p-[8px_10px] text-[12px] text-white outline-none resize-none mt-[8px] font-sans"
-                    style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(245,196,0,.25)', minHeight: '60px' }}
+                    className="w-full rounded-[10px] p-[12px] text-[15px] text-white outline-none resize-none mt-[10px] font-sans leading-[1.5]"
+                    style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(245,196,0,.25)', minHeight: '70px' }}
                     value={noteText}
-                    onChange={e => setNoteText(e.target.value)}
-                    placeholder="e.g. Client: John Smith, picked up tiles from Bunnings for bathroom reno"
+                    onChange={e => { setNoteText(e.target.value); setActivePrefix(null); }}
+                    placeholder="Tap a chip below or type a note..."
                     data-testid={`notes-input-${idx}`}
                   />
 
-                  <div className="flex flex-wrap gap-[4px] mt-[6px]">
-                    {SUGGESTIONS.map((s) => (
-                      <button
-                        key={s}
-                        className="rounded-[5px] px-[7px] py-[3px] font-data text-[8px] uppercase tracking-[.04em] cursor-pointer transition-all"
-                        style={{ background: 'rgba(255,255,255,.05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-                        onClick={() => applySuggestion(s)}
-                        data-testid={`notes-suggest-${s.replace(/[^a-zA-Z]/g, '').toLowerCase()}`}
-                      >
-                        {s.trim().replace(/:$/, '')}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-[5px] mt-[8px]">
+                    {PREFIXES.map((s) => {
+                      const names = getStoredNames(s);
+                      const isActive = activePrefix === s;
+                      return (
+                        <button
+                          key={s}
+                          className="rounded-[8px] px-[10px] py-[6px] font-heading font-bold text-[12px] uppercase tracking-[.03em] cursor-pointer transition-all flex items-center gap-[4px]"
+                          style={{
+                            background: isActive ? 'rgba(245,196,0,.15)' : 'rgba(255,255,255,.06)',
+                            border: isActive ? '1px solid rgba(245,196,0,.4)' : '1px solid var(--wc-border)',
+                            color: isActive ? 'var(--wc-y)' : 'var(--wc-t2)',
+                          }}
+                          onClick={() => handlePrefixTap(s)}
+                          data-testid={`notes-prefix-${s.replace(/[^a-zA-Z]/g, '').toLowerCase()}`}
+                        >
+                          {s}
+                          {names.length > 0 && (
+                            <span className="font-data text-[9px] rounded-full w-[16px] h-[16px] flex items-center justify-center" style={{ background: isActive ? 'var(--wc-y)' : 'rgba(255,255,255,.1)', color: isActive ? '#000' : 'var(--wc-t3)' }}>
+                              {names.length}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex gap-[6px] mt-[8px]">
+                  {activePrefix && prefixNames.length > 0 && (
+                    <div className="mt-[6px] rounded-[10px] overflow-hidden" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(245,196,0,.2)' }}>
+                      <div className="flex items-center justify-between px-[12px] py-[6px]" style={{ borderBottom: '1px solid rgba(245,196,0,.1)' }}>
+                        <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>
+                          <User className="w-[12px] h-[12px] inline mr-[4px]" />
+                          Your {activePrefix}s
+                        </span>
+                        <button onClick={() => setActivePrefix(null)} className="cursor-pointer" data-testid="notes-close-names">
+                          <X className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t3)' }} />
+                        </button>
+                      </div>
+                      {prefixNames.map((name, ni) => (
+                        <button
+                          key={ni}
+                          className="w-full text-left px-[12px] py-[10px] text-[14px] cursor-pointer transition-all flex items-center gap-[8px]"
+                          style={{ color: 'white', borderBottom: ni < prefixNames.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}
+                          onClick={() => handleNameSelect(activePrefix, name)}
+                          data-testid={`notes-name-${ni}`}
+                        >
+                          <MapPin className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {recentHistory.length > 0 && !noteText && !activePrefix && (
+                    <div className="mt-[8px]">
+                      <div className="flex items-center gap-[5px] mb-[5px]">
+                        <Clock className="w-[11px] h-[11px]" style={{ color: 'var(--wc-t3)' }} />
+                        <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Recent notes</span>
+                      </div>
+                      <div className="flex flex-col gap-[3px]">
+                        {recentHistory.slice(0, 5).map((h, hi) => (
+                          <button
+                            key={hi}
+                            className="w-full text-left rounded-[8px] px-[10px] py-[8px] text-[13px] cursor-pointer transition-all truncate"
+                            style={{ background: 'rgba(255,255,255,.03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                            onClick={() => handleHistorySelect(h)}
+                            data-testid={`notes-history-${hi}`}
+                          >
+                            {h}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-[8px] mt-[10px]">
                     <button
-                      className="flex-1 py-[7px] rounded-[8px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all"
+                      className="flex-1 py-[12px] rounded-[10px] font-heading font-bold text-[14px] uppercase tracking-[.04em] cursor-pointer transition-all"
                       style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
-                      onClick={() => { setEditingTrip(null); setNoteText(''); }}
+                      onClick={() => { setEditingTrip(null); setNoteText(''); setActivePrefix(null); }}
                       data-testid={`notes-cancel-${idx}`}
                     >
                       Cancel
                     </button>
                     <button
-                      className="flex-1 py-[7px] rounded-[8px] font-heading font-bold text-[11px] uppercase tracking-[.04em] text-black cursor-pointer transition-all"
+                      className="flex-1 py-[12px] rounded-[10px] font-heading font-bold text-[14px] uppercase tracking-[.04em] text-black cursor-pointer transition-all"
                       style={{ background: 'var(--wc-y)' }}
                       onClick={saveNote}
                       data-testid={`notes-save-${idx}`}
@@ -218,12 +365,6 @@ export function NotesScreen() {
                       Save Note
                     </button>
                   </div>
-
-                  {hasNote && (
-                    <div className="mt-[4px] text-[9px] italic truncate" style={{ color: 'var(--wc-t3)' }}>
-                      Current: {trip.notes}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -232,21 +373,21 @@ export function NotesScreen() {
 
         {bizTrips.length === 0 && (
           <div className="flex flex-col items-center justify-center py-[30px]">
-            <MessageSquarePlus className="w-[32px] h-[32px] mb-[8px]" style={{ color: 'var(--wc-t3)' }} />
-            <div className="font-heading font-bold text-[14px] uppercase text-center" style={{ color: 'var(--wc-t3)' }}>No business trips yet</div>
-            <div className="text-[11px] text-center mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Sort and classify trips first, then come back to add notes.</div>
+            <MessageSquarePlus className="w-[36px] h-[36px] mb-[10px]" style={{ color: 'var(--wc-t3)' }} />
+            <div className="font-heading font-bold text-[16px] uppercase text-center" style={{ color: 'var(--wc-t3)' }}>No business trips yet</div>
+            <div className="text-[12px] text-center mt-[4px]" style={{ color: 'var(--wc-t3)' }}>Sort and classify trips first, then come back to add notes.</div>
           </div>
         )}
       </div>
 
-      <div className="px-[14px] py-[6px] flex-shrink-0">
+      <div className="px-[14px] py-[8px] flex-shrink-0">
         <button
-          className="w-full rounded-[13px] py-[13px] font-heading font-black text-[17px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-2 transition-all"
+          className="w-full rounded-[14px] py-[15px] font-heading font-black text-[18px] tracking-[.07em] uppercase text-black cursor-pointer flex items-center justify-center gap-3 transition-all"
           style={{ background: 'var(--wc-y)', boxShadow: '0 4px 20px rgba(245,196,0,.25)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'odometer' })}
           data-testid="button-done-notes"
         >
-          <ArrowRight className="w-[18px] h-[18px]" strokeWidth={2.5} />
+          <ArrowRight className="w-[20px] h-[20px]" strokeWidth={2.5} />
           Continue to Odometer
         </button>
       </div>
