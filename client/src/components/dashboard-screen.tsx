@@ -13,6 +13,8 @@ export function DashboardScreen() {
   const bizKm = state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const dedTotal = state.dedTotal;
   const unsortedCount = state.trips.length - state.currentIndex;
+  const queuedCount = state.queuedTrips.length;
+  const totalUnsorted = unsortedCount + queuedCount;
 
   const hasBizTrips = state.bizCount > 0;
 
@@ -31,7 +33,7 @@ export function DashboardScreen() {
   const disclaimer = useMemo(() => getEstimateDisclaimer(deductionState), [deductionState]);
 
   const tiles = [
-    { screen: 'sort' as const, label: 'Sort Trips', sub: unsortedCount > 0 ? `${unsortedCount} trip${unsortedCount !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: unsortedCount },
+    { screen: 'sort' as const, label: 'Sort Trips', sub: totalUnsorted > 0 ? `${totalUnsorted} trip${totalUnsorted !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: totalUnsorted },
     { screen: 'reports' as const, label: 'Driving Reports', sub: 'Trip summaries & export', icon: Car, primary: false },
     { screen: 'input' as const, label: 'Add Trip', sub: 'Manual or live entry', icon: Plus, primary: false },
     { screen: 'expenses' as const, label: 'Expenses', sub: 'Track & report costs', icon: Receipt, primary: false },

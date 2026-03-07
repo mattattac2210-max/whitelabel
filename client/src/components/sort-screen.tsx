@@ -5,7 +5,7 @@ import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
 import { DeductionCard } from './deduction-card';
-import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info, CheckCircle } from 'lucide-react';
+import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -87,50 +87,6 @@ function BusinessDial({ pct }: { pct: number }) {
   );
 }
 
-const BATCH_SIZE = 6;
-
-function BatchCompleteView({ batchNumber, trips, batchStart, batchEnd, remaining, onNext }: {
-  batchNumber: number;
-  trips: { type: string | null }[];
-  batchStart: number;
-  batchEnd: number;
-  remaining: number;
-  onNext: () => void;
-}) {
-  const batchTrips = trips.slice(batchStart, batchEnd);
-  const batchBiz = batchTrips.filter(t => t.type === 'business').length;
-  const batchPer = batchTrips.filter(t => t.type === 'personal').length;
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-[14px] p-7 z-50 animate-pop">
-      <div className="w-[56px] h-[56px] rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,.12)', border: '2px solid rgba(34,197,94,.3)' }}>
-        <CheckCircle className="w-[28px] h-[28px]" style={{ color: 'var(--wc-gr)' }} />
-      </div>
-      <div className="font-heading font-black text-[20px] uppercase text-white text-center">Batch {batchNumber} Sorted</div>
-      <div className="flex items-center gap-[12px]">
-        <div className="flex items-center gap-[4px]">
-          <div className="w-[8px] h-[8px] rounded-full" style={{ background: 'var(--wc-gr)' }} />
-          <span className="font-data text-[12px]" style={{ color: 'var(--wc-t2)' }}>{batchBiz} business</span>
-        </div>
-        <div className="flex items-center gap-[4px]">
-          <div className="w-[8px] h-[8px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
-          <span className="font-data text-[12px]" style={{ color: 'var(--wc-t2)' }}>{batchPer} personal</span>
-        </div>
-      </div>
-      <div className="text-[12px] text-center" style={{ color: 'var(--wc-t3)' }}>
-        {remaining} more trip{remaining !== 1 ? 's' : ''} to sort
-      </div>
-      <button
-        className="rounded-[11px] px-[24px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"
-        style={{ background: 'var(--wc-yd)', border: '1.5px solid rgba(245,196,0,.35)', color: 'var(--wc-y)' }}
-        onClick={onNext}
-        data-testid="button-next-batch"
-      >
-        Next Batch →
-      </button>
-    </div>
-  );
-}
-
 export function SortScreen() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
@@ -159,24 +115,10 @@ export function SortScreen() {
     }
   }, [state.currentIndex, tutorialPhase]);
 
-  const [batchOffset, setBatchOffset] = useState(0);
-  const batchStart = batchOffset;
-  const batchEnd = Math.min(batchStart + BATCH_SIZE, state.trips.length);
-  const batchNumber = Math.floor(batchOffset / BATCH_SIZE) + 1;
-  const totalBatches = Math.ceil(state.trips.length / BATCH_SIZE);
-  const remainingInBatch = batchEnd - state.currentIndex;
-  const batchComplete = state.currentIndex >= batchEnd && state.currentIndex < state.trips.length;
-
-  useEffect(() => {
-    if (state.currentIndex === 0) setBatchOffset(0);
-    else if (state.currentIndex < batchOffset) {
-      setBatchOffset(Math.floor(state.currentIndex / BATCH_SIZE) * BATCH_SIZE);
-    }
-  }, [state.currentIndex, batchOffset]);
-
   const currentTrip = state.trips[state.currentIndex];
   const isComplete = state.currentIndex >= state.trips.length;
   const remaining = state.trips.length - state.currentIndex;
+  const queuedCount = state.queuedTrips.length;
 
   const sortedSlice = state.trips.slice(0, state.currentIndex);
   const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
@@ -266,13 +208,13 @@ export function SortScreen() {
         </div>
 
         <div className="flex items-center gap-[5px] ml-auto">
-          {totalBatches > 1 && (
+          {queuedCount > 0 && (
             <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)' }}>
-              <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>{batchNumber}/{totalBatches}</span>
+              <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>+{queuedCount} queued</span>
             </div>
           )}
           <div className="flex items-center gap-[3px] rounded-[20px] px-[7px] py-[2px]" style={{ background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.2)' }}>
-            <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{batchComplete ? 0 : remainingInBatch}</span>
+            <span className="font-heading font-black text-[13px]" style={{ color: 'var(--wc-y)' }} data-testid="text-remaining">{remaining}</span>
             <span className="font-heading font-semibold text-[9px] uppercase tracking-[.03em]" style={{ color: 'rgba(245,196,0,.6)' }}>left</span>
           </div>
           {nextScreen && (
@@ -343,18 +285,9 @@ export function SortScreen() {
           </div>
         )}
 
-        {batchComplete && !isComplete ? (
-          <BatchCompleteView
-            batchNumber={batchNumber}
-            trips={state.trips}
-            batchStart={batchStart}
-            batchEnd={batchEnd}
-            remaining={remaining}
-            onNext={() => setBatchOffset(state.currentIndex)}
-          />
-        ) : !isComplete ? (
+        {!isComplete ? (
           <>
-            {state.trips.slice(state.currentIndex, Math.min(state.currentIndex + 3, batchEnd)).map((trip, offset) => (
+            {state.trips.slice(state.currentIndex, state.currentIndex + 3).map((trip, offset) => (
               <TripCard
                 key={trip.id}
                 trip={trip}
@@ -592,12 +525,24 @@ export function SortScreen() {
           {isComplete && state.trips.length > 0 && (
             <button
               className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[5px]"
-              style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }}
+              style={queuedCount > 0
+                ? { background: 'var(--wc-yd)', border: '1px solid rgba(245,196,0,.35)', color: 'var(--wc-y)' }
+                : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }
+              }
               onClick={() => setConfirmDelete(true)}
               data-testid="button-delete-trips"
             >
-              <Trash2 className="w-[11px] h-[11px]" />
-              Delete All Sort Cards
+              {queuedCount > 0 ? (
+                <>
+                  <ChevronRight className="w-[11px] h-[11px]" />
+                  Clear & Load Next {Math.min(queuedCount, 6)} Trips
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-[11px] h-[11px]" />
+                  Delete All Sort Cards
+                </>
+              )}
             </button>
           )}
 
@@ -618,30 +563,39 @@ export function SortScreen() {
         >
           <div
             className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
-            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: queuedCount > 0 ? '1.5px solid rgba(245,196,0,.35)' : '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
             data-testid="modal-delete-confirm"
           >
             <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
-                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={queuedCount > 0 ? { background: 'rgba(245,196,0,.12)', border: '2px solid rgba(245,196,0,.3)' } : { background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+                {queuedCount > 0 ? <ChevronRight className="w-[22px] h-[22px]" style={{ color: 'var(--wc-y)' }} /> : <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />}
               </div>
-              <div className="font-heading font-black text-[18px] uppercase text-white text-center">Delete All Sort Cards?</div>
+              <div className="font-heading font-black text-[18px] uppercase text-white text-center">
+                {queuedCount > 0 ? 'Clear & Load Next Batch?' : 'Delete All Sort Cards?'}
+              </div>
             </div>
-            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
-              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
-              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
-                <strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={queuedCount > 0 ? { background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.2)' } : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: queuedCount > 0 ? 'var(--wc-y)' : 'var(--wc-re)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: queuedCount > 0 ? 'rgba(245,196,0,.85)' : 'rgba(239,68,68,.85)' }}>
+                {queuedCount > 0 ? (
+                  <><strong>Current sort cards will be cleared</strong> and the next {Math.min(queuedCount, 6)} trip{Math.min(queuedCount, 6) !== 1 ? 's' : ''} will be loaded. Make sure you've saved your report first.</>
+                ) : (
+                  <><strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.</>
+                )}
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
               <button
                 className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
+                style={queuedCount > 0
+                  ? { background: 'rgba(245,196,0,.15)', border: '1.5px solid rgba(245,196,0,.4)', color: 'var(--wc-y)' }
+                  : { background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }
+                }
                 onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}
                 data-testid="button-confirm-delete"
               >
-                Yes, Delete All Cards
+                {queuedCount > 0 ? `Yes, Load Next ${Math.min(queuedCount, 6)} Trips` : 'Yes, Delete All Cards'}
               </button>
               <button
                 className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"

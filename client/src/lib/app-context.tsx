@@ -93,6 +93,7 @@ interface AppState {
   pendingFinalise: boolean;
   sessionId: string;
   baseOdo: number;
+  queuedTrips: Trip[];
 }
 
 type Action =
@@ -132,8 +133,10 @@ function nowStr(): string {
   return n.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' }) + ' ' + n.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
 }
 
+const BATCH_SIZE = 6;
+
 const initialState: AppState = {
-  trips: initialTrips.map(t => ({ ...t })),
+  trips: initialTrips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
   currentScreen: 'dashboard',
   currentIndex: 0,
   dedTotal: 0,
@@ -157,6 +160,7 @@ const initialState: AppState = {
   pendingFinalise: false,
   sessionId: 'batch1',
   baseOdo: ODO_START,
+  queuedTrips: initialTrips.slice(BATCH_SIZE).map(t => ({ ...t })),
 };
 
 function computeDedTotal(trips: Trip[], upToIndex: number): number {
@@ -461,7 +465,8 @@ function reducer(state: AppState, action: Action): AppState {
     case 'RESET_DEMO':
       return {
         ...initialState,
-        trips: initialTrips.map(t => ({ ...t })),
+        trips: initialTrips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
+        queuedTrips: initialTrips.slice(BATCH_SIZE).map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
       };
@@ -472,21 +477,32 @@ function reducer(state: AppState, action: Action): AppState {
         : ODO_START;
       return {
         ...initialState,
-        trips: batch2Trips.map(t => ({ ...t })),
+        trips: batch2Trips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
+        queuedTrips: batch2Trips.slice(BATCH_SIZE).map(t => ({ ...t })),
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
         sessionId: 'batch2',
         baseOdo: prevOdoEnd,
       };
     }
-    case 'DELETE_ALL_TRIPS':
+    case 'DELETE_ALL_TRIPS': {
+      const nextBatch = state.queuedTrips.slice(0, BATCH_SIZE).map(t => ({ ...t }));
+      const stillQueued = state.queuedTrips.slice(BATCH_SIZE).map(t => ({ ...t }));
+      const hasMore = nextBatch.length > 0;
       return {
         ...initialState,
-        trips: [],
+        trips: nextBatch,
+        queuedTrips: stillQueued,
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
-        auditLog: [{ time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false }, ...state.auditLog],
+        freshSession: hasMore,
+        auditLog: [
+          ...(hasMore ? [{ time: nowStr(), desc: `Next batch loaded — ${nextBatch.length} trip${nextBatch.length !== 1 ? 's' : ''} ready to sort`, hasPhoto: false }] : []),
+          { time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false },
+          ...state.auditLog,
+        ],
       };
+    }
     case 'DELETE_SESSION': {
       const remaining = state.savedReports.filter(r => r.sessionId !== action.sessionId);
       const isCurrentSession = state.sessionId === action.sessionId;
