@@ -105,27 +105,80 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
   const mode = getEstimateMode();
   const basicComplete = checks?.basicDetailsComplete ?? false;
   const isLocked = state === 'locked';
-
   const needsBasics = mode === 'industry' && !basicComplete;
   const isIndustryReady = mode === 'industry' && basicComplete;
 
-  const title = needsBasics
-    ? 'Add a few details to unlock estimates'
-    : isLocked
-      ? 'Unlock deduction estimates'
-      : isIndustryReady
-        ? 'Your estimated deduction'
-        : 'Your estimated deduction';
+  const [purchasePrice, setPurchasePrice] = useState(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      return p.purchasePrice || '';
+    } catch { return ''; }
+  });
 
-  const description = needsBasics
-    ? 'We just need your vehicle type and purchase price to start showing per-trip deduction values when you sort.'
-    : isLocked
-      ? 'Complete your vehicle and tax details so we can calculate your estimated claimable deductions.'
-      : isIndustryReady
-        ? 'This is based on industry average running costs for your vehicle type. You can customise it anytime with your actual figures.'
-        : 'Based on your entered vehicle costs and expenses. Keep your details up to date for the most accurate figure.';
+  const [depYears, setDepYears] = useState<string>(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      if (p.boughtNewOrUsed === 'New') return 'new';
+      if (p.approxYearsOwned) return p.approxYearsOwned;
+      return '';
+    } catch { return ''; }
+  });
 
-  const iconColor = needsBasics || isLocked ? 'var(--wc-am)' : isIndustryReady ? 'var(--wc-am)' : 'var(--wc-gr)';
+  const ATO_CAR_LIMIT = 68108;
+  const DV_RATE = 0.25;
+
+  const rawPrice = parseFloat(purchasePrice) || 0;
+  const capped = Math.min(rawPrice, ATO_CAR_LIMIT);
+  const isNew = depYears === 'new';
+  const yearsNum = isNew ? 0 : (parseInt(depYears) || 0);
+
+  let depAmount = 0;
+  if (capped > 0) {
+    let wdv = capped;
+    for (let i = 0; i < yearsNum; i++) {
+      wdv -= wdv * DV_RATE;
+    }
+    depAmount = Math.round(wdv * DV_RATE);
+  }
+
+  const savePurchasePrice = (val: string) => {
+    setPurchasePrice(val);
+    try {
+      const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      p.purchasePrice = val;
+      localStorage.setItem('wc_vehicle_purchase', JSON.stringify(p));
+    } catch {}
+  };
+
+  const saveDepYears = (val: string) => {
+    setDepYears(val);
+    try {
+      const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      if (val === 'new') {
+        p.boughtNewOrUsed = 'New';
+        p.vehicleHistoryStatus = 'New vehicle';
+        p.approxYearsOwned = '';
+      } else {
+        p.boughtNewOrUsed = 'Used';
+        p.vehicleHistoryStatus = "I'm not sure";
+        p.approxYearsOwned = val;
+      }
+      localStorage.setItem('wc_vehicle_purchase', JSON.stringify(p));
+    } catch {}
+  };
+
+  const hasPrice = rawPrice > 0;
+  const hasDep = depYears !== '';
+
+  const title = needsBasics || isLocked
+    ? 'Quick Setup'
+    : 'Your Estimated Deduction';
+
+  const subtitle = needsBasics || isLocked
+    ? 'Fill in below to unlock per-trip values'
+    : isIndustryReady
+      ? 'Based on industry averages for your vehicle'
+      : 'Based on your entered figures';
 
   return (
     <div
@@ -134,25 +187,18 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up"
-        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
+        className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up overflow-y-auto"
+        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)', maxHeight: '85vh' }}
         onClick={e => e.stopPropagation()}
         data-testid="modal-deduction-prompt"
       >
         <div className="flex justify-between items-start mb-[14px]">
-          <div className="flex items-center gap-[10px]">
-            <div
-              className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0"
-              style={{ background: `color-mix(in srgb, ${iconColor} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${iconColor} 25%, transparent)` }}
-            >
-              {needsBasics || isLocked ? (
-                <AlertTriangle className="w-[18px] h-[18px]" style={{ color: iconColor }} />
-              ) : (
-                <Calculator className="w-[18px] h-[18px]" style={{ color: iconColor }} />
-              )}
-            </div>
-            <div className="font-heading font-black text-[16px] uppercase text-white leading-[1.15]">
+          <div>
+            <div className="font-heading font-black text-[18px] uppercase text-white leading-[1.1]">
               {title}
+            </div>
+            <div className="text-[11px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
+              {subtitle}
             </div>
           </div>
           <button
@@ -171,107 +217,109 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
             <div className="font-display text-[32px] leading-none" style={{ color: isIndustryReady ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
               ${value.toFixed(0)}{isIndustryReady ? '*' : ''}
             </div>
-            {isIndustryReady && (
-              <div className="flex items-center gap-[5px] mt-[6px]">
-                <div className="w-[5px] h-[5px] rounded-full" style={{ background: 'var(--wc-am)' }} />
-                <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-am)' }}>Industry average estimate</span>
-              </div>
-            )}
           </div>
         )}
 
-        <div className="text-[12px] leading-[1.5] mb-[16px]" style={{ color: 'var(--wc-t2)' }}>
-          {description}
+        <div className="rounded-[12px] p-[14px] mb-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: hasPrice ? 'var(--wc-gr)' : 'var(--wc-y)' }}>
+            Purchase Price
+          </div>
+          <div className="relative">
+            <span className="absolute left-[12px] top-1/2 -translate-y-1/2 font-data text-[16px] font-bold" style={{ color: hasPrice ? 'var(--wc-y)' : 'var(--wc-t3)' }}>$</span>
+            <input
+              className="w-full rounded-[10px] p-[12px_12px_12px_28px] text-[16px] text-white outline-none font-data"
+              style={{ background: 'rgba(255,255,255,.05)', border: hasPrice ? '1.5px solid rgba(245,196,0,.3)' : '1.5px solid rgba(255,255,255,.08)' }}
+              type="number"
+              inputMode="numeric"
+              value={purchasePrice}
+              onChange={e => savePurchasePrice(e.target.value)}
+              placeholder="e.g. 55000"
+              data-testid="input-prompt-purchase-price"
+            />
+          </div>
+          {hasPrice && capped < rawPrice && (
+            <div className="text-[9px] mt-[6px] flex items-center gap-[4px]" style={{ color: 'var(--wc-am)' }}>
+              <Info className="w-[9px] h-[9px]" />
+              ATO caps at ${ATO_CAR_LIMIT.toLocaleString()} for depreciation
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-[12px] p-[14px] mb-[14px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: hasDep ? 'var(--wc-gr)' : 'var(--wc-y)' }}>
+            Depreciation
+          </div>
+          <div className="flex gap-[6px] flex-wrap">
+            <button
+              className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
+              style={{
+                background: isNew ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.04)',
+                border: isNew ? '1.5px solid rgba(245,196,0,.4)' : '1px solid rgba(255,255,255,.08)',
+                color: isNew ? 'var(--wc-y)' : 'var(--wc-t3)',
+              }}
+              onClick={() => saveDepYears('new')}
+              data-testid="button-dep-new"
+            >
+              New
+            </button>
+            {[1, 2, 3, 4, 5].map(y => {
+              const active = depYears === String(y);
+              return (
+                <button
+                  key={y}
+                  className="rounded-[8px] py-[10px] px-[14px] font-heading font-bold text-[12px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.97]"
+                  style={{
+                    background: active ? 'rgba(245,196,0,.12)' : 'rgba(255,255,255,.04)',
+                    border: active ? '1.5px solid rgba(245,196,0,.4)' : '1px solid rgba(255,255,255,.08)',
+                    color: active ? 'var(--wc-y)' : 'var(--wc-t3)',
+                  }}
+                  onClick={() => saveDepYears(String(y))}
+                  data-testid={`button-dep-${y}yr`}
+                >
+                  {y}yr
+                </button>
+              );
+            })}
+          </div>
+          {hasPrice && hasDep && (
+            <div className="flex items-center justify-between mt-[10px] pt-[8px]" style={{ borderTop: '1px solid rgba(255,255,255,.06)' }}>
+              <span className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>This year's depreciation</span>
+              <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-gr)' }}>${depAmount.toLocaleString()}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-[8px]">
-          {needsBasics && (
-            <>
-              <button
-                className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-                onClick={() => onNavigate('account')}
-                data-testid="button-prompt-basic-details"
-              >
-                <Car className="w-[14px] h-[14px]" />
-                Add Basic Details
-                <ChevronRight className="w-[14px] h-[14px]" />
-              </button>
-              <button
-                className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
-                onClick={() => onNavigate('account')}
-                data-testid="button-prompt-customise"
-              >
-                <Settings className="w-[12px] h-[12px]" />
-                Customise All Details
-              </button>
-            </>
-          )}
-
-          {isLocked && !needsBasics && (
+          {(needsBasics || isLocked) && hasPrice && hasDep && (
             <button
               className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
               style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-              onClick={() => onNavigate('account')}
-              data-testid="button-prompt-unlock"
+              onClick={onClose}
+              data-testid="button-prompt-done"
             >
-              Complete Setup
-              <ChevronRight className="w-[14px] h-[14px]" />
-            </button>
-          )}
-
-          {isIndustryReady && (
-            <>
-              <button
-                className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-                onClick={() => onNavigate('account')}
-                data-testid="button-prompt-see-breakdown"
-              >
-                <Calculator className="w-[14px] h-[14px]" />
-                See Full Breakdown
-                <ChevronRight className="w-[14px] h-[14px]" />
-              </button>
-              <button
-                className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
-                onClick={() => {
-                  try {
-                    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
-                    settings.useIndustryAverages = false;
-                    localStorage.setItem('wc_settings', JSON.stringify(settings));
-                  } catch {}
-                  onNavigate('account');
-                }}
-                data-testid="button-prompt-personalise"
-              >
-                Customise With My Figures
-                <ChevronRight className="w-[14px] h-[14px]" />
-              </button>
-            </>
-          )}
-
-          {!isLocked && !needsBasics && !isIndustryReady && (
-            <button
-              className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-              style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-              onClick={() => onNavigate('account')}
-              data-testid="button-prompt-update"
-            >
-              <Settings className="w-[14px] h-[14px]" />
-              Update Details
-              <ChevronRight className="w-[14px] h-[14px]" />
+              <CheckCircle2 className="w-[14px] h-[14px]" />
+              Done
             </button>
           )}
 
           <button
-            className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            className="w-full rounded-[11px] py-[10px] flex items-center justify-center gap-[6px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t3)' }}
+            onClick={() => onNavigate('account')}
+            data-testid="button-prompt-customise"
+          >
+            <Settings className="w-[12px] h-[12px]" />
+            More Options
+            <ChevronRight className="w-[12px] h-[12px]" />
+          </button>
+
+          <button
+            className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
             style={{ color: 'var(--wc-t3)' }}
             onClick={onClose}
             data-testid="button-prompt-dismiss"
           >
-            Got It
+            Close
           </button>
         </div>
       </div>
