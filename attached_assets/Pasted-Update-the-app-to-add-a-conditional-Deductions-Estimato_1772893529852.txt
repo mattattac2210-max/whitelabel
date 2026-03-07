@@ -1,0 +1,252 @@
+Update the app to add a conditional Deductions Estimator system that only becomes available when the user has provided enough profile, vehicle, and expense data.
+
+GOAL
+The deductions estimator must feel intelligent and trustworthy.
+Do not show a confident deduction estimate unless the app has enough information.
+If information is missing, lock the feature or show an estimated value with an asterisk.
+
+CORE PRODUCT LOGIC
+
+Create 3 deduction states:
+
+1. LOCKED
+The deduction estimator is locked when the user has not yet completed the required profile fields.
+
+2. PARTIAL ESTIMATE
+The estimator can show a value with an asterisk if some but not all required data is available.
+
+3. ACTIVE ESTIMATE
+The estimator shows a fuller running deduction estimate when enough information has been provided.
+
+LOCKED STATE RULES
+
+The deductions estimator should remain locked if any of the following are missing:
+- tax estimate profile not completed
+- vehicle purchase details not completed
+- current WDV not entered
+- purchase price not entered
+- business use data not yet established from trip/logbook activity
+
+In locked mode:
+- show a lock icon over deduction cards
+- blur or mute the deduction values
+- if the user taps the locked card, open a modal or bottom sheet explaining what is missing
+
+LOCKED MODAL COPY
+
+Title:
+Unlock deduction estimates
+
+Body:
+To calculate estimated claimable deductions, complete the following:
+- add your income in Tax Estimate Profile
+- add your vehicle purchase details
+- enter your current WDV or previous claim history
+- classify trips to establish business use
+- add vehicle expenses for a more accurate estimate
+
+Buttons:
+- Go to Tax Estimate Profile
+- Go to Vehicle Details
+- Go to Expenses
+
+SORT / SUMMARY CARDS BEHAVIOUR
+
+In the short summary cards area:
+- deduction graphics or rising values should only be visible if the deductions estimator is enabled and unlocked
+- if the estimator is disabled in settings, replace values with a locked state
+- if the estimator is locked, show a lock icon and no animated value rise
+- if the estimator is partially available, show value with an asterisk
+
+SETTINGS LOGIC
+
+In Settings, add a toggle:
+Show deduction estimates
+
+If toggled OFF:
+- hide deduction values from summary cards
+- show locked/disabled state instead
+- do not animate rising values
+- keep raw logbook and expense features working normally
+
+If toggled ON:
+- allow the deductions estimator to appear, subject to data completeness rules
+
+DEDUCTION ESTIMATOR INPUT LOGIC
+
+Estimated claimable deductions must be calculated using:
+- current business use percentage from trips/logbook
+- vehicle expense data entered by the user
+- fuel estimate based on business kms and fuel consumption
+- depreciation
+- income profile for estimated tax impact
+
+Do not present this as tax advice.
+Always label outputs as estimates.
+
+MISSING DATA / ASTERISK RULES
+
+If some expense categories are missing, still allow the app to show an estimate, but:
+- add an asterisk to the displayed number
+- show helper text that this is not a full representation of the user’s tax situation
+- explain which expense categories are missing
+
+Examples of missing categories:
+- registration
+- insurance
+- repairs & maintenance
+- loan interest
+- lease payments
+- depreciation inputs
+
+Example copy:
+*Estimate based on current trip usage and available expense data only. This is not a full representation of your tax situation.
+
+DEPRECIATION LOGIC
+
+Depreciation must be treated as a major input into the deduction estimate.
+
+Add the following fields to Vehicle Details / Tax Calculation Details:
+
+Vehicle Purchase Price
+- user-entered
+- apply ATO car limit / cap where relevant before deduction calculations
+
+Current Written Down Value (WDV)
+- user-entered if the vehicle has already been claimed in prior years
+
+Purchase Date
+- used for first-year pro-rata calculations
+
+Date First Used for Business
+- used for deduction timing logic
+
+Previously Claimed Amounts
+- optional user input
+- allows year-on-year depreciation continuity
+
+Depreciation Engine Requirements
+
+The depreciation engine should:
+- support first-year pro-rata depreciation based on purchase date / date first used
+- support year-on-year value decline after the first year
+- use current WDV if the vehicle is already in progress
+- calculate depreciation from capped purchase price where applicable
+- roll forward depreciation across financial years
+- integrate business use percentage into deductible depreciation
+
+DEPRECIATION OUTPUTS
+
+Display:
+- capped purchase value used
+- current WDV
+- annual depreciation estimate
+- deductible depreciation estimate after applying business use percentage
+
+If missing depreciation inputs:
+- keep deduction estimate in partial mode
+- add asterisk
+- mark depreciation as incomplete
+
+PROFILE COMPLETION RULES
+
+Add a "Deduction Estimate Readiness" status that checks whether the user has completed the required information.
+
+Readiness logic:
+- Tax Profile complete?
+- Vehicle purchase details complete?
+- WDV or prior claim history entered?
+- Logbook/business use data available?
+- Some expenses entered?
+
+Display a readiness card with statuses such as:
+- Incomplete
+- Basic estimate available
+- More accurate estimate available
+
+LIVE UPDATE RULES
+
+As the user adds or edits:
+- expenses
+- trip classifications
+- income
+- vehicle purchase details
+- WDV
+- previous claims
+
+the deductions calculator should update automatically.
+
+UI REQUIREMENTS
+
+Deduction cards should support:
+- locked state
+- partial estimate state
+- active estimate state
+
+Locked state:
+- lock icon
+- muted background
+- no value animation
+
+Partial estimate state:
+- value shown with asterisk
+- helper text below value
+- tap opens data completeness explanation
+
+Active estimate state:
+- value shown normally
+- optional positive trend animation
+- supporting explanation below
+
+DATA COMPLETENESS EXPLANATION
+
+If user taps a partial estimate, show:
+- what has been included
+- what is missing
+- how to improve estimate accuracy
+
+Example:
+Included:
+- business kms
+- fuel estimate
+- registration
+- insurance
+
+Missing:
+- depreciation inputs
+- repairs & maintenance
+- loan interest
+
+CTA buttons:
+- Add vehicle details
+- Add expenses
+- Update tax profile
+
+DISCLAIMERS
+
+Wherever deduction values are shown, include one of these messages depending on state:
+
+Locked:
+Complete your profile to unlock deduction estimates.
+
+Partial:
+*Estimate based on current usage and available inputs only. This is not a full representation of your tax situation.
+
+Active:
+Planning estimate only. Final outcomes depend on your full tax position and should be reviewed by a registered tax agent.
+
+TECHNICAL NOTES
+
+Create logic to derive deduction estimate from:
+- business use percentage
+- expense totals
+- fuel estimate
+- depreciation
+- current tax estimate profile
+
+Ensure all deduction values are clearly labelled:
+- Estimated vehicle deduction
+- Estimated tax impact
+- Estimate only
+
+Do not use any wording that implies guaranteed refund, guaranteed claim, or tax advice.

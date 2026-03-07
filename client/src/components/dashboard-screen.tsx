@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle } from 'lucide-react';
+import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
+import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
 
 export function DashboardScreen() {
   const { state, dispatch } = useApp();
@@ -11,6 +13,21 @@ export function DashboardScreen() {
   const bizKm = state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const dedTotal = state.dedTotal;
   const unsortedCount = state.trips.length - state.currentIndex;
+
+  const hasBizTrips = state.bizCount > 0;
+
+  const showDeductionEstimates = useMemo(() => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      return settings.showDeductionEstimates !== false;
+    } catch {
+      return true;
+    }
+  }, []);
+
+  const readinessChecks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
+  const deductionState = useMemo(() => getDeductionState(readinessChecks, showDeductionEstimates), [readinessChecks, showDeductionEstimates]);
+  const disclaimer = useMemo(() => getEstimateDisclaimer(deductionState), [deductionState]);
 
   const tiles = [
     { screen: 'sort' as const, label: 'Sort Trips', sub: unsortedCount > 0 ? `${unsortedCount} trip${unsortedCount !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: unsortedCount },
@@ -99,17 +116,13 @@ export function DashboardScreen() {
           <div className="font-display text-[28px] leading-none mt-1" style={{ color: 'var(--wc-y)' }}>{bizKm.toFixed(1)}</div>
           <div className="text-[10px] mt-1" style={{ color: 'var(--wc-t2)' }}>km tracked</div>
         </div>
-        <div
-          className="flex-1 rounded-xl p-3"
-          style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
-          data-testid="dash-stat-ded"
-        >
-          <div className="text-[10px] font-bold uppercase tracking-[.07em]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
-          <div className="font-display text-[28px] leading-none mt-1" style={{ color: 'var(--wc-gr)' }}>
-            ${dedTotal.toFixed(0)}
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: 'var(--wc-t2)' }}>logbook method</div>
-        </div>
+        <DeductionCard
+          value={dedTotal}
+          state={deductionState}
+          label="Deduction"
+          sublabel="logbook method"
+          checks={readinessChecks}
+        />
       </div>
 
       <div className="ob-a3 mb-4">
@@ -196,6 +209,20 @@ export function DashboardScreen() {
           Complete 12 weeks <span style={{ color: 'var(--wc-t2)' }}>for 5 years of deductions</span>
         </div>
       </div>
+
+      {deductionState !== 'active' && (
+        <div className="ob-a5 mb-4">
+          <ReadinessCard state={deductionState} checks={readinessChecks} />
+        </div>
+      )}
+
+      {deductionState !== 'locked' && (
+        <div className="ob-a6 mb-4 px-1">
+          <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+            {disclaimer}
+          </div>
+        </div>
+      )}
 
     </div>
   );

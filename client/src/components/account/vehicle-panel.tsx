@@ -23,6 +23,9 @@ interface PurchaseDetails {
   purchaseDate: string;
   purchasePrice: string;
   financeType: string;
+  currentWDV: string;
+  dateFirstUsed: string;
+  previouslyClaimed: string;
 }
 
 const SPEC_DEFAULT: VehicleSpecs = {
@@ -33,6 +36,7 @@ const SPEC_DEFAULT: VehicleSpecs = {
 
 const PURCHASE_DEFAULT: PurchaseDetails = {
   purchaseDate: '', purchasePrice: '', financeType: 'Owned',
+  currentWDV: '', dateFirstUsed: '', previouslyClaimed: '',
 };
 
 function loadSpecs(): VehicleSpecs {
@@ -91,21 +95,30 @@ export function VehiclePanel() {
   const hasVehicle = specs.make && specs.model;
 
   const depreciationCalc = () => {
-    const price = Math.min(parseFloat(purchase.purchasePrice) || 0, ATO_CAR_LIMIT);
-    if (price <= 0) return null;
+    const rawPrice = parseFloat(purchase.purchasePrice) || 0;
+    if (rawPrice <= 0) return null;
+    const cappedPrice = Math.min(rawPrice, ATO_CAR_LIMIT);
+    const wdv = parseFloat(purchase.currentWDV) || 0;
+    const base = wdv > 0 ? wdv : cappedPrice;
+    const prevClaimed = parseFloat(purchase.previouslyClaimed) || 0;
+
+    const dateUsed = purchase.dateFirstUsed ? new Date(purchase.dateFirstUsed) : null;
     const purchDate = purchase.purchaseDate ? new Date(purchase.purchaseDate) : null;
+    const startDate = dateUsed || purchDate;
+
     const now = new Date();
     const fyStart = new Date(now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1, 6, 1);
     const fyEnd = new Date(fyStart.getFullYear() + 1, 5, 30);
     let daysInFY = Math.round((fyEnd.getTime() - fyStart.getTime()) / 86400000);
     let daysOwned = daysInFY;
-    if (purchDate && purchDate > fyStart) {
-      daysOwned = Math.round((fyEnd.getTime() - purchDate.getTime()) / 86400000);
+    if (startDate && startDate > fyStart) {
+      daysOwned = Math.round((fyEnd.getTime() - startDate.getTime()) / 86400000);
       daysOwned = Math.max(0, Math.min(daysOwned, daysInFY));
     }
     const prorata = daysOwned / daysInFY;
-    const dep = Math.round(price * DV_RATE * prorata * 100) / 100;
-    return { dep, prorata: Math.round(prorata * 100), method: 'Diminishing Value' };
+    const annualDep = Math.round(base * DV_RATE * 100) / 100;
+    const dep = Math.round(base * DV_RATE * prorata * 100) / 100;
+    return { dep, annualDep, prorata: Math.round(prorata * 100), method: 'Diminishing Value', cappedPrice, currentWDV: wdv, base, prevClaimed };
   };
 
   const fuelEconomy = parseFloat(specs.fuelConsumption) || 0;
@@ -215,6 +228,12 @@ export function VehiclePanel() {
         <FieldInput label="Purchase Price ($)" value={purchase.purchasePrice} onChange={updPurch('purchasePrice')} type="number" placeholder="e.g. 55000" testId="input-purchase-price" />
         <ChipSelect label="Finance Type" options={['Owned', 'Loan', 'Lease']} value={purchase.financeType} onChange={updPurch('financeType')} testId="chip-finance" />
 
+        <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mt-[14px] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>Tax Calculation Details</div>
+
+        <FieldInput label="Current Written Down Value (WDV) ($)" value={purchase.currentWDV} onChange={updPurch('currentWDV')} type="number" placeholder="e.g. 42000" testId="input-current-wdv" />
+        <FieldInput label="Date First Used for Business" value={purchase.dateFirstUsed} onChange={updPurch('dateFirstUsed')} type="date" testId="input-date-first-used" />
+        <FieldInput label="Previously Claimed Amounts ($)" value={purchase.previouslyClaimed} onChange={updPurch('previouslyClaimed')} type="number" placeholder="e.g. 8000" testId="input-previously-claimed" />
+
         <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mt-[14px] mb-[8px]" style={{ color: 'var(--wc-t2)' }}>ATO Calculation Data</div>
         <div className="grid grid-cols-3 gap-[6px]">
           <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
@@ -230,9 +249,34 @@ export function VehiclePanel() {
             <div className="text-[14px] font-heading font-bold mt-[2px]" style={{ color: 'var(--wc-gr)' }}>{depResult ? `$${depResult.dep.toLocaleString()}` : '—'}</div>
           </div>
         </div>
+        {depResult && (
+          <div className="mt-[8px] grid grid-cols-2 gap-[6px]">
+            <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Capped Value</div>
+              <div className="text-[13px] font-heading font-bold mt-[2px] text-white">${depResult.cappedPrice.toLocaleString()}</div>
+            </div>
+            <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Current WDV</div>
+              <div className="text-[13px] font-heading font-bold mt-[2px] text-white">{depResult.currentWDV > 0 ? `$${depResult.currentWDV.toLocaleString()}` : '—'}</div>
+            </div>
+            <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Annual Dep.</div>
+              <div className="text-[13px] font-heading font-bold mt-[2px]" style={{ color: 'var(--wc-gr)' }}>${depResult.annualDep.toLocaleString()}</div>
+            </div>
+            <div className="rounded-[8px] p-[8px_10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Deductible Dep.</div>
+              <div className="text-[13px] font-heading font-bold mt-[2px]" style={{ color: 'var(--wc-gr)' }}>${depResult.dep.toLocaleString()}</div>
+            </div>
+          </div>
+        )}
         {depResult && depResult.prorata < 100 && (
           <div className="text-[10px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
             Prorated at {depResult.prorata}% ({depResult.method})
+          </div>
+        )}
+        {depResult && depResult.prevClaimed > 0 && (
+          <div className="text-[10px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
+            Previously claimed: ${depResult.prevClaimed.toLocaleString()}
           </div>
         )}
       </div>

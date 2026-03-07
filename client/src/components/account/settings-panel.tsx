@@ -15,6 +15,7 @@ interface AppSettings {
   fuelPriceSource: string;
   avgFuelPrice: string;
   receiptAI: boolean;
+  showDeductionEstimates: boolean;
   defaultTaxYear: string;
   exportFormat: string;
   shareWithAccountant: boolean;
@@ -25,6 +26,7 @@ const DEFAULT: AppSettings = {
   tripDetectionAlerts: true, missingTripAlerts: true, eofyReminder: true, receiptScanNotif: true,
   autoDetectTrips: true, autoClassifySuggestions: true, homeLocation: '', workLocation: '',
   fuelAutoEstimation: true, fuelPriceSource: 'National Average', avgFuelPrice: '1.95', receiptAI: true,
+  showDeductionEstimates: true,
   defaultTaxYear: '2025-26', exportFormat: 'PDF', shareWithAccountant: false, biometricLogin: false,
 };
 
@@ -70,6 +72,9 @@ export function SettingsPanel() {
         <ChipSelect label="Fuel Price Source" options={['National Average', 'State Average', 'Manual']} value={s.fuelPriceSource} onChange={updStr('fuelPriceSource')} testId="chip-fuel-source" />
         <FieldInput label="Current Avg Fuel Price ($/L)" value={s.avgFuelPrice} onChange={updStr('avgFuelPrice')} type="number" placeholder="1.95" testId="input-fuel-price" />
         <ToggleRow label="Receipt AI Detection" value={s.receiptAI} onChange={updBool('receiptAI')} testId="toggle-receipt-ai" />
+
+        <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Estimates</div>
+        <ToggleRow label="Show Deduction Estimates" value={s.showDeductionEstimates} onChange={updBool('showDeductionEstimates')} testId="toggle-show-deduction-estimates" />
 
         <div className="font-heading font-bold text-[11px] uppercase tracking-[.05em] mt-[16px] mb-[4px]" style={{ color: 'var(--wc-t2)' }}>Reports</div>
         <ChipSelect label="Default Tax Year" options={['2024-25', '2025-26']} value={s.defaultTaxYear} onChange={updStr('defaultTaxYear')} testId="chip-tax-year" />

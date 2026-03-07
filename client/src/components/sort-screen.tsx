@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
+import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
-import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock } from 'lucide-react';
+import { DeductionCard } from './deduction-card';
+import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -133,6 +135,16 @@ export function SortScreen() {
   const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const sortedTotKm = sortedSlice.reduce((s, t) => s + t.km, 0);
   const logbookPct = sortedTotKm > 0 ? Math.round(sortedBizKm / sortedTotKm * 100) : 0;
+
+  const hasBizTrips = state.bizCount > 0;
+  const checks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
+  const showDeductionEstimates = useMemo(() => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      return settings.showDeductionEstimates !== false;
+    } catch { return true; }
+  }, []);
+  const deductionState = useMemo(() => getDeductionState(checks, showDeductionEstimates), [checks, showDeductionEstimates]);
 
   const sortDone = isComplete;
   const classifyDone = state.bizCount === 0 || (state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length);
@@ -397,8 +409,8 @@ export function SortScreen() {
       </div>
       <div className="flex-shrink-0" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
         <div className="px-[14px] pt-[6px] flex flex-col gap-1">
-          <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: 'var(--wc-y)' }} />
+          <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: deductionState === 'locked' ? 'rgba(255,255,255,.02)' : 'var(--wc-card)', border: deductionState === 'locked' ? '1px solid rgba(255,255,255,.06)' : '1px solid var(--wc-border)' }}>
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-y)' }} />
             <div className="flex items-baseline justify-between">
               <div>
                 <div className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook Claim Est.*</div>
@@ -414,6 +426,26 @@ export function SortScreen() {
                   const currentSessionHasReport = state.savedReports.some(r => r.sessionId === state.sessionId && !r.supersedes);
                   const unsavedDed = currentSessionHasReport ? 0 : state.dedTotal;
                   const runningTotal = Math.round(savedDed + unsavedDed);
+
+                  if (deductionState === 'locked') {
+                    return (
+                      <div className="flex items-center gap-[6px]" data-testid="text-deduction">
+                        <Lock className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                        <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'rgba(255,255,255,.15)', filter: 'blur(4px)' }}>
+                          $---
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (deductionState === 'partial') {
+                    return (
+                      <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-am)' }} data-testid="text-deduction">
+                        ${runningTotal.toLocaleString('en-AU')}*
+                      </div>
+                    );
+                  }
+
                   return (
                     <div className={`font-heading font-black text-[26px] leading-none ${dedPop ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-y)' }} data-testid="text-deduction">
                       ${runningTotal.toLocaleString('en-AU')}
@@ -426,9 +458,22 @@ export function SortScreen() {
                 <div className="font-heading font-bold text-[15px]" style={{ color: 'var(--wc-t2)' }} data-testid="text-biz-count">{state.bizCount} trips</div>
               </div>
             </div>
-            <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-              *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO Logbook Method</button> &middot; Biz% &times; vehicle costs &middot; Estimates only
-            </div>
+            {deductionState === 'locked' && (
+              <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
+                {getEstimateDisclaimer('locked')}
+              </div>
+            )}
+            {deductionState === 'partial' && (
+              <div className="text-[9px] mt-[2px] flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
+                <Info className="w-[8px] h-[8px]" />
+                {getEstimateDisclaimer('partial')}
+              </div>
+            )}
+            {deductionState === 'active' && (
+              <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
+                *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO Logbook Method</button> &middot; Biz% &times; vehicle costs &middot; Estimates only
+              </div>
+            )}
             <div className="mt-[6px]">
               <div className="h-1 rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.07)' }}>
                 <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#ffe066)' }} />

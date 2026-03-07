@@ -1,8 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calculator, AlertTriangle } from 'lucide-react';
+import { Calculator, AlertTriangle, Lock, CheckCircle, Circle, Info } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { CollapsiblePanel, FieldInput, ChipSelect, ToggleRow } from './collapsible-panel';
+import {
+  getReadinessChecks,
+  getDeductionState,
+  getMissingItems,
+  getIncludedItems,
+  getEstimateDisclaimer,
+  getReadinessLabel,
+  type DeductionState,
+} from '@/lib/deduction-estimator';
 
 interface TaxProfile {
   incomeMode: string;
@@ -56,6 +65,21 @@ export function TaxEstimatePanel() {
     return p.incomeMode === 'Weekly' ? raw * 52 : raw;
   }, [p.salary, p.incomeMode]);
 
+  const hasBizTrips = state.trips.some(t => t.type === 'business');
+  const readinessChecks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips, p]);
+
+  let showDeductionEstimates = true;
+  try {
+    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+    if (settings.showDeductionEstimates === false) showDeductionEstimates = false;
+  } catch {}
+
+  const deductionState = getDeductionState(readinessChecks, showDeductionEstimates);
+  const missingItems = getMissingItems(readinessChecks);
+  const includedItems = getIncludedItems(readinessChecks);
+  const readinessLabel = getReadinessLabel(deductionState);
+  const disclaimer = getEstimateDisclaimer(deductionState);
+
   const bizKm = state.trips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const totalKmAll = state.trips.filter(t => t.type !== null).reduce((s, t) => s + t.km, 0);
   const vehicleDed = calcLogbookDeduction(bizKm, totalKmAll);
@@ -71,13 +95,50 @@ export function TaxEstimatePanel() {
 
   const sliderMax = p.incomeMode === 'Weekly' ? 5000 : 250000;
 
+  const readinessColor = deductionState === 'active' ? 'rgba(34,197,94,.15)' : deductionState === 'partial' ? 'rgba(245,158,11,.15)' : 'rgba(255,255,255,.06)';
+  const readinessBorderColor = deductionState === 'active' ? 'rgba(34,197,94,.25)' : deductionState === 'partial' ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.08)';
+  const readinessTextColor = deductionState === 'active' ? 'var(--wc-gr)' : deductionState === 'partial' ? 'var(--wc-am)' : 'var(--wc-t3)';
+
   return (
     <CollapsiblePanel title="Tax Estimate" icon={Calculator} testId="panel-tax-estimate">
       <div className="pt-[12px]">
+        <div className="rounded-[10px] p-[10px_12px] mb-[12px]" style={{ background: readinessColor, border: `1px solid ${readinessBorderColor}` }} data-testid="card-readiness-status">
+          <div className="flex items-center gap-[6px] mb-[6px]">
+            {deductionState === 'active' ? (
+              <CheckCircle className="w-[14px] h-[14px] flex-shrink-0" style={{ color: readinessTextColor }} />
+            ) : deductionState === 'partial' ? (
+              <Info className="w-[14px] h-[14px] flex-shrink-0" style={{ color: readinessTextColor }} />
+            ) : (
+              <Lock className="w-[14px] h-[14px] flex-shrink-0" style={{ color: readinessTextColor }} />
+            )}
+            <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: readinessTextColor }} data-testid="text-readiness-label">{readinessLabel}</span>
+          </div>
+          {includedItems.length > 0 && (
+            <div className="mb-[4px]">
+              {includedItems.map((item, i) => (
+                <div key={i} className="flex items-center gap-[4px] text-[10px] leading-[1.6]" style={{ color: 'var(--wc-t2)' }}>
+                  <CheckCircle className="w-[10px] h-[10px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {missingItems.length > 0 && (
+            <div>
+              {missingItems.map((item, i) => (
+                <div key={i} className="flex items-center gap-[4px] text-[10px] leading-[1.6]" style={{ color: 'var(--wc-t3)' }}>
+                  <Circle className="w-[10px] h-[10px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="rounded-[10px] p-[10px_12px] mb-[12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
           <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
           <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-            This estimate is for planning purposes only and does not constitute tax advice. Final tax outcomes depend on your full tax position and should be reviewed by a registered tax agent.
+            {disclaimer}
           </div>
         </div>
 
@@ -166,20 +227,48 @@ export function TaxEstimatePanel() {
               </div>
             </div>
 
-            <div className="rounded-[10px] p-[12px] mb-[6px]" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.2)' }}>
+            <div className="rounded-[10px] p-[12px] mb-[6px] relative" style={{ background: 'rgba(245,196,0,.04)', border: '1.5px solid rgba(245,196,0,.2)' }} data-testid="card-vehicle-deduction">
+              {deductionState === 'locked' && (
+                <div className="absolute inset-0 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 1 }}>
+                  <div className="flex items-center gap-[6px]">
+                    <Lock className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                    <span className="font-heading font-bold text-[11px] uppercase" style={{ color: 'var(--wc-t3)' }}>Complete profile to unlock</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between items-center mb-[4px]">
                 <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Vehicle Deduction</span>
-                <span className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>${vehicleDed.toLocaleString()}</span>
+                <span className="font-heading font-bold text-[16px]" style={{ color: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-y)' }}>
+                  ${vehicleDed.toLocaleString()}{deductionState === 'partial' && '*'}
+                </span>
               </div>
-              <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{totalKmAll > 0 ? Math.round(bizKm / totalKmAll * 100) : 0}% biz use &times; vehicle costs</div>
+              <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>
+                {totalKmAll > 0 ? Math.round(bizKm / totalKmAll * 100) : 0}% biz use &times; vehicle costs
+              </div>
+              {deductionState === 'partial' && (
+                <div className="text-[9px] mt-[4px]" style={{ color: 'var(--wc-am)' }}>*Approximate — add more details for accuracy</div>
+              )}
             </div>
 
-            <div className="rounded-[10px] p-[12px]" style={{ background: 'rgba(34,197,94,.04)', border: '1.5px solid rgba(34,197,94,.2)' }}>
+            <div className="rounded-[10px] p-[12px] relative" style={{ background: 'rgba(34,197,94,.04)', border: '1.5px solid rgba(34,197,94,.2)' }} data-testid="card-tax-saving">
+              {deductionState === 'locked' && (
+                <div className="absolute inset-0 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 1 }}>
+                  <div className="flex items-center gap-[6px]">
+                    <Lock className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                    <span className="font-heading font-bold text-[11px] uppercase" style={{ color: 'var(--wc-t3)' }}>Locked</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between items-center mb-[2px]">
-                <span className="font-heading font-bold text-[13px] uppercase" style={{ color: 'var(--wc-gr)' }}>Tax Saving from Vehicle</span>
-                <span className="font-heading font-black text-[20px]" style={{ color: 'var(--wc-gr)' }}>${taxSaving.toLocaleString()}</span>
+                <span className="font-heading font-bold text-[13px] uppercase" style={{ color: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-gr)' }}>Tax Saving from Vehicle</span>
+                <span className="font-heading font-black text-[20px]" style={{ color: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-gr)' }}>
+                  ${taxSaving.toLocaleString()}{deductionState === 'partial' && '*'}
+                </span>
               </div>
               <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Estimated impact on your tax bill</div>
+              {deductionState === 'partial' && (
+                <div className="text-[9px] mt-[4px]" style={{ color: 'var(--wc-am)' }}>*Approximate — add more details for accuracy</div>
+              )}
             </div>
 
             {surchargeRisk && (
