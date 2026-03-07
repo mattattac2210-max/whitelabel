@@ -1,0 +1,307 @@
+Update the application to create a structured “Account & Vehicle” area that captures user details, vehicle information, tax estimate inputs, and app settings while keeping the interface simple and mobile-first.
+
+GOAL
+Provide all information required to:
+- generate ATO-compliant logbook reports
+- calculate estimated vehicle deductions
+- allow tax agents to verify vehicle details
+- support prorated depreciation calculations
+
+NAVIGATION STRUCTURE
+
+Add a new main section called:
+Account
+
+Inside the Account section create four panels:
+
+1. My Details
+2. Vehicle Details
+3. Tax Estimate Profile
+4. Settings
+
+Keep the UI minimal and mobile-first with large touch targets.
+
+---
+
+SECTION 1: MY DETAILS
+
+Purpose: Store user identity and accountant information.
+
+Fields:
+
+Full Name
+Email
+Mobile Number
+Business Name (optional)
+ABN (optional)
+
+Residential Address
+Business Address (optional)
+
+Account Type:
+- Individual
+- Sole Trader
+- Business
+
+Accountant Details (optional):
+- Accountant Name
+- Accountant Email
+- Accountant Phone
+
+These details will be included in exported reports if available.
+
+---
+
+SECTION 2: VEHICLE DETAILS
+
+Purpose: Store vehicle data required for ATO calculations and deduction estimates.
+
+Vehicle Identification
+
+Allow two ways to populate vehicle data:
+
+1) Automatic detection during onboarding
+2) Manual lookup using registration plate number
+
+Provide a button:
+
+Lookup Vehicle by Rego
+
+When the user enters a registration number, call the vehicle lookup API and populate vehicle specifications.
+
+Store the following vehicle attributes:
+
+Registration Number
+Make
+Model
+Variant
+Year
+Body Type
+Fuel Type
+Transmission
+Engine Capacity
+Fuel Consumption (L/100km)
+Vehicle Category
+Payload Capacity (kg)
+Gross Vehicle Mass (GVM)
+Vehicle Value (if available)
+
+These attributes are required to support:
+
+fuel estimation
+logbook validation
+depreciation calculations
+
+Display these details as read-only cards after lookup.
+
+Allow the user to manually edit only if necessary.
+
+---
+
+VEHICLE PURCHASE DETAILS
+
+Add a section:
+
+Vehicle Purchase Details
+
+Fields:
+
+Purchase Date
+Purchase Price
+Financing Type:
+- Owned
+- Loan
+- Lease
+
+Allow the purchase date to determine prorated deductions.
+
+Example:
+
+If vehicle purchased mid-financial year, depreciation calculations must prorate automatically.
+
+---
+
+ATO CALCULATION DATA
+
+Display additional fields derived from vehicle data:
+
+Fuel Economy
+Estimated Annual Running Cost
+Depreciation Method
+
+These should be read-only unless overridden.
+
+---
+
+SECTION 3: TAX ESTIMATE PROFILE
+
+Purpose: Allow optional inputs to estimate the tax impact of vehicle deductions.
+
+IMPORTANT DISCLAIMER
+
+Always display:
+
+“This estimate is for planning purposes only and does not constitute tax advice. Final tax outcomes depend on your full tax position and should be reviewed by a registered tax agent.”
+
+INPUT FIELDS
+
+Income Mode
+- Weekly
+- Annual
+
+Salary / Wages
+Slider input
+Exact value input
+
+Other Deduction Estimate
+Slider input
+Exact value input
+
+HELP / HECS Debt
+Yes / No
+
+Private Hospital Cover
+Yes / No
+
+Family Status
+- Single
+- Family
+
+Dependants (optional)
+
+---
+
+TAX CALCULATION LOGIC
+
+Use Australian resident tax rates:
+
+0 – 18,200 = 0%
+18,201 – 45,000 = 16%
+45,001 – 135,000 = 30%
+135,001 – 190,000 = 37%
+190,001+ = 45%
+
+Apply Medicare levy at 2%.
+
+Flag possible Medicare levy surcharge if:
+
+income exceeds threshold
+AND
+private hospital cover is "No".
+
+---
+
+TAX SUMMARY CARD
+
+Display the following outputs:
+
+Estimated Annual Income
+Estimated Taxable Income
+Estimated Tax Bracket
+Estimated Medicare Levy
+Vehicle Deduction Estimate
+Estimated Tax Impact of Vehicle Deduction
+
+All outputs must be labelled clearly as estimates.
+
+---
+
+SECTION 4: SETTINGS
+
+Purpose: Control app behaviour.
+
+Notification Settings
+
+Trip Detection Alerts
+Missing Trip Alerts
+EOFY Reminder
+Receipt Scan Notifications
+
+Trip Tracking Settings
+
+Auto Detect Trips
+Auto Classification Suggestions
+Home Location
+Work Base Location
+
+Expense Settings
+
+Allow Fuel Auto Estimation
+Fuel Price Source
+Current Average Fuel Price
+
+Receipt AI Detection
+Enable / Disable
+
+Report Settings
+
+Default Tax Year
+Export Format
+Share Report With Accountant
+
+Security Settings
+
+Biometric Login
+Change Password
+Log Out
+
+---
+
+EXPENSE SYSTEM INTEGRATION
+
+Vehicle details must integrate with the Expenses module.
+
+Fuel estimation must use:
+
+Business KMs
+Vehicle Fuel Consumption
+Current Average Fuel Price
+
+Formula:
+
+Fuel Estimate =
+Business KMs × Fuel Consumption ÷ 100 × Fuel Price
+
+Mark all fuel estimates with an asterisk.
+
+Example display:
+
+Fuel Estimate: $1,482*
+
+*Estimated using recorded business kilometres and current average fuel price. Final values may be adjusted by your tax agent.
+
+---
+
+DATA MODEL
+
+Ensure the following tables exist:
+
+users
+vehicles
+vehicle_specs
+vehicle_purchase_details
+tax_estimate_profiles
+expenses
+expense_reports
+trip_logs
+
+Vehicles must be linked to users.
+
+Expenses must be linked to vehicles.
+
+Trip logs must link to vehicles.
+
+---
+
+UI GOALS
+
+Mobile-first interface
+Minimal navigation buttons
+Clear card layout
+Large touch targets
+Simple editing flows
+Avoid long forms
+
+Use collapsible cards for each panel.
+
+Ensure users can update vehicle details and tax estimate inputs quickly.

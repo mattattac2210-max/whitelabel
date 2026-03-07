@@ -35,17 +35,17 @@ All application logic runs client-side using React state (via useReducer + Conte
    - UserData includes: trade, kmBand, vehicleAge, vehicleType, finance, priceBand, recommendation
 
 2. **Dashboard** (main hub after onboarding):
-   - Quick action tiles: Sort Trips, Driving Reports, Add Trip, Expenses, My Stats, Export, Find My Keys
+   - Quick action tiles: Sort Trips, Driving Reports, Add Trip, Expenses, My Stats, Export, Find My Keys, Account
    - Summary stats: total trips, business km, estimated deduction
    - 12-week logbook progress strip
 
 3. **Logbook Screens** (accessed from dashboard, with bottom nav):
-   - Sort, Classify, Review, Odometer, Reports, Export, Input, Expenses, Stats, Find Keys
+   - Sort, Classify, Review, Odometer, Reports, Export, Input, Expenses, Stats, Find Keys, Account
    - Bottom nav includes Home button to return to dashboard
 
 ### Screen Flow
 
-11 screens managed by `currentScreen` state:
+12 screens managed by `currentScreen` state:
 1. **Dashboard** -- Main hub with quick action tiles, stats, and 12-week progress
 2. **Sort** -- Swipe/tap to classify trips as business or personal. Business button is single-click. Card fly-out animation on classify.
 3. **Classify** -- Step through business trips, pick purpose category from 10-option grid
@@ -57,6 +57,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 9. **Expenses** -- Unified expense section with two tabs (Entries / Report). Entries tab shows saved expense items with category, amount, date, vendor, receipt thumbnail, edit/delete. Report tab shows ATO-ordered category totals (Fuel/Electricity, Oil, Repairs & Maintenance, Registration, Insurance, Lease Payments, Loan Interest, Depreciation), business use %, deductible estimate, CSV export. Fuel auto-estimated from biz km × consumption × avg price; Depreciation auto-calculated via diminishing value method. Add Expense flow includes category picker, amount, date, vendor, receipt photo upload with AI extraction placeholder, verify before save. Data in `localStorage.wc_expenses`.
 10. **Stats** -- Trip analytics: business vs personal split, trips by day bar chart, top destinations, averages (km/trip, cost/km), fuel cost integration.
 11. **Find My Keys** -- GPS location save ("Mark Location"), vibrate ring, Google Maps navigation, location history.
+12. **Account** -- 4 collapsible panels: My Details (name, email, mobile, business info, ABN, accountant details), Vehicle Details (rego lookup with mock API, full vehicle specs, purchase details with prorated depreciation, ATO calc data), Tax Estimate (income slider, other deductions, HECS/hospital/family inputs, Australian tax bracket calculator with Medicare levy, vehicle deduction impact), Settings (notifications, trip tracking, expense config, fuel price, report defaults, security, logout).
 
 ### Trip Data
 
@@ -111,6 +112,12 @@ All reducer actions (`UPDATE_TRIP`, `RECLASSIFY`, `UNDO_LAST`) recalculate `dedT
 | `client/src/components/expenses-screen.tsx` | Unified expenses: Entries/Report tabs + Add Expense flow |
 | `client/src/components/stats-screen.tsx` | Trip analytics and stats dashboard |
 | `client/src/components/find-keys-screen.tsx` | GPS key location + vibrate + Maps nav |
+| `client/src/components/account-screen.tsx` | Account wrapper with 4 collapsible panels |
+| `client/src/components/account/my-details-panel.tsx` | User identity, business info, accountant |
+| `client/src/components/account/vehicle-panel.tsx` | Rego lookup, specs, purchase, depreciation |
+| `client/src/components/account/tax-estimate-panel.tsx` | AU tax brackets, Medicare, deduction impact |
+| `client/src/components/account/settings-panel.tsx` | App settings, notifications, security |
+| `client/src/components/account/collapsible-panel.tsx` | Shared UI: CollapsiblePanel, FieldInput, ToggleRow, ChipSelect |
 | `client/src/components/modals.tsx` | EditModal, ATOModal, SummaryModal |
 | `client/src/components/bottom-nav.tsx` | Bottom navigation bar (Home, Sort, Classify, Review, Reports) |
 | `client/src/index.css` | Theme CSS variables, custom animations, onboarding styles (ob-*) |

@@ -12,6 +12,7 @@ import { NotesScreen } from '@/components/notes-screen';
 import { ExpensesScreen } from '@/components/expenses-screen';
 import { StatsScreen } from '@/components/stats-screen';
 import { FindKeysScreen } from '@/components/find-keys-screen';
+import { AccountScreen } from '@/components/account-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
 
 import { OnboardingFlow } from '@/components/onboarding/index';
@@ -53,6 +54,7 @@ function ScreenContainer() {
     expenses: <ExpensesScreen />,
     stats: <StatsScreen />,
     'find-keys': <FindKeysScreen />,
+    account: <AccountScreen />,
   };
 
   return (

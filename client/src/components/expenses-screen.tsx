@@ -30,15 +30,27 @@ interface Expense {
   estimated: boolean;
 }
 
-const FUEL_CONSUMPTION: Record<string, number> = {
+const FUEL_CONSUMPTION_FALLBACK: Record<string, number> = {
   'ute-4x4': 12.5, 'ute-4x2': 10.5, 'suv-medium': 9.8,
   'suv-small': 8.2, 'sedan': 7.5, 'van': 11.0, default: 10.0,
 };
-const AVG_FUEL_PRICE = 1.95;
 
-const PRICE_MID: Record<string, number> = {
-  'under20': 15000, '20to30': 25000, '30to50': 40000, 'over50': 60000,
-};
+function getVehicleFuelConsumption(): number {
+  const fromSpecs = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
+  if (fromSpecs > 0) return fromSpecs;
+  const vType = localStorage.getItem('wc_vehicle_type') || 'default';
+  return FUEL_CONSUMPTION_FALLBACK[vType] || FUEL_CONSUMPTION_FALLBACK.default;
+}
+
+function getAvgFuelPrice(): number {
+  try {
+    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+    const price = parseFloat(settings.avgFuelPrice);
+    if (price > 0) return price;
+  } catch {}
+  return 1.95;
+}
+
 const DV_RATE = 0.25;
 const ATO_CAR_LIMIT = 68108;
 
@@ -78,17 +90,27 @@ export function ExpensesScreen() {
   );
   const bizPct = totalKm > 0 ? Math.round(bizKm / totalKm * 100) : 0;
 
-  const vType = localStorage.getItem('wc_vehicle_type') || 'default';
-  const litresPer100 = FUEL_CONSUMPTION[vType] || FUEL_CONSUMPTION.default;
-  const fuelEstimate = Math.round(bizKm / 100 * litresPer100 * AVG_FUEL_PRICE * 100) / 100;
+  const litresPer100 = getVehicleFuelConsumption();
+  const avgFuelPrice = getAvgFuelPrice();
+  const fuelEstimate = Math.round(bizKm / 100 * litresPer100 * avgFuelPrice * 100) / 100;
 
-  const vAge = localStorage.getItem('wc_vehicle_age') || '3to5';
-  const pBand = localStorage.getItem('wc_price_band') || '30to50';
-  const purchasePrice = Math.min(PRICE_MID[pBand] || 40000, ATO_CAR_LIMIT);
-  const ageYears: Record<string, number> = { 'new': 0, '1to2': 1.5, '3to5': 4, '6to10': 8, '10plus': 12 };
-  const yrs = ageYears[vAge] ?? 4;
-  const depBase = purchasePrice * Math.pow(1 - DV_RATE, yrs);
-  const depAmount = Math.round(depBase * DV_RATE * 100) / 100;
+  const depAmount = useMemo(() => {
+    try {
+      const purchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      const price = Math.min(parseFloat(purchase.purchasePrice) || 0, ATO_CAR_LIMIT);
+      if (price <= 0) return 0;
+      const purchDate = purchase.purchaseDate ? new Date(purchase.purchaseDate) : null;
+      const now = new Date();
+      const fyStart = new Date(now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1, 6, 1);
+      const fyEnd = new Date(fyStart.getFullYear() + 1, 5, 30);
+      const daysInFY = Math.round((fyEnd.getTime() - fyStart.getTime()) / 86400000);
+      let daysOwned = daysInFY;
+      if (purchDate && purchDate > fyStart) {
+        daysOwned = Math.max(0, Math.min(Math.round((fyEnd.getTime() - purchDate.getTime()) / 86400000), daysInFY));
+      }
+      return Math.round(price * DV_RATE * (daysOwned / daysInFY) * 100) / 100;
+    } catch { return 0; }
+  }, []);
 
   const userExpenses = expenses.filter(e => !e.estimated);
 
@@ -499,7 +521,7 @@ export function ExpensesScreen() {
           <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
             <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
             <div className="text-[11px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-              * Fuel estimate is based on {bizKm.toFixed(0)} business km, {litresPer100}L/100km consumption, and ${AVG_FUEL_PRICE.toFixed(2)}/L avg price. Your tax agent can update these figures at tax time.
+              * Fuel estimate is based on {bizKm.toFixed(0)} business km, {litresPer100}L/100km consumption, and ${avgFuelPrice.toFixed(2)}/L avg price. Your tax agent can update these figures at tax time.
             </div>
           </div>
 

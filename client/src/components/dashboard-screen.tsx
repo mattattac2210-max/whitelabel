@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { RATE } from '@/lib/trip-data';
-import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car } from 'lucide-react';
+import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle } from 'lucide-react';
 
 export function DashboardScreen() {
   const { state, dispatch } = useApp();
@@ -20,6 +20,7 @@ export function DashboardScreen() {
     { screen: 'stats' as const, label: 'My Stats', sub: 'Trips, km & trends', icon: BarChart3, primary: false },
     { screen: 'export' as const, label: 'Export', sub: 'PDF & CSV download', icon: Download, primary: false },
     { screen: 'find-keys' as const, label: 'Find My Keys', sub: 'Last known location', icon: Key, primary: false },
+    { screen: 'account' as const, label: 'Account', sub: 'Profile, vehicle & tax', icon: UserCircle, primary: false },
   ];
 
   return (

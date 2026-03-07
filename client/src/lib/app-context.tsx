@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
 import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips } from './trip-data';
 
-export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'notes' | 'odometer' | 'reports' | 'export' | 'input' | 'expenses' | 'stats' | 'find-keys';
+export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'notes' | 'odometer' | 'reports' | 'export' | 'input' | 'expenses' | 'stats' | 'find-keys' | 'account';
 
 export const INDUSTRY_BIZ_AVG = 65;
 
