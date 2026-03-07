@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Lock, X, ChevronRight, CheckCircle2, AlertCircle, Info, BarChart3 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { Lock, X, ChevronRight, CheckCircle2, AlertCircle, Info, BarChart3, Calculator } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import {
   type DeductionState,
@@ -9,6 +10,7 @@ import {
   getEstimateDisclaimer,
   getReadinessLabel,
   getEstimateMode,
+  getVehicleCostsDetailed,
 } from '@/lib/deduction-estimator';
 
 interface DeductionCardProps {
@@ -78,7 +80,7 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
         )}
       </div>
 
-      {showModal && checks && (
+      {showModal && checks && createPortal(
         <DeductionModal
           state={state}
           checks={checks}
@@ -87,19 +89,29 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
             setShowModal(false);
             dispatch({ type: 'GO_SCREEN', screen: screen as any });
           }}
-        />
+        />,
+        document.body
       )}
 
-      {showIndustryModal && (
+      {showIndustryModal && createPortal(
         <IndustryAveragesModal
           value={value}
-          checks={checks}
           onClose={() => setShowIndustryModal(false)}
-          onSwitchToPersonalised={() => {
+          onExploreMaths={() => {
             setShowIndustryModal(false);
             dispatch({ type: 'GO_SCREEN', screen: 'account' as any });
           }}
-        />
+          onSwitchToPersonalised={() => {
+            setShowIndustryModal(false);
+            try {
+              const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+              settings.useIndustryAverages = false;
+              localStorage.setItem('wc_settings', JSON.stringify(settings));
+            } catch {}
+            dispatch({ type: 'GO_SCREEN', screen: 'account' as any });
+          }}
+        />,
+        document.body
       )}
     </>
   );
@@ -107,33 +119,42 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
 
 interface IndustryAveragesModalProps {
   value: number;
-  checks?: ReadinessCheck;
   onClose: () => void;
+  onExploreMaths: () => void;
   onSwitchToPersonalised: () => void;
 }
 
-function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised }: IndustryAveragesModalProps) {
-  const included = checks ? getIncludedItems(checks) : [];
+function IndustryAveragesModal({ value, onClose, onExploreMaths, onSwitchToPersonalised }: IndustryAveragesModalProps) {
+  const costs = useMemo(() => getVehicleCostsDetailed(), []);
   const disclaimer = getEstimateDisclaimer('partial');
 
-  const handleSwitchToPersonalised = () => {
-    try {
-      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
-      settings.useIndustryAverages = false;
-      localStorage.setItem('wc_settings', JSON.stringify(settings));
-    } catch {}
-    onSwitchToPersonalised();
-  };
+  let bizPct = 0;
+  try {
+    const trips = JSON.parse(localStorage.getItem('wc_app_state') || '{}').trips || [];
+    const sorted = trips.filter((t: any) => t.type !== null);
+    const bizKm = sorted.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const totKm = sorted.reduce((s: number, t: any) => s + (t.km || 0), 0);
+    if (totKm > 0) bizPct = Math.round(bizKm / totKm * 100);
+  } catch {}
+
+  const costBreakdown = [
+    { label: 'Running costs (industry avg)', value: costs.manual },
+    { label: 'Fuel estimate', value: costs.fuelEstimate },
+    { label: 'Depreciation', value: costs.depreciation },
+  ].filter(c => c.value > 0);
+
+  if (costs.financeInterest > 0) costBreakdown.push({ label: 'Finance interest', value: costs.financeInterest });
+  if (costs.leasePayments > 0) costBreakdown.push({ label: 'Lease payments', value: costs.leasePayments });
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center"
+      className="fixed inset-0 z-[9999] flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up"
-        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)' }}
+        className="w-full max-w-[390px] rounded-t-[20px] p-[20px_18px_28px] animate-slide-up overflow-y-auto"
+        style={{ background: '#1a1a1e', border: '1.5px solid var(--wc-border)', borderBottom: 'none', boxShadow: '0 -20px 60px rgba(0,0,0,.6)', maxHeight: '85vh' }}
         onClick={e => e.stopPropagation()}
         data-testid="modal-industry-averages"
       >
@@ -147,12 +168,12 @@ function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised 
             </div>
             <div>
               <div className="font-heading font-black text-[17px] uppercase text-white leading-[1.1]">
-                Industry Average Estimate
+                How We Calculated This
               </div>
               <div className="flex items-center gap-[5px] mt-[3px]">
                 <div className="w-[6px] h-[6px] rounded-full" style={{ background: 'var(--wc-am)' }} />
                 <span className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-am)' }}>
-                  Based on averages
+                  Industry averages
                 </span>
               </div>
             </div>
@@ -172,28 +193,43 @@ function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised 
           <div className="font-display text-[32px] leading-none" style={{ color: 'var(--wc-am)' }}>
             ${value.toFixed(0)}*
           </div>
-          <div className="text-[10px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
-            Based on industry averages for your vehicle and usage
+        </div>
+
+        <div className="rounded-[10px] p-[12px] mb-[12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: 'var(--wc-y)' }}>The Formula</div>
+          <div className="flex items-center gap-[6px] mb-[6px]">
+            <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+              <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
+            </div>
+            <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>&times;</span>
+            <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+              <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
+            </div>
+            <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>=</span>
+            <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
+              <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-am)' }}>${value.toFixed(0)}</span>
+            </div>
+          </div>
+          <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+            Business use % &times; Total vehicle costs = Deduction
           </div>
         </div>
 
-        <div className="text-[12px] leading-[1.5] mb-[12px]" style={{ color: 'var(--wc-t2)' }}>
-          This estimate uses typical running costs for your vehicle type. It gives you a quick idea of potential deductions before entering detailed financial info.
+        <div className="rounded-[10px] p-[12px] mb-[12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+          <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>Vehicle costs breakdown</div>
+          {costBreakdown.map((item, i) => (
+            <div key={i} className="flex justify-between items-center py-[5px]" style={{ borderBottom: i < costBreakdown.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+              <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
+              <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t2)' }}>${item.value.toLocaleString()}</span>
+            </div>
+          ))}
+          <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgba(245,196,0,.2)' }}>
+            <span className="text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>Total vehicle costs</span>
+            <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
+          </div>
         </div>
 
-        {included.length > 0 && (
-          <div className="mb-[12px]">
-            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-am)' }}>What's included</div>
-            {included.map((item, i) => (
-              <div key={i} className="flex items-center gap-[8px] py-[4px]" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <CheckCircle2 className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'rgba(245,158,11,.6)' }} />
-                <span className="text-[12px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="text-[10px] leading-[1.4] mb-[14px] px-[2px]" style={{ color: 'var(--wc-t3)' }}>
+        <div className="text-[10px] leading-[1.4] mb-[12px] px-[2px]" style={{ color: 'var(--wc-t3)' }}>
           {disclaimer}
         </div>
 
@@ -201,7 +237,16 @@ function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised 
           <button
             className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
             style={{ background: 'rgba(245,196,0,.08)', border: '1.5px solid rgba(245,196,0,.3)', color: 'var(--wc-y)' }}
-            onClick={handleSwitchToPersonalised}
+            onClick={onExploreMaths}
+            data-testid="button-explore-maths"
+          >
+            <Calculator className="w-[14px] h-[14px]" />
+            Explore Our Maths
+          </button>
+          <button
+            className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[6px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
+            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            onClick={onSwitchToPersonalised}
             data-testid="button-switch-personalised"
           >
             Switch to Personalised Estimates
@@ -209,7 +254,7 @@ function IndustryAveragesModal({ value, checks, onClose, onSwitchToPersonalised 
           </button>
           <button
             className="w-full rounded-[11px] py-[12px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.98]"
-            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+            style={{ color: 'var(--wc-t3)' }}
             onClick={onClose}
             data-testid="button-close-industry-ok"
           >
@@ -245,7 +290,7 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center"
+      className="fixed inset-0 z-[9999] flex items-end justify-center"
       style={{ background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
@@ -387,7 +432,7 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
         <ChevronRight className="w-[14px] h-[14px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
       </button>
 
-      {showModal && (
+      {showModal && createPortal(
         <DeductionModal
           state={state}
           checks={checks}
@@ -396,8 +441,80 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
             setShowModal(false);
             dispatch({ type: 'GO_SCREEN', screen: screen as any });
           }}
-        />
+        />,
+        document.body
       )}
     </>
+  );
+}
+
+export function CalculationBreakdown({ className = '' }: { className?: string }) {
+  const costs = useMemo(() => getVehicleCostsDetailed(), []);
+
+  let bizPct = 0;
+  let deduction = 0;
+  try {
+    const appState = JSON.parse(localStorage.getItem('wc_app_state') || '{}');
+    const trips = appState.trips || [];
+    const sorted = trips.filter((t: any) => t.type !== null);
+    const bizKm = sorted.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
+    const totKm = sorted.reduce((s: number, t: any) => s + (t.km || 0), 0);
+    if (totKm > 0) {
+      bizPct = Math.round(bizKm / totKm * 100);
+      deduction = Math.round(bizPct / 100 * costs.total);
+    }
+  } catch {}
+
+  const costBreakdown = [
+    { label: 'Running costs (industry avg)', value: costs.manual },
+    { label: 'Fuel estimate', value: costs.fuelEstimate },
+    { label: 'Depreciation', value: costs.depreciation },
+  ].filter(c => c.value > 0);
+  if (costs.financeInterest > 0) costBreakdown.push({ label: 'Finance interest', value: costs.financeInterest });
+  if (costs.leasePayments > 0) costBreakdown.push({ label: 'Lease payments', value: costs.leasePayments });
+
+  return (
+    <div className={className}>
+      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(245,158,11,.04)', border: '1.5px solid rgba(245,158,11,.15)' }}>
+        <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Estimated Deduction</div>
+        <div className="font-display text-[28px] leading-none" style={{ color: 'var(--wc-am)' }}>
+          ${deduction.toLocaleString()}*
+        </div>
+      </div>
+
+      <div className="rounded-[10px] p-[12px] mb-[10px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+        <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[8px]" style={{ color: 'var(--wc-y)' }}>The Formula</div>
+        <div className="flex items-center gap-[6px] mb-[6px] flex-wrap">
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
+          </div>
+          <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>&times;</span>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,196,0,.08)', border: '1px solid rgba(245,196,0,.2)' }}>
+            <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
+          </div>
+          <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>=</span>
+          <div className="rounded-[6px] px-[8px] py-[4px]" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)' }}>
+            <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-am)' }}>${deduction.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+          Business use % &times; Total vehicle costs = Deduction
+        </div>
+      </div>
+
+      <div className="rounded-[10px] p-[12px]" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+        <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[6px]" style={{ color: 'var(--wc-t2)' }}>Vehicle costs breakdown</div>
+        {costBreakdown.map((item, i) => (
+          <div key={i} className="flex justify-between items-center py-[5px]" style={{ borderBottom: i < costBreakdown.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
+            <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{item.label}</span>
+            <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t2)' }}>${item.value.toLocaleString()}</span>
+          </div>
+        ))}
+        <div className="flex justify-between items-center pt-[6px] mt-[4px]" style={{ borderTop: '1.5px solid rgba(245,196,0,.2)' }}>
+          <span className="text-[11px] font-bold" style={{ color: 'var(--wc-y)' }}>Total vehicle costs</span>
+          <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-y)' }}>${costs.total.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import { Calculator, AlertTriangle, Lock, CheckCircle, Circle, Info, BarChart3, 
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { CollapsiblePanel, FieldInput, ChipSelect, ToggleRow } from './collapsible-panel';
+import { CalculationBreakdown } from '@/components/deduction-card';
 import {
   getReadinessChecks,
   getDeductionState,
@@ -147,12 +148,15 @@ export function TaxEstimatePanel() {
         </div>
 
         {useIndustry ? (
-          <div className="rounded-[10px] p-[12px] flex items-start gap-[10px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
-            <BarChart3 className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
-            <div className="text-[11px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>
-              Your deduction estimate is based on industry average running costs for your vehicle type. Switch off to enter your own financial details for a more accurate figure.
+          <>
+            <CalculationBreakdown className="mb-[10px]" />
+            <div className="rounded-[10px] p-[10px_12px] flex items-start gap-[8px]" style={{ background: 'rgba(245,158,11,.04)', border: '1px solid rgba(245,158,11,.15)' }}>
+              <BarChart3 className="w-[14px] h-[14px] flex-shrink-0 mt-[2px]" style={{ color: 'var(--wc-am)' }} />
+              <div className="text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                Based on industry average running costs for your vehicle type. Switch off the toggle above to enter your own financial details.
+              </div>
             </div>
-          </div>
+          </>
         ) : (
           <>
             <div className="rounded-[10px] p-[10px_12px] mb-[12px]" style={{ background: readinessColor, border: `1px solid ${readinessBorderColor}` }} data-testid="card-readiness-status">
