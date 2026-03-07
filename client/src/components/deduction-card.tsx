@@ -105,9 +105,10 @@ function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalPr
 
   const navButtons: { label: string; screen: string }[] = [];
   const screens = new Set(missing.map(m => m.screen));
-  if (screens.has('account')) navButtons.push({ label: 'Go to Account', screen: 'account' });
-  if (screens.has('sort')) navButtons.push({ label: 'Go to Sort Trips', screen: 'sort' });
-  if (screens.has('expenses')) navButtons.push({ label: 'Go to Expenses', screen: 'expenses' });
+  if (screens.has('account')) navButtons.push({ label: 'Update Vehicle Details', screen: 'account' });
+  if (screens.has('expenses')) navButtons.push({ label: 'Add Expenses', screen: 'expenses' });
+  if (screens.has('sort')) navButtons.push({ label: 'Sort Trips', screen: 'sort' });
+  if (!screens.has('account') && checks.taxProfileComplete === false) navButtons.push({ label: 'Update Tax Profile', screen: 'account' });
 
   return (
     <div

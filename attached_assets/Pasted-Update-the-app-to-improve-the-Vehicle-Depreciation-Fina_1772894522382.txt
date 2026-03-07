@@ -1,0 +1,316 @@
+Update the app to improve the Vehicle / Depreciation / Finance logic so users can still get an estimate even if they do not know their exact WDV.
+
+GOAL
+Build a flexible vehicle ownership and depreciation section that supports:
+- new vehicles
+- previously claimed vehicles
+- users who do not know their current WDV
+- financed vehicles
+- leased vehicles
+- pro-rata timing based on purchase date and first business use date
+
+IMPORTANT PRODUCT RULES
+- Do not require exact WDV to unlock the estimator
+- Let users choose whether the vehicle is new, previously claimed, or unknown
+- If the user does not know WDV, allow an estimated depreciation position using purchase timing and prior-use inputs
+- Mark all estimated values with an asterisk
+- Finance details should feed into interest estimation only, not principal deduction
+- All outputs must be labelled as estimates only, not tax advice
+
+SECTION LOCATION
+Add this inside the Vehicle Details area under two grouped cards:
+1. Purchase, Ownership & Finance
+2. Depreciation Details
+
+--------------------------------------------------
+CARD 1: PURCHASE, OWNERSHIP & FINANCE
+--------------------------------------------------
+
+FIELDS
+
+Ownership Type
+- Owned outright
+- Financed
+- Leased
+
+Purchase Price
+- numeric input
+
+ATO Capped Purchase Value
+- calculated field
+- use the lower of purchase price and current ATO car limit where relevant
+- display clearly as:
+  "ATO capped value used for depreciation"
+
+Purchase Date
+- date input
+
+Date First Used For Business
+- date input
+
+Bought New or Used
+- New
+- Used
+
+Vehicle History Status
+- New vehicle
+- Previously claimed
+- I’m not sure
+
+If user selects Financed, show:
+
+FINANCE INPUT MODE
+- Simple
+- Advanced
+
+If Simple:
+- Estimated annual interest
+- Lender name (optional)
+
+If Advanced:
+- Loan amount
+- Deposit paid
+- Loan start date
+- Loan term (months or years)
+- Interest rate
+- Repayment frequency
+- Balloon payment (optional)
+- Estimated annual interest (calculated output)
+
+If user selects Leased, show:
+- Lease provider
+- Lease payment amount
+- Payment frequency
+- Lease start date
+- Estimated annual lease total
+
+RULES
+- Only interest should feed into deduction estimate for financed vehicles
+- Principal repayments must not be treated as deductible
+- Lease payments should be stored separately from loan interest
+
+--------------------------------------------------
+CARD 2: DEPRECIATION DETAILS
+--------------------------------------------------
+
+PURPOSE
+Allow users to set the depreciation starting point in a flexible way.
+
+STEP 1
+Ask:
+What best describes this vehicle?
+
+Options:
+- New vehicle
+- Previously claimed
+- I’m not sure
+
+--------------------------------
+IF "NEW VEHICLE"
+--------------------------------
+
+Show fields:
+- Purchase price
+- Purchase date
+- Date first used for business
+
+Logic:
+- start depreciation cycle from purchase / first business use date
+- calculate first-year pro-rata automatically
+- use capped purchase value where relevant
+- calculate year-on-year WDV after first year
+
+--------------------------------
+IF "PREVIOUSLY CLAIMED"
+--------------------------------
+
+Show:
+How would you like to enter prior claim position?
+
+Options:
+- Enter current WDV
+- Enter previously claimed amount
+- Estimate it for me
+
+If "Enter current WDV":
+- Current WDV
+- Year first claimed (optional)
+
+If "Enter previously claimed amount":
+- Previously claimed amount
+- Purchase date
+- Year first claimed
+- Date first used for business
+
+If "Estimate it for me":
+- Purchase date
+- Bought new or used
+- Approximate years used for business
+- Approximate business use %
+- Prior claims made? Yes / No / Unsure
+
+Then calculate an estimated current WDV and mark it with an asterisk.
+
+--------------------------------
+IF "I’M NOT SURE"
+--------------------------------
+
+Show an assisted estimator with fields:
+- Purchase date
+- Bought new or used
+- Approximate years owned
+- Approximate years used for business
+- Approximate business use %
+- Have you claimed this vehicle before?
+  - Yes
+  - No
+  - Not sure
+
+Then estimate:
+- likely depreciation cycle position
+- estimated current WDV
+- estimated current year depreciation
+
+All outputs in this mode must show an asterisk.
+
+--------------------------------------------------
+DEPRECIATION ENGINE RULES
+--------------------------------------------------
+
+The depreciation engine must:
+- use purchase date to determine where the vehicle is in the cycle
+- support first-year pro-rata depreciation
+- support year-on-year WDV roll forward
+- use capped purchase value where relevant
+- allow current WDV override
+- allow prior claimed amount as an alternative starting point
+- allow estimated WDV if exact values are unknown
+- apply business use percentage to deductible depreciation
+- update live when vehicle details, trip usage, or tax profile changes
+
+DISPLAY OUTPUTS
+Show these fields in the Depreciation Details card:
+
+- Purchase price
+- ATO capped value used
+- Purchase date
+- Date first used for business
+- Vehicle history status
+- Current WDV
+- WDV source:
+  - entered by user
+  - estimated by app
+- Current year depreciation estimate
+- Deductible depreciation estimate after business use %
+- Estimate status:
+  - exact input
+  - estimated*
+
+If estimated, show helper text:
+*Estimated using purchase timing and prior-use inputs. Review with your tax agent.
+
+--------------------------------------------------
+READINESS LOGIC
+--------------------------------------------------
+
+Update deduction estimate readiness rules.
+
+The deduction estimator should NOT require exact WDV if:
+- purchase date exists
+- purchase price exists
+- vehicle history status exists
+- enough information exists to estimate the depreciation cycle position
+
+Readiness states:
+- Locked = not enough vehicle/tax/trip data
+- Partial estimate = some data missing, but estimate possible
+- Active estimate = enough data for fuller estimate
+
+Examples:
+- If purchase date exists but WDV is unknown, allow partial estimate with asterisk
+- If finance exists but annual interest is missing, keep estimate partial and flag finance as incomplete
+- If depreciation inputs are estimated, keep deduction estimate in partial mode unless other key data is complete
+
+--------------------------------------------------
+MISSING DATA / ASTERISK RULES
+--------------------------------------------------
+
+If deduction estimate includes estimated WDV or missing expense categories:
+- show deduction value with an asterisk
+- show helper text:
+  "Estimate based on current usage and available data only. This is not a full representation of your tax situation."
+
+If user taps the asterisk or partial estimate:
+show a modal explaining:
+Included:
+- current business use
+- fuel estimate
+- available expenses
+- estimated depreciation
+
+Missing / incomplete:
+- exact WDV
+- finance interest detail
+- missing expense categories
+- other tax profile details
+
+Buttons:
+- Update Vehicle Details
+- Add Expenses
+- Update Tax Profile
+
+--------------------------------------------------
+LIVE UPDATE RULES
+--------------------------------------------------
+
+As the user edits any of the following:
+- purchase date
+- purchase price
+- ownership type
+- finance details
+- WDV
+- previous claim position
+- trip classifications
+- expenses
+- income profile
+
+the deduction estimator must refresh automatically.
+
+--------------------------------------------------
+SETTINGS INTEGRATION
+--------------------------------------------------
+
+If “Show deduction estimates” is toggled OFF in Settings:
+- hide deduction values
+- show locked or disabled state on summary cards
+- keep all vehicle, expense, and logbook data stored normally
+
+--------------------------------------------------
+DISCLAIMERS
+--------------------------------------------------
+
+Always display one of these messages depending on state:
+
+Locked:
+Complete your profile to unlock deduction estimates.
+
+Partial:
+*Estimate based on current usage and available inputs only. This is not a full representation of your tax situation.
+
+Active:
+Planning estimate only. Final outcomes depend on your full tax position and should be reviewed by a registered tax agent.
+
+Do not use wording that implies guaranteed refund, guaranteed claim, or tax advice.
+
+--------------------------------------------------
+UX GOALS
+--------------------------------------------------
+
+- mobile-first
+- minimal buttons
+- large touch targets
+- clear grouped cards
+- simple branching flows
+- no long intimidating tax form
+- estimated values clearly marked
+- make uncertainty feel supported, not blocked
