@@ -119,29 +119,17 @@ export function SortScreen() {
   const isComplete = state.currentIndex >= state.trips.length;
   const remaining = state.trips.length - state.currentIndex;
 
-  const handleClassify = useCallback((type: 'business' | 'personal') => {
-    const trip = state.trips[state.currentIndex];
-    if (!trip) return;
-    if (type === 'business') {
-      setFlashAmt('+' + trip.km.toFixed(1) + ' km');
-      setDedPop(true);
-      setTimeout(() => setFlashAmt(null), 1100);
-      setTimeout(() => setDedPop(false), 500);
-    }
-    dispatch({ type: 'CLASSIFY_TRIP', tripType: type });
-  }, [state.currentIndex, state.trips, dispatch]);
-
   const sortedSlice = state.trips.slice(0, state.currentIndex);
   const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const allTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
   const vehicleCosts = useMemo(() => getVehicleCosts(), []);
+  const perKmRate = allTripsKm > 0 ? vehicleCosts / allTripsKm : 0;
   const tripDeductionValue = useCallback((tripKm: number) => {
-    const totalTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
-    if (totalTripsKm <= 0) return 0;
-    return Math.round((tripKm / totalTripsKm) * vehicleCosts);
-  }, [vehicleCosts, state.trips]);
+    if (allTripsKm <= 0) return 0;
+    return Math.round(tripKm * perKmRate);
+  }, [perKmRate, allTripsKm]);
 
   const hasBizTrips = state.bizCount > 0;
   const checks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
@@ -152,6 +140,19 @@ export function SortScreen() {
     } catch { return true; }
   }, []);
   const deductionState = useMemo(() => getDeductionState(checks, showDeductionEstimates), [checks, showDeductionEstimates]);
+
+  const handleClassify = useCallback((type: 'business' | 'personal') => {
+    const trip = state.trips[state.currentIndex];
+    if (!trip) return;
+    if (type === 'business' && deductionState !== 'locked') {
+      const val = tripDeductionValue(trip.km);
+      setFlashAmt('+$' + Math.round(val).toLocaleString('en-AU'));
+      setDedPop(true);
+      setTimeout(() => setFlashAmt(null), 1100);
+      setTimeout(() => setDedPop(false), 500);
+    }
+    dispatch({ type: 'CLASSIFY_TRIP', tripType: type });
+  }, [state.currentIndex, state.trips, dispatch, deductionState, tripDeductionValue]);
 
   const sortDone = isComplete;
   const classifyDone = state.bizCount === 0 || (state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length);
@@ -347,14 +348,7 @@ export function SortScreen() {
             <div className="font-heading font-black text-[26px] uppercase text-white text-center leading-none" data-testid="text-complete">All Sorted!</div>
             <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>This session's estimated claimable deduction*</div>
             {(() => {
-              const activeSessionReport = state.savedReports.find(r => r.sessionId === state.sessionId && !r.supersedes);
               let sessionDed = state.dedTotal;
-              if (activeSessionReport) {
-                const rTrips = activeSessionReport.trips || [];
-                const rBizKm = rTrips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-                const rTotKm = rTrips.reduce((s, t) => s + t.km, 0);
-                sessionDed = calcLogbookDeduction(rBizKm, rTotKm);
-              }
               return (
                 <div className="font-heading font-black text-[44px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-total-deduction">
                   ${Math.round(sessionDed).toLocaleString('en-AU')}
@@ -417,6 +411,39 @@ export function SortScreen() {
       </div>
       <div className="flex-shrink-0" style={{ background: 'rgba(10,10,10,.97)', borderTop: '1px solid var(--wc-border)' }}>
         <div className="px-[14px] pt-[6px] flex flex-col gap-1">
+          {deductionState !== 'locked' && state.currentIndex > 0 && (() => {
+            const recentSorted = sortedSlice.slice(-3);
+            let runBefore = 0;
+            const startIdx = Math.max(0, state.currentIndex - 3);
+            for (let i = 0; i < startIdx; i++) {
+              if (state.trips[i].type === 'business') runBefore += tripDeductionValue(state.trips[i].km);
+            }
+            let running = runBefore;
+            return (
+              <div className="flex flex-col gap-[1px] mb-[2px]" data-testid="running-subtotals">
+                {recentSorted.map((t, i) => {
+                  const val = t.type === 'business' ? tripDeductionValue(t.km) : 0;
+                  running += val;
+                  return (
+                    <div key={t.id} className="flex items-center justify-between px-[4px] py-[1px]" style={{ opacity: i === recentSorted.length - 1 ? 1 : 0.5 }}>
+                      <div className="flex items-center gap-[5px]">
+                        <div className="w-[5px] h-[5px] rounded-full" style={{ background: t.type === 'business' ? 'var(--wc-gr)' : 'var(--wc-t3)' }} />
+                        <span className="font-data text-[8px] tracking-[.02em]" style={{ color: 'var(--wc-t2)' }}>
+                          {t.km.toFixed(1)}km {t.type === 'business' ? '→' : '—'}
+                        </span>
+                        {t.type === 'business' ? (
+                          <span className="font-data text-[9px] font-bold" style={{ color: 'var(--wc-gr)' }}>+${Math.round(val).toLocaleString('en-AU')}</span>
+                        ) : (
+                          <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>personal</span>
+                        )}
+                      </div>
+                      <span className="font-data text-[8px]" style={{ color: 'var(--wc-t3)' }}>${Math.round(running).toLocaleString('en-AU')}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
           <div className="rounded-[11px] p-[8px_13px] relative overflow-hidden" style={{ background: deductionState === 'locked' ? 'rgba(255,255,255,.02)' : 'var(--wc-card)', border: deductionState === 'locked' ? '1px solid rgba(255,255,255,.06)' : '1px solid var(--wc-border)' }}>
             <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[11px]" style={{ background: deductionState === 'locked' ? 'var(--wc-t3)' : 'var(--wc-y)' }} />
             <div className="flex items-baseline justify-between">
