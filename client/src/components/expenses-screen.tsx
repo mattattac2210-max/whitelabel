@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import {
   ArrowLeft, Plus, Receipt, Trash2, Check, ChevronDown, ChevronUp,

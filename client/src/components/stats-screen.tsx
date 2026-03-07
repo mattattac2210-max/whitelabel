@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft, TrendingUp, Calendar, MapPin, DollarSign, Clock, Fuel } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export function StatsScreen() {
   const totalKm = sorted.reduce((s, t) => s + t.km, 0);
   const bizKm = biz.reduce((s, t) => s + t.km, 0);
   const perKm = per.reduce((s, t) => s + t.km, 0);
-  const totalDed = bizKm * RATE;
+  const totalDed = calcLogbookDeduction(bizKm, totalKm);
   const bizPct = totalKm > 0 ? (bizKm / totalKm * 100) : 0;
   const avgTripKm = sorted.length > 0 ? totalKm / sorted.length : 0;
   const avgBizTripKm = biz.length > 0 ? bizKm / biz.length : 0;

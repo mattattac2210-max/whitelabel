@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
-import { CATEGORIES, RATE } from '@/lib/trip-data';
+import { CATEGORIES } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Check, MapPin } from 'lucide-react';
 
@@ -194,7 +194,7 @@ export function ClassifyScreen() {
               <span className="w-[3px] h-[3px] rounded-full flex-shrink-0" style={{ background: 'var(--wc-t3)' }} />
               <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
             </div>
-            <div className="font-heading font-extrabold text-[18px]" style={{ color: 'var(--wc-gr)' }}>+${(trip.km * RATE).toFixed(2)}</div>
+            <div className="font-heading font-extrabold text-[18px]" style={{ color: 'var(--wc-gr)' }}>{trip.km.toFixed(1)} km</div>
           </div>
           <div className="w-[175px] aspect-square flex-shrink-0 self-center rounded-[14px] overflow-hidden">
             <ClassifyMiniMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />

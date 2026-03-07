@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calculator, AlertTriangle } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction } from '@/lib/trip-data';
 import { CollapsiblePanel, FieldInput, ChipSelect, ToggleRow } from './collapsible-panel';
 
 interface TaxProfile {
@@ -57,7 +57,8 @@ export function TaxEstimatePanel() {
   }, [p.salary, p.incomeMode]);
 
   const bizKm = state.trips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-  const vehicleDed = Math.round(bizKm * RATE * 100) / 100;
+  const totalKmAll = state.trips.filter(t => t.type !== null).reduce((s, t) => s + t.km, 0);
+  const vehicleDed = calcLogbookDeduction(bizKm, totalKmAll);
   const otherDed = parseFloat(p.otherDeductions) || 0;
   const totalDed = vehicleDed + otherDed;
   const taxableIncome = Math.max(0, annualIncome - totalDed);
@@ -170,7 +171,7 @@ export function TaxEstimatePanel() {
                 <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Vehicle Deduction</span>
                 <span className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-y)' }}>${vehicleDed.toLocaleString()}</span>
               </div>
-              <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{bizKm.toFixed(0)} biz km @ ${RATE}/km</div>
+              <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>{totalKmAll > 0 ? Math.round(bizKm / totalKmAll * 100) : 0}% biz use &times; vehicle costs</div>
             </div>
 
             <div className="rounded-[10px] p-[12px]" style={{ background: 'rgba(34,197,94,.04)', border: '1.5px solid rgba(34,197,94,.2)' }}>

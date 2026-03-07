@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import {
   Download, FileText, Check, ChevronDown, ChevronUp,
@@ -50,7 +50,7 @@ function combineReports(reports: any[]) {
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const perKm = totalKm - bizKm;
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100) : 0;
-  const totalEst = bizTrips.reduce((s: number, t: any) => s + t.km * RATE, 0);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm);
 
   const odoStarts = reports.map(r => r.odoRangeStart).filter((v: any) => v != null);
   const odoEnds = reports.map(r => r.odoRangeEnd).filter((v: any) => v != null);
@@ -173,12 +173,12 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   y += grid.length * cellH + 4;
 
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
-  doc.text(`ATO cents per kilometre rate 2024\u20132025: $${RATE.toFixed(2)}    \u00B7    Total estimated deduction (c/km): $${totalEst.toFixed(2)}`, ML, y);
+  doc.text(`ATO Logbook Method 2024\u20132025: Business ${bizPct.toFixed(1)}% \u00D7 vehicle costs    \u00B7    Est. deduction: $${totalEst.toFixed(2)}`, ML, y);
   y += 7;
 
   sectionTitle('Combined Journey List');
 
-  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Reimburse'];
+  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Biz km'];
   const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
   const hdrH = 6.5;
 
@@ -208,7 +208,7 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
       isBiz ? noteStr : '\u2014',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '',
-      isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00',
+      isBiz ? t.km.toFixed(1) : '0',
     ];
     let cx2 = ML;
     cells.forEach((cell, ci) => {
@@ -283,7 +283,7 @@ function exportCombinedCSV(combined: any) {
   const headers = [
     'Start Date','End Date','ODO Start (km)','ODO End (km)',
     'Business/Personal','Purpose','Notes','Total Distance (km)',
-    'Business km (autofilled)','Reimbursement (autofilled)',
+    'Business km (autofilled)','Business km',
     'Verified','Photo Evidence'
   ];
   const rows = allTrips.map((t: any) => {
@@ -296,7 +296,7 @@ function exportCombinedCSV(combined: any) {
       t.notes ?? '',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '0',
-      isBiz ? (t.km * RATE).toFixed(2) : '0.00',
+      isBiz ? t.km.toFixed(1) : '0',
       t.verified ? 'Yes' : 'No',
       t.photo ? 'Yes' : 'No',
     ];
@@ -471,9 +471,9 @@ export function ExportScreen() {
                     </div>
 
                     <div className="mt-[12px] rounded-[10px] p-[12px_14px] text-center" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-                      <div className="font-data text-[10px] uppercase tracking-[.08em] text-white/60 mb-[2px]">Estimated Deduction (c/km method)</div>
+                      <div className="font-data text-[10px] uppercase tracking-[.08em] text-white/60 mb-[2px]">Estimated Deduction (Logbook Method)</div>
                       <div className="font-heading font-extrabold text-[28px]" style={{ color: 'var(--wc-gr)' }}>${combined.totalEst.toFixed(2)}</div>
-                      <div className="font-data text-[10px] text-white/40 mt-[2px]">@ ${RATE.toFixed(2)}/km</div>
+                      <div className="font-data text-[10px] text-white/40 mt-[2px]">{combined.bizPct.toFixed(1)}% biz use &times; vehicle costs</div>
                     </div>
 
                     {combined.odoRangeStart != null && combined.odoRangeEnd != null && (

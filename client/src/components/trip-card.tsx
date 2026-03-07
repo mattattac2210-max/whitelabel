@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '@/lib/app-context';
-import { type Trip, getTripOdoStart, getTripOdoEnd, RATE } from '@/lib/trip-data';
+import { type Trip, getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
 import { MapPin, Pointer, X, Clock, Route, Gauge } from 'lucide-react';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
@@ -860,8 +860,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 </div>
               </div>
               <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgba(245,196,0,.06)', border: '1px solid rgba(245,196,0,.15)' }}>
-                <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>ATO Deduction</span>
-                <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>${(trip.km * RATE).toFixed(2)}</span>
+                <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Business KM</span>
+                <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{trip.km.toFixed(1)} km</span>
               </div>
               <button
                 className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em]"

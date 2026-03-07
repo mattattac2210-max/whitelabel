@@ -1,6 +1,55 @@
-export const RATE = 0.88;
-export const BIZ_PCT = 0.70;
 export const ODO_START = 84280;
+
+export function getVehicleCosts(): number {
+  let manual = 0;
+  try {
+    const exps = JSON.parse(localStorage.getItem('wc_expenses') || '[]');
+    manual = exps.filter((e: any) => !e.estimated).reduce((s: number, e: any) => s + (e.amount || 0), 0);
+  } catch {}
+
+  let fuelConsumption = 10;
+  try {
+    const fc = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
+    if (fc > 0) fuelConsumption = fc;
+  } catch {}
+
+  let avgFuelPrice = 1.95;
+  try {
+    const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+    const p = parseFloat(settings.avgFuelPrice);
+    if (p > 0) avgFuelPrice = p;
+  } catch {}
+
+  const totalAnnualKm = 15000;
+  const fuelEstimate = Math.round(totalAnnualKm / 100 * fuelConsumption * avgFuelPrice * 100) / 100;
+
+  let depAmount = 0;
+  try {
+    const purchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+    const price = Math.min(parseFloat(purchase.purchasePrice) || 0, 68108);
+    if (price > 0) {
+      const purchDate = purchase.purchaseDate ? new Date(purchase.purchaseDate) : null;
+      const now = new Date();
+      const fyStart = new Date(now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1, 6, 1);
+      const fyEnd = new Date(fyStart.getFullYear() + 1, 5, 30);
+      const daysInFY = Math.round((fyEnd.getTime() - fyStart.getTime()) / 86400000);
+      let daysOwned = daysInFY;
+      if (purchDate && purchDate > fyStart) {
+        daysOwned = Math.max(0, Math.min(Math.round((fyEnd.getTime() - purchDate.getTime()) / 86400000), daysInFY));
+      }
+      depAmount = Math.round(price * 0.25 * (daysOwned / daysInFY) * 100) / 100;
+    }
+  } catch {}
+
+  return manual + fuelEstimate + depAmount;
+}
+
+export function calcLogbookDeduction(bizKm: number, totalKm: number): number {
+  if (totalKm <= 0) return 0;
+  const bizPct = bizKm / totalKm;
+  const vehicleCosts = getVehicleCosts();
+  return Math.round(bizPct * vehicleCosts * 100) / 100;
+}
 
 export const CATEGORIES = [
   { icon: 'Wrench', label: 'Tool Run' },

@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction } from '@/lib/trip-data';
 import { BottomNav } from './bottom-nav';
 import {
   ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check,
@@ -97,7 +97,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-  const totalEst = bizTrips.reduce((s: number, t: any) => s + t.km * RATE, 0);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm);
   const generatedAt = new Date().toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   function addPage() {
@@ -205,12 +205,12 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   y += grid.length * cellH + 4;
 
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GG);
-  doc.text(`ATO cents per kilometre rate 2024\u20132025: $${RATE.toFixed(2)}    \u00B7    Total estimated deduction (c/km): $${totalEst.toFixed(2)}`, ML, y);
+  doc.text(`ATO Logbook Method 2024\u20132025: Business ${bizPct}% \u00D7 vehicle costs    \u00B7    Est. deduction: $${totalEst.toFixed(2)}`, ML, y);
   y += 7;
 
   sectionTitle('Journey List');
 
-  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Reimburse'];
+  const cols = ['Date','ODO start','ODO end','Type','Purpose','Notes','km','Biz km','Biz km'];
   const colW = [20, 18, 18, 15, 24, 30, 13, 13, 20];
   const hdrH = 6.5;
 
@@ -245,7 +245,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
       isBiz ? noteStr : '\u2014',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '',
-      isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00',
+      isBiz ? t.km.toFixed(1) : '0',
     ];
 
     let cx2 = ML;
@@ -321,7 +321,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
 
   const taxBlocks = [
     ['Logbook Method', 'Claim the business-use % of all car expenses (fuel, rego, insurance, depreciation, loan interest, servicing). No km cap. Requires 12-week continuous logbook renewed every 5 years. Record odometer at start and end of every income year.'],
-    ['Cents per Kilometre Method', `Claim $${RATE.toFixed(2)}/km (2024\u201325) up to 5,000 km/year without receipts. Cannot also claim fuel/depreciation separately.`],
+    ['Cents per Kilometre Method', `Claim $0.88/km (2024\u201325) up to 5,000 km/year without receipts. Cannot also claim fuel/depreciation separately. Note: This report uses the logbook method.`],
     ['Pro-rata (partial year)', `If you didn't hold the vehicle for the full income year, deductions are pro-rated by days held. Example: purchased 1 Jan 2025 (181 of 365 days), $8,000 expenses, 65% business use = $8,000 \u00D7 65% \u00D7 (181\u00F7365) = $2,579 deductible.`],
     ['Key ATO References', 'TR 2021/1 \u2014 Car expenses  \u00B7  PCG 2021/3 \u2014 Logbook record-keeping  \u00B7  s.25-10 ITAA 1997. Seek advice from a registered tax agent (RTA) or licensed accountant for edge cases.'],
   ];
@@ -374,7 +374,7 @@ function exportCSV(report: any) {
       t.notes ?? '',
       t.km.toFixed(1),
       isBiz ? t.km.toFixed(1) : '0',
-      isBiz ? (t.km * RATE).toFixed(2) : '0.00',
+      isBiz ? t.km.toFixed(1) : '0',
       t.verified ? 'Yes' : 'No',
       t.photo ? 'Yes' : 'No',
     ];
@@ -1029,7 +1029,7 @@ function TaxInfoModal({ onClose }: { onClose: () => void }) {
               s.25-10 ITAA 1997 — Motor vehicle expenses
             </InfoBlock>
             <InfoBlock title="Always seek professional advice" color="am">
-              WorkCar calculates estimates using the cents-per-km method. For the full logbook method — which can yield a higher deduction — provide this report as logbook evidence to your registered tax agent or accountant.
+              WorkCar calculates estimates using the logbook method (business use % &times; total vehicle running costs). Provide this report as logbook evidence to your registered tax agent or accountant for final deduction calculation.
             </InfoBlock>
           </>)}
 
@@ -1266,7 +1266,7 @@ export function ReportsScreen() {
                     const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-                    const totalEst = bizTrips.reduce((s: number, t: any) => s + t.km * RATE, 0);
+                    const totalEst = calcLogbookDeduction(bizKm, totalKm);
 
                     return (
                       <div key={i} className="rounded-[13px] overflow-hidden"
@@ -1410,7 +1410,7 @@ export function ReportsScreen() {
                                         <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? 'Biz' : 'Per'}</td>
                                         <td className="p-[3px_6px] text-white">{t.km.toFixed(1)}</td>
                                         <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{isBiz ? `$${(t.km * RATE).toFixed(2)}` : '$0.00'}</td>
+                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{isBiz ? `${t.km.toFixed(1)}` : '\u2014'}</td>
                                       </tr>
                                     );
                                   })}

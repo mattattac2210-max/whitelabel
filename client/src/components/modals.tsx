@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { RATE, CATEGORIES, getTripOdoEnd } from '@/lib/trip-data';
+import { CATEGORIES, getTripOdoEnd, calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
 import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark } from 'lucide-react';
 import { AddressInput } from './address-input';
 
@@ -104,8 +104,6 @@ export function EditModal() {
 
   const km = parseFloat(editKm) || 0;
   const totalKm = km;
-  const cpm = totalKm * RATE;
-  const log = totalKm * RATE * 0.7;
 
   const handleSave = () => {
     const fromParts = editFrom.split(',');
@@ -291,12 +289,8 @@ export function EditModal() {
           </div>
           <div className="h-px my-[5px]" style={{ background: 'rgba(255,255,255,.05)' }} />
           <div className="flex justify-between items-center">
-            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Cents/km ($0.88)</span>
-            <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>${cpm.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Logbook (70% biz)</span>
-            <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>${log.toFixed(2)}</span>
+            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Business KM</span>
+            <span className="font-heading font-extrabold text-[15px]" style={{ color: 'var(--wc-y)' }}>{totalKm.toFixed(1)} km</span>
           </div>
           {calcStatus === 'loading' && (
             <div className="text-[9px] mt-[3px] flex items-center gap-[4px]" style={{ color: 'var(--wc-y)' }}>
@@ -341,9 +335,9 @@ export function ATOModal() {
         <div className="font-heading font-black text-[20px] uppercase tracking-[.04em] mb-[2px]" style={{ color: 'var(--wc-y)' }}>ATO Compliance Notice</div>
         <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[13px]" style={{ color: 'var(--wc-t3)' }}>Tax Ruling TR 2021/1 &middot; FY2024-25</div>
         <div className="text-[11px] leading-[1.6] flex flex-col gap-2" style={{ color: 'var(--wc-t2)' }}>
-          <p><strong className="text-white">Cents per km:</strong> $0.88/km (FY2024-25). No receipts needed, but capped at 5,000 km ($4,400 max). Simple &mdash; but leaves money on the table.</p>
-          <p><strong className="text-white">Logbook method:</strong> Business use % x actual vehicle expenses (fuel, rego, insurance, depreciation, etc). <em>No kilometre cap.</em> Requires a 12-week logbook &mdash; which WorkCar helps you build. For most tradies, this method returns a significantly larger deduction.</p>
-          <p><strong className="text-white">Estimates only.</strong> Final amounts depend on your individual tax circumstances. Confirm with a registered tax agent before lodging.</p>
+          <p><strong className="text-white">Logbook method:</strong> Business use % &times; actual vehicle running costs (fuel, rego, insurance, repairs, depreciation, etc). <em>No kilometre cap.</em> WorkCar helps you build the 12-week logbook the ATO requires.</p>
+          <p><strong className="text-white">How it works:</strong> Sort all your trips as business or personal. Your business use percentage is calculated automatically. This percentage is then applied to your total vehicle expenses to determine your deduction.</p>
+          <p><strong className="text-white">Estimates only.</strong> Final amounts depend on your individual tax circumstances and actual vehicle expenses. Confirm with a registered tax agent before lodging.</p>
           <p style={{ color: 'rgba(239,68,68,.7)', fontWeight: 600 }}>False claims are a serious offence under the Income Tax Assessment Act 1997. WorkCar maintains an immutable, timestamped audit trail of all classifications and edits.</p>
         </div>
         <button

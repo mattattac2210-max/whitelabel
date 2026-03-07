@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, batch2Trips, RATE, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips } from './trip-data';
+import { type Trip, initialTrips, batch2Trips, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips, calcLogbookDeduction } from './trip-data';
 
 export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'notes' | 'odometer' | 'reports' | 'export' | 'input' | 'expenses' | 'stats' | 'find-keys' | 'account';
 
@@ -159,6 +159,13 @@ const initialState: AppState = {
   baseOdo: ODO_START,
 };
 
+function computeDedTotal(trips: Trip[], upToIndex: number): number {
+  const slice = trips.slice(0, upToIndex);
+  const bizKm = slice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+  const totalKm = slice.reduce((s, t) => s + t.km, 0);
+  return calcLogbookDeduction(bizKm, totalKm);
+}
+
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'CLASSIFY_TRIP': {
@@ -167,15 +174,16 @@ function reducer(state: AppState, action: Action): AppState {
       const newTrips = [...state.trips];
       newTrips[state.currentIndex] = { ...trip, type: action.tripType };
       const isBiz = action.tripType === 'business';
-      const earned = isBiz ? trip.km * RATE : 0;
+      const newIdx = state.currentIndex + 1;
+      const newDedTotal = computeDedTotal(newTrips, newIdx);
       return {
         ...state,
         trips: newTrips,
-        dedTotal: state.dedTotal + earned,
+        dedTotal: newDedTotal,
         bizCount: state.bizCount + (isBiz ? 1 : 0),
         perCount: state.perCount + (isBiz ? 0 : 1),
-        lastAction: { idx: state.currentIndex, type: action.tripType, ded: earned },
-        currentIndex: state.currentIndex + 1,
+        lastAction: { idx: state.currentIndex, type: action.tripType, ded: newDedTotal - state.dedTotal },
+        currentIndex: newIdx,
         freshSession: true,
       };
     }
@@ -189,7 +197,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         trips: newTrips,
         currentIndex: idx,
-        dedTotal: undoSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0),
+        dedTotal: computeDedTotal(newTrips, idx),
         bizCount: undoSlice.filter(t => t.type === 'business').length,
         perCount: undoSlice.filter(t => t.type === 'personal').length,
         lastAction: null,
@@ -229,7 +237,7 @@ function reducer(state: AppState, action: Action): AppState {
       }
       const newCurrentIndex = mergedTrips.filter(t => t.type !== null).length;
       const sortedSlice = mergedTrips.slice(0, newCurrentIndex);
-      const newDedTotal = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0);
+      const newDedTotal = computeDedTotal(mergedTrips, newCurrentIndex);
       const newBizCount = sortedSlice.filter(t => t.type === 'business').length;
       const newPerCount = sortedSlice.filter(t => t.type === 'personal').length;
       const bizTrips = mergedTrips.map((t, i) => i).filter(i => mergedTrips[i].type === 'business');
@@ -260,9 +268,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedSlice = newTrips.slice(0, state.currentIndex);
       const newBiz = sortedSlice.filter(t => t.type === 'business').length;
       const newPer = sortedSlice.filter(t => t.type === 'personal').length;
-      const newDed = sortedSlice
-        .filter(t => t.type === 'business')
-        .reduce((s, t) => s + t.km * RATE, 0);
+      const newDed = computeDedTotal(newTrips, state.currentIndex);
       const reclassDesc = `Reclassified "${trip.from} \u2192 ${trip.to}" from ${oldType || 'unsorted'} to ${action.tripType}`;
       return {
         ...state,
@@ -326,9 +332,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedForCount = newTrips.slice(0, state.currentIndex);
       const newBizCount = sortedForCount.filter(t => t.type === 'business').length;
       const newPerCount = sortedForCount.filter(t => t.type === 'personal').length;
-      const newDedTotal = sortedForCount
-        .filter(t => t.type === 'business')
-        .reduce((s, t) => s + t.km * RATE, 0);
+      const newDedTotal = computeDedTotal(newTrips, state.currentIndex);
       const editDesc = routeChanged
         ? `Route edited: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to} (${newTrips[action.tripIndex].km.toFixed(1)} km)`
         : `Edited trip: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to}`;
@@ -528,7 +532,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedSlice = newTrips.slice(0, newCurrentIndex);
       const newBiz = sortedSlice.filter(t => t.type === 'business').length;
       const newPer = sortedSlice.filter(t => t.type === 'personal').length;
-      const newDed = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0);
+      const newDed = computeDedTotal(newTrips, newCurrentIndex);
       const newVerified = new Set(state.verifiedSet);
       for (let i = insertIdx; i < newTrips.length; i++) {
         if (newTrips[i].odoReading != null || newTrips[i].odoStartReading != null) {

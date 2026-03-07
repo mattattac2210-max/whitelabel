@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction } from '@/lib/trip-data';
 import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle } from 'lucide-react';
 
 export function DashboardScreen() {
@@ -108,7 +108,7 @@ export function DashboardScreen() {
           <div className="font-display text-[28px] leading-none mt-1" style={{ color: 'var(--wc-gr)' }}>
             ${dedTotal.toFixed(0)}
           </div>
-          <div className="text-[10px] mt-1" style={{ color: 'var(--wc-t2)' }}>@ ${RATE}/km</div>
+          <div className="text-[10px] mt-1" style={{ color: 'var(--wc-t2)' }}>logbook method</div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { RATE } from '@/lib/trip-data';
+import { calcLogbookDeduction } from '@/lib/trip-data';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
 import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock } from 'lucide-react';
@@ -121,8 +121,7 @@ export function SortScreen() {
     const trip = state.trips[state.currentIndex];
     if (!trip) return;
     if (type === 'business') {
-      const earned = trip.km * RATE;
-      setFlashAmt('+$' + earned.toFixed(2));
+      setFlashAmt('+' + trip.km.toFixed(1) + ' km');
       setDedPop(true);
       setTimeout(() => setFlashAmt(null), 1100);
       setTimeout(() => setDedPop(false), 500);
@@ -130,7 +129,10 @@ export function SortScreen() {
     dispatch({ type: 'CLASSIFY_TRIP', tripType: type });
   }, [state.currentIndex, state.trips, dispatch]);
 
-  const logbookPct = Math.min(100, Math.round((state.dedTotal / 5000) * 100));
+  const sortedSlice = state.trips.slice(0, state.currentIndex);
+  const sortedBizKm = sortedSlice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+  const sortedTotKm = sortedSlice.reduce((s, t) => s + t.km, 0);
+  const logbookPct = sortedTotKm > 0 ? Math.round(sortedBizKm / sortedTotKm * 100) : 0;
 
   const sortDone = isComplete;
   const classifyDone = state.bizCount === 0 || (state.classifyBizTrips.length > 0 && state.classifyStep >= state.classifyBizTrips.length);
@@ -326,9 +328,13 @@ export function SortScreen() {
             <div className="text-[12px] text-center" style={{ color: 'var(--wc-t2)' }}>This session's estimated claimable deduction*</div>
             {(() => {
               const activeSessionReport = state.savedReports.find(r => r.sessionId === state.sessionId && !r.supersedes);
-              const sessionDed = activeSessionReport
-                ? (activeSessionReport.trips || []).filter(t => t.type === 'business').reduce((s, t) => s + t.km * RATE, 0)
-                : state.dedTotal;
+              let sessionDed = state.dedTotal;
+              if (activeSessionReport) {
+                const rTrips = activeSessionReport.trips || [];
+                const rBizKm = rTrips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+                const rTotKm = rTrips.reduce((s, t) => s + t.km, 0);
+                sessionDed = calcLogbookDeduction(rBizKm, rTotKm);
+              }
               return (
                 <div className="font-heading font-black text-[44px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-total-deduction">
                   ${Math.round(sessionDed).toLocaleString('en-AU')}
@@ -400,8 +406,10 @@ export function SortScreen() {
                   const savedDed = state.savedReports
                     .filter(r => !r.supersedes)
                     .reduce((sum, r) => {
-                      const biz = (r.trips || []).filter(t => t.type === 'business');
-                      return sum + biz.reduce((s, t) => s + t.km * RATE, 0);
+                      const rTrips = r.trips || [];
+                      const rBizKm = rTrips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+                      const rTotKm = rTrips.reduce((s, t) => s + t.km, 0);
+                      return sum + calcLogbookDeduction(rBizKm, rTotKm);
                     }, 0);
                   const currentSessionHasReport = state.savedReports.some(r => r.sessionId === state.sessionId && !r.supersedes);
                   const unsavedDed = currentSessionHasReport ? 0 : state.dedTotal;
@@ -419,14 +427,14 @@ export function SortScreen() {
               </div>
             </div>
             <div className="font-data text-[8px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-              *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO rates TR 2021/1</button> &middot; Estimates only &middot; Not tax advice
+              *<button className="border-b" style={{ color: 'rgba(245,196,0,.55)', borderColor: 'rgba(245,196,0,.22)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })} data-testid="button-ato-info">ATO Logbook Method</button> &middot; Biz% &times; vehicle costs &middot; Estimates only
             </div>
             <div className="mt-[6px]">
               <div className="h-1 rounded-[2px] overflow-hidden relative" style={{ background: 'rgba(255,255,255,.07)' }}>
                 <div className="h-full rounded-[2px] transition-all duration-700" style={{ width: `${logbookPct}%`, background: 'linear-gradient(90deg,rgba(34,197,94,.8),var(--wc-y),#ffe066)' }} />
               </div>
               <div className="flex justify-between mt-[3px]">
-                <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Logbook coverage: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
+                <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Business use: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
                 <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgba(245,196,0,.55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
               </div>
             </div>
