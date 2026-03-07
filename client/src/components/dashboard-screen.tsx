@@ -9,14 +9,48 @@ export function DashboardScreen() {
   const { state, dispatch } = useApp();
   const [autoTrack, setAutoTrack] = useState(() => localStorage.getItem('wc_autotrack') === '1');
 
-  const totalTrips = state.currentIndex;
-  const bizKm = state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
-  const dedTotal = state.dedTotal;
   const unsortedCount = state.trips.length - state.currentIndex;
   const queuedCount = state.queuedTrips.length;
   const totalUnsorted = unsortedCount + queuedCount;
 
-  const hasBizTrips = state.bizCount > 0;
+  const activeReports = useMemo(() =>
+    state.savedReports.filter(r => !r.supersedes),
+    [state.savedReports]
+  );
+
+  const currentSessionHasReport = useMemo(() =>
+    activeReports.some(r => r.sessionId === state.sessionId),
+    [activeReports, state.sessionId]
+  );
+
+  const { totalTrips, bizKm, dedTotal, totalBizCount, totalPerCount } = useMemo(() => {
+    let rTrips = 0, rBizKm = 0, rDed = 0, rBiz = 0, rPer = 0;
+    for (const r of activeReports) {
+      if (currentSessionHasReport && r.sessionId === state.sessionId) {
+        rTrips += r.bizCount + r.perCount;
+        rBizKm += parseFloat(r.totalKm) || 0;
+        rDed += parseFloat(r.est.replace(/[^0-9.]/g, '')) || 0;
+        rBiz += r.bizCount;
+        rPer += r.perCount;
+      } else if (r.sessionId !== state.sessionId) {
+        rTrips += r.bizCount + r.perCount;
+        rBizKm += parseFloat(r.totalKm) || 0;
+        rDed += parseFloat(r.est.replace(/[^0-9.]/g, '')) || 0;
+        rBiz += r.bizCount;
+        rPer += r.perCount;
+      }
+    }
+    if (!currentSessionHasReport) {
+      rTrips += state.currentIndex;
+      rBizKm += state.trips.slice(0, state.currentIndex).filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+      rDed += state.dedTotal;
+      rBiz += state.bizCount;
+      rPer += state.perCount;
+    }
+    return { totalTrips: rTrips, bizKm: rBizKm, dedTotal: rDed, totalBizCount: rBiz, totalPerCount: rPer };
+  }, [activeReports, currentSessionHasReport, state.sessionId, state.currentIndex, state.trips, state.dedTotal, state.bizCount, state.perCount]);
+
+  const hasBizTrips = totalBizCount > 0;
 
   const showDeductionEstimates = useMemo(() => {
     try {
@@ -107,7 +141,7 @@ export function DashboardScreen() {
           <div className="text-[10px] font-bold uppercase tracking-[.07em]" style={{ color: 'var(--wc-t3)' }}>Trips</div>
           <div className="font-display text-[28px] leading-none mt-1">{totalTrips}</div>
           <div className="text-[10px] mt-1" style={{ color: 'var(--wc-t2)' }}>
-            {state.bizCount}B / {state.perCount}P
+            {totalBizCount}B / {totalPerCount}P
           </div>
         </div>
         <div
