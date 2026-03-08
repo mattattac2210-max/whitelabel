@@ -144,9 +144,11 @@ export function StatsScreen() {
     const latest = new Date(sorted_[sorted_.length - 1]);
     const daySpan = Math.max(1, Math.ceil((latest.getTime() - earliest.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     const wks = Math.min(12, Math.max(1, daySpan / 7));
+    const workingDaysInSpan = Math.max(1, Math.round(daySpan * 5 / 7));
     const logbookDed = calcLogbookDeduction(bizKm, totalKm);
-    const weeklyRate = logbookDed / wks;
-    return { projectedDeductibles: Math.round(weeklyRate * 48), weeksTracked: Math.round(wks * 10) / 10 };
+    const dailyRate = logbookDed / workingDaysInSpan;
+    const annualWorkingDays = 48 * 5;
+    return { projectedDeductibles: Math.round(dailyRate * annualWorkingDays), weeksTracked: Math.round(wks * 10) / 10 };
   }, [sorted, bizKm, totalKm]);
 
   const dayStats = useMemo(() => {
@@ -248,7 +250,7 @@ export function StatsScreen() {
           <div className="rounded-[8px] px-[10px] py-[6px] flex items-start gap-[6px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
             <DollarSign className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-t3)' }} />
             <div className="font-data text-[9px] leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>
-              Claimable deductibles estimated at <strong style={{ color: 'var(--wc-gr)' }}>${projectedDeductibles.toLocaleString('en-AU')}</strong> — projected from your {weeksTracked}-week logbook average across 48 weeks. This is an estimate only.
+              Claimable deductibles estimated at <strong style={{ color: 'var(--wc-gr)' }}>${projectedDeductibles.toLocaleString('en-AU')}</strong> — projected from your {weeksTracked}-week logbook average over a 5-day working week, across 48 weeks. This is an estimate only.
             </div>
           </div>
         )}
