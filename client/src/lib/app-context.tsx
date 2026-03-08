@@ -470,10 +470,13 @@ function reducer(state: AppState, action: Action): AppState {
       const nextBatch = state.queuedTrips.slice(0, BATCH_SIZE).map(t => ({ ...t }));
       const stillQueued = state.queuedTrips.slice(BATCH_SIZE).map(t => ({ ...t }));
       const hasMore = nextBatch.length > 0;
-      const lastTripIdx = state.trips.length - 1;
-      const newBaseOdo = lastTripIdx >= 0
-        ? Math.round(getTripOdoEnd(state.trips, lastTripIdx, state.baseOdo))
+      const latestReport = state.savedReports.find(r => !r.supersedes);
+      const reportOdoEnd = latestReport?.odoRangeEnd;
+      const manualOdo = state.lastOdoReading;
+      const calcOdo = state.trips.length > 0
+        ? Math.round(getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo))
         : state.baseOdo;
+      const newBaseOdo = manualOdo ?? reportOdoEnd ?? calcOdo;
       const newSessionId = 'session_' + Date.now();
       return {
         ...initialState,
