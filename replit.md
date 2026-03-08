@@ -25,6 +25,19 @@ All application logic runs client-side using React state (via useReducer + Conte
 - **Styling**: Light/dark theme via CSS custom properties and `.dark` class on documentElement. ThemeProvider at `client/src/lib/theme-provider.tsx`. Colors use `--wc-*` CSS vars that auto-adapt. `--wc-ink` (0 0 0 light / 255 255 255 dark) used with `rgb(var(--wc-ink) / alpha)` for translucent overlays. Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display), Inter (body alt)
 - **Icons**: Lucide React throughout
 
+### Batch Deletion & Session Independence
+
+- When user deletes all sort cards and a new batch loads (`DELETE_ALL_TRIPS`), the new batch gets:
+  - A unique `sessionId` (`session_<timestamp>`) so saved reports are independent, not revisions of the deleted batch
+  - An advanced `baseOdo` (previous base + deleted trips' total km) so odometer readings don't overlap
+
+### Stats Projection
+
+- Claimable deductibles projection uses actual driving data: total km / working days in tracking span × 5 days × 48 weeks = projected annual km
+- Fuel cost calculated from projected annual km (not hardcoded 15,000 km) × fuel consumption × avg fuel price
+- Non-fuel vehicle costs (manual expenses, depreciation, finance interest, lease payments) sourced from `getVehicleCostsDetailed()`
+- Final projection = business % × (non-fuel costs + projected fuel)
+
 ### App Flow
 
 1. **Dashboard** (main hub, app entry point):
