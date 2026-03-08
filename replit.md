@@ -28,8 +28,9 @@ All application logic runs client-side using React state (via useReducer + Conte
 ### Batch Deletion & Odometer Continuity
 
 - When user deletes all sort cards and a new batch loads (`DELETE_ALL_TRIPS`), the new batch:
-  - Keeps the same `sessionId` so batches remain linked as one sequence
+  - Gets a new unique `sessionId` so each batch saves as an independent report (not a revision of the deleted batch)
   - Gets an advanced `baseOdo` (previous base + deleted trips' total km) so odometer readings continue seamlessly from where the deleted batch ended
+- Linked/revision reports only happen when the user re-saves within the same session without deleting
 
 ### Stats Projection
 
