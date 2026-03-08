@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
+import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
 import { BottomNav } from './bottom-nav';
 import { ArrowLeft, TrendingUp, MapPin, DollarSign, Fuel, Route, Target } from 'lucide-react';
 
@@ -136,19 +137,43 @@ export function StatsScreen() {
   const avgTripKm = sorted.length > 0 ? totalKm / sorted.length : 0;
   const avgBizTripKm = biz.length > 0 ? bizKm / biz.length : 0;
 
-  const { projectedDeductibles, weeksTracked } = useMemo(() => {
+  const { projectedDeductibles, weeksTracked, projectedAnnualKm, weeklyAvgKm } = useMemo(() => {
     const dateKeys = sorted.map(t => getDateKey(t)).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
-    if (dateKeys.length === 0) return { projectedDeductibles: 0, weeksTracked: 0 };
-    const sorted_ = [...dateKeys].sort();
-    const earliest = new Date(sorted_[0]);
-    const latest = new Date(sorted_[sorted_.length - 1]);
+    if (dateKeys.length === 0 || totalKm <= 0) return { projectedDeductibles: 0, weeksTracked: 0, projectedAnnualKm: 0, weeklyAvgKm: 0 };
+    const sortedDates = [...dateKeys].sort();
+    const earliest = new Date(sortedDates[0]);
+    const latest = new Date(sortedDates[sortedDates.length - 1]);
     const daySpan = Math.max(1, Math.ceil((latest.getTime() - earliest.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     const wks = Math.min(12, Math.max(1, daySpan / 7));
     const workingDaysInSpan = Math.max(1, Math.round(daySpan * 5 / 7));
-    const logbookDed = calcLogbookDeduction(bizKm, totalKm);
-    const dailyRate = logbookDed / workingDaysInSpan;
-    const annualWorkingDays = 48 * 5;
-    return { projectedDeductibles: Math.round(dailyRate * annualWorkingDays), weeksTracked: Math.round(wks * 10) / 10 };
+
+    const dailyAvgKm = totalKm / workingDaysInSpan;
+    const wklyAvgKm = dailyAvgKm * 5;
+    const annualKm = wklyAvgKm * 48;
+
+    const projectedBizKm = totalKm > 0 ? (bizKm / totalKm) * annualKm : 0;
+
+    const costs = getVehicleCostsDetailed();
+
+    let fuelConsumption = 10;
+    try {
+      const fc = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
+      if (fc > 0) fuelConsumption = fc;
+    } catch {}
+    let avgFuelPrice = 1.95;
+    try {
+      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      const p = parseFloat(settings.avgFuelPrice);
+      if (p > 0) avgFuelPrice = p;
+    } catch {}
+    const projectedFuel = Math.round(annualKm / 100 * fuelConsumption * avgFuelPrice * 100) / 100;
+
+    const nonFuelCosts = costs.manual + costs.depreciation + costs.financeInterest + costs.leasePayments;
+    const totalProjectedCosts = nonFuelCosts + projectedFuel;
+    const bizPctDecimal = totalKm > 0 ? bizKm / totalKm : 0;
+    const projected = Math.round(bizPctDecimal * totalProjectedCosts);
+
+    return { projectedDeductibles: projected, weeksTracked: Math.round(wks * 10) / 10, projectedAnnualKm: Math.round(annualKm), weeklyAvgKm: Math.round(wklyAvgKm) };
   }, [sorted, bizKm, totalKm]);
 
   const dayStats = useMemo(() => {
@@ -231,7 +256,7 @@ export function StatsScreen() {
               Claimable Est.
             </div>
             <div className="font-data text-[7px] mt-[1px] leading-[1.3]" style={{ color: 'var(--wc-t3)', opacity: 0.7 }}>
-              Projected from {weeksTracked} wk avg
+              {weeklyAvgKm} km/wk x 48 wks
             </div>
           </div>
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -250,7 +275,7 @@ export function StatsScreen() {
           <div className="rounded-[8px] px-[10px] py-[6px] flex items-start gap-[6px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid rgb(var(--wc-ink) / .06)' }}>
             <DollarSign className="w-[12px] h-[12px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-t3)' }} />
             <div className="font-data text-[9px] leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>
-              Claimable deductibles estimated at <strong style={{ color: 'var(--wc-gr)' }}>${projectedDeductibles.toLocaleString('en-AU')}</strong> — projected from your {weeksTracked}-week logbook average over a 5-day working week, across 48 weeks. This is an estimate only.
+              Claimable deductibles estimated at <strong style={{ color: 'var(--wc-gr)' }}>${projectedDeductibles.toLocaleString('en-AU')}</strong> — based on {weeklyAvgKm.toLocaleString('en-AU')} km/week avg over {weeksTracked} weeks, projected across 48 working weeks (5 days/wk). Fuel based on industry pricing and projected km. Estimate only.
             </div>
           </div>
         )}
