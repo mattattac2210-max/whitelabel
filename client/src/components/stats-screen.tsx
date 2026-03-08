@@ -151,8 +151,6 @@ export function StatsScreen() {
     const wklyAvgKm = dailyAvgKm * 5;
     const annualKm = wklyAvgKm * 48;
 
-    const projectedBizKm = totalKm > 0 ? (bizKm / totalKm) * annualKm : 0;
-
     const costs = getVehicleCostsDetailed();
 
     let fuelConsumption = 10;
