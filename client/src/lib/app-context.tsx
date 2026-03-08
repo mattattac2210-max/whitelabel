@@ -472,14 +472,13 @@ function reducer(state: AppState, action: Action): AppState {
       const hasMore = nextBatch.length > 0;
       const deletedKm = state.trips.reduce((s, t) => s + t.km, 0);
       const newBaseOdo = Math.round(state.baseOdo + deletedKm);
-      const newSessionId = 'session_' + Date.now();
       return {
         ...initialState,
         trips: nextBatch,
         queuedTrips: stillQueued,
         savedReports: state.savedReports,
         baseOdo: newBaseOdo,
-        sessionId: newSessionId,
+        sessionId: state.sessionId,
         sessionStartTime: Date.now(),
         freshSession: hasMore,
         auditLog: [

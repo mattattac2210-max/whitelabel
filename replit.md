@@ -25,11 +25,11 @@ All application logic runs client-side using React state (via useReducer + Conte
 - **Styling**: Light/dark theme via CSS custom properties and `.dark` class on documentElement. ThemeProvider at `client/src/lib/theme-provider.tsx`. Colors use `--wc-*` CSS vars that auto-adapt. `--wc-ink` (0 0 0 light / 255 255 255 dark) used with `rgb(var(--wc-ink) / alpha)` for translucent overlays. Fonts: Barlow Condensed (headings), Barlow (body), JetBrains Mono (data), Bebas Neue (display), Inter (body alt)
 - **Icons**: Lucide React throughout
 
-### Batch Deletion & Session Independence
+### Batch Deletion & Odometer Continuity
 
-- When user deletes all sort cards and a new batch loads (`DELETE_ALL_TRIPS`), the new batch gets:
-  - A unique `sessionId` (`session_<timestamp>`) so saved reports are independent, not revisions of the deleted batch
-  - An advanced `baseOdo` (previous base + deleted trips' total km) so odometer readings don't overlap
+- When user deletes all sort cards and a new batch loads (`DELETE_ALL_TRIPS`), the new batch:
+  - Keeps the same `sessionId` so batches remain linked as one sequence
+  - Gets an advanced `baseOdo` (previous base + deleted trips' total km) so odometer readings continue seamlessly from where the deleted batch ended
 
 ### Stats Projection
 
