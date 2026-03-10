@@ -1,6 +1,7 @@
-import { useState, Fragment } from 'react';
-import { useApp } from '@/lib/app-context';
+import { useState, Fragment, useMemo } from 'react';
+import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
+import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
 import { BottomNav } from './bottom-nav';
 import {
   ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check,
@@ -76,7 +77,7 @@ function TableRow({ label, val, highlight, tip }: { label: string; val: string; 
   );
 }
 
-async function generatePDF(report: any, vehicle: VehicleDetails) {
+async function generatePDF(report: any, vehicle: VehicleDetails, vehicleCosts: number) {
   const JsPDF = await loadJsPDF();
   if (!JsPDF) { alert('Failed to load PDF library. Check your connection.'); return; }
 
@@ -97,7 +98,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-  const totalEst = calcLogbookDeduction(bizKm, totalKm);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
   const generatedAt = new Date().toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   function addPage() {
@@ -1172,6 +1173,18 @@ export function ReportsScreen() {
   const [vehicleModal, setVehicleModal] = useState<{ report: any } | null>(null);
   const [vehicleDetails, setVehicleDetails] = useState<VehicleDetails>({ make: '', model: '', registration: '', engineCapacity: '', year: '' });
 
+  const hasBizTrips = state.bizCount > 0;
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const vehicleCosts = useMemo(
+    () => getVehicleCostsDetailed({
+      vehicleSpecs: estimatorParams.vehicleSpecs,
+      vehiclePurchase: estimatorParams.vehiclePurchase,
+      expenses: estimatorParams.expenses,
+      settings: estimatorParams.settings,
+    }).total,
+    [estimatorParams]
+  );
+
   const locked = !state.freshSession && state.savedReports.length > 0;
   const sessionIds = [...new Set(state.savedReports.map(r => r.sessionId))];
   const sessionGroups = sessionIds.map(sid => ({
@@ -1189,7 +1202,7 @@ export function ReportsScreen() {
     const r = vehicleModal.report;
     const today = new Date();
     const dateStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-    generatePDF(r, v);
+    generatePDF(r, v, vehicleCosts);
     setExportLog(l => [{ ts: today.toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), type: 'PDF', rev: r.revision, dateStr }, ...l]);
   }
   function handleExportCSV(report: any) {
@@ -1297,7 +1310,7 @@ export function ReportsScreen() {
                     const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-                    const totalEst = calcLogbookDeduction(bizKm, totalKm);
+                    const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
 
                     return (
                       <div key={i} className="rounded-[13px] overflow-hidden"

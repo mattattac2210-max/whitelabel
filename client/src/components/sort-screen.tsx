@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { useApp, useComputedStats } from '@/lib/app-context';
-import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { useApp, useComputedStats, getEstimatorParamsFromState } from '@/lib/app-context';
+import { calcLogbookDeduction } from '@/lib/trip-data';
+import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
 import { TripCard } from './trip-card';
 import { BottomNav } from './bottom-nav';
@@ -125,22 +126,35 @@ export function SortScreen() {
   const allTripsKm = state.trips.reduce((s, t) => s + t.km, 0);
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
-  const vehicleCosts = getVehicleCosts();
-  const ANNUAL_KM = 15000;
-  const perKmRate = vehicleCosts / ANNUAL_KM;
-  const tripDeductionValue = useCallback((tripKm: number) => {
-    return Math.round(tripKm * perKmRate);
-  }, [perKmRate]);
-
   const hasBizTrips = state.bizCount > 0;
-  const checks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const checks = useMemo(() => getReadinessChecks(estimatorParams), [estimatorParams]);
   const showDeductionEstimates = useMemo(() => {
     try {
       const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
       return settings.showDeductionEstimates !== false;
     } catch { return true; }
   }, []);
-  const deductionState = useMemo(() => getDeductionState(checks, showDeductionEstimates), [checks, showDeductionEstimates]);
+  const deductionState = useMemo(
+    () => getDeductionState(checks, showDeductionEstimates, estimatorParams.settings),
+    [checks, showDeductionEstimates, estimatorParams.settings]
+  );
+
+  const costsParams = useMemo(
+    () => ({
+      vehicleSpecs: estimatorParams.vehicleSpecs,
+      vehiclePurchase: estimatorParams.vehiclePurchase,
+      expenses: estimatorParams.expenses,
+      settings: estimatorParams.settings,
+    }),
+    [estimatorParams]
+  );
+  const vehicleCosts = getVehicleCostsDetailed(costsParams).total;
+  const ANNUAL_KM = 15000;
+  const perKmRate = vehicleCosts / ANNUAL_KM;
+  const tripDeductionValue = useCallback((tripKm: number) => {
+    return Math.round(tripKm * perKmRate);
+  }, [perKmRate]);
 
   const handleClassify = useCallback((type: 'business' | 'personal') => {
     const trip = state.trips[state.currentIndex];
@@ -491,13 +505,13 @@ export function SortScreen() {
             </div>
             {deductionState === 'locked' && (
               <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                {getEstimateDisclaimer('locked')}
+                {getEstimateDisclaimer('locked', estimatorParams.settings)}
               </div>
             )}
             {deductionState === 'partial' && (
               <div className="text-[9px] mt-[2px] flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
                 <Info className="w-[8px] h-[8px]" />
-                {getEstimateDisclaimer('partial')}
+                {getEstimateDisclaimer('partial', estimatorParams.settings)}
               </div>
             )}
             {deductionState === 'active' && (

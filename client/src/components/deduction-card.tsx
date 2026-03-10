@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Lock, X, ChevronRight, CheckCircle2, AlertCircle, Info, BarChart3, Calculator, Car, Settings, AlertTriangle } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
+import { getEstimatorParamsFromState } from '@/lib/app-context';
+import { type Trip } from '@/lib/trip-data';
 import {
   type DeductionState,
   type ReadinessCheck,
@@ -12,6 +14,7 @@ import {
   getEstimateMode,
   getVehicleCostsDetailed,
   getReadinessChecks,
+  type AppSettings,
 } from '@/lib/deduction-estimator';
 
 interface DeductionCardProps {
@@ -25,9 +28,11 @@ interface DeductionCardProps {
 }
 
 export function DeductionCard({ value, state, label = 'Deduction', sublabel, animate, className = '', checks }: DeductionCardProps) {
-  const { dispatch } = useApp();
+  const { state: appState, dispatch } = useApp();
   const [showModal, setShowModal] = useState(false);
-  const mode = getEstimateMode();
+  const hasBizTrips = appState.bizCount > 0;
+  const params = useMemo(() => getEstimatorParamsFromState(appState, hasBizTrips), [appState, hasBizTrips]);
+  const mode = getEstimateMode(params.settings);
 
   const handleTap = () => {
     setShowModal(true);
@@ -81,6 +86,7 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
           value={value}
           state={state}
           checks={checks}
+          estimatorParams={params}
           onClose={() => setShowModal(false)}
           onNavigate={(screen) => {
             setShowModal(false);
@@ -97,12 +103,13 @@ interface SimplifiedPromptProps {
   value: number;
   state: DeductionState;
   checks?: ReadinessCheck;
+  estimatorParams?: { settings?: AppSettings; vehicleSpecs?: import('@/lib/deduction-estimator').VehicleSpecs };
   onClose: () => void;
   onNavigate: (screen: string) => void;
 }
 
-function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }: SimplifiedPromptProps) {
-  const mode = getEstimateMode();
+function SimplifiedDeductionPrompt({ value, state, checks, estimatorParams, onClose, onNavigate }: SimplifiedPromptProps) {
+  const mode = getEstimateMode(estimatorParams?.settings);
   const basicComplete = checks?.basicDetailsComplete ?? false;
   const isLocked = state === 'locked';
   const needsBasics = mode === 'industry' && !basicComplete;
@@ -374,15 +381,16 @@ function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }
 interface DeductionModalProps {
   state: DeductionState;
   checks: ReadinessCheck;
+  estimatorParams?: { settings?: AppSettings; vehicleSpecs?: import('@/lib/deduction-estimator').VehicleSpecs };
   onClose: () => void;
   onNavigate: (screen: string) => void;
 }
 
-function DeductionModal({ state, checks, onClose, onNavigate }: DeductionModalProps) {
-  const missing = getMissingItems(checks);
-  const included = getIncludedItems(checks);
-  const readiness = getReadinessLabel(state);
-  const disclaimer = getEstimateDisclaimer(state);
+function DeductionModal({ state, checks, estimatorParams, onClose, onNavigate }: DeductionModalProps) {
+  const missing = getMissingItems(checks, estimatorParams?.vehicleSpecs, estimatorParams?.settings);
+  const included = getIncludedItems(checks, estimatorParams?.vehicleSpecs, estimatorParams?.settings);
+  const readiness = getReadinessLabel(state, estimatorParams?.settings);
+  const disclaimer = getEstimateDisclaimer(state, estimatorParams?.settings);
 
   const isLocked = state === 'locked';
 
@@ -493,11 +501,13 @@ interface ReadinessCardProps {
 }
 
 export function ReadinessCard({ state, checks }: ReadinessCardProps) {
-  const { dispatch } = useApp();
+  const { state: appState, dispatch } = useApp();
   const [showModal, setShowModal] = useState(false);
-  const mode = getEstimateMode();
-  const readiness = getReadinessLabel(state);
-  const missing = getMissingItems(checks);
+  const hasBizTrips = appState.bizCount > 0;
+  const params = useMemo(() => getEstimatorParamsFromState(appState, hasBizTrips), [appState, hasBizTrips]);
+  const mode = getEstimateMode(params.settings);
+  const readiness = getReadinessLabel(state, params.settings);
+  const missing = getMissingItems(checks, params.vehicleSpecs, params.settings);
   const completedCount = Object.values(checks).filter(Boolean).length;
   const totalCount = Object.keys(checks).length;
 
@@ -541,6 +551,7 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
         <DeductionModal
           state={state}
           checks={checks}
+          estimatorParams={params}
           onClose={() => setShowModal(false)}
           onNavigate={(screen) => {
             setShowModal(false);
@@ -554,22 +565,27 @@ export function ReadinessCard({ state, checks }: ReadinessCardProps) {
 }
 
 export function CalculationBreakdown({ className = '' }: { className?: string }) {
-  const costs = getVehicleCostsDetailed();
+  const { state } = useApp();
+  const hasBizTrips = state.bizCount > 0;
+  const params = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const costsParams = {
+    vehicleSpecs: params.vehicleSpecs,
+    vehiclePurchase: params.vehiclePurchase,
+    expenses: params.expenses,
+    settings: params.settings,
+  };
+  const costs = getVehicleCostsDetailed(costsParams);
 
   let bizPct = 0;
   let deduction = 0;
-  try {
-    const appState = JSON.parse(localStorage.getItem('wc_app_state') || '{}');
-    const trips = appState.trips || [];
-    const bizKm = trips.filter((t: any) => t.type === 'business').reduce((s: number, t: any) => s + (t.km || 0), 0);
-    const totKm = trips.reduce((s: number, t: any) => s + (t.km || 0), 0);
-    if (totKm > 0) {
-      bizPct = Math.round(bizKm / totKm * 100);
-      deduction = Math.round(bizPct / 100 * costs.total);
-    }
-  } catch {}
+  const bizKm = state.trips.filter((t): t is Trip & { type: 'business' } => t.type === 'business').reduce((s, t) => s + (t.km || 0), 0);
+  const totKm = state.trips.reduce((s: number, t: { km: number }) => s + (t.km || 0), 0);
+  if (totKm > 0) {
+    bizPct = Math.round(bizKm / totKm * 100);
+    deduction = Math.round(bizPct / 100 * costs.total);
+  }
 
-  const mode = getEstimateMode();
+  const mode = getEstimateMode(params.settings);
   const costBreakdown = [
     { label: mode === 'industry' ? 'Running costs (industry avg)' : 'Your vehicle expenses', value: costs.manual },
     { label: 'Fuel estimate', value: costs.fuelEstimate },

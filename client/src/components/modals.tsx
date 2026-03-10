@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { CATEGORIES, getTripOdoEnd, calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { CATEGORIES, getTripOdoEnd } from '@/lib/trip-data';
 import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark } from 'lucide-react';
 import { AddressInput } from './address-input';
 

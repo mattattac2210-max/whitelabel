@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
-import { calcLogbookDeduction } from '@/lib/trip-data';
 import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle, Info, AlertTriangle, Settings } from 'lucide-react';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer, getEstimateMode } from '@/lib/deduction-estimator';
+import { getEstimatorParamsFromState } from '@/lib/app-context';
 import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
 
 export function DashboardScreen() {
@@ -61,10 +61,20 @@ export function DashboardScreen() {
     }
   }, []);
 
-  const estimateMode = useMemo(() => getEstimateMode(), []);
-  const readinessChecks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips]);
-  const deductionState = useMemo(() => getDeductionState(readinessChecks, showDeductionEstimates), [readinessChecks, showDeductionEstimates]);
-  const disclaimer = useMemo(() => getEstimateDisclaimer(deductionState), [deductionState]);
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const estimateMode = useMemo(() => getEstimateMode(estimatorParams.settings), [estimatorParams.settings]);
+  const readinessChecks = useMemo(
+    () => getReadinessChecks(estimatorParams),
+    [estimatorParams]
+  );
+  const deductionState = useMemo(
+    () => getDeductionState(readinessChecks, showDeductionEstimates, estimatorParams.settings),
+    [readinessChecks, showDeductionEstimates, estimatorParams.settings]
+  );
+  const disclaimer = useMemo(
+    () => getEstimateDisclaimer(deductionState, estimatorParams.settings),
+    [deductionState, estimatorParams.settings]
+  );
 
   const tiles = [
     { screen: 'sort' as const, label: 'Sort Trips', sub: totalUnsorted > 0 ? `${totalUnsorted} trip${totalUnsorted !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: totalUnsorted },

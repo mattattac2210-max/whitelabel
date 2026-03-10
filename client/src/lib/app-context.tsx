@@ -1,9 +1,71 @@
-import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import { type Trip, initialTrips, batch2Trips, ODO_START, getTripOdoStart, getTripOdoEnd, generateConnectorTrips, calcLogbookDeduction, getVehicleCosts } from './trip-data';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react';
+import {
+  type Trip,
+  ODO_START,
+  getTripOdoStart,
+  getTripOdoEnd,
+  generateConnectorTrips,
+} from './trip-data';
+import {
+  getVehicles,
+  getExpenses,
+  getTrips,
+  getProfile,
+  getLogbookPeriods,
+  getReports as fetchReports,
+  classifyTrip,
+  updateTrip,
+  saveTrip,
+  deleteTrip,
+  saveReport,
+  deleteReport,
+  logAuditEvent,
+} from './data-service';
+import type {
+  AppVehicle,
+  AppExpense,
+  AppProfile,
+  AppLogbookPeriod,
+  AppReport,
+  AppTrip,
+} from '@shared/types';
+import { getCurrentFY } from '@shared/types';
+import { getVehicleCostsDetailed } from './deduction-estimator';
+import type {
+  VehicleSpecs,
+  VehiclePurchase,
+  ExpenseRecord,
+  AppSettings,
+} from './deduction-estimator';
 
-export type Screen = 'dashboard' | 'sort' | 'classify' | 'review' | 'notes' | 'odometer' | 'reports' | 'export' | 'input' | 'expenses' | 'stats' | 'find-keys' | 'account';
+// ── Screen type ──────────────────────────────────────────────
+
+export type Screen =
+  | 'dashboard'
+  | 'sort'
+  | 'classify'
+  | 'review'
+  | 'notes'
+  | 'odometer'
+  | 'reports'
+  | 'export'
+  | 'input'
+  | 'expenses'
+  | 'stats'
+  | 'find-keys'
+  | 'account';
 
 export const INDUSTRY_BIZ_AVG = 65;
+
+// ── Audit score ──────────────────────────────────────────────
 
 export function calcAuditScore(params: {
   totalTrips: number;
@@ -14,22 +76,48 @@ export function calcAuditScore(params: {
   notesCount?: number;
   bizCount?: number;
 }) {
-  const { totalTrips, sortedTrips, verifiedCount, photoCount, bizPct, notesCount = 0, bizCount = 0 } = params;
-  if (sortedTrips === 0) return { classifiedPct: 0, verifiedPct: 0, photoPct: 0, ratioPct: 0, notesPct: 0, classifiedContrib: 0, verifiedContrib: 0, photoContrib: 0, ratioContrib: 0, notesContrib: 0, total: 0 };
+  const {
+    totalTrips,
+    sortedTrips,
+    verifiedCount,
+    photoCount,
+    bizPct,
+    notesCount = 0,
+    bizCount = 0,
+  } = params;
+
+  if (sortedTrips === 0) {
+    return {
+      classifiedPct: 0, verifiedPct: 0, photoPct: 0, ratioPct: 0, notesPct: 0,
+      classifiedContrib: 0, verifiedContrib: 0, photoContrib: 0, ratioContrib: 0,
+      notesContrib: 0, total: 0,
+    };
+  }
+
   const classifiedPct = sortedTrips > 0 ? 100 : 0;
   const verifiedPct = (verifiedCount / sortedTrips) * 100;
   const photoPct = (photoCount / sortedTrips) * 100;
   const notesPct = bizCount > 0 ? (notesCount / bizCount) * 100 : 0;
   const deviation = Math.abs(bizPct - INDUSTRY_BIZ_AVG);
   const ratioPct = Math.max(0, 100 - (deviation / INDUSTRY_BIZ_AVG) * 100);
+
   const classifiedContrib = Math.round(classifiedPct * 0.30);
   const verifiedContrib = Math.round(verifiedPct * 0.25);
   const photoContrib = Math.round(photoPct * 0.10);
   const notesContrib = Math.round(notesPct * 0.10);
   const ratioContrib = Math.round(ratioPct * 0.24);
-  const total = Math.min(99, classifiedContrib + verifiedContrib + photoContrib + notesContrib + ratioContrib);
-  return { classifiedPct, verifiedPct, photoPct, ratioPct, notesPct, classifiedContrib, verifiedContrib, photoContrib, ratioContrib, notesContrib, total };
+  const total = Math.min(
+    99,
+    classifiedContrib + verifiedContrib + photoContrib + notesContrib + ratioContrib
+  );
+
+  return {
+    classifiedPct, verifiedPct, photoPct, ratioPct, notesPct,
+    classifiedContrib, verifiedContrib, photoContrib, ratioContrib, notesContrib, total,
+  };
 }
+
+// ── Saved report shape ───────────────────────────────────────
 
 interface SavedTripSummary {
   from: string;
@@ -49,6 +137,7 @@ interface SavedTripSummary {
 
 interface SavedReport {
   sessionId: string;
+  dbId?: string;         // Supabase reports.id when persisted
   timestamp: string;
   bizCount: number;
   perCount: number;
@@ -68,7 +157,10 @@ interface SavedReport {
   supersedes: boolean;
 }
 
+// ── App state ────────────────────────────────────────────────
+
 interface AppState {
+  // Core trip state
   trips: Trip[];
   currentScreen: Screen;
   currentIndex: number;
@@ -94,9 +186,24 @@ interface AppState {
   sessionId: string;
   baseOdo: number;
   queuedTrips: Trip[];
+
+  // Supabase-loaded data
+  vehicle: AppVehicle | null;
+  vehicleId: string | null;
+  profile: AppProfile | null;
+  expenses: AppExpense[];
+  logbookPeriods: AppLogbookPeriod[];
+
+  // Loading / error states
+  isLoading: boolean;
+  isInitialised: boolean;
+  error: string | null;
 }
 
+// ── Actions ──────────────────────────────────────────────────
+
 type Action =
+  // All original actions — unchanged
   | { type: 'CLASSIFY_TRIP'; tripType: 'business' | 'personal' }
   | { type: 'UNDO_LAST' }
   | { type: 'GO_SCREEN'; screen: Screen }
@@ -125,18 +232,64 @@ type Action =
   | { type: 'RESUME_SORTING' }
   | { type: 'ADD_TRIP'; trip: Trip }
   | { type: 'CONFIRM_GAP'; tripIndex: number; km: number }
-  | { type: 'DELETE_GAP'; tripIndex: number };
+  | { type: 'DELETE_GAP'; tripIndex: number }
+  // New actions for Supabase integration
+  | { type: 'DB_LOADED'; trips: Trip[]; vehicle: AppVehicle | null; vehicleId: string | null; profile: AppProfile | null; expenses: AppExpense[]; logbookPeriods: AppLogbookPeriod[]; baseOdo: number }
+  | { type: 'DB_ERROR'; error: string }
+  | { type: 'SET_VEHICLE'; vehicle: AppVehicle; vehicleId: string }
+  | { type: 'SET_EXPENSES'; expenses: AppExpense[] }
+  | { type: 'SET_PROFILE'; profile: AppProfile }
+  | { type: 'REPORT_SAVED_TO_DB'; sessionId: string; dbId: string }
+  | { type: 'REPORT_DELETED_FROM_DB'; dbId: string };
 
+
+// ── Helpers ──────────────────────────────────────────────────
 
 function nowStr(): string {
   const n = new Date();
-  return n.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' }) + ' ' + n.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+  return (
+    n.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' }) +
+    ' ' +
+    n.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
+  );
 }
 
 const BATCH_SIZE = 6;
 
+/** Convert AppTrip from data-service to Trip for local state (id = index, dbId = Supabase id) */
+function appTripToTrip(app: AppTrip, index: number): Trip {
+  return {
+    id: index,
+    dbId: app.id,
+    date: app.date,
+    day: app.day,
+    month: app.month,
+    year: app.year,
+    time: app.time,
+    duration: app.duration,
+    km: app.km,
+    from: app.from,
+    fromSub: app.fromSub,
+    to: app.to,
+    toSub: app.toSub,
+    type: app.type,
+    verified: app.verified,
+    photo: app.photo,
+    odoReading: app.odoReading,
+    odoStartReading: app.odoStartReading,
+    purposeLabel: app.purposeLabel,
+    purposeIndex: app.purposeIndex,
+    stops: app.stops,
+    notes: app.notes,
+    autoGenerated: app.autoGenerated,
+    gapConfirmed: app.gapConfirmed,
+  };
+}
+
+// ── Initial state ────────────────────────────────────────────
+
 const initialState: AppState = {
-  trips: initialTrips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
+  trips: [],
   currentScreen: 'dashboard',
   currentIndex: 0,
   dedTotal: 0,
@@ -158,22 +311,151 @@ const initialState: AppState = {
   conflictResolved: false,
   freshSession: true,
   pendingFinalise: false,
-  sessionId: 'batch1',
+  sessionId: 'session_' + Date.now(),
   baseOdo: ODO_START,
-  queuedTrips: initialTrips.slice(BATCH_SIZE).map(t => ({ ...t })),
+  queuedTrips: [],
+  vehicle: null,
+  vehicleId: null,
+  profile: null,
+  expenses: [],
+  logbookPeriods: [],
+  isLoading: true,
+  isInitialised: false,
+  error: null,
 };
 
-function computeDedTotal(trips: Trip[], upToIndex: number): number {
-  const vehicleCosts = getVehicleCosts();
+// ── Deduction computation (uses Supabase-loaded data) ────────
+
+function buildEstimatorInputs(state: AppState): {
+  vehicleSpecs: VehicleSpecs;
+  vehiclePurchase: VehiclePurchase;
+  expenses: ExpenseRecord[];
+  settings: AppSettings;
+} {
+  const v = state.vehicle;
+  const vehicleSpecs: VehicleSpecs = {
+    vehicleCategory: v?.vehicleCategory || undefined,
+    bodyType: v?.bodyType || undefined,
+    fuelConsumption: v?.fuelConsumption ?? undefined,
+  };
+  const vehiclePurchase: VehiclePurchase = {
+    purchasePrice: v?.purchasePrice ?? undefined,
+    purchaseDate: v?.purchaseDate ?? undefined,
+    currentWDV: v?.wdvAtStartOfFy ?? undefined,
+    vehicleHistoryStatus: v?.vehicleHistoryStatus ?? undefined,
+    depreciationInputMode: v?.depreciationInputMode ?? undefined,
+    previouslyClaimed: v?.priorDepreciationClaimed ?? undefined,
+    approxYearsOwned: v?.approxYearsOwned ?? undefined,
+    approxYearsBusinessUse: v?.approxYearsBusinessUse ?? undefined,
+    dateFirstUsed: v?.dateFirstBusinessUse ?? undefined,
+  };
+  const expenses: ExpenseRecord[] = state.expenses.map(e => ({
+    amount: e.amount,
+    isEstimated: e.isEstimated,
+  }));
+  const settings: AppSettings = {
+    useIndustryAverages: state.profile?.estimatorMode !== 'personalised',
+  };
+  return { vehicleSpecs, vehiclePurchase, expenses, settings };
+}
+
+function computeDedTotal(state: AppState, trips: Trip[], upToIndex: number): number {
+  const params = buildEstimatorInputs(state);
+  const costs = getVehicleCostsDetailed(params);
   const ANNUAL_KM = 15000;
-  const perKmRate = vehicleCosts / ANNUAL_KM;
-  const sorted = trips.slice(0, upToIndex);
-  const bizKm = sorted.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
+  const perKmRate = costs.total / ANNUAL_KM;
+  const slice = trips.slice(0, upToIndex);
+  const bizKm = slice.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   return Math.round(bizKm * perKmRate * 100) / 100;
+}
+
+/** Build params for deduction-estimator (getReadinessChecks, getDeductionState, getMissingItems, etc.) from app state */
+export function getEstimatorParamsFromState(state: AppState, hasBizTrips: boolean): {
+  taxProfile?: { salary?: string | number };
+  vehiclePurchase?: import('./deduction-estimator').VehiclePurchase;
+  vehicleSpecs?: VehicleSpecs;
+  expenses?: ExpenseRecord[];
+  hasBizTrips: boolean;
+  settings?: AppSettings;
+} {
+  const v = state.vehicle;
+  const vehicleSpecs: VehicleSpecs = {
+    vehicleCategory: v?.vehicleCategory || undefined,
+    bodyType: v?.bodyType || undefined,
+    fuelConsumption: v?.fuelConsumption ?? undefined,
+  };
+  const vehiclePurchase: VehiclePurchase = {
+    purchasePrice: v?.purchasePrice ?? undefined,
+    purchaseDate: v?.purchaseDate ?? undefined,
+    currentWDV: v?.wdvAtStartOfFy ?? undefined,
+    vehicleHistoryStatus: v?.vehicleHistoryStatus ?? undefined,
+    depreciationInputMode: v?.depreciationInputMode ?? undefined,
+    previouslyClaimed: v?.priorDepreciationClaimed ?? undefined,
+    approxYearsOwned: v?.approxYearsOwned ?? undefined,
+    approxYearsBusinessUse: v?.approxYearsBusinessUse ?? undefined,
+    dateFirstUsed: v?.dateFirstBusinessUse ?? undefined,
+  };
+  const taxProfile = state.profile ? { salary: (state.profile as { incomeBracket?: string }).incomeBracket } : undefined;
+  const expenses: ExpenseRecord[] = state.expenses.map(e => ({ amount: e.amount, isEstimated: e.isEstimated }));
+  const settings: AppSettings = { useIndustryAverages: state.profile?.estimatorMode !== 'personalised' };
+  return { taxProfile, vehiclePurchase, vehicleSpecs, expenses, hasBizTrips, settings };
 }
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+
+    // ── Supabase lifecycle ──
+
+    case 'DB_LOADED': {
+      const batch = action.trips.slice(0, BATCH_SIZE).map(t => ({ ...t }));
+      const queued = action.trips.slice(BATCH_SIZE).map(t => ({ ...t }));
+      const sorted = batch.filter(t => t.type !== null);
+      const newCurrentIndex = sorted.length;
+      return {
+        ...state,
+        trips: batch,
+        queuedTrips: queued,
+        vehicle: action.vehicle,
+        vehicleId: action.vehicleId,
+        profile: action.profile,
+        expenses: action.expenses,
+        logbookPeriods: action.logbookPeriods,
+        baseOdo: action.baseOdo,
+        currentIndex: newCurrentIndex,
+        bizCount: sorted.filter(t => t.type === 'business').length,
+        perCount: sorted.filter(t => t.type === 'personal').length,
+        isLoading: false,
+        isInitialised: true,
+        error: null,
+      };
+    }
+
+    case 'DB_ERROR':
+      return { ...state, isLoading: false, error: action.error };
+
+    case 'SET_VEHICLE':
+      return { ...state, vehicle: action.vehicle, vehicleId: action.vehicleId };
+
+    case 'SET_EXPENSES':
+      return { ...state, expenses: action.expenses };
+
+    case 'SET_PROFILE':
+      return { ...state, profile: action.profile };
+
+    case 'REPORT_SAVED_TO_DB': {
+      const updated = state.savedReports.map(r =>
+        r.sessionId === action.sessionId && !r.dbId ? { ...r, dbId: action.dbId } : r
+      );
+      return { ...state, savedReports: updated };
+    }
+
+    case 'REPORT_DELETED_FROM_DB': {
+      const filtered = state.savedReports.filter(r => r.dbId !== action.dbId);
+      return { ...state, savedReports: filtered };
+    }
+
+    // ── All original actions ──
+
     case 'CLASSIFY_TRIP': {
       const trip = state.trips[state.currentIndex];
       if (!trip) return state;
@@ -181,7 +463,7 @@ function reducer(state: AppState, action: Action): AppState {
       newTrips[state.currentIndex] = { ...trip, type: action.tripType };
       const isBiz = action.tripType === 'business';
       const newIdx = state.currentIndex + 1;
-      const newDedTotal = computeDedTotal(newTrips, newIdx);
+      const newDedTotal = computeDedTotal(state, newTrips, newIdx);
       return {
         ...state,
         trips: newTrips,
@@ -203,7 +485,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         trips: newTrips,
         currentIndex: idx,
-        dedTotal: computeDedTotal(newTrips, idx),
+        dedTotal: computeDedTotal(state, newTrips, idx),
         bizCount: undoSlice.filter(t => t.type === 'business').length,
         perCount: undoSlice.filter(t => t.type === 'personal').length,
         lastAction: null,
@@ -224,7 +506,7 @@ function reducer(state: AppState, action: Action): AppState {
       const mergedTrips = state.trips;
       const newCurrentIndex = mergedTrips.filter(t => t.type !== null).length;
       const sortedSlice = mergedTrips.slice(0, newCurrentIndex);
-      const newDedTotal = computeDedTotal(mergedTrips, newCurrentIndex);
+      const newDedTotal = computeDedTotal(state,mergedTrips, newCurrentIndex);
       const newBizCount = sortedSlice.filter(t => t.type === 'business').length;
       const newPerCount = sortedSlice.filter(t => t.type === 'personal').length;
       const bizTrips = mergedTrips.map((t, i) => i).filter(i => mergedTrips[i].type === 'business');
@@ -255,7 +537,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedSlice = newTrips.slice(0, state.currentIndex);
       const newBiz = sortedSlice.filter(t => t.type === 'business').length;
       const newPer = sortedSlice.filter(t => t.type === 'personal').length;
-      const newDed = computeDedTotal(newTrips, state.currentIndex);
+      const newDed = computeDedTotal(state, newTrips, state.currentIndex);
       const reclassDesc = `Reclassified "${trip.from} \u2192 ${trip.to}" from ${oldType || 'unsorted'} to ${action.tripType}`;
       return {
         ...state,
@@ -319,7 +601,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedForCount = newTrips.slice(0, state.currentIndex);
       const newBizCount = sortedForCount.filter(t => t.type === 'business').length;
       const newPerCount = sortedForCount.filter(t => t.type === 'personal').length;
-      const newDedTotal = computeDedTotal(newTrips, state.currentIndex);
+      const newDedTotal = computeDedTotal(state, newTrips, state.currentIndex);
       const editDesc = routeChanged
         ? `Route edited: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to} (${newTrips[action.tripIndex].km.toFixed(1)} km)`
         : `Edited trip: ${newTrips[action.tripIndex].from} → ${newTrips[action.tripIndex].to}`;
@@ -446,20 +728,36 @@ function reducer(state: AppState, action: Action): AppState {
     case 'RESET_DEMO':
       return {
         ...initialState,
-        trips: initialTrips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
-        queuedTrips: initialTrips.slice(BATCH_SIZE).map(t => ({ ...t })),
+        vehicle: state.vehicle,
+        vehicleId: state.vehicleId,
+        profile: state.profile,
+        expenses: state.expenses,
+        logbookPeriods: state.logbookPeriods,
+        isLoading: false,
+        isInitialised: true,
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
       };
     case 'LOAD_BATCH2': {
       const prevActive = state.savedReports.filter(r => !r.supersedes && r.sessionId !== 'batch2');
-      const prevOdoEnd = prevActive.length > 0
-        ? Math.max(...prevActive.map(r => r.odoRangeEnd ?? ODO_START))
-        : ODO_START;
+      const prevOdoEnd =
+        prevActive.length > 0
+          ? Math.max(...prevActive.map(r => r.odoRangeEnd ?? ODO_START))
+          : ODO_START;
+      const queued = state.queuedTrips;
+      const batch = queued.slice(0, BATCH_SIZE).map(t => ({ ...t }));
+      const stillQueued = queued.slice(BATCH_SIZE).map(t => ({ ...t }));
       return {
         ...initialState,
-        trips: batch2Trips.slice(0, BATCH_SIZE).map(t => ({ ...t })),
-        queuedTrips: batch2Trips.slice(BATCH_SIZE).map(t => ({ ...t })),
+        trips: batch,
+        queuedTrips: stillQueued,
+        vehicle: state.vehicle,
+        vehicleId: state.vehicleId,
+        profile: state.profile,
+        expenses: state.expenses,
+        logbookPeriods: state.logbookPeriods,
+        isLoading: false,
+        isInitialised: true,
         savedReports: state.savedReports,
         sessionStartTime: Date.now(),
         sessionId: 'batch2',
@@ -473,15 +771,23 @@ function reducer(state: AppState, action: Action): AppState {
       const latestReport = state.savedReports.find(r => !r.supersedes);
       const reportOdoEnd = latestReport?.odoRangeEnd;
       const manualOdo = state.lastOdoReading;
-      const calcOdo = state.trips.length > 0
-        ? Math.round(getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo))
-        : state.baseOdo;
+      const calcOdo =
+        state.trips.length > 0
+          ? Math.round(getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo))
+          : state.baseOdo;
       const newBaseOdo = manualOdo ?? reportOdoEnd ?? calcOdo;
       const newSessionId = 'session_' + Date.now();
       return {
         ...initialState,
         trips: nextBatch,
         queuedTrips: stillQueued,
+        vehicle: state.vehicle,
+        vehicleId: state.vehicleId,
+        profile: state.profile,
+        expenses: state.expenses,
+        logbookPeriods: state.logbookPeriods,
+        isLoading: false,
+        isInitialised: true,
         savedReports: state.savedReports,
         baseOdo: newBaseOdo,
         lastOdoReading: newBaseOdo,
@@ -489,7 +795,9 @@ function reducer(state: AppState, action: Action): AppState {
         sessionStartTime: Date.now(),
         freshSession: hasMore,
         auditLog: [
-          ...(hasMore ? [{ time: nowStr(), desc: `Next batch loaded — ${nextBatch.length} trip${nextBatch.length !== 1 ? 's' : ''} ready to sort`, hasPhoto: false }] : []),
+          ...(hasMore
+            ? [{ time: nowStr(), desc: `Next batch loaded — ${nextBatch.length} trip${nextBatch.length !== 1 ? 's' : ''} ready to sort`, hasPhoto: false }]
+            : []),
           { time: nowStr(), desc: 'All sort cards deleted by user', hasPhoto: false },
           ...state.auditLog,
         ],
@@ -501,12 +809,26 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...initialState,
         trips: isCurrentSession ? [] : state.trips,
+        vehicle: state.vehicle,
+        vehicleId: state.vehicleId,
+        profile: state.profile,
+        expenses: state.expenses,
+        logbookPeriods: state.logbookPeriods,
+        isLoading: false,
+        isInitialised: true,
         savedReports: remaining,
-        sessionId: isCurrentSession ? state.sessionId : state.sessionId,
+        sessionId: state.sessionId,
         baseOdo: isCurrentSession ? initialState.baseOdo : state.baseOdo,
         sessionStartTime: Date.now(),
         freshSession: true,
-        auditLog: [{ time: nowStr(), desc: `Session "${action.sessionId}" deleted — reports removed. Can be re-sorted anytime.`, hasPhoto: false }, ...state.auditLog],
+        auditLog: [
+          {
+            time: nowStr(),
+            desc: `Session "${action.sessionId}" deleted — reports removed. Can be re-sorted anytime.`,
+            hasPhoto: false,
+          },
+          ...state.auditLog,
+        ],
       };
     }
     case 'COME_BACK_LATER':
@@ -542,7 +864,7 @@ function reducer(state: AppState, action: Action): AppState {
       const sortedSlice = newTrips.slice(0, newCurrentIndex);
       const newBiz = sortedSlice.filter(t => t.type === 'business').length;
       const newPer = sortedSlice.filter(t => t.type === 'personal').length;
-      const newDed = computeDedTotal(newTrips, newCurrentIndex);
+      const newDed = computeDedTotal(state, newTrips, newCurrentIndex);
       const newVerified = new Set(state.verifiedSet);
       for (let i = insertIdx; i < newTrips.length; i++) {
         if (newTrips[i].odoReading != null || newTrips[i].odoStartReading != null) {
@@ -598,19 +920,215 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
+// ── Context ──────────────────────────────────────────────────
+
 const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<Action>;
 } | null>(null);
 
+// ── Provider with Supabase sync ──────────────────────────────
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  // ── Initial data load ──────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitialData() {
+      try {
+        const fy = getCurrentFY();
+
+        const [profile, vehicles] = await Promise.all([
+          getProfile(),
+          getVehicles(),
+        ]);
+
+        const vehicle = vehicles[0] ?? null;
+        const vehicleId = vehicle?.id ?? null;
+
+        const [trips, expenses, logbookPeriods] = vehicleId
+          ? await Promise.all([
+              getTrips(vehicleId, fy),
+              getExpenses(vehicleId, fy),
+              getLogbookPeriods(vehicleId),
+            ])
+          : [[], [], []];
+
+        if (cancelled) return;
+
+        const baseOdo = vehicle?.odometerAtStart ?? ODO_START;
+        const tripList = (trips as AppTrip[]).map((t, i) => appTripToTrip(t, i));
+
+        dispatch({
+          type: 'DB_LOADED',
+          trips: tripList,
+          vehicle,
+          vehicleId,
+          profile,
+          expenses: expenses as AppExpense[],
+          logbookPeriods: logbookPeriods as AppLogbookPeriod[],
+          baseOdo,
+        });
+      } catch (err) {
+        if (!cancelled) {
+          dispatch({ type: 'DB_ERROR', error: String(err) });
+        }
+      }
+    }
+
+    loadInitialData();
+    return () => { cancelled = true; };
+  }, []);
+
+  // ── Supabase side-effects ────────────────
+  const dispatchWithSync = useCallback(async (action: Action) => {
+    dispatch(action);
+
+    const s = stateRef.current;
+    const vehicleId = s.vehicleId;
+
+    try {
+      switch (action.type) {
+        case 'CLASSIFY_TRIP': {
+          const trip = s.trips[s.currentIndex];
+          if (trip?.dbId && vehicleId) {
+            await classifyTrip(trip.dbId, action.tripType);
+          }
+          break;
+        }
+        case 'RECLASSIFY': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await classifyTrip(trip.dbId, action.tripType);
+          }
+          break;
+        }
+        case 'SET_PURPOSE': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await updateTrip(trip.dbId, { purposeLabel: action.purposeLabel });
+          }
+          break;
+        }
+        case 'VERIFY_TRIP': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await updateTrip(trip.dbId, {
+              verified: true,
+              odoStartReading: action.startReading,
+              odoReading: action.reading,
+              photo: action.photo || trip.photo,
+            });
+          }
+          break;
+        }
+        case 'ADD_PHOTO': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await updateTrip(trip.dbId, { photo: true });
+          }
+          break;
+        }
+        case 'UPDATE_TRIP': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await updateTrip(trip.dbId, action.updates as Partial<AppTrip>);
+          }
+          break;
+        }
+        case 'ADD_TRIP': {
+          if (vehicleId) {
+            const saved = await saveTrip(vehicleId, action.trip as unknown as Partial<AppTrip> & { startTime?: string; endTime?: string });
+            if (saved?.id) {
+              const idx = stateRef.current.trips.findIndex(
+                t => t.from === action.trip.from && t.to === action.trip.to && t.time === action.trip.time
+              );
+              if (idx >= 0) {
+                dispatch({ type: 'UPDATE_TRIP', tripIndex: idx, updates: { dbId: saved.id } });
+              }
+            }
+          }
+          break;
+        }
+        case 'DELETE_GAP': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await deleteTrip(trip.dbId);
+          }
+          break;
+        }
+        case 'CONFIRM_GAP': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await updateTrip(trip.dbId, { gapConfirmed: true, km: action.km });
+          }
+          break;
+        }
+        case 'SET_MANUAL_ODO': {
+          await logAuditEvent('vehicle', vehicleId, 'manual_odo_set', { reading: action.reading });
+          break;
+        }
+        case 'SAVE_SESSION': {
+          if (vehicleId) {
+            setTimeout(async () => {
+              const currentState = stateRef.current;
+              const report = currentState.savedReports[0];
+              if (report && !report.dbId) {
+                const saved = await saveReport(
+                  vehicleId,
+                  'session_summary',
+                  {
+                    sessionId: report.sessionId,
+                    bizCount: report.bizCount,
+                    perCount: report.perCount,
+                    classified: report.classified,
+                    unclassified: report.unclassified,
+                    est: report.est,
+                    totalKm: report.totalKm,
+                    auditScore: report.auditScore,
+                    lastOdoReading: report.lastOdoReading,
+                    odoRangeStart: report.odoRangeStart,
+                    odoRangeEnd: report.odoRangeEnd,
+                    trips: report.trips,
+                    auditLog: report.auditLog,
+                    areasToCheck: report.areasToCheck,
+                    revision: report.revision,
+                  },
+                  `Session Report — ${report.timestamp}`
+                );
+                if (saved?.id) {
+                  dispatch({ type: 'REPORT_SAVED_TO_DB', sessionId: report.sessionId, dbId: saved.id });
+                }
+              }
+            }, 0);
+          }
+          break;
+        }
+        case 'DELETE_SESSION': {
+          const toDelete = s.savedReports.filter(r => r.sessionId === action.sessionId && r.dbId);
+          await Promise.all(toDelete.map(r => deleteReport(r.dbId!)));
+          break;
+        }
+        default:
+          break;
+      }
+    } catch (err) {
+      console.warn('[AppContext] Supabase sync failed for action', action.type, err);
+    }
+  }, []);
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch: dispatchWithSync }}>
       {children}
     </AppContext.Provider>
   );
 }
+
+// ── Hooks ────────────────────────────────────────────────────
 
 export function useApp() {
   const ctx = useContext(AppContext);

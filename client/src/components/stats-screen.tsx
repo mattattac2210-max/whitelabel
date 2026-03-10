@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useApp } from '@/lib/app-context';
+import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
 import { BottomNav } from './bottom-nav';
@@ -127,6 +127,15 @@ export function StatsScreen() {
     return trips;
   }, [activeReports, currentSessionHasReport, state.sessionId, state.trips]);
 
+  const hasBizTrips = state.bizCount > 0;
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const costsParams = useMemo(() => ({
+    vehicleSpecs: estimatorParams.vehicleSpecs,
+    vehiclePurchase: estimatorParams.vehiclePurchase,
+    expenses: estimatorParams.expenses,
+    settings: estimatorParams.settings,
+  }), [estimatorParams]);
+
   const sorted = allTrips;
   const biz = sorted.filter(t => t.type === 'business');
   const per = sorted.filter(t => t.type === 'personal');
@@ -151,19 +160,11 @@ export function StatsScreen() {
     const wklyAvgKm = dailyAvgKm * 5;
     const annualKm = wklyAvgKm * 48;
 
-    const costs = getVehicleCostsDetailed();
-
-    let fuelConsumption = 10;
-    try {
-      const fc = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
-      if (fc > 0) fuelConsumption = fc;
-    } catch {}
-    let avgFuelPrice = 1.95;
-    try {
-      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
-      const p = parseFloat(settings.avgFuelPrice);
-      if (p > 0) avgFuelPrice = p;
-    } catch {}
+    const costs = getVehicleCostsDetailed(costsParams);
+    const fuelConsumption = typeof costsParams.vehicleSpecs?.fuelConsumption === 'number'
+      ? costsParams.vehicleSpecs.fuelConsumption
+      : parseFloat(String(costsParams.vehicleSpecs?.fuelConsumption ?? 10)) || 10;
+    const avgFuelPrice = parseFloat(String(costsParams.settings?.avgFuelPrice ?? 1.95)) || 1.95;
     const projectedFuel = Math.round(annualKm / 100 * fuelConsumption * avgFuelPrice * 100) / 100;
 
     const nonFuelCosts = costs.manual + costs.depreciation + costs.financeInterest + costs.leasePayments;
@@ -172,7 +173,7 @@ export function StatsScreen() {
     const projected = Math.round(bizPctDecimal * totalProjectedCosts);
 
     return { projectedDeductibles: projected, weeksTracked: Math.round(wks * 10) / 10, projectedAnnualKm: Math.round(annualKm), weeklyAvgKm: Math.round(wklyAvgKm) };
-  }, [sorted, bizKm, totalKm]);
+  }, [sorted, bizKm, totalKm, costsParams]);
 
   const dayStats = useMemo(() => {
     const days: Record<string, { biz: number; per: number; bizKm: number; perKm: number }> = {};

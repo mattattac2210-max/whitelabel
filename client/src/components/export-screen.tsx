@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useApp } from '@/lib/app-context';
-import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { useState, useMemo } from 'react';
+import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
+import { calcLogbookDeduction } from '@/lib/trip-data';
+import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
 import { BottomNav } from './bottom-nav';
 import {
   Download, FileText, Check, ChevronDown, ChevronUp,
@@ -36,7 +37,7 @@ async function loadJsPDF(): Promise<any> {
   });
 }
 
-function combineReports(reports: any[]) {
+function combineReports(reports: any[], vehicleCosts: number) {
   const allTrips = reports.flatMap(r => r.trips || []);
   allTrips.sort((a: any, b: any) => {
     const pa = a.date.split('/');
@@ -50,7 +51,7 @@ function combineReports(reports: any[]) {
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const perKm = totalKm - bizKm;
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100) : 0;
-  const totalEst = calcLogbookDeduction(bizKm, totalKm);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
 
   const odoStarts = reports.map(r => r.odoRangeStart).filter((v: any) => v != null);
   const odoEnds = reports.map(r => r.odoRangeEnd).filter((v: any) => v != null);
@@ -352,6 +353,18 @@ export function ExportScreen() {
   const [exportLog, setExportLog] = useState<{ ts: string; type: string; count: number }[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const hasBizTrips = state.bizCount > 0;
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const vehicleCosts = useMemo(
+    () => getVehicleCostsDetailed({
+      vehicleSpecs: estimatorParams.vehicleSpecs,
+      vehiclePurchase: estimatorParams.vehiclePurchase,
+      expenses: estimatorParams.expenses,
+      settings: estimatorParams.settings,
+    }).total,
+    [estimatorParams]
+  );
+
   const activeReports = state.savedReports
     .map((r, i) => ({ ...r, globalIdx: i }))
     .filter(r => !r.supersedes);
@@ -373,7 +386,7 @@ export function ExportScreen() {
   }
 
   const selectedReports = activeReports.filter(r => selected.has(r.globalIdx));
-  const combined = selectedReports.length > 0 ? combineReports(selectedReports) : null;
+  const combined = selectedReports.length > 0 ? combineReports(selectedReports, vehicleCosts) : null;
 
   function handleExport(mode: 'pdf' | 'csv') {
     if (!combined) return;

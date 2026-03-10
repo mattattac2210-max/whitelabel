@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calculator, AlertTriangle, Lock, CheckCircle, Circle, Info, BarChart3, ChevronRight, X } from 'lucide-react';
-import { useApp } from '@/lib/app-context';
+import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { CollapsiblePanel, FieldInput, ChipSelect, ToggleRow } from './collapsible-panel';
 import { CalculationBreakdown } from '@/components/deduction-card';
@@ -12,6 +12,7 @@ import {
   getEstimateDisclaimer,
   getReadinessLabel,
   getEstimateMode,
+  getVehicleCostsDetailed,
   type DeductionState,
 } from '@/lib/deduction-estimator';
 
@@ -104,7 +105,11 @@ export function TaxEstimatePanel() {
   }, [p.salary, p.incomeMode]);
 
   const hasBizTrips = state.trips.some(t => t.type === 'business');
-  const readinessChecks = useMemo(() => getReadinessChecks(hasBizTrips), [hasBizTrips, p]);
+  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const readinessChecks = useMemo(
+    () => getReadinessChecks(estimatorParams),
+    [estimatorParams]
+  );
 
   let showDeductionEstimates = true;
   try {
@@ -112,15 +117,21 @@ export function TaxEstimatePanel() {
     if (settings.showDeductionEstimates === false) showDeductionEstimates = false;
   } catch {}
 
-  const deductionState = getDeductionState(readinessChecks, showDeductionEstimates);
-  const missingItems = getMissingItems(readinessChecks);
-  const includedItems = getIncludedItems(readinessChecks);
-  const readinessLabel = getReadinessLabel(deductionState);
-  const disclaimer = getEstimateDisclaimer(deductionState);
+  const deductionState = getDeductionState(readinessChecks, showDeductionEstimates, estimatorParams.settings);
+  const missingItems = getMissingItems(readinessChecks, estimatorParams.vehicleSpecs, estimatorParams.settings);
+  const includedItems = getIncludedItems(readinessChecks, estimatorParams.vehicleSpecs, estimatorParams.settings);
+  const readinessLabel = getReadinessLabel(deductionState, estimatorParams.settings);
+  const disclaimer = getEstimateDisclaimer(deductionState, estimatorParams.settings);
 
   const bizKm = state.trips.filter(t => t.type === 'business').reduce((s, t) => s + t.km, 0);
   const totalKmAll = state.trips.filter(t => t.type !== null).reduce((s, t) => s + t.km, 0);
-  const vehicleDed = calcLogbookDeduction(bizKm, totalKmAll);
+  const vehicleCosts = getVehicleCostsDetailed({
+    vehicleSpecs: estimatorParams.vehicleSpecs,
+    vehiclePurchase: estimatorParams.vehiclePurchase,
+    expenses: estimatorParams.expenses,
+    settings: estimatorParams.settings,
+  }).total;
+  const vehicleDed = calcLogbookDeduction(bizKm, totalKmAll, vehicleCosts);
   const otherDed = parseFloat(p.otherDeductions) || 0;
   const totalDed = vehicleDed + otherDed;
   const taxableIncome = Math.max(0, annualIncome - totalDed);

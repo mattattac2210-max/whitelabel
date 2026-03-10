@@ -234,7 +234,6 @@ function mapAppToDbTrip(app: Partial<AppTrip> & { startTime?: string; endTime?: 
   if (app.toSub !== undefined) map.end_address = app.toSub;
   if (app.type !== undefined) map.classification = app.type || 'unclassified';
   if (app.purposeLabel !== undefined) map.purpose_category = app.purposeLabel;
-  if (app.purpose !== undefined) map.purpose = app.purpose;
   if (app.verified !== undefined) map.odo_verified = app.verified;
   if (app.photo !== undefined) map.has_photo = app.photo;
   if (app.odoReading !== undefined) map.odo_end = app.odoReading;
