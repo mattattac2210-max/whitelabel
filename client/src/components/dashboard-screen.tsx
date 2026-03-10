@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
-import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, UserCircle, Info, AlertTriangle, Settings, HelpCircle, Play, BookOpen, ArrowRight, X, RotateCcw, Eye, TrendingUp, Fuel, Calendar, Route, DollarSign, Target, Clock } from 'lucide-react';
+import { MapPin, FileText, Download, Plus, ChevronRight, Navigation, Receipt, BarChart3, Key, Car, Info, AlertTriangle, Settings, HelpCircle, Play, BookOpen, ArrowRight, X, RotateCcw, Eye, TrendingUp, Fuel, Calendar, Route, DollarSign, Target, Clock } from 'lucide-react';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer, getEstimateMode } from '@/lib/deduction-estimator';
 import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
 import { getAssistantMode, setAssistantMode as saveAssistantMode } from '@/lib/assistant-mode';
@@ -171,12 +171,11 @@ export function DashboardScreen() {
   const archived = isLogbookArchived(activePeriod);
 
   const allTiles = [
-    { screen: 'sort' as const, label: 'Sort Trips', sub: totalUnsorted > 0 ? `${totalUnsorted} trip${totalUnsorted !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: totalUnsorted, archivedHide: true },
+    { screen: 'sort' as const, label: 'Sort Trips', sub: totalUnsorted > 0 ? `${totalUnsorted} trip${totalUnsorted !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: totalUnsorted, archivedHide: true, fullWidth: true },
     { screen: 'documents' as const, label: 'Documents', sub: 'Reports, expenses & export', icon: FileText, primary: false, archivedHide: false },
     { screen: 'input' as const, label: 'Add Trip', sub: 'Manual or live entry', icon: Plus, primary: false, archivedHide: true },
     { screen: 'stats' as const, label: 'My Stats', sub: 'Trips, km & trends', icon: BarChart3, primary: false, archivedHide: false },
     { screen: 'find-keys' as const, label: 'Find My Keys', sub: 'Last known location', icon: Key, primary: false, archivedHide: true },
-    { screen: 'account' as const, label: 'Account', sub: 'Profile, vehicle & tax', icon: UserCircle, primary: false, archivedHide: false },
   ];
 
   const tiles = archived ? allTiles.filter(t => !t.archivedHide) : allTiles;
@@ -826,11 +825,13 @@ export function DashboardScreen() {
             {tiles.map(tile => {
               const Icon = tile.icon;
               const badgeCount = (tile as any).badge;
+              const fullWidth = (tile as any).fullWidth;
               return (
                 <button
                   key={tile.screen}
                   className="relative flex items-center gap-[10px] p-[12px_14px] rounded-xl text-left transition-all active:scale-[.98]"
                   style={{
+                    ...(fullWidth && { gridColumn: '1 / -1' }),
                     background: tile.primary ? 'rgb(var(--wc-ink) / .06)' : 'var(--wc-card)',
                     border: tile.primary && badgeCount > 0 ? '2px solid rgb(var(--wc-ink) / .85)' : tile.primary ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1px solid var(--wc-border)',
                   }}
