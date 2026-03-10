@@ -503,18 +503,40 @@ export async function getAllTrips(fy?: string): Promise<AppTrip[]> {
   return data.map(t => mapDbToAppTrip(t as DbTrip));
 }
 
+/** Build ISO start_time from day/month/year and time string (e.g. "9:30 AM") */
+function buildStartTimeFromTrip(trip: { day?: number; month?: number; year?: number; time?: string }): string | null {
+  const { day, month, year, time } = trip;
+  if (day == null || month == null || year == null || !time) return null;
+  const m = time.match(/^(\d{1,2}):(\d{1,2})\s*(AM|PM)$/i);
+  if (!m) return null;
+  let hour = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const ampm = m[3].toUpperCase();
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  const d = new Date(year, month, day, hour, min);
+  return d.toISOString();
+}
+
 export async function saveTrip(
   vehicleId: string,
-  trip: Partial<AppTrip> & { startTime?: string; endTime?: string }
+  trip: Partial<AppTrip> & { startTime?: string; endTime?: string; day?: number; month?: number; year?: number; time?: string }
 ): Promise<AppTrip | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Build start_time from date/time when missing (Add Existing flow)
+  const tripForDb = { ...trip };
+  if (!tripForDb.startTime && trip.day != null && trip.month != null && trip.year != null && trip.time) {
+    const built = buildStartTimeFromTrip(trip);
+    if (built) tripForDb.startTime = built;
+  }
+
   const dbData = {
     vehicle_id: vehicleId,
     user_id: user.id,
-    fy: trip.fy || getCurrentFY(),
-    ...mapAppToDbTrip(trip),
+    fy: tripForDb.fy || getCurrentFY(),
+    ...mapAppToDbTrip(tripForDb),
   };
 
   const { data, error } = await supabase
@@ -523,7 +545,11 @@ export async function saveTrip(
     .select()
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error('[saveTrip] Supabase insert failed:', error);
+    return null;
+  }
+  if (!data) return null;
   return mapDbToAppTrip(data as DbTrip);
 }
 

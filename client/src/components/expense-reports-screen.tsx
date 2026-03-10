@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
-import { BottomNav } from './bottom-nav';
 import { ArrowLeft, Receipt, Download, FileText } from 'lucide-react';
 
 interface Expense {
@@ -154,7 +153,6 @@ export function ExpenseReportsScreen() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }

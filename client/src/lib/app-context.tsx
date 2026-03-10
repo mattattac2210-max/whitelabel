@@ -56,12 +56,14 @@ export type Screen =
   | 'notes'
   | 'odometer'
   | 'reports'
+  | 'documents'
   | 'export'
   | 'input'
   | 'expenses'
   | 'stats'
   | 'find-keys'
-  | 'account';
+  | 'account'
+  | 'logbook-complete';
 
 export const INDUSTRY_BIZ_AVG = 65;
 
@@ -145,6 +147,7 @@ interface SavedReport {
   unclassified: number;
   est: string;
   totalKm: string;
+  allKm?: number;        // Total km for the report (for compatibility)
   auditScore: number;
   lastOdoReading: number | null;
   lastOdoVerifiedAt: string | null;
@@ -240,7 +243,13 @@ type Action =
   | { type: 'SET_EXPENSES'; expenses: AppExpense[] }
   | { type: 'SET_PROFILE'; profile: AppProfile }
   | { type: 'REPORT_SAVED_TO_DB'; sessionId: string; dbId: string }
-  | { type: 'REPORT_DELETED_FROM_DB'; dbId: string };
+  | { type: 'REPORT_DELETED_FROM_DB'; dbId: string }
+  | { type: 'EXPENSE_ADDED'; expense: AppExpense }
+  | { type: 'EXPENSE_UPDATED'; expense: AppExpense }
+  | { type: 'EXPENSE_DELETED'; id: string }
+  | { type: 'ARCHIVE_LOGBOOK' }
+  | { type: 'RESTART_LOGBOOK' }
+  | { type: 'START_LOGBOOK' };
 
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -453,6 +462,30 @@ function reducer(state: AppState, action: Action): AppState {
       const filtered = state.savedReports.filter(r => r.dbId !== action.dbId);
       return { ...state, savedReports: filtered };
     }
+
+    case 'EXPENSE_ADDED':
+      return { ...state, expenses: [action.expense, ...state.expenses] };
+
+    case 'EXPENSE_UPDATED': {
+      const updated = state.expenses.map(e => e.id === action.expense.id ? action.expense : e);
+      return { ...state, expenses: updated };
+    }
+
+    case 'EXPENSE_DELETED':
+      return { ...state, expenses: state.expenses.filter(e => e.id !== action.id) };
+
+    case 'ARCHIVE_LOGBOOK': {
+      const active = state.logbookPeriods.find(p => p.status === 'active');
+      if (!active) return { ...state, currentScreen: 'dashboard' };
+      const updated = state.logbookPeriods.map(p =>
+        p.id === active.id ? { ...p, status: 'archived' as const } : p
+      );
+      return { ...state, logbookPeriods: updated, currentScreen: 'dashboard' };
+    }
+    case 'RESTART_LOGBOOK':
+      return { ...state, currentScreen: 'sort', freshSession: true };
+    case 'START_LOGBOOK':
+      return { ...state, currentScreen: 'sort', freshSession: true };
 
     // ── All original actions ──
 
@@ -674,6 +707,7 @@ function reducer(state: AppState, action: Action): AppState {
         unclassified: biz.length - classified,
         est: '$' + Math.round(state.dedTotal).toLocaleString('en-AU'),
         totalKm: biz.reduce((s, t) => s + t.km, 0).toFixed(1),
+        allKm: state.trips.reduce((s, t) => s + t.km, 0),
         auditScore: (() => {
           const st = state.trips.filter(t => t.type !== null);
           const tot = st.length;
@@ -860,7 +894,12 @@ function reducer(state: AppState, action: Action): AppState {
         }
       }
       newTrips.splice(insertIdx, 0, action.trip);
-      const newCurrentIndex = state.currentIndex + 1;
+      // If the new trip is unclassified (type === null), don't increment currentIndex so it appears in sort cards.
+      // If insertIdx < currentIndex, the trip we were sorting shifted right, so increment to keep pointing at it.
+      const needsSort = action.trip.type === null;
+      const newCurrentIndex = needsSort
+        ? (insertIdx < state.currentIndex ? state.currentIndex + 1 : state.currentIndex)
+        : state.currentIndex + 1;
       const sortedSlice = newTrips.slice(0, newCurrentIndex);
       const newBiz = sortedSlice.filter(t => t.type === 'business').length;
       const newPer = sortedSlice.filter(t => t.type === 'personal').length;
@@ -1041,8 +1080,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           break;
         }
         case 'ADD_TRIP': {
-          if (vehicleId) {
-            const saved = await saveTrip(vehicleId, action.trip as unknown as Partial<AppTrip> & { startTime?: string; endTime?: string });
+          let vid = vehicleId;
+          if (!vid) {
+            const vehicles = await getVehicles();
+            vid = vehicles[0]?.id ?? null;
+          }
+          if (vid) {
+            const saved = await saveTrip(vid, action.trip as unknown as Partial<AppTrip> & { startTime?: string; endTime?: string });
             if (saved?.id) {
               const idx = stateRef.current.trips.findIndex(
                 t => t.from === action.trip.from && t.to === action.trip.to && t.time === action.trip.time

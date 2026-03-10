@@ -5,7 +5,21 @@
 // Vehicle costs are passed as parameters (no localStorage).
 // ============================================================
 
+import type { VehicleSpecs, VehiclePurchase, ExpenseRecord, AppSettings } from './deduction-estimator';
+import { getVehicleCostsDetailed } from './deduction-estimator';
+
 export const ODO_START = 84280;
+
+/** Get total vehicle costs for deduction calculation. Delegates to deduction-estimator. */
+export function getVehicleCosts(params: {
+  vehicleSpecs?: VehicleSpecs;
+  vehiclePurchase?: VehiclePurchase;
+  expenses?: ExpenseRecord[];
+  settings?: AppSettings;
+  fuelConsumptionOverride?: number;
+}): number {
+  return getVehicleCostsDetailed(params).total;
+}
 
 // ── Categories ───────────────────────────────────────────────
 

@@ -2,25 +2,22 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
-import { MapPin, Pointer, X, Clock, Route, Gauge } from 'lucide-react';
+import { MapPin, Pointer, X, Clock, Route, Gauge, Undo2 } from 'lucide-react';
+import { loadGoogleMaps } from './address-input';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const polylineCache = new Map<string, string>();
 
-function loadGMaps(): Promise<void> {
-  if (window._gmapsLoaded) return Promise.resolve();
-  if (window._gmapsPromise) return window._gmapsPromise;
-  window._gmapsPromise = new Promise<void>((resolve, reject) => {
-    if (!MAPS_KEY) { reject(new Error('No key')); return; }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places,geometry`;
-    script.async = true;
-    script.onload = () => { window._gmapsLoaded = true; resolve(); };
-    script.onerror = () => reject(new Error('Failed'));
-    document.head.appendChild(script);
-  });
-  return window._gmapsPromise;
+function MapFallback() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'var(--wc-card)' }}>
+      <div className="flex flex-col items-center gap-[4px]">
+        <MapPin className="w-[18px] h-[18px] opacity-25" style={{ color: 'var(--wc-t3)' }} />
+        <span className="font-data text-[8px] uppercase tracking-[.1em] opacity-30" style={{ color: 'var(--wc-t3)' }}>Map</span>
+      </div>
+    </div>
+  );
 }
 
 function StaticRouteMap({ from, to }: { from: string; to: string }) {
@@ -30,7 +27,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 
   useEffect(() => {
     const cacheKey = `${from}|${to}`;
-    if (!MAPS_KEY || fetchedRef.current === cacheKey) return;
+    if (!MAPS_KEY || (window as any)._gmapsAuthFailed || fetchedRef.current === cacheKey) return;
     fetchedRef.current = cacheKey;
     let cancelled = false;
 
@@ -64,7 +61,7 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
       return;
     }
 
-    loadGMaps().then(() => {
+    loadGoogleMaps().then(() => {
       if (cancelled) return;
       const ds = new window.google.maps.DirectionsService();
       ds.route({
@@ -105,15 +102,8 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
     return () => { cancelled = true; };
   }, [from, to]);
 
-  if (error || !imgUrl) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'var(--wc-card)' }}>
-        <div className="flex flex-col items-center gap-[4px]">
-          <MapPin className="w-[18px] h-[18px] opacity-25" style={{ color: 'var(--wc-t3)' }} />
-          <span className="font-data text-[8px] uppercase tracking-[.1em] opacity-30" style={{ color: 'var(--wc-t3)' }}>Map</span>
-        </div>
-      </div>
-    );
+  if ((window as any)._gmapsAuthFailed || error || !imgUrl) {
+    return <MapFallback />;
   }
 
   return (
@@ -132,15 +122,18 @@ function StaticRouteMap({ from, to }: { from: string; to: string }) {
 function InteractiveMap({ from, to, stops = [], interactive = true }: { from: string; to: string; stops?: string[]; interactive?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
+  const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
-    if (!mapRef.current || !MAPS_KEY) return;
+    if (!mapRef.current || !MAPS_KEY || (window as any)._gmapsAuthFailed) return;
     let cancelled = false;
 
-    loadGMaps().then(() => {
+    loadGoogleMaps().then(() => {
+      if ((window as any)._gmapsAuthFailed || cancelled) return setMapError(true);
       if (cancelled || !mapRef.current) return;
-      const g = window.google.maps;
-      const map = new g.Map(mapRef.current, {
+      try {
+        const g = window.google.maps;
+        const map = new g.Map(mapRef.current, {
         zoom: 12,
         center: { lat: -33.8688, lng: 151.2093 },
         disableDefaultUI: true,
@@ -306,6 +299,11 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
           });
         }
       });
+      } catch {
+        if (!cancelled) setMapError(true);
+      }
+    }).catch(() => {
+      if (!cancelled) setMapError(true);
     });
 
     return () => {
@@ -314,6 +312,9 @@ function InteractiveMap({ from, to, stops = [], interactive = true }: { from: st
     };
   }, [from, to, stops.join('|')]);
 
+  if ((window as any)._gmapsAuthFailed || mapError) {
+    return <MapFallback />;
+  }
   return <div ref={mapRef} className="w-full h-full" />;
 }
 
@@ -329,7 +330,7 @@ interface TripCardProps {
 }
 
 export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, tutorialPhase = 'done', tripValue }: TripCardProps) {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -435,6 +436,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
         pointerEvents: isTop ? 'auto' : 'none',
         transformOrigin: 'center 62%',
         willChange: 'transform',
+        touchAction: 'none',
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -485,6 +487,21 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           </div>
         </>
       )}
+      {isTop && state.lastAction && (
+        <button
+          className="absolute top-[10px] left-[10px] z-30 flex items-center gap-[4px] rounded-[8px] px-[8px] py-[5px] transition-all active:scale-[.95]"
+          style={{
+            background: 'rgba(0,0,0,.55)',
+            backdropFilter: 'blur(6px)',
+            border: '1px solid rgba(255,255,255,.15)',
+          }}
+          onClick={(e) => { e.stopPropagation(); dispatch({ type: 'UNDO_LAST' }); }}
+          data-testid="button-undo"
+        >
+          <Undo2 className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</span>
+        </button>
+      )}
       <div className="w-full relative overflow-hidden flex-1 rounded-t-[20px] flex flex-col" style={{ background: 'var(--wc-card)' }}>
         <div className="flex-[1.6] relative overflow-hidden" style={{ perspective: '500px' }}
           onPointerDown={e => {
@@ -505,7 +522,7 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           }}
           data-testid="map-tap-area">
           <div className="absolute inset-[-20%_0_0_0]" style={{ transform: 'rotateX(28deg) scale(1.15)', transformOrigin: '50% 55%' }}>
-            <InteractiveMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} stops={trip.stops || []} interactive={false} />
+            <StaticRouteMap from={`${trip.from}, ${trip.fromSub}`} to={`${trip.to}, ${trip.toSub}`} />
           </div>
           <div className="absolute inset-0 pointer-events-none z-[1]" style={{ background: 'linear-gradient(to bottom, rgb(var(--wc-ink) / 0.1) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.15) 100%)' }} />
           {isTop && tutorialPhase !== 'done' && (
@@ -612,8 +629,8 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
             className="flex-1 py-[7px] rounded-[10px] font-heading font-extrabold text-[13px] tracking-[.06em] uppercase flex items-center justify-center gap-1"
             style={{
               background: perBtnHighlight ? 'rgba(180,180,180,.15)' : 'transparent',
-              border: perBtnHighlight ? '1.5px solid rgba(180,180,180,.5)' : '1.5px solid rgba(180,180,180,.2)',
-              color: perBtnHighlight ? 'rgba(200,200,200,.9)' : 'rgba(180,180,180,.5)',
+              border: perBtnHighlight ? '1.5px solid rgb(var(--wc-ink) / .8)' : '1.5px solid rgb(var(--wc-ink) / .5)',
+              color: perBtnHighlight ? 'rgba(200,200,200,.9)' : 'rgb(var(--wc-ink) / .6)',
               transition: 'all .4s ease',
               transform: perBtnHighlight ? 'scale(1.04)' : 'scale(1)',
               boxShadow: perBtnHighlight ? '0 0 12px rgba(180,180,180,.2)' : 'none',

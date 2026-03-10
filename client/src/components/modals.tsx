@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp, useComputedStats } from '@/lib/app-context';
-import { CATEGORIES, getTripOdoEnd } from '@/lib/trip-data';
-import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark } from 'lucide-react';
+import { CATEGORIES, getTripOdoEnd, calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { X, Check, AlertTriangle, Clock, Camera, MapPin, Settings, Trophy, Target, Gauge, ChevronUp, ChevronDown, ShieldCheck, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, HelpCircle, Volume2, VolumeX, ChevronRight } from 'lucide-react';
 import { AddressInput } from './address-input';
+import { getAssistantMode, sessionCompleteGuideExtended } from '@/lib/assistant-mode';
 
 function ModalOverlay({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   if (!open) return null;
@@ -357,6 +358,8 @@ export function SummaryModal() {
   const { state, dispatch } = useApp();
   const stats = useComputedStats();
   const [showAuditBreakdown, setShowAuditBreakdown] = useState(false);
+  const [showAssistHelp, setShowAssistHelp] = useState(false);
+  const [assistSpeaking, setAssistSpeaking] = useState(false);
   const NUM_DIGITS = 6;
   const toDigits = (n: number): number[] => {
     const s = String(Math.max(0, Math.floor(n))).padStart(NUM_DIGITS, '0');
@@ -416,65 +419,175 @@ export function SummaryModal() {
 
   return (
     <ModalOverlay open={state.summaryModalOpen} onClose={() => dispatch({ type: 'CLOSE_SUMMARY' })}>
-      <div className="pt-5 pb-6 flex flex-col" style={{ maxHeight: '100%' }}>
-        <div className="flex items-center gap-[14px] px-[20px] mb-4">
+      <div className="pt-4 pb-5 flex flex-col" style={{ maxHeight: '100%' }}>
+        <div className="flex items-center gap-[12px] px-[18px] mb-3">
           <div
-            className="w-[56px] h-[56px] rounded-full flex items-center justify-center flex-shrink-0"
+            className="w-[50px] h-[50px] rounded-full flex items-center justify-center flex-shrink-0"
             style={{ border: `3px solid ${scoreCol}`, background: score > 85 ? 'rgba(34,197,94,.08)' : 'rgb(var(--wc-ink) / .08)' }}
           >
-            <span className="font-heading font-black text-[20px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
+            <span className="font-heading font-black text-[18px]" style={{ color: scoreCol }} data-testid="text-summary-score">{score}%</span>
           </div>
           <div>
-            <div className="font-heading font-black text-[22px] uppercase leading-none" style={{ color: 'var(--wc-text)' }}>Session Complete</div>
-            <div className="text-[13px] mt-[3px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: scoreCol }}>Audit Score: {score}%</div>
+            <div className="font-heading font-black text-[20px] uppercase leading-none" style={{ color: 'var(--wc-text)' }}>Session Complete</div>
+            <div className="text-[12px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>You sorted {state.trips.filter(t => t.type !== null).length} trips this session.</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[1px]" style={{ color: scoreCol }}>Audit Score: {score}%</div>
           </div>
         </div>
 
-        <div className="flex gap-[8px] px-[20px] mb-4">
-          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+        {getAssistantMode() && (
+          <div className="mx-[18px] mb-3">
+            <button
+              className="w-full rounded-[11px] p-[10px_14px] flex items-center gap-[10px] cursor-pointer transition-all active:scale-[.98]"
+              style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .15)' }}
+              onClick={() => setShowAssistHelp(true)}
+              data-testid="button-session-assist"
+            >
+              <HelpCircle className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+              <div className="flex-1 text-left">
+                <div className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-text)' }}>What should I do next?</div>
+                <div className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Tap to see what each option does</div>
+              </div>
+              <ChevronRight
+                className="w-[13px] h-[13px] flex-shrink-0"
+                style={{ color: 'var(--wc-t3)' }}
+              />
+            </button>
+          </div>
+        )}
+
+        {showAssistHelp && (
+          <div
+            className="fixed inset-0 z-[210] flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
+            onClick={() => { setShowAssistHelp(false); window.speechSynthesis?.cancel(); setAssistSpeaking(false); }}
+            data-testid="assist-help-overlay"
+          >
+            <div
+              className="w-[340px] max-h-[85vh] overflow-y-auto rounded-[20px] p-[20px] animate-pop"
+              style={{ background: 'var(--wc-card)', border: '1.5px solid var(--wc-border)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-[8px]">
+                  <HelpCircle className="w-[20px] h-[20px]" style={{ color: 'var(--wc-y)' }} />
+                  <span className="font-heading font-extrabold text-[16px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>What Next?</span>
+                </div>
+                <div className="flex items-center gap-[6px]">
+                  <button
+                    className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all active:scale-[.9]"
+                    style={{ background: assistSpeaking ? 'rgb(var(--wc-ink) / .2)' : 'rgb(var(--wc-ink) / .08)', border: assistSpeaking ? '1.5px solid rgb(var(--wc-ink) / .3)' : '1px solid rgb(var(--wc-ink) / .12)' }}
+                    onClick={() => {
+                      if (!window.speechSynthesis) return;
+                      if (assistSpeaking) {
+                        window.speechSynthesis.cancel();
+                        setAssistSpeaking(false);
+                        return;
+                      }
+                      const text = `${sessionCompleteGuideExtended.intro} ${sessionCompleteGuideExtended.options.map((o: { label: string; description: string }) => `${o.label}: ${o.description}`).join('. ')}. ${sessionCompleteGuideExtended.warning}`;
+                      const utter = new SpeechSynthesisUtterance(text);
+                      utter.rate = 0.95;
+                      utter.pitch = 1;
+                      utter.lang = 'en-AU';
+                      const voices = window.speechSynthesis.getVoices();
+                      const femaleVoice = voices.find(v => (v.lang.includes('en-AU') || v.lang.includes('en-GB')) && /female|fiona|karen|kate|samantha|zira|hazel|susan/i.test(v.name))
+                        || voices.find(v => v.lang.includes('en-AU'))
+                        || voices.find(v => v.lang.includes('en-GB'));
+                      if (femaleVoice) utter.voice = femaleVoice;
+                      utter.onend = () => setAssistSpeaking(false);
+                      utter.onerror = () => setAssistSpeaking(false);
+                      window.speechSynthesis.speak(utter);
+                      setAssistSpeaking(true);
+                    }}
+                    data-testid="button-speak-session-assist"
+                  >
+                    {assistSpeaking
+                      ? <VolumeX className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                      : <Volume2 className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
+                    }
+                  </button>
+                  <button
+                    className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all active:scale-[.9]"
+                    style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .12)' }}
+                    onClick={() => { setShowAssistHelp(false); window.speechSynthesis?.cancel(); setAssistSpeaking(false); }}
+                    data-testid="button-close-assist-help"
+                  >
+                    <X className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-[13px] leading-[1.6] mb-4" style={{ color: 'var(--wc-t2)' }}>{sessionCompleteGuideExtended.intro}</div>
+
+              <div className="flex flex-col gap-[8px] mb-4">
+                {sessionCompleteGuideExtended.options.map((opt: { label: string; description: string }, i: number) => (
+                  <div key={i} className="rounded-[10px] p-[12px_14px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .08)' }}>
+                    <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em] mb-[3px]" style={{ color: 'var(--wc-text)' }}>{opt.label}</div>
+                    <div className="text-[12px] leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>{opt.description}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-[10px] p-[12px_14px] mb-4" style={{ background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)' }}>
+                <div className="font-heading font-bold text-[10px] uppercase tracking-[.06em] mb-[2px]" style={{ color: 'var(--wc-am)' }}>Important</div>
+                <div className="text-[12px] leading-[1.5]" style={{ color: 'var(--wc-t3)' }}>{sessionCompleteGuideExtended.warning}</div>
+              </div>
+
+              <button
+                className="w-full py-[12px] rounded-[12px] font-heading font-bold text-[14px] uppercase tracking-[.06em] cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                onClick={() => { setShowAssistHelp(false); window.speechSynthesis?.cancel(); setAssistSpeaking(false); }}
+                data-testid="button-got-it-assist"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-[7px] px-[18px] mb-3">
+          <div className="flex-1 rounded-[11px] p-[10px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
-            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
+            <div className="font-data text-[18px] leading-tight" style={{ color: 'var(--wc-y)' }}>{sessionKm.toFixed(1)} km</div>
           </div>
-          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex-1 rounded-[11px] p-[10px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
-            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
+            <div className="font-data text-[18px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
           </div>
-          <div className="flex-1 rounded-[12px] p-[12px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex-1 rounded-[11px] p-[10px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Photos</div>
-            <div className="font-heading font-black text-[20px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
+            <div className="font-data text-[18px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
           </div>
         </div>
 
-        <div className="mx-[20px] mb-4 rounded-[14px] p-[14px_16px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-center gap-[8px] mb-[10px]">
-            <Gauge className="w-[18px] h-[18px]" style={{ color: 'var(--wc-am)' }} />
-            <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer</span>
+        <div className="mx-[18px] mb-3 rounded-[13px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-center gap-[8px] mb-[8px]">
+            <Gauge className="w-[16px] h-[16px]" style={{ color: 'var(--wc-am)' }} />
+            <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer</span>
             {state.lastOdoVerifiedAt && (
-              <span className="ml-auto font-data uppercase tracking-[.08em] text-[12px]" style={{ color: 'var(--wc-text)' }}>
+              <span className="ml-auto font-data uppercase tracking-[.08em] text-[10px]" style={{ color: 'var(--wc-text)' }}>
                 verified {state.lastOdoVerifiedAt}
               </span>
             )}
           </div>
 
-          <div className="rounded-[12px] p-[8px_6px] mb-[10px]" style={{ background: 'var(--wc-bg)', border: '2px solid rgb(var(--wc-ink) / .1)', boxShadow: 'inset 0 3px 12px rgba(0,0,0,.7)' }}>
+          <div className="rounded-[11px] p-[6px_5px] mb-[8px]" style={{ background: 'var(--wc-bg)', border: '2px solid rgb(var(--wc-ink) / .1)', boxShadow: 'inset 0 3px 12px rgba(0,0,0,.7)' }}>
             <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => {
                 const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
                 const delay = (NUM_DIGITS - 1 - i) * 0.15;
                 const duration = 0.8 + (NUM_DIGITS - 1 - i) * 0.15;
                 return (
-                  <div key={i} className="flex flex-col items-center" style={{ width: '52px' }}>
+                  <div key={i} className="flex flex-col items-center" style={{ width: '46px' }}>
                     <button
-                      className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-t-[8px] transition-all active:scale-95"
+                      className="w-full h-[26px] flex items-center justify-center cursor-pointer rounded-t-[7px] transition-all active:scale-95"
                       style={{ background: 'rgb(var(--wc-ink) / .06)' }}
                       onClick={() => spinDigit(i, 1)}
                       data-testid={`button-odo-up-${i}`}
                     >
-                      <ChevronUp className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t3)' }} />
+                      <ChevronUp className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
                     </button>
                     <div
-                      className="w-full h-[56px] overflow-hidden relative"
+                      className="w-full h-[48px] overflow-hidden relative"
                       style={{
                         background: i < NUM_DIGITS - 1
                           ? 'linear-gradient(180deg, var(--wc-bg) 0%, var(--wc-card) 40%, var(--wc-card) 60%, var(--wc-bg) 100%)'
@@ -488,13 +601,13 @@ export function SummaryModal() {
                         <div
                           className="flex flex-col items-center"
                           style={{
-                            animation: `odoRoll${digit} ${duration}s cubic-bezier(.2,.8,.3,1) ${delay}s both`,
+                            animation: `odoRollSm${digit} ${duration}s cubic-bezier(.2,.8,.3,1) ${delay}s both`,
                           }}
                         >
                           {rollNumbers.concat(rollNumbers).concat(rollNumbers.slice(0, digit + 1)).map((n, j) => (
                             <div
                               key={j}
-                              className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none flex-shrink-0"
+                              className="w-full h-[48px] flex items-center justify-center font-data font-black text-[30px] select-none flex-shrink-0"
                               style={{
                                 color: i < NUM_DIGITS - 1 ? 'var(--wc-text)' : 'var(--wc-am)',
                                 textShadow: '0 0 12px rgb(var(--wc-ink) / .2)',
@@ -506,7 +619,7 @@ export function SummaryModal() {
                         </div>
                       ) : (
                         <div
-                          className="w-full h-[56px] flex items-center justify-center font-data font-black text-[36px] select-none"
+                          className="w-full h-[48px] flex items-center justify-center font-data font-black text-[30px] select-none"
                           style={{
                             color: i < NUM_DIGITS - 1 ? 'var(--wc-text)' : 'var(--wc-am)',
                             textShadow: '0 0 12px rgb(var(--wc-ink) / .2)',
@@ -517,29 +630,29 @@ export function SummaryModal() {
                       )}
                     </div>
                     <button
-                      className="w-full h-[30px] flex items-center justify-center cursor-pointer rounded-b-[8px] transition-all active:scale-95"
+                      className="w-full h-[26px] flex items-center justify-center cursor-pointer rounded-b-[7px] transition-all active:scale-95"
                       style={{ background: 'rgb(var(--wc-ink) / .06)' }}
                       onClick={() => spinDigit(i, -1)}
                       data-testid={`button-odo-down-${i}`}
                     >
-                      <ChevronDown className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t3)' }} />
+                      <ChevronDown className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
                     </button>
                   </div>
                 );
               })}
-              <div className="flex flex-col items-center justify-center" style={{ width: '24px' }}>
-                <div className="h-[30px]" />
-                <div className="h-[56px] flex items-end pb-[8px]">
-                  <span className="font-data text-[12px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
+              <div className="flex flex-col items-center justify-center" style={{ width: '22px' }}>
+                <div className="h-[26px]" />
+                <div className="h-[48px] flex items-end pb-[7px]">
+                  <span className="font-data text-[11px] font-bold" style={{ color: 'var(--wc-t3)' }}>km</span>
                 </div>
-                <div className="h-[30px]" />
+                <div className="h-[26px]" />
               </div>
             </div>
           </div>
 
           {odoSaved ? (
             <div
-              className="w-full rounded-[8px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
+              className="w-full rounded-[8px] py-[7px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
               style={{
                 background: 'rgba(34,197,94,.12)',
                 border: '1.5px solid rgba(34,197,94,.3)',
@@ -548,12 +661,12 @@ export function SummaryModal() {
               }}
               data-testid="odo-saved-confirm"
             >
-              <Check className="w-[14px] h-[14px]" strokeWidth={2.5} />
+              <Check className="w-[13px] h-[13px]" strokeWidth={2.5} />
               Saved
             </div>
           ) : (
             <button
-              className="w-full rounded-[8px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              className="w-full rounded-[8px] py-[7px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
               style={{ background: 'rgba(153,153,153,.12)', border: '1.5px solid rgba(153,153,153,.3)', color: 'var(--wc-am)' }}
               onClick={() => {
                 const val = digitsToNum(odoDigits);
@@ -569,42 +682,42 @@ export function SummaryModal() {
           )}
         </div>
 
-        <div className="mx-[20px] mb-4 rounded-[12px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-baseline justify-between mb-[6px]">
-            <div className="text-[13px]" style={{ color: 'var(--wc-text)' }}>
-              <span className="font-heading font-black text-[20px]">{weeksDone}</span> / 12 weeks
+        <div className="mx-[18px] mb-3 rounded-[11px] p-[10px_13px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+          <div className="flex items-baseline justify-between mb-[5px]">
+            <div className="text-[12px]" style={{ color: 'var(--wc-text)' }}>
+              <span className="font-heading font-black text-[18px]">{weeksDone}</span> / 12 weeks
             </div>
-            <span className="font-heading font-black text-[18px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
+            <span className="font-heading font-black text-[16px]" style={{ color: 'var(--wc-y)' }}>{pct}%</span>
           </div>
-          <div className="h-[6px] rounded-[3px] overflow-hidden mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
+          <div className="h-[5px] rounded-[3px] overflow-hidden mb-[5px]" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
             <div className="h-full rounded-[3px]" style={{ width: `${Math.min(barFill, pct)}%`, background: 'linear-gradient(90deg,var(--wc-y),#ffe066)', transition: 'width 1.2s cubic-bezier(.25,.8,.25,1)' }} />
           </div>
-          <div className="text-[11px]" style={{ color: 'var(--wc-text)' }}>
+          <div className="text-[10px]" style={{ color: 'var(--wc-text)' }}>
             Due <strong>{dueFmt}</strong> &middot; {weeksLeft > 0 ? `${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} to go` : 'Logbook complete'}
           </div>
         </div>
 
-        <div className="px-[20px] flex flex-col gap-[8px]">
+        <div className="px-[18px] flex flex-col gap-[7px]">
           <button
-            className="w-full rounded-[12px] py-[16px] font-heading font-black text-[20px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[12px] py-[14px] font-heading font-black text-[18px] tracking-[.07em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 4px 20px rgb(var(--wc-ink) / .2)' }}
             onClick={() => dispatch({ type: 'SAVE_SESSION' })}
             data-testid="button-save-session"
           >
-            <Check className="w-[20px] h-[20px]" strokeWidth={2.5} />
+            <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
             Save &amp; Generate Report
           </button>
           <button
-            className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[16px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-2 transition-all"
             style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => setShowAuditBreakdown(true)}
             data-testid="button-understand-audit"
           >
-            <ShieldCheck className="w-[18px] h-[18px]" style={{ color: scoreCol }} />
+            <ShieldCheck className="w-[16px] h-[16px]" style={{ color: scoreCol }} />
             Understand Your Audit Score
           </button>
           <button
-            className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[16px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}
             onClick={() => dispatch({ type: 'CLOSE_SUMMARY' })}
             data-testid="button-back-modify"
@@ -612,7 +725,7 @@ export function SummaryModal() {
             &larr; Go Back &amp; Modify
           </button>
           <button
-            className="w-full rounded-[12px] py-[14px] font-heading font-bold text-[16px] tracking-[.05em] uppercase cursor-pointer transition-all"
+            className="w-full py-[8px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
             style={{ background: 'transparent', color: 'var(--wc-t3)' }}
             onClick={() => { dispatch({ type: 'CLOSE_SUMMARY' }); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
             data-testid="button-exit-no-save"

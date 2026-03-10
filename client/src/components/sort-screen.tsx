@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { useApp, useComputedStats, getEstimatorParamsFromState } from '@/lib/app-context';
-import { calcLogbookDeduction } from '@/lib/trip-data';
-import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
+import { useApp, useComputedStats } from '@/lib/app-context';
+import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { getLogbookStatus, isLogbookArchived, getActivePeriod } from '@/lib/logbook-utils';
+import { getEstimatorParamsFromState } from '@/lib/app-context';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer } from '@/lib/deduction-estimator';
 import { TripCard } from './trip-card';
-import { BottomNav } from './bottom-nav';
 import { DeductionCard } from './deduction-card';
-import { Undo2, ChevronRight, AlertTriangle, Trash2, Lock, Info } from 'lucide-react';
+import { Undo2, ChevronRight, ChevronDown, AlertTriangle, Trash2, Lock, Info, ArrowLeft, Home } from 'lucide-react';
 
 function MiniCalendar({ day, month, year }: { day: number; month: number; year: number }) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -95,6 +95,7 @@ export function SortScreen() {
   const [dedPop, setDedPop] = useState(false);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [dedExpanded, setDedExpanded] = useState(false);
   const [tutorialPhase, setTutorialPhase] = useState<'idle' | 'left' | 'right' | 'done'>('idle');
   const tutorialRan = useRef(false);
   const tutorialTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -127,7 +128,15 @@ export function SortScreen() {
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
   const hasBizTrips = state.bizCount > 0;
-  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
+  const estimatorParams = getEstimatorParamsFromState(state, hasBizTrips);
+  const vehicleCosts = getVehicleCosts(estimatorParams);
+  const ANNUAL_KM = 15000;
+  const perKmRate = vehicleCosts / ANNUAL_KM;
+  const tripDeductionValue = useCallback((tripKm: number) => {
+    return Math.round(tripKm * perKmRate);
+  }, [perKmRate]);
+
+  const activePeriod = getActivePeriod(state.logbookPeriods);
   const checks = useMemo(() => getReadinessChecks(estimatorParams), [estimatorParams]);
   const showDeductionEstimates = useMemo(() => {
     try {
@@ -135,26 +144,7 @@ export function SortScreen() {
       return settings.showDeductionEstimates !== false;
     } catch { return true; }
   }, []);
-  const deductionState = useMemo(
-    () => getDeductionState(checks, showDeductionEstimates, estimatorParams.settings),
-    [checks, showDeductionEstimates, estimatorParams.settings]
-  );
-
-  const costsParams = useMemo(
-    () => ({
-      vehicleSpecs: estimatorParams.vehicleSpecs,
-      vehiclePurchase: estimatorParams.vehiclePurchase,
-      expenses: estimatorParams.expenses,
-      settings: estimatorParams.settings,
-    }),
-    [estimatorParams]
-  );
-  const vehicleCosts = getVehicleCostsDetailed(costsParams).total;
-  const ANNUAL_KM = 15000;
-  const perKmRate = vehicleCosts / ANNUAL_KM;
-  const tripDeductionValue = useCallback((tripKm: number) => {
-    return Math.round(tripKm * perKmRate);
-  }, [perKmRate]);
+  const deductionState = useMemo(() => getDeductionState(checks, showDeductionEstimates), [checks, showDeductionEstimates]);
 
   const handleClassify = useCallback((type: 'business' | 'personal') => {
     const trip = state.trips[state.currentIndex];
@@ -176,53 +166,30 @@ export function SortScreen() {
   const nextScreen = !sortDone ? null : !classifyDone ? 'classify' as const : 'review' as const;
 
   return (
-    <div className="flex flex-col h-full" data-testid="sort-screen">
-      <div className="flex items-center px-[14px] pt-[5px] pb-[3px] flex-shrink-0 gap-[6px]">
-        <button
-          className="flex items-center gap-[4px] rounded-[8px] px-[8px] py-[4px] transition-all"
-          style={{
-            background: 'rgb(var(--wc-ink) / .06)',
-            border: '1px solid var(--wc-border)',
-            opacity: state.lastAction ? 1 : 0,
-            pointerEvents: state.lastAction ? 'auto' : 'none',
-          }}
-          onClick={() => dispatch({ type: 'UNDO_LAST' })}
-          data-testid="button-undo"
-        >
-          <Undo2 className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
-          <span className="font-heading font-bold text-[10px] tracking-[.04em] uppercase" style={{ color: 'var(--wc-y)' }}>Undo</span>
-        </button>
-
-        <div className="flex items-center gap-[6px]">
-          {([
-            { id: 'step1', label: 'Sort', active: !sortDone, done: sortDone, screen: 'sort' as const },
-            { id: 'step2', label: 'Classify', active: sortDone && !classifyDone, done: classifyDone, screen: 'classify' as const },
-            { id: 'step3', label: 'Review', active: sortDone && classifyDone && !odoDone, done: sortDone && classifyDone && odoDone, screen: 'review' as const },
-            { id: 'step4', label: 'Odo', active: false, done: odoDone, screen: 'odometer' as const },
-          ]).map((step, i, arr) => (
-            <div key={step.id} className="flex items-center gap-[3px]">
-              <div
-                className="w-[14px] h-[14px] rounded-full flex items-center justify-center font-heading text-[7px] font-bold transition-all"
-                style={{
-                  background: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .15)' : 'var(--wc-bg)',
-                  border: step.active ? '1.5px solid var(--wc-y)' : step.done ? '1.5px solid rgb(var(--wc-ink) / .5)' : '1.5px solid var(--wc-border)',
-                  color: step.active ? 'var(--wc-bg)' : step.done ? 'var(--wc-y)' : 'var(--wc-t3)',
-                }}
-              >
-                {step.done ? '\u2713' : i + 1}
-              </div>
-              <span className="font-data text-[7px] uppercase tracking-[.04em]" style={{ color: step.active ? 'var(--wc-y)' : step.done ? 'rgb(var(--wc-ink) / .55)' : 'var(--wc-t3)' }}>
-                {step.label}
-              </span>
-              {i < arr.length - 1 && (
-                <div className="w-[6px] h-px" style={{ background: step.done ? 'rgb(var(--wc-ink) / .4)' : 'var(--wc-border)' }} />
-              )}
-            </div>
-          ))}
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden" data-testid="sort-screen">
+      <div className="flex items-center justify-center px-[14px] pt-[5px] pb-[3px] flex-shrink-0">
+        <div className="flex items-center gap-[5px]">
+          <div
+            className="w-[16px] h-[16px] rounded-full flex items-center justify-center font-heading text-[8px] font-bold"
+            style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
+          >
+            1
+          </div>
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>
+            Step 1 <span style={{ color: 'var(--wc-t3)' }}>of 6</span>
+          </span>
         </div>
-
+      </div>
+      <div className="flex items-center px-[14px] pb-[3px] flex-shrink-0 gap-[6px]">
+        <button
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+          data-testid="button-back"
+          style={{ color: 'var(--wc-text)' }}
+        >
+          <ArrowLeft className="w-[22px] h-[22px]" />
+        </button>
         <div className="flex items-center gap-[5px] ml-auto">
-          {queuedCount > 0 && (
+          {queuedCount > 0 && !isComplete && (
             <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
               <span className="font-data text-[8px] tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>+{queuedCount} queued</span>
             </div>
@@ -242,10 +209,6 @@ export function SortScreen() {
               <ChevronRight className="w-[10px] h-[10px]" style={{ color: 'var(--wc-y)' }} />
             </button>
           )}
-          <div className="flex items-center gap-[3px] rounded-[20px] px-[6px] py-[2px]" style={{ background: 'var(--wc-grd)', border: '1px solid rgba(34,197,94,.2)' }}>
-            <div className="w-[5px] h-[5px] rounded-full animate-gps" style={{ background: 'var(--wc-gr)' }} />
-            <span className="font-data text-[7px] tracking-[.06em]" style={{ color: 'var(--wc-gr)' }}>GPS</span>
-          </div>
         </div>
       </div>
       <div className="px-4 pb-[5px] flex-shrink-0">
@@ -257,7 +220,7 @@ export function SortScreen() {
           />
         </div>
       </div>
-      <div className="flex-1 relative mx-[14px]">
+      <div className="flex-1 relative mx-[14px]" style={{ minHeight: '420px' }}>
         {state.pendingFinalise && (
           <div
             className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-[10px] p-7 rounded-[14px]"
@@ -325,29 +288,37 @@ export function SortScreen() {
               All sort cards have been deleted. Use Reset Demo to load sample trips, or connect your GPS to import new trips.
             </div>
             <div className="flex flex-col gap-[7px] w-full mt-1">
-              {!state.savedReports.some(r => r.sessionId === 'batch1') && (
-                <button
-                  className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase cursor-pointer transition-all"
-                  style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
-                  onClick={() => dispatch({ type: 'RESET_DEMO' })}
-                  data-testid="button-reload-demo"
-                >
-                  Load Batch 1 — Week 1
-                </button>
-              )}
-              {!state.savedReports.some(r => r.sessionId === 'batch2') && (
-                <button
-                  className={`w-full rounded-[11px] py-${state.savedReports.some(r => r.sessionId === 'batch1') ? '3' : '[10px]'} font-heading font-${state.savedReports.some(r => r.sessionId === 'batch1') ? 'extrabold text-[16px]' : 'bold text-[14px]'} tracking-[.06em] uppercase cursor-pointer transition-all`}
-                  style={state.savedReports.some(r => r.sessionId === 'batch1')
-                    ? { background: 'var(--wc-y)', color: 'var(--wc-bg)' }
-                    : { background: 'transparent', border: '1.5px solid var(--wc-y)', color: 'var(--wc-y)' }
-                  }
-                  onClick={() => dispatch({ type: 'LOAD_BATCH2' })}
-                  data-testid="button-load-batch2"
-                >
-                  Load Batch 2 — Week 2
-                </button>
-              )}
+              {(() => {
+                const allBatchesDone = state.savedReports.some(r => r.sessionId === 'batch1') && state.savedReports.some(r => r.sessionId === 'batch2');
+                const hideBatches = allBatchesDone;
+                return !hideBatches ? (
+                  <>
+                    {!state.savedReports.some(r => r.sessionId === 'batch1') && (
+                      <button
+                        className="w-full rounded-[11px] py-3 font-heading font-extrabold text-[16px] tracking-[.06em] uppercase cursor-pointer transition-all"
+                        style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
+                        onClick={() => dispatch({ type: 'RESET_DEMO' })}
+                        data-testid="button-reload-demo"
+                      >
+                        Load Batch 1 — Week 1
+                      </button>
+                    )}
+                    {!state.savedReports.some(r => r.sessionId === 'batch2') && (
+                      <button
+                        className={`w-full rounded-[11px] py-${state.savedReports.some(r => r.sessionId === 'batch1') ? '3' : '[10px]'} font-heading font-${state.savedReports.some(r => r.sessionId === 'batch1') ? 'extrabold text-[16px]' : 'bold text-[14px]'} tracking-[.06em] uppercase cursor-pointer transition-all`}
+                        style={state.savedReports.some(r => r.sessionId === 'batch1')
+                          ? { background: 'var(--wc-y)', color: 'var(--wc-bg)' }
+                          : { background: 'transparent', border: '1.5px solid var(--wc-y)', color: 'var(--wc-y)' }
+                        }
+                        onClick={() => dispatch({ type: 'LOAD_BATCH2' })}
+                        data-testid="button-load-batch2"
+                      >
+                        Load Batch 2 — Week 2
+                      </button>
+                    )}
+                  </>
+                ) : null;
+              })()}
               {state.savedReports.length > 0 && (
                 <button
                   className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[14px] tracking-[.06em] uppercase cursor-pointer transition-all"
@@ -505,13 +476,13 @@ export function SortScreen() {
             </div>
             {deductionState === 'locked' && (
               <div className="text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
-                {getEstimateDisclaimer('locked', estimatorParams.settings)}
+                {getEstimateDisclaimer('locked')}
               </div>
             )}
             {deductionState === 'partial' && (
               <div className="text-[9px] mt-[2px] flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
                 <Info className="w-[8px] h-[8px]" />
-                {getEstimateDisclaimer('partial', estimatorParams.settings)}
+                {getEstimateDisclaimer('partial')}
               </div>
             )}
             {deductionState === 'active' && (
@@ -525,7 +496,7 @@ export function SortScreen() {
               </div>
               <div className="flex justify-between mt-[3px]">
                 <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-t3)' }}>Business use: <span data-testid="text-logbook-pct">{logbookPct}%</span></span>
-                <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgb(var(--wc-ink) / .55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method &nearr;</button>
+                <button className="text-[9px] font-semibold cursor-pointer" style={{ color: 'rgb(var(--wc-ink) / .55)' }} onClick={() => dispatch({ type: 'OPEN_ATO' })}>No cap with logbook method ↗</button>
               </div>
             </div>
           </div>
@@ -536,27 +507,15 @@ export function SortScreen() {
             {!isComplete && !currentTrip && state.trips.length > 0 && <MiniCalendar day={state.trips[state.trips.length - 1].day} month={state.trips[state.trips.length - 1].month} year={state.trips[state.trips.length - 1].year} />}
           </div>
 
-          {isComplete && state.trips.length > 0 && (
+          {isComplete && state.trips.length > 0 && queuedCount === 0 && (
             <button
               className="w-full rounded-[11px] py-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[5px]"
-              style={queuedCount > 0
-                ? { background: 'var(--wc-yd)', border: '1px solid rgb(var(--wc-ink) / .35)', color: 'var(--wc-y)' }
-                : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }
-              }
+              style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)', color: 'rgba(239,68,68,.6)' }}
               onClick={() => setConfirmDelete(true)}
               data-testid="button-delete-trips"
             >
-              {queuedCount > 0 ? (
-                <>
-                  <ChevronRight className="w-[11px] h-[11px]" />
-                  Clear & Load Next {Math.min(queuedCount, 6)} Trips
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-[11px] h-[11px]" />
-                  Delete All Sort Cards
-                </>
-              )}
+              <Trash2 className="w-[11px] h-[11px]" />
+              Delete All Sort Cards
             </button>
           )}
 
@@ -567,7 +526,22 @@ export function SortScreen() {
           </div>
         </div>
 
-        <BottomNav activeOverride="sort" />
+        <div
+          className="flex items-center justify-center px-[16px] pt-[10px] pb-[22px] border-t flex-shrink-0"
+          style={{ background: 'var(--wc-nav-bg)', borderColor: 'var(--wc-border)' }}
+        >
+          <button
+            className="flex items-center gap-[6px] px-[16px] py-[8px] rounded-full cursor-pointer transition-all active:scale-[.97]"
+            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .1)' }}
+            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+            data-testid="sort-nav-home"
+          >
+            <Home className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
+            <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>
+              Back to Home
+            </span>
+          </button>
+        </div>
       </div>
       {confirmDelete && (
         <div
@@ -577,39 +551,32 @@ export function SortScreen() {
         >
           <div
             className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
-            style={{ background: 'var(--wc-card)', border: queuedCount > 0 ? '1.5px solid rgb(var(--wc-ink) / .35)' : '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(239,68,68,.35)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
             onClick={e => e.stopPropagation()}
             data-testid="modal-delete-confirm"
           >
             <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={queuedCount > 0 ? { background: 'rgb(var(--wc-ink) / .12)', border: '2px solid rgb(var(--wc-ink) / .3)' } : { background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
-                {queuedCount > 0 ? <ChevronRight className="w-[22px] h-[22px]" style={{ color: 'var(--wc-y)' }} /> : <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />}
+              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,.12)', border: '2px solid rgba(239,68,68,.3)' }}>
+                <Trash2 className="w-[22px] h-[22px]" style={{ color: 'var(--wc-re)' }} />
               </div>
               <div className="font-heading font-black text-[18px] uppercase text-center" style={{ color: 'var(--wc-text)' }}>
-                {queuedCount > 0 ? 'Clear & Load Next Batch?' : 'Delete All Sort Cards?'}
+                Delete All Sort Cards?
               </div>
             </div>
-            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={queuedCount > 0 ? { background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' } : { background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
-              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: queuedCount > 0 ? 'var(--wc-y)' : 'var(--wc-re)' }} />
-              <span className="text-[12px] leading-[1.5]" style={{ color: queuedCount > 0 ? 'rgb(var(--wc-ink) / .85)' : 'rgba(239,68,68,.85)' }}>
-                {queuedCount > 0 ? (
-                  <><strong>Current sort cards will be cleared</strong> and the next {Math.min(queuedCount, 6)} trip{Math.min(queuedCount, 6) !== 1 ? 's' : ''} will be loaded. Make sure you've saved your report first.</>
-                ) : (
-                  <><strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.</>
-                )}
+            <div className="flex items-start gap-[8px] rounded-[10px] p-[10px_12px] mb-[16px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)' }}>
+              <AlertTriangle className="w-[16px] h-[16px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
+              <span className="text-[12px] leading-[1.5]" style={{ color: 'rgba(239,68,68,.85)' }}>
+                <strong>This action is not reversible.</strong> Please check your reports are accurate for this session before you decide to delete your sort cards.
               </span>
             </div>
             <div className="flex flex-col gap-[8px]">
               <button
                 className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all"
-                style={queuedCount > 0
-                  ? { background: 'rgb(var(--wc-ink) / .15)', border: '1.5px solid rgb(var(--wc-ink) / .4)', color: 'var(--wc-y)' }
-                  : { background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }
-                }
+                style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
                 onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); }}
                 data-testid="button-confirm-delete"
               >
-                {queuedCount > 0 ? `Yes, Load Next ${Math.min(queuedCount, 6)} Trips` : 'Yes, Delete All Cards'}
+                Yes, Delete All Cards
               </button>
               <button
                 className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] tracking-[.05em] uppercase cursor-pointer transition-all"

@@ -4,6 +4,7 @@ import { ClassifyScreen } from '@/components/classify-screen';
 import { ReviewScreen } from '@/components/review-screen';
 import { OdometerScreen } from '@/components/odometer-screen';
 import { ReportsScreen } from '@/components/reports-screen';
+import { DocumentsScreen } from '@/components/documents-screen';
 import { ExportScreen } from '@/components/export-screen';
 import { InputScreen } from '@/components/input-screen';
 import { DashboardScreen } from '@/components/dashboard-screen';
@@ -13,22 +14,24 @@ import { StatsScreen } from '@/components/stats-screen';
 import { FindKeysScreen } from '@/components/find-keys-screen';
 import { AccountScreen } from '@/components/account-screen';
 import { EditModal, ATOModal, SummaryModal } from '@/components/modals';
+import { BottomNav } from '@/components/bottom-nav';
+import type { Screen } from '@/lib/app-context';
 
 function StatusBar() {
   return (
-    <div className="absolute top-0 left-0 right-0 z-[90] flex justify-between items-center px-[26px] pt-[14px] pointer-events-none">
-      <span className="font-heading font-bold text-[16px]" style={{ color: 'var(--wc-status-text)' }}>9:41</span>
+    <div className="flex-shrink-0 flex justify-between items-center px-[26px] pt-[14px] pb-[10px] pointer-events-none" style={{ color: 'var(--wc-status-text)' }}>
+      <span className="font-heading font-bold text-[16px]">9:41</span>
       <div className="flex gap-[5px] items-center">
         <svg width="15" height="11" viewBox="0 0 24 18" fill="none">
-          <path d="M1 4C7-1 17-1 23 4" stroke="var(--wc-status-text)" strokeWidth="2" strokeLinecap="round" />
-          <path d="M4 8c4-4 12-4 16 0" stroke="var(--wc-status-text)" strokeWidth="2" strokeLinecap="round" />
-          <path d="M8 12c2-2 6-2 8 0" stroke="var(--wc-status-text)" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="12" cy="16" r="1.5" fill="var(--wc-status-text)" />
+          <path d="M1 4C7-1 17-1 23 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M4 8c4-4 12-4 16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M8 12c2-2 6-2 8 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="12" cy="16" r="1.5" fill="currentColor" />
         </svg>
         <svg width="22" height="12" viewBox="0 0 22 12">
-          <rect x="0" y="1" width="18" height="10" rx="2" stroke="var(--wc-status-text)" strokeWidth="1.5" fill="none" />
-          <rect x="2" y="3" width="10" height="6" rx="1" fill="var(--wc-status-text)" />
-          <path d="M20 4v4" stroke="var(--wc-status-text)" strokeWidth="1.5" strokeLinecap="round" />
+          <rect x="0" y="1" width="18" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          <rect x="2" y="3" width="10" height="6" rx="1" fill="currentColor" />
+          <path d="M20 4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </div>
     </div>
@@ -46,6 +49,7 @@ function ScreenContainer() {
     notes: <NotesScreen />,
     odometer: <OdometerScreen />,
     reports: <ReportsScreen />,
+    documents: <DocumentsScreen />,
     export: <ExportScreen />,
     input: <InputScreen />,
     expenses: <ExpensesScreen />,
@@ -54,42 +58,67 @@ function ScreenContainer() {
     account: <AccountScreen />,
   };
 
-  return (
-    <div className="relative flex-1 flex flex-col pt-[40px] overflow-hidden">
-      {screens[state.currentScreen]}
-    </div>
-  );
-}
-
-function PhoneFrame({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex justify-center items-center min-h-screen overflow-hidden" style={{ background: 'var(--wc-frame-outer)' }}>
-      <div
-        className="relative flex flex-col overflow-hidden"
-        style={{
-          width: '390px',
-          height: '844px',
-          background: 'var(--wc-bg)',
-          borderRadius: '50px',
-          border: '1px solid var(--wc-frame-border)',
-          boxShadow: '0 0 0 6px var(--wc-frame-outer), 0 0 0 7px var(--wc-frame-ring), 0 50px 130px var(--wc-frame-shadow)',
-        }}
-        data-testid="phone-frame"
-      >
-        {children}
+  if (state.isLoading && !state.isInitialised) {
+    return (
+      <div className="relative flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 pt-2 min-h-0 overflow-auto">
+          <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--wc-y)' }} />
+          <span className="font-heading font-bold text-[14px] uppercase" style={{ color: 'var(--wc-t3)' }}>Loading...</span>
+        </div>
+        <BottomNav />
       </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="relative flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 pt-2 min-h-0 overflow-auto">
+          <span className="font-heading font-bold text-[14px] uppercase text-center" style={{ color: 'var(--wc-re)' }}>{state.error}</span>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  const navActiveOverride: Record<string, Screen> = {
+    notes: 'dashboard',
+    odometer: 'dashboard',
+    classify: 'sort',
+    review: 'sort',
+    export: 'documents',
+    expenses: 'documents',
+    reports: 'documents',
+    stats: 'documents',
+    'find-keys': 'dashboard',
+  };
+  const activeOverride = navActiveOverride[state.currentScreen];
+
+  return (
+    <div className="relative flex-1 flex flex-col min-h-0">
+      <div className="flex-1 min-h-0 overflow-auto pt-2">
+        {screens[state.currentScreen]}
+      </div>
+      <BottomNav activeOverride={activeOverride} />
     </div>
   );
 }
 
 export default function Home() {
   return (
-    <PhoneFrame>
-      <StatusBar />
-      <ScreenContainer />
+    <div
+      className="flex flex-col min-h-[100dvh] w-full"
+      style={{ background: 'var(--wc-bg)' }}
+      data-testid="app-root"
+      data-layout="full-viewport"
+    >
+      <div className="flex-1 flex flex-col min-h-0 max-w-[390px] w-full mx-auto">
+        <StatusBar />
+        <ScreenContainer />
+      </div>
       <EditModal />
       <ATOModal />
       <SummaryModal />
-    </PhoneFrame>
+    </div>
   );
 }

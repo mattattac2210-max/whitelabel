@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string, firstName: string, phone: string) => {
       setError(null);
       try {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -119,13 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPendingEmail(email);
         setPendingPhone(phone);
         setIsNewUser(true);
-        // If email confirmation is required, go to verify
-        if (data.user && !data.session) {
-          setAuthScreen('verify');
-        } else {
-          // Auto-confirmed — go straight to onboarding
-          setAuthScreen('setup-vehicle');
-        }
+        // For now, skip OTP verification and go straight to onboarding
+        setAuthScreen('setup-vehicle');
       } catch (err: any) {
         setError(err.message || 'Signup failed. Please try again.');
       }

@@ -1,8 +1,6 @@
-import { useState, Fragment, useMemo } from 'react';
-import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
+import { useState, Fragment } from 'react';
+import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
-import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
-import { BottomNav } from './bottom-nav';
 import {
   ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check,
   Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus, Pause,
@@ -77,7 +75,7 @@ function TableRow({ label, val, highlight, tip }: { label: string; val: string; 
   );
 }
 
-async function generatePDF(report: any, vehicle: VehicleDetails, vehicleCosts: number) {
+async function generatePDF(report: any, vehicle: VehicleDetails) {
   const JsPDF = await loadJsPDF();
   if (!JsPDF) { alert('Failed to load PDF library. Check your connection.'); return; }
 
@@ -98,7 +96,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails, vehicleCosts: n
   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-  const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
   const generatedAt = new Date().toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   function addPage() {
@@ -173,7 +171,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails, vehicleCosts: n
   sectionTitle('Vehicle & Logbook Details');
 
   const grid = [
-    ['Car make and model', vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
+    ['Car make and model', vehicle.model || vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
     ['Engine capacity', vehicle.engineCapacity || '_______________', 'Year of manufacture', vehicle.year || '_______________'],
     ['Logbook start date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end date', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
     ['Odometer start (km)', report.odoRangeStart != null ? report.odoRangeStart.toLocaleString('en-AU') : '\u2014', 'Odometer end (km)', report.odoRangeEnd != null ? report.odoRangeEnd.toLocaleString('en-AU') : '\u2014'],
@@ -834,7 +832,18 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
     { label: 'Logbook covers a continuous period', desc: 'Trips are recorded as they occur in real-time', pass: true, required: true },
     { label: 'Odometer verified on business trips', desc: `${verified} of ${bizTrips.length} trips odometer-verified`, pass: verified === bizTrips.length && bizTrips.length > 0, required: false },
     { label: 'Photo evidence attached to trips', desc: `${withPhoto} of ${bizTrips.length} trips have photos`, pass: withPhoto > 0, required: false },
-    { label: 'Vehicle details on file', desc: 'Make, model, registration — add in your tax return', pass: false, required: false },
+    { label: 'Vehicle details on file', desc: (() => {
+      try {
+        const v = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+        if (v.make && v.model) return `${v.make} ${v.model}${v.rego ? ` (${v.rego})` : ''}`;
+      } catch {}
+      return 'Make, model, registration — add in your tax return';
+    })(), pass: (() => {
+      try {
+        const v = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+        return !!(v.make && v.model);
+      } catch { return false; }
+    })(), required: false },
   ];
 
   const passCount = checks.filter(c => c.pass).length;
@@ -1161,7 +1170,7 @@ function ExportLogPanel({ log }: { log: { ts: string; type: string; rev: number 
 
 export function ReportsScreen() {
   const { state, dispatch } = useApp();
-  const [view, setView] = useState<'list' | 'calendar' | 'timeline'>('list');
+  const [view, setView] = useState<'list' | 'calendar' | 'timeline' | 'archive'>('list');
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [conflictSessionId, setConflictSessionId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1171,22 +1180,21 @@ export function ReportsScreen() {
   const [taxInfoOpen, setTaxInfoOpen] = useState(false);
   const [exportLog, setExportLog] = useState<{ ts: string; type: string; rev: number; dateStr?: string }[]>([]);
   const [vehicleModal, setVehicleModal] = useState<{ report: any } | null>(null);
-  const [vehicleDetails, setVehicleDetails] = useState<VehicleDetails>({ make: '', model: '', registration: '', engineCapacity: '', year: '' });
-
-  const hasBizTrips = state.bizCount > 0;
-  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
-  const vehicleCosts = useMemo(
-    () => getVehicleCostsDetailed({
-      vehicleSpecs: estimatorParams.vehicleSpecs,
-      vehiclePurchase: estimatorParams.vehiclePurchase,
-      expenses: estimatorParams.expenses,
-      settings: estimatorParams.settings,
-    }).total,
-    [estimatorParams]
-  );
+  const [vehicleDetails, setVehicleDetails] = useState<VehicleDetails>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      return {
+        make: saved.make || '',
+        model: [saved.make, saved.model, saved.variant].filter(Boolean).join(' ') || '',
+        registration: saved.rego || '',
+        engineCapacity: saved.engineCapacity || '',
+        year: saved.year || '',
+      };
+    } catch { return { make: '', model: '', registration: '', engineCapacity: '', year: '' }; }
+  });
 
   const locked = !state.freshSession && state.savedReports.length > 0;
-  const sessionIds = [...new Set(state.savedReports.map(r => r.sessionId))];
+  const sessionIds = Array.from(new Set(state.savedReports.map(r => r.sessionId)));
   const sessionGroups = sessionIds.map(sid => ({
     sessionId: sid,
     reports: state.savedReports.map((r, i) => ({ ...r, globalIdx: i })).filter(r => r.sessionId === sid),
@@ -1195,6 +1203,33 @@ export function ReportsScreen() {
   function handleExportPDF(report: any) {
     setVehicleModal({ report });
   }
+  function handleCombinedExportPDF() {
+    const activeReports = state.savedReports.filter(r => !r.supersedes);
+    if (activeReports.length === 0) return;
+    const allTrips = activeReports.flatMap(r => r.trips || []);
+    allTrips.sort((a: any, b: any) => {
+      const pa = a.date.split('/');
+      const pb = b.date.split('/');
+      const da = new Date(parseInt(pa[2]), parseInt(pa[1]) - 1, parseInt(pa[0]));
+      const db = new Date(parseInt(pb[2]), parseInt(pb[1]) - 1, parseInt(pb[0]));
+      return da.getTime() - db.getTime();
+    });
+    const odoStarts = activeReports.map(r => r.odoRangeStart).filter((v: any) => v != null);
+    const odoEnds = activeReports.map(r => r.odoRangeEnd).filter((v: any) => v != null);
+    const combined = {
+      trips: allTrips,
+      bizCount: allTrips.filter((t: any) => t.type === 'business').length,
+      perCount: allTrips.filter((t: any) => t.type === 'personal').length,
+      revision: activeReports.length,
+      odoRangeStart: odoStarts.length > 0 ? Math.min(...odoStarts) : null,
+      odoRangeEnd: odoEnds.length > 0 ? Math.max(...odoEnds) : null,
+      auditScore: Math.round(activeReports.reduce((s, r) => s + (r.auditScore || 0), 0) / activeReports.length),
+      est: activeReports.map(r => r.est).join(' + '),
+      totalKm: allTrips.reduce((s: number, t: any) => s + t.km, 0).toFixed(1),
+      timestamp: activeReports[0]?.timestamp || '',
+    };
+    setVehicleModal({ report: combined });
+  }
   function handleVehicleConfirm(v: VehicleDetails) {
     if (!vehicleModal) return;
     setVehicleDetails(v);
@@ -1202,7 +1237,7 @@ export function ReportsScreen() {
     const r = vehicleModal.report;
     const today = new Date();
     const dateStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-    generatePDF(r, v, vehicleCosts);
+    generatePDF(r, v);
     setExportLog(l => [{ ts: today.toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), type: 'PDF', rev: r.revision, dateStr }, ...l]);
   }
   function handleExportCSV(report: any) {
@@ -1218,7 +1253,7 @@ export function ReportsScreen() {
         {!locked && (
           <button className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
             style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
-            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'sort' })} data-testid="button-back-reports">
+            onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'documents' })} data-testid="button-back-reports">
             <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
           </button>
         )}
@@ -1239,9 +1274,10 @@ export function ReportsScreen() {
           { id: 'list', label: 'List', Icon: List },
           { id: 'calendar', label: 'Calendar', Icon: Calendar },
           { id: 'timeline', label: '12-Week', Icon: BarChart2 },
+          { id: 'archive', label: 'Archive', Icon: Archive },
         ] as const).map(({ id, label, Icon }) => (
           <button key={id}
-            className="flex items-center gap-[4px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold uppercase tracking-[.04em] transition-all text-[18px]"
+            className="flex items-center gap-[3px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold uppercase tracking-[.04em] transition-all text-[14px]"
             style={{
               background: view === id ? 'rgb(var(--wc-ink) / .12)' : 'rgb(var(--wc-ink) / .03)',
               border: `1px solid ${view === id ? 'rgb(var(--wc-ink) / .35)' : 'var(--wc-border)'}`,
@@ -1264,6 +1300,213 @@ export function ReportsScreen() {
         )}
 
         {view === 'calendar' && <CalendarView savedReports={state.savedReports} exportLog={exportLog} />}
+
+        {view === 'archive' && (
+          (() => {
+            const archivedReports = state.savedReports
+              .map((r, i) => ({ ...r, globalIdx: i }))
+              .filter(r => r.supersedes);
+            const activeReports = state.savedReports
+              .map((r, i) => ({ ...r, globalIdx: i }))
+              .filter(r => !r.supersedes);
+
+            return archivedReports.length === 0 ? (
+              <div className="py-[40px] text-center flex flex-col items-center gap-[10px]">
+                <Archive className="w-[28px] h-[28px]" style={{ color: 'var(--wc-t3)' }} />
+                <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>No Archived Reports</div>
+                <div className="text-[12px] max-w-[240px]" style={{ color: 'var(--wc-t3)' }}>
+                  When you create a new revision for a session, older versions are moved here automatically.
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-[10px]">
+                <div className="rounded-[12px] p-[12px_14px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)' }}>
+                  <div className="flex items-center gap-[8px] mb-[4px]">
+                    <Archive className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
+                    <span className="font-heading font-bold text-[12px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>
+                      {archivedReports.length} Archived Report{archivedReports.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+                    Superseded report revisions. Tap any report to view details or promote it back to active.
+                  </div>
+                </div>
+
+                {activeReports.length > 0 && (
+                  <div className="rounded-[10px] p-[10px_12px] flex items-center gap-[8px]" style={{ background: 'rgba(34,197,94,.05)', border: '1px solid rgba(34,197,94,.15)' }}>
+                    <Check className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
+                    <span className="text-[11px]" style={{ color: 'var(--wc-text)' }}>
+                      <strong style={{ color: 'var(--wc-gr)' }}>{activeReports.length} active</strong> report{activeReports.length !== 1 ? 's' : ''} currently in use
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[8px] font-heading font-bold text-[13px] uppercase tracking-[.04em] cursor-pointer transition-all active:scale-[.98]"
+                  style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1.5px solid rgb(var(--wc-ink) / .2)', color: 'var(--wc-y)' }}
+                  onClick={handleCombinedExportPDF}
+                  data-testid="button-combined-pdf-archive"
+                >
+                  <Download className="w-[14px] h-[14px]" />
+                  Combined PDF
+                </button>
+
+                {archivedReports.map(r => {
+                  const i = r.globalIdx;
+                  const isOpen = expandedIdx === i;
+                  const allTrips = r.trips || [];
+                  const bizTrips = allTrips.filter((t: any) => t.type === 'business');
+                  const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
+                  const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
+                  const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
+                  const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
+                  const sessionLabel = SESSION_LABELS[r.sessionId] || r.sessionId;
+
+                  return (
+                    <div key={i} className="rounded-[13px] overflow-hidden"
+                      style={{
+                        background: 'var(--wc-card)',
+                        border: `1px solid ${isOpen ? 'rgb(var(--wc-ink) / .25)' : 'var(--wc-border)'}`,
+                        opacity: 0.75,
+                      }}
+                      data-testid={`archive-report-${i}`}>
+
+                      <button className="w-full p-[12px_14px] text-left cursor-pointer" style={{ background: 'transparent' }}
+                        onClick={() => setExpandedIdx(isOpen ? null : i)} data-testid={`archive-report-toggle-${i}`}>
+                        <div className="flex items-start justify-between mb-[2px]">
+                          <div className="flex items-center gap-[6px] flex-wrap">
+                            <div className="font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t2)' }}>{r.timestamp}</div>
+                            <span className="inline-flex items-center gap-[3px] font-heading font-bold text-[8px] uppercase tracking-[.06em] px-[5px] py-[1px] rounded-[4px]"
+                              style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}>
+                              <Archive className="w-[8px] h-[8px]" />Rev {r.revision}
+                            </span>
+                          </div>
+                          {isOpen ? <ChevronUp className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-text)' }} />
+                            : <ChevronDown className="w-[16px] h-[16px] mt-1 flex-shrink-0" style={{ color: 'var(--wc-text)' }} />}
+                        </div>
+                        <div className="font-heading font-bold text-[14px] mb-[3px]" style={{ color: 'var(--wc-text)' }}>
+                          {r.bizCount + r.perCount} trips — {sessionLabel}
+                        </div>
+                        <div className="flex gap-[8px] flex-wrap">
+                          {[
+                            { val: `${r.bizCount}`, label: 'biz', color: 'var(--wc-t2)' },
+                            { val: `${r.perCount}`, label: 'personal', color: 'var(--wc-t2)' },
+                            { val: r.est, label: 'est.', color: 'var(--wc-t2)' },
+                            { val: `${r.totalKm} km`, label: '', color: 'var(--wc-t2)' },
+                          ].map((item, idx) => (
+                            <span key={idx} className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+                              <strong style={{ color: item.color }}>{item.val}</strong>{item.label ? ` ${item.label}` : ''}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+
+                      {isOpen && (
+                        <div className="px-[14px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
+                          <div className="flex gap-[5px] mt-[10px] mb-[8px]">
+                            <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
+                              style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1.5px solid rgb(var(--wc-ink) / .2)', color: 'var(--wc-y)' }}
+                              onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: i })}
+                              data-testid={`archive-promote-${i}`}>
+                              <ArrowUpCircle className="w-[12px] h-[12px]" />Make Active
+                            </button>
+                            <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
+                              style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                              onClick={() => handleExportPDF(r)}
+                              data-testid={`archive-export-pdf-${i}`}>
+                              <FileText className="w-[12px] h-[12px]" />PDF
+                            </button>
+                            <button className="flex items-center justify-center gap-[5px] rounded-[9px] px-[10px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
+                              style={{ background: 'rgba(34,197,94,.05)', border: '1px solid rgba(34,197,94,.15)', color: 'var(--wc-gr)' }}
+                              onClick={() => handleExportCSV(r)}
+                              data-testid={`archive-export-csv-${i}`}>
+                              <Download className="w-[12px] h-[12px]" />CSV
+                            </button>
+                          </div>
+
+                          <div className="rounded-[8px] overflow-hidden mb-[10px]" style={{ border: '1px solid var(--wc-border)' }}>
+                            <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
+                              <tbody>
+                                {[
+                                  ['Logbook start', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
+                                  ['Odo start', r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') + ' km' : '\u2014', 'Odo end', r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') + ' km' : '\u2014'],
+                                  ['Total km', totalKm.toFixed(1), 'Business %', bizPct + '%'],
+                                ].map(([l1,v1,l2,v2], ri) => (
+                                  <Fragment key={ri}>
+                                    <tr style={{ borderBottom: '1px solid var(--wc-border)' }}>
+                                      <td className="p-[4px_8px]" style={{ color: 'var(--wc-text)', width: '50%' }}>{l1}</td>
+                                      <td className="p-[4px_8px]" style={{ color: 'var(--wc-text)' }}>{l2}</td>
+                                    </tr>
+                                    <tr style={{ borderBottom: ri < 2 ? '1px solid var(--wc-border)' : 'none' }}>
+                                      <td className="p-[2px_8px_6px] font-bold" style={{ color: 'var(--wc-text)' }}>{v1}</td>
+                                      <td className="p-[2px_8px_6px] font-bold" style={{ color: ri === 2 ? 'var(--wc-y)' : 'var(--wc-text)' }}>{v2}</td>
+                                    </tr>
+                                  </Fragment>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="font-heading font-bold text-[10px] uppercase tracking-[.05em] mb-[5px]" style={{ color: 'var(--wc-t2)' }}>Journey List</div>
+                          <div className="rounded-[8px] overflow-x-auto mb-[10px]" style={{ border: '1px solid var(--wc-border)' }}>
+                            <table className="w-full font-data text-[8px]" style={{ borderCollapse: 'collapse', minWidth: '420px' }}>
+                              <thead>
+                                <tr style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
+                                  {['Date','ODO Start','ODO End','Type','km','Biz km','Est $'].map(h => (
+                                    <th key={h} className="p-[4px_6px] text-left font-bold" style={{ color: 'var(--wc-t2)', borderBottom: '1px solid var(--wc-border)' }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {allTrips.map((t: any, ti: number) => {
+                                  const isBiz = t.type === 'business';
+                                  return (
+                                    <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none', background: isBiz ? 'rgb(var(--wc-ink) / .025)' : 'transparent' }}>
+                                      <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.date}</td>
+                                      <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoStart?.toLocaleString('en-AU') ?? '\u2014'}</td>
+                                      <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoEnd?.toLocaleString('en-AU') ?? '\u2014'}</td>
+                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-text)' }}>{isBiz ? 'Biz' : 'Per'}</td>
+                                      <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.km.toFixed(1)}</td>
+                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-text)' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
+                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-text)' }}>{isBiz ? `${t.km.toFixed(1)}` : '\u2014'}</td>
+                                    </tr>
+                                  );
+                                })}
+                                <tr style={{ borderTop: '1px solid var(--wc-border)', background: 'rgb(var(--wc-ink) / .06)' }}>
+                                  <td colSpan={4} className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-t2)' }}>Totals</td>
+                                  <td className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-text)' }}>{totalKm.toFixed(1)}</td>
+                                  <td className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-t2)' }}>{bizKm.toFixed(1)}</td>
+                                  <td className="p-[4px_6px] font-bold" style={{ color: 'var(--wc-gr)' }}>${totalEst.toFixed(2)}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {r.areasToCheck && r.areasToCheck.length > 0 && (
+                            <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgba(153,153,153,.05)', border: '1px solid rgba(153,153,153,.14)' }}>
+                              <div className="flex items-center gap-[5px] mb-[5px]">
+                                <AlertTriangle className="w-[11px] h-[11px]" style={{ color: 'var(--wc-am)' }} />
+                                <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Compliance Notes</span>
+                              </div>
+                              {r.areasToCheck.map((a: string, ai: number) => (
+                                <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
+                                  <span style={{ color: a.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                                    {a.startsWith('All clear') ? '\u2713' : '\u00B7'}
+                                  </span>
+                                  <span className="text-[10px]" style={{ color: 'var(--wc-text)' }}>{a}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()
+        )}
 
         {view === 'list' && (
           state.savedReports.length === 0 ? (
@@ -1310,7 +1553,7 @@ export function ReportsScreen() {
                     const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-                    const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
+                    const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
 
                     return (
                       <div key={i} className="rounded-[13px] overflow-hidden"
@@ -1587,9 +1830,7 @@ export function ReportsScreen() {
             )}
           </div>
         </div>
-      ) : (
-        <BottomNav activeOverride="reports" />
-      )}
+      ) : null}
       {auditReport && <PreAuditChecklist report={auditReport} onClose={() => setAuditReport(null)} />}
       {taxInfoOpen && <TaxInfoModal onClose={() => setTaxInfoOpen(false)} />}
       {vehicleModal && (
@@ -1648,7 +1889,7 @@ export function ReportsScreen() {
             <div className="flex flex-col gap-[8px]">
               <button className="w-full rounded-[11px] py-[11px] font-heading font-bold text-[14px] uppercase cursor-pointer"
                 style={{ background: 'rgba(239,68,68,.15)', border: '1.5px solid rgba(239,68,68,.4)', color: '#EF4444' }}
-                onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); dispatch({ type: 'GO_SCREEN', screen: 'sort' }); }}
+                onClick={() => { dispatch({ type: 'DELETE_ALL_TRIPS' }); setConfirmDelete(false); dispatch({ type: 'GO_SCREEN', screen: 'dashboard' }); }}
                 data-testid="button-confirm-delete-reports">Yes, Delete All Cards</button>
               <button className="w-full rounded-[11px] py-[10px] font-heading font-bold text-[13px] uppercase cursor-pointer"
                 style={{ background: 'transparent', border: '1.5px solid var(--wc-border)', color: 'var(--wc-t2)' }}

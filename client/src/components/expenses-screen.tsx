@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
-import { BottomNav } from './bottom-nav';
 import {
   ArrowLeft, Plus, Receipt, Trash2, Check, ChevronDown, ChevronUp,
   Camera, Image, Pencil, X, Download, AlertTriangle, Sparkles, FileText
@@ -51,7 +50,7 @@ function getAvgFuelPrice(): number {
 }
 
 const DV_RATE = 0.25;
-const ATO_CAR_LIMIT = 68108;
+const ATO_CAR_LIMIT = 69674;
 
 function getExpenses(): Expense[] {
   try { return JSON.parse(localStorage.getItem('wc_expenses') || '[]'); }
@@ -360,7 +359,6 @@ export function ExpensesScreen() {
             {editing ? 'Update Expense' : 'Save Expense'}
           </button>
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -371,7 +369,7 @@ export function ExpensesScreen() {
         <button
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
-          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'documents' })}
           data-testid="button-back-expenses"
         >
           <ArrowLeft className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t2)' }} />
@@ -551,7 +549,6 @@ export function ExpensesScreen() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }

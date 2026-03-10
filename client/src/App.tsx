@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/lib/app-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { AuthScreens } from "@/components/auth-screens";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 
@@ -14,27 +15,28 @@ import NotFound from "@/pages/not-found";
 
 function AuthGate() {
   return (
-    <AppProvider>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route component={NotFound} />
-      </Switch>
-    </AppProvider>
+    <Switch>
+      <Route path="/auth" component={AuthScreens} />
+      <Route path="/" component={Home} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
-            <AuthGate />
-          </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <AppProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <AuthProvider>
+              <Toaster />
+              <AuthGate />
+            </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </AppProvider>
   );
 }
 

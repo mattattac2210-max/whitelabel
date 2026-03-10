@@ -171,11 +171,15 @@
     @apply border-border;
   }
 
+  html, body {
+    min-height: 100%;
+  }
+
   body {
     @apply font-sans antialiased;
     background: var(--wc-frame-outer);
     color: var(--wc-text);
-    overflow: hidden;
+    overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
@@ -346,13 +350,13 @@
 .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--wc-border); border-radius: 1px; }
 
 .pac-container {
+  z-index: 99999 !important;
   background: var(--wc-bg) !important;
   border: 1px solid var(--wc-border) !important;
   border-radius: 10px !important;
   box-shadow: 0 10px 40px rgba(0,0,0,.15) !important;
   margin-top: 4px !important;
   font-family: 'Barlow', sans-serif !important;
-  z-index: 10000 !important;
 }
 .dark .pac-container {
   box-shadow: 0 10px 40px rgba(0,0,0,.6) !important;

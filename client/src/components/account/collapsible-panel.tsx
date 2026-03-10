@@ -37,9 +37,18 @@ export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, child
   );
 }
 
-export function FieldInput({ label, value, onChange, placeholder, type = 'text', testId, readOnly = false }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; testId: string; readOnly?: boolean;
-}) {
+interface FieldInputProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  testId: string;
+  readOnly?: boolean;
+  onBlur?: () => void;
+}
+
+export function FieldInput({ label, value, onChange, placeholder, type = 'text', testId, readOnly = false, onBlur }: FieldInputProps) {
   return (
     <div className="mb-[10px]">
       <label className="font-data text-[9px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>{label}</label>
@@ -49,6 +58,7 @@ export function FieldInput({ label, value, onChange, placeholder, type = 'text',
         style={{ background: readOnly ? 'rgb(var(--wc-ink) / .02)' : 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', opacity: readOnly ? 0.7 : 1, color: 'var(--wc-text)' }}
         value={value}
         onChange={e => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         readOnly={readOnly}
         data-testid={testId}

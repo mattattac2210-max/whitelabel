@@ -295,3 +295,33 @@ export function getActivePeriod(
     return db - da;
   })[0] ?? null;
 }
+
+// ── Convenience wrappers (take period for context-aware consumers) ──
+
+/** Returns the status display for a logbook period, with start/end dates for display. */
+export function getLogbookStatus(
+  period: AppLogbookPeriod | null | undefined,
+  referenceDate: Date = new Date()
+): LogbookSummary & { startDate: Date | null; endDate: Date | null; expired?: boolean; graceActive?: boolean } {
+  const summary = getLogbookSummary(period, referenceDate);
+  return {
+    ...summary,
+    startDate: period ? parseDate(period.startDate) : null,
+    endDate: period ? parseDate(period.endDate) : null,
+    expired: summary.status === 'expired',
+    graceActive: false,
+  };
+}
+
+/** Returns true if the period is archived. */
+export function isLogbookArchived(
+  period: AppLogbookPeriod | null | undefined
+): boolean {
+  return period?.status === 'archived';
+}
+
+/** Validates a restart code string. */
+export function validateRestartCode(code: string): boolean {
+  const trimmed = code.trim().toUpperCase();
+  return trimmed === 'RESTART' || trimmed === 'RESET';
+}

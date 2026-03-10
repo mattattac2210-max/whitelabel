@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
-import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
-import { calcLogbookDeduction } from '@/lib/trip-data';
-import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
-import { BottomNav } from './bottom-nav';
+import { useState } from 'react';
+import { useApp } from '@/lib/app-context';
+import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
+import { getLogbookStatus, getActivePeriod } from '@/lib/logbook-utils';
 import {
   Download, FileText, Check, ChevronDown, ChevronUp,
-  XCircle, Layers, BarChart2, Clock,
+  XCircle, Layers, BarChart2, Clock, ArrowLeft, Archive,
 } from 'lucide-react';
 
 const SESSION_LABELS: Record<string, string> = {
@@ -37,20 +36,23 @@ async function loadJsPDF(): Promise<any> {
   });
 }
 
-function combineReports(reports: any[], vehicleCosts: number) {
+function combineReports(reports: any[]) {
   const allTrips = reports.flatMap(r => r.trips || []);
-  allTrips.sort((a: any, b: any) => {
-    const pa = a.date.split('/');
-    const pb = b.date.split('/');
-    const da = new Date(parseInt(pa[2]), parseInt(pa[1]) - 1, parseInt(pa[0]));
-    const db = new Date(parseInt(pb[2]), parseInt(pb[1]) - 1, parseInt(pb[0]));
-    return da.getTime() - db.getTime();
-  });
+  function parseTripDate(d: string): number {
+    if (d.includes('/')) {
+      const p = d.split('/');
+      return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime();
+    }
+    const t = Date.parse(d.replace(/^[A-Za-z]+,\s*/, '') + ' 2026');
+    return isNaN(t) ? 0 : t;
+  }
+  allTrips.sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date));
   const bizTrips = allTrips.filter((t: any) => t.type === 'business');
   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const perKm = totalKm - bizKm;
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100) : 0;
+  const vehicleCosts = 0; // Combined reports - use first report's vehicle costs if needed
   const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
 
   const odoStarts = reports.map(r => r.odoRangeStart).filter((v: any) => v != null);
@@ -63,7 +65,7 @@ function combineReports(reports: any[], vehicleCosts: number) {
     : 0;
 
   const allAreas = reports.flatMap(r => r.areasToCheck || []);
-  const uniqueAreas = [...new Set(allAreas)];
+  const uniqueAreas = Array.from(new Set(allAreas));
 
   return {
     trips: allTrips,
@@ -103,7 +105,7 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   const bizTrips = allTrips.filter((t: any) => t.type === 'business');
   const totalKm = combined.totalKm;
   const bizKm = combined.bizKm;
-  const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
+  const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100) : 0;
   const totalEst = combined.totalEst;
   const generatedAt = new Date().toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -145,11 +147,11 @@ async function generateCombinedPDF(combined: any, vehicle: VehicleDetails) {
   sectionTitle('Vehicle & Logbook Details');
 
   const grid = [
-    ['Car make and model', vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
+    ['Car make and model', vehicle.model || vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
     ['Engine capacity', vehicle.engineCapacity || '_______________', 'Year of manufacture', vehicle.year || '_______________'],
     ['Logbook start date', allTrips.length > 0 ? allTrips[0].date : '\u2014', 'Logbook end date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014'],
     ['Odometer start (km)', combined.odoRangeStart != null ? combined.odoRangeStart.toLocaleString('en-AU') : '\u2014', 'Odometer end (km)', combined.odoRangeEnd != null ? combined.odoRangeEnd.toLocaleString('en-AU') : '\u2014'],
-    ['Total kilometres', `${totalKm.toFixed(1)} km`, 'Percentage business km', `${bizPct}%`],
+    ['Total kilometres', `${totalKm.toFixed(1)} km`, 'Percentage business km', `${bizPct.toFixed(1)}%`],
   ];
 
   const cellH = 9, col1W = CW / 2;
@@ -345,25 +347,29 @@ function exportCombinedCSV(combined: any) {
 }
 
 export function ExportScreen() {
-  const { state } = useApp();
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const { state, dispatch } = useApp();
+  const [selected, setSelected] = useState<Set<number>>(() => {
+    const active = state.savedReports
+      .map((r, i) => ({ ...r, globalIdx: i }))
+      .filter(r => !r.supersedes);
+    return new Set(active.map(r => r.globalIdx));
+  });
   const [vehicleModal, setVehicleModal] = useState(false);
   const [exportMode, setExportMode] = useState<'pdf' | 'csv'>('pdf');
-  const [vehicleDetails, setVehicleDetails] = useState<VehicleDetails>({ make: '', model: '', registration: '', engineCapacity: '', year: '' });
+  const [vehicleDetails, setVehicleDetails] = useState<VehicleDetails>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      return {
+        make: saved.make || '',
+        model: [saved.make, saved.model, saved.variant].filter(Boolean).join(' ') || '',
+        registration: saved.rego || '',
+        engineCapacity: saved.engineCapacity || '',
+        year: saved.year || '',
+      };
+    } catch { return { make: '', model: '', registration: '', engineCapacity: '', year: '' }; }
+  });
   const [exportLog, setExportLog] = useState<{ ts: string; type: string; count: number }[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
-
-  const hasBizTrips = state.bizCount > 0;
-  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
-  const vehicleCosts = useMemo(
-    () => getVehicleCostsDetailed({
-      vehicleSpecs: estimatorParams.vehicleSpecs,
-      vehiclePurchase: estimatorParams.vehiclePurchase,
-      expenses: estimatorParams.expenses,
-      settings: estimatorParams.settings,
-    }).total,
-    [estimatorParams]
-  );
 
   const activeReports = state.savedReports
     .map((r, i) => ({ ...r, globalIdx: i }))
@@ -386,7 +392,19 @@ export function ExportScreen() {
   }
 
   const selectedReports = activeReports.filter(r => selected.has(r.globalIdx));
-  const combined = selectedReports.length > 0 ? combineReports(selectedReports, vehicleCosts) : null;
+  const combined = selectedReports.length > 0 ? combineReports(selectedReports) : null;
+
+  const activePeriod = getActivePeriod(state.logbookPeriods);
+  const logbookStatus = getLogbookStatus(activePeriod);
+  const logbookExpired = logbookStatus.status === 'expired';
+  const [autoArchived, setAutoArchived] = useState(false);
+
+  function archiveAfterExport() {
+    if (logbookExpired && !autoArchived) {
+      dispatch({ type: 'ARCHIVE_LOGBOOK' });
+      setAutoArchived(true);
+    }
+  }
 
   function handleExport(mode: 'pdf' | 'csv') {
     if (!combined) return;
@@ -397,6 +415,7 @@ export function ExportScreen() {
       exportCombinedCSV(combined);
       const now = new Date();
       setExportLog(l => [{ ts: now.toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), type: 'CSV', count: selectedReports.length }, ...l]);
+      archiveAfterExport();
     }
   }
 
@@ -407,11 +426,21 @@ export function ExportScreen() {
     generateCombinedPDF(combined, v);
     const now = new Date();
     setExportLog(l => [{ ts: now.toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), type: 'PDF', count: selectedReports.length }, ...l]);
+    archiveAfterExport();
   }
 
   return (
     <div className="flex flex-col h-full" data-testid="export-screen">
-      <div className="flex items-center gap-[8px] px-4 pt-2 pb-[5px] flex-shrink-0">
+      <div className="flex items-center justify-center px-4 pt-2 pb-[2px] flex-shrink-0">
+        <div className="flex items-center gap-[5px]">
+          <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center font-heading text-[8px] font-bold" style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}>6</div>
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Step 6 <span style={{ color: 'var(--wc-t3)' }}>of 6</span></span>
+        </div>
+      </div>
+      <div className="flex items-center gap-[8px] px-4 pb-[5px] flex-shrink-0">
+        <button onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'documents' })} data-testid="button-back" style={{ color: 'var(--wc-text)' }}>
+          <ArrowLeft className="w-[22px] h-[22px]" />
+        </button>
         <Download className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Export</span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--wc-t2)' }}>{activeReports.length} active report{activeReports.length !== 1 ? 's' : ''}</span>
@@ -577,8 +606,6 @@ export function ExportScreen() {
         </div>
       )}
 
-      <BottomNav />
-
       {vehicleModal && (
         <div className="fixed inset-0 z-[400] flex items-end justify-center" style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(6px)' }} onClick={() => setVehicleModal(false)}>
           <div className="w-full max-w-[390px] rounded-t-[20px] overflow-hidden" style={{ background: 'var(--wc-card)', border: '1.5px solid rgb(var(--wc-ink) / .25)' }} onClick={e => e.stopPropagation()}>
@@ -628,6 +655,16 @@ export function ExportScreen() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {autoArchived && (
+        <div className="flex-shrink-0 mx-[14px] mb-[8px] rounded-[12px] p-[12px_14px] flex items-center gap-[10px] animate-pop"
+          style={{ background: 'rgba(34,197,94,.08)', border: '1.5px solid rgba(34,197,94,.25)' }}>
+          <Archive className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'var(--wc-gr)' }} />
+          <div>
+            <div className="font-heading font-bold text-[12px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-gr)' }}>Logbook Archived</div>
+            <div className="text-[10px]" style={{ color: 'var(--wc-t2)' }}>Your 12-week logbook has been locked and archived.</div>
           </div>
         </div>
       )}

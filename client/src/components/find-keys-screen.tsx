@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
-import { BottomNav } from './bottom-nav';
 import { ArrowLeft, Key, MapPin, Clock, Navigation, Volume2, VolumeX } from 'lucide-react';
 
 interface KeyLocation {
@@ -212,7 +211,6 @@ export function FindKeysScreen() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

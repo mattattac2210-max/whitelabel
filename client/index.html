@@ -13,6 +13,11 @@
     <meta property="og:description" content="Sort your work car trips for tax deductions. Fast, simple, ATO-ready." />
   </head>
   <body>
+    <script>
+      window.gm_authFailure = function() {
+        window._gmapsAuthFailed = true;
+      };
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

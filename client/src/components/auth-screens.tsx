@@ -698,6 +698,40 @@ function SetupVehicleScreen() {
     }
   };
 
+  const handleUseDemoVehicle = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      await saveVehicle({
+        make: 'Toyota',
+        model: 'HiLux',
+        year: 2020,
+        variant: 'SR5',
+        rego: 'DEMO123',
+        regoState: state,
+        purchaseDate: '2023-07-01',
+        purchasePrice: 55000,
+        isNewAtPurchase: true,
+        primaryUse: 'mixed',
+        odometerAtStart: 84280,
+        depreciationMethod: 'diminishing_value',
+        effectiveLifeYears: 8,
+        wdvAtStartOfFy: 45000,
+        isWdvConfirmed: false,
+        vehicleCategory: 'ute-4x4',
+        bodyType: 'Ute',
+        fuelConsumption: 10,
+        status: 'active',
+        metadata: {},
+      });
+      goTo('setup-tax');
+    } catch {
+      goTo('setup-tax');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <PhoneNav onBack={() => goTo('verify')} right={<StepIndicator step={2} total={4} />} />
@@ -712,7 +746,7 @@ function SetupVehicleScreen() {
             <div className="flex gap-2">
               <select
                 value={state}
-                onChange={e => setState(e.target.value)}
+                onChange={e => setState(e.target.value as 'NSW' | 'VIC' | 'QLD' | 'WA' | 'SA' | 'TAS' | 'ACT' | 'NT')}
                 className="px-3 py-4 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-900 text-sm focus:border-gray-900 focus:outline-none"
               >
                 {['VIC', 'NSW', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'].map(s => (
@@ -752,6 +786,7 @@ function SetupVehicleScreen() {
           <PrimaryBtn onClick={handleConfirm} loading={loading} disabled={!rego || !odo}>
             Confirm Vehicle →
           </PrimaryBtn>
+          <GhostBtn onClick={handleUseDemoVehicle}>Use demo vehicle</GhostBtn>
           <GhostBtn onClick={() => goTo('setup-tax')}>Skip for now</GhostBtn>
         </div>
       </div>

@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/lib/app-context';
 import { CATEGORIES } from '@/lib/trip-data';
-import { BottomNav } from './bottom-nav';
-import { ArrowLeft, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Check, MapPin } from 'lucide-react';
+import { ArrowLeft, Wrench, Building2, Package, ClipboardList, Handshake, Store, Zap, FileText, GraduationCap, Landmark, Check, MapPin, Home } from 'lucide-react';
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
@@ -44,8 +43,10 @@ function ClassifyMiniMap({ from, to }: { from: string; to: string }) {
     const markers = `markers=size:small|color:0x22C55E|${encodeURIComponent(from)}&markers=size:small|color:0xFFFFFF|${encodeURIComponent(to)}`;
 
     loadGMaps().then(() => {
-      const ds = new google.maps.DirectionsService();
-      ds.route({ origin: from, destination: to, travelMode: google.maps.TravelMode.DRIVING, region: 'au' })
+      const g = (window as any).google?.maps;
+      if (!g) return;
+      const ds = new g.DirectionsService();
+      ds.route({ origin: from, destination: to, travelMode: g.TravelMode.DRIVING, region: 'au' })
         .then((result: any) => {
           const poly = result.routes?.[0]?.overview_polyline;
           if (poly) {
@@ -134,7 +135,13 @@ export function ClassifyScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="classify-screen">
-      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+      <div className="flex items-center justify-center px-4 pt-2 pb-[2px] flex-shrink-0">
+        <div className="flex items-center gap-[5px]">
+          <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center font-heading text-[8px] font-bold" style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}>2</div>
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Step 2 <span style={{ color: 'var(--wc-t3)' }}>of 6</span></span>
+        </div>
+      </div>
+      <div className="flex items-center gap-[10px] px-4 pb-[5px] flex-shrink-0">
         <button
           className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
@@ -253,7 +260,22 @@ export function ClassifyScreen() {
         </div>
       </div>
 
-      <BottomNav activeOverride="classify" />
+      <div
+        className="flex items-center justify-center px-[16px] pt-[10px] pb-[22px] border-t flex-shrink-0"
+        style={{ background: 'var(--wc-nav-bg)', borderColor: 'var(--wc-border)' }}
+      >
+        <button
+          className="flex items-center gap-[6px] px-[16px] py-[8px] rounded-full cursor-pointer transition-all active:scale-[.97]"
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .1)' }}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+          data-testid="classify-nav-home"
+        >
+          <Home className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>
+            Back to Home
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

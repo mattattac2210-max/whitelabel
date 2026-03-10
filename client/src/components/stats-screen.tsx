@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { getVehicleCostsDetailed } from '@/lib/deduction-estimator';
-import { BottomNav } from './bottom-nav';
-import { ArrowLeft, TrendingUp, MapPin, DollarSign, Fuel, Route, Target } from 'lucide-react';
+import { DepreciationCurve } from './depreciation-curve';
+import { ArrowLeft, TrendingUp, MapPin, DollarSign, Fuel, Route, Target, Car } from 'lucide-react';
 
 interface TripLike {
   from: string;
@@ -127,15 +127,6 @@ export function StatsScreen() {
     return trips;
   }, [activeReports, currentSessionHasReport, state.sessionId, state.trips]);
 
-  const hasBizTrips = state.bizCount > 0;
-  const estimatorParams = useMemo(() => getEstimatorParamsFromState(state, hasBizTrips), [state, hasBizTrips]);
-  const costsParams = useMemo(() => ({
-    vehicleSpecs: estimatorParams.vehicleSpecs,
-    vehiclePurchase: estimatorParams.vehiclePurchase,
-    expenses: estimatorParams.expenses,
-    settings: estimatorParams.settings,
-  }), [estimatorParams]);
-
   const sorted = allTrips;
   const biz = sorted.filter(t => t.type === 'business');
   const per = sorted.filter(t => t.type === 'personal');
@@ -160,11 +151,22 @@ export function StatsScreen() {
     const wklyAvgKm = dailyAvgKm * 5;
     const annualKm = wklyAvgKm * 48;
 
-    const costs = getVehicleCostsDetailed(costsParams);
-    const fuelConsumption = typeof costsParams.vehicleSpecs?.fuelConsumption === 'number'
-      ? costsParams.vehicleSpecs.fuelConsumption
-      : parseFloat(String(costsParams.vehicleSpecs?.fuelConsumption ?? 10)) || 10;
-    const avgFuelPrice = parseFloat(String(costsParams.settings?.avgFuelPrice ?? 1.95)) || 1.95;
+    const { state } = useApp();
+    const hasBizTrips = (state?.bizCount ?? 0) > 0;
+    const params = getEstimatorParamsFromState(state as any, hasBizTrips);
+    const costs = getVehicleCostsDetailed(params);
+
+    let fuelConsumption = 10;
+    try {
+      const fc = parseFloat(localStorage.getItem('wc_fuel_consumption') || '');
+      if (fc > 0) fuelConsumption = fc;
+    } catch {}
+    let avgFuelPrice = 1.95;
+    try {
+      const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
+      const p = parseFloat(settings.avgFuelPrice);
+      if (p > 0) avgFuelPrice = p;
+    } catch {}
     const projectedFuel = Math.round(annualKm / 100 * fuelConsumption * avgFuelPrice * 100) / 100;
 
     const nonFuelCosts = costs.manual + costs.depreciation + costs.financeInterest + costs.leasePayments;
@@ -173,7 +175,7 @@ export function StatsScreen() {
     const projected = Math.round(bizPctDecimal * totalProjectedCosts);
 
     return { projectedDeductibles: projected, weeksTracked: Math.round(wks * 10) / 10, projectedAnnualKm: Math.round(annualKm), weeklyAvgKm: Math.round(wklyAvgKm) };
-  }, [sorted, bizKm, totalKm, costsParams]);
+  }, [sorted, bizKm, totalKm]);
 
   const dayStats = useMemo(() => {
     const days: Record<string, { biz: number; per: number; bizKm: number; perKm: number }> = {};
@@ -220,8 +222,25 @@ export function StatsScreen() {
     } catch { return []; }
   }, []);
   const totalExpenses = expenses.reduce((s: number, e: any) => s + (e.amount || 0), 0);
-  const fuelCost = expenses.filter((e: any) => e.category === 'Fuel & Oil').reduce((s: number, e: any) => s + (e.amount || 0), 0);
-  const costPerKm = totalKm > 0 ? (totalExpenses / totalKm) : 0;
+  const manualFuelCost = expenses.filter((e: any) => e.category === 'Fuel & Oil').reduce((s: number, e: any) => s + (e.amount || 0), 0);
+
+  const estimatedFuelCost = useMemo(() => {
+    try {
+      const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      const consumption = parseFloat(specs.fuelConsumption) || 0;
+      if (consumption <= 0 || bizKm <= 0) return 0;
+      const fuelType = (specs.fuelType || '').toLowerCase();
+      let pricePerLitre = 1.95;
+      if (fuelType.includes('diesel')) pricePerLitre = 1.89;
+      else if (fuelType.includes('premium')) pricePerLitre = 2.15;
+      else if (fuelType.includes('lpg')) pricePerLitre = 1.05;
+      else if (fuelType.includes('electric') || fuelType.includes('ev')) return 0;
+      return (bizKm / 100) * consumption * pricePerLitre;
+    } catch { return 0; }
+  }, [bizKm]);
+
+  const fuelCost = manualFuelCost > 0 ? manualFuelCost : estimatedFuelCost;
+  const costPerKm = totalKm > 0 ? (totalExpenses > 0 ? totalExpenses / totalKm : fuelCost / bizKm) : 0;
 
   return (
     <div className="flex flex-col h-full" data-testid="stats-screen">
@@ -266,7 +285,7 @@ export function StatsScreen() {
           <div className="rounded-[12px] p-[12px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
             <Fuel className="w-[16px] h-[16px] mb-[4px]" style={{ color: 'var(--wc-am)' }} />
             <div className="font-heading font-black text-[26px] leading-none" style={{ color: 'var(--wc-am)' }}>${fuelCost > 0 ? fuelCost.toFixed(0) : '—'}</div>
-            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>Fuel Costs</div>
+            <div className="font-data text-[9px] uppercase tracking-[.1em] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{manualFuelCost > 0 ? 'Fuel Costs' : 'Est. Fuel Cost'}</div>
           </div>
         </div>
 
@@ -278,6 +297,24 @@ export function StatsScreen() {
             </div>
           </div>
         )}
+
+        {(() => {
+          try {
+            const purchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+            const rawPrice = parseFloat(purchase.purchasePrice) || 0;
+            if (rawPrice <= 0) return null;
+            const cappedPrice = Math.min(rawPrice, 69674);
+            return (
+              <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
+                <div className="flex items-center gap-[6px] mb-[2px]">
+                  <Car className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
+                  <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Vehicle Depreciation</div>
+                </div>
+                <DepreciationCurve startValue={cappedPrice} rawPrice={rawPrice} />
+              </div>
+            );
+          } catch { return null; }
+        })()}
 
         <div className="rounded-[12px] p-[14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
           <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em] mb-[12px]" style={{ color: 'var(--wc-t2)' }}>Business vs Personal</div>
@@ -446,7 +483,6 @@ export function StatsScreen() {
 
       </div>
 
-      <BottomNav />
     </div>
   );
 }

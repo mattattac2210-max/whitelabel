@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import { useApp, useComputedStats, calcAuditScore, INDUSTRY_BIZ_AVG } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
-import { BottomNav } from './bottom-nav';
-import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle, ChevronDown, ChevronUp, Home } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
@@ -30,7 +29,13 @@ export function OdometerScreen() {
 
   return (
     <div className="flex flex-col h-full" data-testid="odometer-screen">
-      <div className="flex items-center gap-[8px] px-[14px] pt-[6px] pb-[4px] flex-shrink-0">
+      <div className="flex items-center justify-center px-[14px] pt-[6px] pb-[2px] flex-shrink-0">
+        <div className="flex items-center gap-[5px]">
+          <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center font-heading text-[8px] font-bold" style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}>5</div>
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Step 5 <span style={{ color: 'var(--wc-t3)' }}>of 6</span></span>
+        </div>
+      </div>
+      <div className="flex items-center gap-[8px] px-[14px] pb-[4px] flex-shrink-0">
         <button
           className="w-[28px] h-[28px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
@@ -156,24 +161,24 @@ export function OdometerScreen() {
           style={{ background: 'rgba(0,0,0,.8)', backdropFilter: 'blur(6px)' }}
         >
           <div
-            className="mx-6 w-full max-w-[340px] rounded-[16px] p-[20px_18px] animate-pop"
+            className="mx-5 w-full max-w-[370px] rounded-[18px] p-[24px_22px] animate-pop"
             style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(153,153,153,.4)', boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}
             data-testid="modal-odo-warning"
           >
-            <div className="flex flex-col items-center gap-[10px] mb-[14px]">
-              <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center" style={{ background: 'rgba(153,153,153,.12)', border: '2px solid rgba(153,153,153,.35)' }}>
-                <AlertTriangle className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
+            <div className="flex flex-col items-center gap-[12px] mb-[18px]">
+              <div className="w-[56px] h-[56px] rounded-full flex items-center justify-center" style={{ background: 'rgba(153,153,153,.12)', border: '2px solid rgba(153,153,153,.35)' }}>
+                <AlertTriangle className="w-[26px] h-[26px]" style={{ color: 'var(--wc-am)' }} />
               </div>
-              <div className="font-heading font-black text-[18px] uppercase text-center" style={{ color: 'var(--wc-text)' }}>Accuracy Required</div>
+              <div className="font-heading font-black text-[22px] uppercase text-center leading-[1.2]" style={{ color: 'var(--wc-text)' }}>Accuracy Required</div>
             </div>
-            <div className="text-[12px] leading-[1.6] mb-[16px]" style={{ color: 'var(--wc-t2)' }}>
-              <p className="mb-[8px]">Both <strong style={{ color: 'var(--wc-text)' }}>personal and business</strong> trips must show accurate odometer readings.</p>
-              <p className="mb-[8px]">Total km must be accurate with <strong style={{ color: 'var(--wc-text)' }}>no missing distances</strong> between trips.</p>
-              <p className="mb-[8px]">Adjusting totals will <strong style={{ color: 'var(--wc-text)' }}>alter the calculations</strong> for claim estimates.</p>
+            <div className="text-[15px] leading-[1.7] mb-[20px]" style={{ color: 'var(--wc-t2)' }}>
+              <p className="mb-[10px]">Both <strong style={{ color: 'var(--wc-text)' }}>personal and business</strong> trips must show accurate odometer readings.</p>
+              <p className="mb-[10px]">Total km must be accurate with <strong style={{ color: 'var(--wc-text)' }}>no missing distances</strong> between trips.</p>
+              <p className="mb-[10px]">Adjusting totals will <strong style={{ color: 'var(--wc-text)' }}>alter the calculations</strong> for claim estimates.</p>
               <p>All adjustments will be <strong style={{ color: 'var(--wc-text)' }}>logged in your audit report</strong>.</p>
             </div>
             <button
-              className="w-full rounded-[11px] py-[12px] font-heading font-extrabold text-[15px] tracking-[.06em] uppercase cursor-pointer transition-all"
+              className="w-full rounded-[11px] py-[14px] font-heading font-extrabold text-[16px] tracking-[.06em] uppercase cursor-pointer transition-all"
               style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
               onClick={() => setShowOdoWarning(false)}
               data-testid="button-odo-warning-ok"
@@ -181,7 +186,7 @@ export function OdometerScreen() {
               I Understand
             </button>
             <button
-              className="w-full rounded-[11px] py-[10px] mt-[8px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+              className="w-full rounded-[11px] py-[12px] mt-[8px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
               style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid rgb(var(--wc-ink) / .1)', color: 'var(--wc-t2)' }}
               onClick={() => { setShowOdoWarning(false); setShowOdoInfoPopup(true); }}
               data-testid="button-see-more-odo-warning"
@@ -584,7 +589,22 @@ export function OdometerScreen() {
         </div>
       )}
 
-      <BottomNav />
+      <div
+        className="flex items-center justify-center px-[16px] pt-[10px] pb-[22px] border-t flex-shrink-0"
+        style={{ background: 'var(--wc-nav-bg)', borderColor: 'var(--wc-border)' }}
+      >
+        <button
+          className="flex items-center gap-[6px] px-[16px] py-[8px] rounded-full cursor-pointer transition-all active:scale-[.97]"
+          style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .1)' }}
+          onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
+          data-testid="odometer-nav-home"
+        >
+          <Home className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
+          <span className="font-heading font-bold text-[11px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>
+            Back to Home
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

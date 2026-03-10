@@ -1,9 +1,11 @@
 import { useApp } from '@/lib/app-context';
-import { BottomNav } from './bottom-nav';
 import { ArrowLeft } from 'lucide-react';
 import { MyDetailsPanel } from './account/my-details-panel';
 import { VehiclePanel } from './account/vehicle-panel';
 import { TaxEstimatePanel } from './account/tax-estimate-panel';
+import { TrackingPanel } from './account/tracking-panel';
+import { NotificationsPanel } from './account/notifications-panel';
+import { HelpPanel } from './account/help-panel';
 import { SettingsPanel } from './account/settings-panel';
 
 export function AccountScreen() {
@@ -27,10 +29,11 @@ export function AccountScreen() {
         <MyDetailsPanel />
         <VehiclePanel />
         <TaxEstimatePanel />
+        <TrackingPanel />
+        <NotificationsPanel />
+        <HelpPanel />
         <SettingsPanel />
       </div>
-
-      <BottomNav />
     </div>
   );
 }

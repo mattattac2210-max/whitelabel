@@ -1,9 +1,87 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoEnd } from '@/lib/trip-data';
-import { BottomNav } from './bottom-nav';
-import { AddressInput } from './address-input';
-import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Square, Car, History, Crosshair, Pause, Play } from 'lucide-react';
+import { AddressInput, preloadGoogleMaps } from './address-input';
+import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Navigation2, Square, Car, History, Crosshair, Pause, Play, DollarSign, Fuel, StickyNote, Route, Briefcase } from 'lucide-react';
+
+const DARK_MAP_STYLES = [
+  { elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#444' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#333' }] },
+  { featureType: 'road', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#777' }] },
+  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
+  { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#666' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e0e1a' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
+
+const LIGHT_MAP_STYLES = [
+  { elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#999999' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'administrative.neighborhood', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+  { featureType: 'administrative.neighborhood', elementType: 'labels.text.fill', stylers: [{ color: '#bbbbbb' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#222222' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#dddddd' }] },
+  { featureType: 'road', elementType: 'labels.text', stylers: [{ visibility: 'on' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#888888' }] },
+  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#111111' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#cccccc' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e0e8ef' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#f4f4f4' }] },
+  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#eef2e8' }] },
+];
+
+function getMapStyles() {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? DARK_MAP_STYLES : LIGHT_MAP_STYLES;
+}
+
+function calcBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
+  const toRad = (d: number) => d * Math.PI / 180;
+  const toDeg = (r: number) => r * 180 / Math.PI;
+  const dLng = toRad(to.lng - from.lng);
+  const lat1 = toRad(from.lat);
+  const lat2 = toRad(to.lat);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function getMarkerColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark
+    ? { fill: '#FFFFFF', stroke: '#000000', polyline: '#FFFFFF' }
+    : { fill: '#000000', stroke: '#FFFFFF', polyline: '#000000' };
+}
+
+function getEstimatedDeduction(km: number): number {
+  return Math.round(km * 0.88 * 100) / 100;
+}
+
+function getEstimatedFuelCost(km: number): number {
+  let fuelConsumption = 10;
+  let fuelPrice = 1.95;
+  try {
+    const specs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+    const fc = parseFloat(specs.fuelConsumption);
+    if (fc > 0) fuelConsumption = fc;
+    const ft = (specs.fuelType || '').toLowerCase();
+    if (ft === 'diesel') fuelPrice = 1.89;
+    else if (ft === 'premium') fuelPrice = 2.15;
+    else if (ft === 'lpg') fuelPrice = 1.05;
+  } catch {}
+  return Math.round(km / 100 * fuelConsumption * fuelPrice * 100) / 100;
+}
 
 let nextManualId = 8000;
 
@@ -11,6 +89,7 @@ type InputMode = 'choose' | 'existing' | 'live';
 
 function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => void }) {
   const { dispatch } = useApp();
+  useEffect(() => { preloadGoogleMaps(); }, []);
   return (
     <div className="flex flex-col h-full" data-testid="input-choose-screen">
       <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
@@ -27,41 +106,41 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
 
       <div className="flex-1 px-[18px] flex flex-col justify-center gap-[14px] pb-[40px]">
         <button
-          className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
+          className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '2px solid rgb(var(--wc-ink) / .25)' }}
           onClick={() => onSelect('live')}
           data-testid="choose-start-new"
         >
-          <div className="flex items-center gap-[14px]">
-            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .12)', border: '1px solid rgb(var(--wc-ink) / .3)' }}>
-              <Navigation className="w-[24px] h-[24px]" style={{ color: 'var(--wc-y)' }} />
+          <div className="flex items-center gap-[18px]">
+            <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .12)', border: '1px solid rgb(var(--wc-ink) / .3)' }}>
+              <Navigation className="w-[30px] h-[30px]" style={{ color: 'var(--wc-y)' }} />
             </div>
             <div>
-              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
-              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Use current location or enter start point. Live map, real-time distance and timer.</div>
+              <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
+              <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Use current location or enter start point. Live map, real-time distance and timer.</div>
             </div>
           </div>
         </button>
 
         <button
-          className="rounded-[16px] p-[22px_20px] cursor-pointer transition-all text-left"
+          className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
           style={{ background: 'rgb(var(--wc-ink) / .03)', border: '2px solid var(--wc-border)' }}
           onClick={() => onSelect('existing')}
           data-testid="choose-add-existing"
         >
-          <div className="flex items-center gap-[14px]">
-            <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
-              <History className="w-[24px] h-[24px]" style={{ color: 'var(--wc-t2)' }} />
+          <div className="flex items-center gap-[18px]">
+            <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
+              <History className="w-[30px] h-[30px]" style={{ color: 'var(--wc-t2)' }} />
             </div>
             <div>
-              <div className="font-heading font-black text-[18px] uppercase tracking-[.04em] leading-none mb-[5px]" style={{ color: 'var(--wc-text)' }}>Add Existing Trip</div>
-              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
+              <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-text)' }}>Add Existing Trip</div>
+              <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
             </div>
           </div>
         </button>
       </div>
 
-      <BottomNav />
+
     </div>
   );
 }
@@ -69,6 +148,7 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live') => v
 function LiveTripScreen({ onBack }: { onBack: () => void }) {
   const { state, dispatch } = useApp();
   const [startAddress, setStartAddress] = useState('');
+  const [destAddress, setDestAddress] = useState('');
   const [phase, setPhase] = useState<'setup' | 'driving' | 'paused' | 'ended'>('setup');
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsed, setElapsed] = useState(0);
@@ -79,14 +159,31 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
   const [saved, setSaved] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [tripNotes, setTripNotes] = useState('');
+  const [tripStops, setTripStops] = useState<string[]>([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [tripType, setTripType] = useState<'business' | 'personal' | null>(null);
+  const [navInfo, setNavInfo] = useState<{ nextStep: string; remainingKm: number; etaMins: number } | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState<'start' | 'dest' | null>(null);
+  const mapPickerRef = useRef<HTMLDivElement>(null);
+  const mapPickerInstanceRef = useRef<any>(null);
+  const mapPickerMarkerRef = useRef<any>(null);
+  const pickedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const positionMarkerRef = useRef<any>(null);
+  const endMarkerRef = useRef<any>(null);
+  const routePolylineRef = useRef<any>(null);
+  const directionsStepsRef = useRef<any[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const destCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const pathRef = useRef<{ lat: number; lng: number }[]>([]);
   const polylineRef = useRef<any>(null);
+  const snapTimerRef = useRef<number | null>(null);
+  const snappedPathRef = useRef<any[]>([]);
   const liveKmRef = useRef(0);
 
   useEffect(() => {
@@ -120,48 +217,208 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   };
 
+  const createLabelMarker = useCallback((map: any, position: { lat: number; lng: number }, label: string, bgColor: string, textColor: string) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+      <path d="M20 51C20 51 38 33 38 20C38 10.1 29.9 2 20 2C10.1 2 2 10.1 2 20C2 33 20 51 20 51Z" fill="${bgColor}" stroke="${textColor}" stroke-width="2"/>
+      <text x="20" y="25" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="18" fill="${textColor}">${label}</text>
+    </svg>`;
+    return new window.google.maps.Marker({
+      position,
+      map,
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: new window.google.maps.Size(40, 52),
+        anchor: new window.google.maps.Point(20, 52),
+      },
+    });
+  }, []);
+
+  const snapToRoad = useCallback((pos: { lat: number; lng: number }, callback: (snapped: { lat: number; lng: number }) => void) => {
+    if (!window._gmapsLoaded) { callback(pos); return; }
+    const offset = 0.001;
+    const nearby = { lat: pos.lat + offset, lng: pos.lng };
+    const ds = new window.google.maps.DirectionsService();
+    ds.route(
+      { origin: pos, destination: nearby, travelMode: window.google.maps.TravelMode.DRIVING, region: 'au' },
+      (result: any, status: string) => {
+        if (status === 'OK' && result?.routes?.[0]?.legs?.[0]) {
+          const loc = result.routes[0].legs[0].start_location;
+          callback({ lat: loc.lat(), lng: loc.lng() });
+        } else {
+          callback(pos);
+        }
+      }
+    );
+  }, []);
+
   const initMap = useCallback((lat: number, lng: number) => {
     if (!mapRef.current || !window._gmapsLoaded) return;
-    const pos = { lat, lng };
+    const rawPos = { lat, lng };
+    const isDark = document.documentElement.classList.contains('dark');
     const map = new window.google.maps.Map(mapRef.current, {
-      center: pos,
-      zoom: 15,
+      center: rawPos,
+      zoom: 17,
       disableDefaultUI: true,
-      zoomControl: true,
-      styles: [
-        { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-        { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-        { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a9a' }] },
-        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a3e' }] },
-        { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#333348' }] },
-        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e0e1a' }] },
-      ],
+      zoomControl: false,
+      gestureHandling: 'greedy',
+      styles: getMapStyles(),
     });
     mapInstanceRef.current = map;
-    const marker = new window.google.maps.Marker({
-      position: pos,
+    setMapLoaded(true);
+
+    const markerBg = isDark ? '#FFFFFF' : '#000000';
+    const markerText = isDark ? '#000000' : '#FFFFFF';
+    const marker = createLabelMarker(map, rawPos, 'A', markerBg, markerText);
+    markerRef.current = marker;
+
+    const posMarker = new window.google.maps.Marker({
+      position: rawPos,
       map,
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: '#FFFFFF',
+        scale: 7,
+        fillColor: isDark ? '#FFFFFF' : '#000000',
         fillOpacity: 1,
-        strokeColor: '#000',
-        strokeWeight: 2,
+        strokeColor: isDark ? '#000000' : '#FFFFFF',
+        strokeWeight: 2.5,
       },
+      zIndex: 10,
     });
-    markerRef.current = marker;
+    positionMarkerRef.current = posMarker;
 
-    const polyline = new window.google.maps.Polyline({
-      path: [pos],
+    const polylineOutline = new window.google.maps.Polyline({
+      path: [rawPos],
       geodesic: true,
-      strokeColor: '#FFFFFF',
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
+      strokeColor: '#1a73e8',
+      strokeOpacity: 0.35,
+      strokeWeight: 8,
       map,
+      zIndex: 3,
     });
-    polylineRef.current = polyline;
+    const polylineInner = new window.google.maps.Polyline({
+      path: [rawPos],
+      geodesic: true,
+      strokeColor: '#4285F4',
+      strokeOpacity: 0.85,
+      strokeWeight: 4,
+      map,
+      zIndex: 4,
+    });
+    polylineRef.current = [polylineOutline, polylineInner];
+
+    snapToRoad(rawPos, (snapped) => {
+      marker.setPosition(snapped);
+      posMarker.setPosition(snapped);
+      map.panTo(snapped);
+      startCoordsRef.current = snapped;
+      pathRef.current = [snapped];
+      polylineOutline.setPath([snapped]);
+      polylineInner.setPath([snapped]);
+    });
+  }, [createLabelMarker, snapToRoad]);
+
+  const loadDirectionsRoute = useCallback((map: any, origin: { lat: number; lng: number }, destination: { lat: number; lng: number }) => {
+    if (!window._gmapsLoaded) return;
+    const isDark = document.documentElement.classList.contains('dark');
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+      { origin, destination, travelMode: window.google.maps.TravelMode.DRIVING },
+      (result: any, status: string) => {
+        if (status !== 'OK' || !result?.routes?.[0]) return;
+        const route = result.routes[0];
+        const leg = route.legs[0];
+
+        let routePath: any[] = [];
+        if (route.overview_path && route.overview_path.length > 0) {
+          routePath = route.overview_path;
+        } else {
+          try {
+            const encoded = typeof route.overview_polyline === 'string' ? route.overview_polyline : route.overview_polyline?.points || route.overview_polyline;
+            routePath = window.google.maps.geometry.encoding.decodePath(encoded);
+          } catch { /* fallback below */ }
+        }
+        if (routePath.length === 0) {
+          route.legs.forEach((leg: any) => {
+            leg.steps.forEach((step: any) => {
+              if (step.path) routePath = routePath.concat(step.path);
+            });
+          });
+        }
+        if (routePolylineRef.current) {
+          if (Array.isArray(routePolylineRef.current)) routePolylineRef.current.forEach((p: any) => p.setMap(null));
+          else routePolylineRef.current.setMap(null);
+        }
+        const routeOutline = new window.google.maps.Polyline({
+          path: routePath,
+          geodesic: true,
+          strokeColor: '#1a73e8',
+          strokeOpacity: 0.35,
+          strokeWeight: 10,
+          map,
+          zIndex: 1,
+        });
+        const routeInner = new window.google.maps.Polyline({
+          path: routePath,
+          geodesic: true,
+          strokeColor: '#4285F4',
+          strokeOpacity: 0.85,
+          strokeWeight: 5,
+          map,
+          zIndex: 2,
+        });
+        routePolylineRef.current = [routeOutline, routeInner];
+
+        directionsStepsRef.current = leg.steps.map((s: any) => ({
+          instruction: s.instructions?.replace(/<[^>]*>/g, '') || '',
+          endLat: s.end_location.lat(),
+          endLng: s.end_location.lng(),
+          distanceM: s.distance?.value || 0,
+        }));
+
+        const markerBg = isDark ? '#FFFFFF' : '#000000';
+        const markerText = isDark ? '#000000' : '#FFFFFF';
+        if (endMarkerRef.current) endMarkerRef.current.setMap(null);
+        const bMarker = createLabelMarker(map, destination, 'B', markerBg, markerText);
+        endMarkerRef.current = bMarker;
+
+        setNavInfo({
+          nextStep: directionsStepsRef.current[0]?.instruction || 'Head to destination',
+          remainingKm: Math.round((leg.distance?.value || 0) / 100) / 10,
+          etaMins: Math.round((leg.duration?.value || 0) / 60),
+        });
+      }
+    );
+  }, [createLabelMarker]);
+
+  const updateNavInfo = useCallback((currentPos: { lat: number; lng: number }) => {
+    if (!directionsStepsRef.current.length) return;
+    const steps = directionsStepsRef.current;
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    for (let i = 0; i < steps.length; i++) {
+      const d = haversineKm(currentPos, { lat: steps[i].endLat, lng: steps[i].endLng });
+      if (d < closestDist) { closestDist = d; closestIdx = i; }
+    }
+    if (closestDist < 0.05 && closestIdx < steps.length - 1) closestIdx++;
+    let remainingM = 0;
+    for (let i = closestIdx; i < steps.length; i++) remainingM += steps[i].distanceM;
+    const remainingKm = Math.round(remainingM / 100) / 10;
+    const avgSpeedKmh = 40;
+    const etaMins = Math.max(1, Math.round((remainingKm / avgSpeedKmh) * 60));
+    setNavInfo({
+      nextStep: steps[closestIdx]?.instruction || 'Continue to destination',
+      remainingKm,
+      etaMins,
+    });
   }, []);
+
+  useEffect(() => {
+    if (phase !== 'driving' || mapLoaded || mapError) return;
+    if (!mapRef.current || !window._gmapsLoaded) return;
+    if (startCoordsRef.current) {
+      initMap(startCoordsRef.current.lat, startCoordsRef.current.lng);
+    }
+  }, [phase, mapLoaded, mapError, initMap]);
 
   const startGeoTracking = useCallback(() => {
     if (!navigator.geolocation) return;
@@ -175,7 +432,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         if (pathRef.current.length > 0) {
           const last = pathRef.current[pathRef.current.length - 1];
           const segKm = haversineKm(last, newPos);
-          if (segKm > 0.005) {
+          if (segKm > 0.01) {
             liveKmRef.current += segKm;
             setTripKm(Math.round(liveKmRef.current * 10) / 10);
             pathRef.current.push(newPos);
@@ -184,14 +441,87 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           pathRef.current.push(newPos);
         }
 
-        if (markerRef.current) {
-          markerRef.current.setPosition(newPos);
-        }
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.panTo(newPos);
+          if (pathRef.current.length >= 2) {
+            const prev = pathRef.current[pathRef.current.length - 2];
+            const heading = calcBearing(prev, newPos);
+            const camCenter = snappedPathRef.current.length > 0
+              ? snappedPathRef.current[snappedPathRef.current.length - 1]
+              : newPos;
+            try {
+              mapInstanceRef.current.moveCamera({ center: camCenter, heading });
+            } catch {
+              mapInstanceRef.current.panTo(camCenter);
+              mapInstanceRef.current.setHeading(heading);
+            }
+          } else {
+            mapInstanceRef.current.panTo(newPos);
+          }
         }
-        if (polylineRef.current) {
-          polylineRef.current.setPath(pathRef.current);
+        if (pathRef.current.length >= 2 && window._gmapsLoaded) {
+          const now = Date.now();
+          if (!snapTimerRef.current || now - snapTimerRef.current > 4000) {
+            snapTimerRef.current = now;
+            const pts = pathRef.current;
+            const origin = pts[0];
+            const current = pts[pts.length - 1];
+            if (haversineKm(origin, current) > 0.005 || pts.length >= 3) {
+              const waypoints: any[] = [];
+              if (pts.length > 2) {
+                const maxWp = 8;
+                const step = Math.max(1, Math.floor((pts.length - 2) / maxWp));
+                for (let i = 1; i < pts.length - 1; i += step) {
+                  if (waypoints.length >= maxWp) break;
+                  waypoints.push({ location: pts[i], stopover: false });
+                }
+              }
+              const ds = new window.google.maps.DirectionsService();
+              ds.route(
+                {
+                  origin,
+                  destination: current,
+                  waypoints,
+                  travelMode: window.google.maps.TravelMode.DRIVING,
+                  region: 'au',
+                  optimizeWaypoints: false,
+                },
+                (result: any, status: string) => {
+                  if (status !== 'OK' || !result?.routes?.[0]) return;
+                  const route = result.routes[0];
+                  let roadPath: any[] = [];
+                  if (route.overview_path && route.overview_path.length > 0) {
+                    roadPath = route.overview_path;
+                  } else {
+                    route.legs.forEach((leg: any) => {
+                      leg.steps.forEach((step: any) => {
+                        if (step.path) roadPath = roadPath.concat(step.path);
+                      });
+                    });
+                  }
+                  if (roadPath.length > 0 && polylineRef.current && Array.isArray(polylineRef.current)) {
+                    snappedPathRef.current = roadPath;
+                    polylineRef.current.forEach((p: any) => p.setPath(roadPath));
+                    const lastRoadPt = roadPath[roadPath.length - 1];
+                    const snappedEnd = {
+                      lat: typeof lastRoadPt.lat === 'function' ? lastRoadPt.lat() : lastRoadPt.lat,
+                      lng: typeof lastRoadPt.lng === 'function' ? lastRoadPt.lng() : lastRoadPt.lng,
+                    };
+                    if (positionMarkerRef.current) {
+                      positionMarkerRef.current.setPosition(snappedEnd);
+                    }
+                  }
+                }
+              );
+            }
+          }
+        }
+        if (!positionMarkerRef.current || snappedPathRef.current.length === 0) {
+          if (positionMarkerRef.current) {
+            positionMarkerRef.current.setPosition(newPos);
+          }
+        }
+        if (directionsStepsRef.current.length > 0) {
+          updateNavInfo(newPos);
         }
       },
       (err) => {
@@ -224,8 +554,11 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           const geocoder = new window.google.maps.Geocoder();
           geocoder.geocode({ location: { lat, lng } }, (results: any, status: string) => {
             if (status === 'OK' && results?.[0]) {
+              const geo = results[0].geometry.location;
+              const snappedLat = typeof geo.lat === 'function' ? geo.lat() : geo.lat;
+              const snappedLng = typeof geo.lng === 'function' ? geo.lng() : geo.lng;
               setStartAddress(results[0].formatted_address);
-              startCoordsRef.current = { lat, lng };
+              startCoordsRef.current = { lat: snappedLat, lng: snappedLng };
               setGeoStatus('done');
             } else {
               setStartAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
@@ -246,6 +579,133 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     );
   };
 
+  const resolveDestCoords = useCallback(() => {
+    if (!destAddress || !window._gmapsLoaded) return;
+    if (destCoordsRef.current) {
+      if (mapInstanceRef.current && startCoordsRef.current) {
+        loadDirectionsRoute(mapInstanceRef.current, startCoordsRef.current, destCoordsRef.current);
+      }
+      return;
+    }
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: destAddress, region: 'au' }, (results: any, status: string) => {
+      if (status === 'OK' && results?.[0]) {
+        const loc = results[0].geometry.location;
+        destCoordsRef.current = { lat: loc.lat(), lng: loc.lng() };
+        if (mapInstanceRef.current && startCoordsRef.current) {
+          loadDirectionsRoute(mapInstanceRef.current, startCoordsRef.current, destCoordsRef.current);
+        }
+      }
+    });
+  }, [destAddress, loadDirectionsRoute]);
+
+  useEffect(() => {
+    if (!mapLoaded || !destAddress) return;
+    resolveDestCoords();
+  }, [mapLoaded, destAddress, resolveDestCoords]);
+
+  useEffect(() => {
+    if (!showMapPicker || !mapPickerRef.current || !window._gmapsLoaded) return;
+    const defaultCenter = startCoordsRef.current || { lat: -33.8688, lng: 151.2093 };
+    const isDark = document.documentElement.classList.contains('dark');
+    const map = new window.google.maps.Map(mapPickerRef.current, {
+      center: defaultCenter,
+      zoom: 14,
+      disableDefaultUI: true,
+      zoomControl: true,
+      gestureHandling: 'greedy',
+      styles: getMapStyles(),
+    });
+    mapPickerInstanceRef.current = map;
+
+    const markerBg = isDark ? '#FFFFFF' : '#000000';
+    const markerText = isDark ? '#000000' : '#FFFFFF';
+    const marker = createLabelMarker(map, defaultCenter, showMapPicker === 'start' ? 'A' : 'B', markerBg, markerText);
+    mapPickerMarkerRef.current = marker;
+    pickedCoordsRef.current = defaultCenter;
+
+    let routeLines: any[] = [];
+    let pickerRenderer: any = null;
+    const drawPickerRoute = (origin: { lat: number; lng: number }, dest: { lat: number; lng: number }) => {
+      routeLines.forEach((l: any) => l.setMap(null));
+      routeLines = [];
+      if (pickerRenderer) { pickerRenderer.setMap(null); pickerRenderer = null; }
+      const ds = new window.google.maps.DirectionsService();
+      ds.route(
+        { origin, destination: dest, travelMode: window.google.maps.TravelMode.DRIVING, region: 'au' },
+        (result: any, status: string) => {
+          if (status !== 'OK' || !result?.routes?.[0]) return;
+          const route = result.routes[0];
+          let path: any[] = [];
+          if (route.overview_path && route.overview_path.length > 0) {
+            path = route.overview_path;
+          } else {
+            route.legs.forEach((leg: any) => {
+              leg.steps.forEach((step: any) => {
+                if (step.path) path = path.concat(step.path);
+              });
+            });
+          }
+          if (path.length > 0) {
+            const outline = new window.google.maps.Polyline({ path, geodesic: true, strokeColor: '#1a73e8', strokeOpacity: 0.35, strokeWeight: 10, map, zIndex: 1 });
+            const inner = new window.google.maps.Polyline({ path, geodesic: true, strokeColor: '#4285F4', strokeOpacity: 0.85, strokeWeight: 5, map, zIndex: 2 });
+            routeLines = [outline, inner];
+          } else {
+            const renderer = new window.google.maps.DirectionsRenderer({ map, suppressMarkers: true, polylineOptions: { strokeColor: '#4285F4', strokeOpacity: 0.85, strokeWeight: 5 } });
+            renderer.setDirections(result);
+            pickerRenderer = renderer;
+          }
+          const bounds = new window.google.maps.LatLngBounds();
+          route.legs.forEach((leg: any) => {
+            bounds.extend(leg.start_location);
+            bounds.extend(leg.end_location);
+          });
+          map.fitBounds(bounds, 50);
+        }
+      );
+    };
+
+    if (showMapPicker === 'dest' && startCoordsRef.current) {
+      const startMarkerBg = isDark ? '#FFFFFF' : '#000000';
+      const startMarkerText = isDark ? '#000000' : '#FFFFFF';
+      createLabelMarker(map, startCoordsRef.current, 'A', startMarkerBg, startMarkerText);
+    }
+
+    map.addListener('click', (e: any) => {
+      const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      marker.setPosition(pos);
+      pickedCoordsRef.current = pos;
+      if (showMapPicker === 'dest' && startCoordsRef.current) {
+        drawPickerRoute(startCoordsRef.current, pos);
+      }
+    });
+
+    return () => {
+      routeLines.forEach((l: any) => l.setMap(null));
+      if (pickerRenderer) pickerRenderer.setMap(null);
+      mapPickerInstanceRef.current = null;
+      mapPickerMarkerRef.current = null;
+    };
+  }, [showMapPicker, createLabelMarker]);
+
+  const handleMapPickerConfirm = () => {
+    if (!pickedCoordsRef.current || !window._gmapsLoaded) { setShowMapPicker(null); return; }
+    const coords = pickedCoordsRef.current;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: coords }, (results: any, status: string) => {
+      const addr = status === 'OK' && results?.[0] ? results[0].formatted_address : `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+      if (showMapPicker === 'start') {
+        setStartAddress(addr);
+        startCoordsRef.current = coords;
+        setGeoStatus('done');
+      } else {
+        setDestAddress(addr);
+        destCoordsRef.current = coords;
+      }
+      setShowMapPicker(null);
+    });
+  };
+
   const handleCommence = () => {
     if (!startAddress) return;
     setPhase('driving');
@@ -253,11 +713,12 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
     setPausedElapsed(0);
     pathRef.current = [];
     liveKmRef.current = 0;
+    if (destAddress) setEndAddress(destAddress);
 
     if (startCoordsRef.current) {
       pathRef.current.push(startCoordsRef.current);
-      if (window._gmapsLoaded) {
-        initMap(startCoordsRef.current.lat, startCoordsRef.current.lng);
+      if (!window._gmapsLoaded) {
+        setMapError(true);
       }
       startGeoTracking();
     } else if (window._gmapsLoaded) {
@@ -269,9 +730,11 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           const lng = loc.lng();
           startCoordsRef.current = { lat, lng };
           pathRef.current.push({ lat, lng });
-          initMap(lat, lng);
         } else {
-          initMap(-33.8688, 151.2093);
+          startCoordsRef.current = { lat: -33.8688, lng: 151.2093 };
+        }
+        if (mapRef.current && !mapLoaded) {
+          initMap(startCoordsRef.current!.lat, startCoordsRef.current!.lng);
         }
         startGeoTracking();
       });
@@ -306,23 +769,44 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
       setTripKm(Math.round(liveKmRef.current * 10) / 10);
     }
 
+    if (destAddress && !endAddress) {
+      setEndAddress(destAddress);
+    }
+
     if (window._gmapsLoaded && pathRef.current.length > 0) {
       const lastPos = pathRef.current[pathRef.current.length - 1];
+      const isDark = document.documentElement.classList.contains('dark');
+      const markerBg = isDark ? '#FFFFFF' : '#000000';
+      const markerText = isDark ? '#000000' : '#FFFFFF';
+      if (mapInstanceRef.current) {
+        const bMarker = createLabelMarker(mapInstanceRef.current, lastPos, 'B', markerBg, markerText);
+        endMarkerRef.current = bMarker;
+        if (markerRef.current && startCoordsRef.current) {
+          const bounds = new window.google.maps.LatLngBounds();
+          bounds.extend(startCoordsRef.current);
+          bounds.extend(lastPos);
+          mapInstanceRef.current.fitBounds(bounds, 60);
+        }
+      }
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ location: lastPos }, (results: any, status: string) => {
         if (status === 'OK' && results?.[0]) {
           setEndAddress(results[0].formatted_address);
+        } else if (!endAddress && !destAddress) {
+          setEndAddress(`${lastPos.lat.toFixed(5)}, ${lastPos.lng.toFixed(5)}`);
         }
       });
+    } else if (!endAddress && !destAddress && startCoordsRef.current) {
+      setEndAddress(startAddress);
     }
 
     setPhase('ended');
   };
 
-  const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm >= 1;
+  const canSendToSort = startAddress.length > 2 && endAddress.length > 2 && tripKm > 0;
 
   const handleSendToSort = () => {
-    if (!startAddress || !endAddress || tripKm < 1) return;
+    if (!startAddress || !endAddress || tripKm <= 0) return;
     const startD = new Date(startTime || Date.now());
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -347,15 +831,15 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
       fromSub: fromParts.slice(1).join(',').trim(),
       to: toParts[0].trim(),
       toSub: toParts.slice(1).join(',').trim(),
-      type: null,
+      type: tripType,
       verified: false,
       photo: false,
       odoReading: null,
       odoStartReading: null,
       purposeLabel: null,
       purposeIndex: null,
-      stops: [],
-      notes: '',
+      stops: tripStops.filter(s => s.length > 2),
+      notes: tripNotes,
     };
 
     dispatch({ type: 'ADD_TRIP', trip });
@@ -368,7 +852,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
 
   if (phase === 'setup') {
     return (
-      <div className="flex flex-col h-full" data-testid="live-setup-screen">
+      <div className="flex flex-col h-full relative" data-testid="live-setup-screen">
         <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
           <button
             className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
@@ -417,16 +901,53 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
               <div className="flex-1 h-[1px]" style={{ background: 'var(--wc-border)' }} />
             </div>
 
-            <AddressInput
-              className="w-full rounded-[10px] p-[12px_14px] text-[13px] outline-none transition-all"
-              style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)' }}
-              value={startAddress}
-              onChange={(v) => { setStartAddress(v); if (geoStatus === 'done') setGeoStatus('idle'); startCoordsRef.current = null; }}
-              placeholder="Enter starting address"
-              data-testid="live-start-address"
-            />
+            <div className="flex gap-[8px] mt-[8px]">
+              <AddressInput
+                className="rounded-[10px] p-[12px_14px] text-[13px] outline-none transition-all"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)', flex: 1 }}
+                value={startAddress}
+                onChange={(v) => { setStartAddress(v); if (geoStatus === 'done') setGeoStatus('idle'); startCoordsRef.current = null; }}
+                placeholder="Enter starting address"
+                data-testid="live-start-address"
+              />
+              <button
+                className="rounded-[10px] px-[10px] flex items-center justify-center cursor-pointer transition-all flex-shrink-0"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)' }}
+                onClick={() => setShowMapPicker('start')}
+                data-testid="button-map-pick-start"
+              >
+                <MapPin className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-[16px] p-[20px] mb-[16px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
+            <div className="flex items-center gap-[10px] mb-[14px]">
+              <MapPin className="w-[18px] h-[18px]" style={{ color: 'var(--wc-t2)' }} />
+              <span className="font-heading font-bold text-[14px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t2)' }}>Where are you going?</span>
+              <span className="ml-auto font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Optional</span>
+            </div>
+
+            <div className="flex gap-[8px]">
+              <AddressInput
+                className="rounded-[10px] p-[12px_14px] text-[13px] outline-none transition-all"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)', flex: 1 }}
+                value={destAddress}
+                onChange={(v) => { setDestAddress(v); destCoordsRef.current = null; }}
+                placeholder="Enter destination address"
+                data-testid="live-dest-address"
+              />
+              <button
+                className="rounded-[10px] px-[10px] flex items-center justify-center cursor-pointer transition-all flex-shrink-0"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1.5px solid var(--wc-border)' }}
+                onClick={() => setShowMapPicker('dest')}
+                data-testid="button-map-pick-dest"
+              >
+                <MapPin className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+              </button>
+            </div>
             <div className="text-[10px] mt-[8px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
-              We'll track distance and time in real-time on the map.
+              {destAddress ? 'We\'ll show turn-by-turn directions and ETA while you drive.' : 'Add a destination for navigation assistance, or leave blank to just record.'}
             </div>
           </div>
 
@@ -442,42 +963,74 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             data-testid="button-commence"
           >
             <Car className="w-[20px] h-[20px]" strokeWidth={2.5} />
-            Commence
+            Start Trip
           </button>
         </div>
 
-        <BottomNav />
+        {showMapPicker && (
+          <div className="absolute inset-0 z-50 flex flex-col" style={{ background: 'var(--wc-bg)' }} data-testid="map-picker-overlay">
+            <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+              <button
+                className="w-[30px] h-[30px] rounded-lg flex items-center justify-center cursor-pointer"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
+                onClick={() => setShowMapPicker(null)}
+                data-testid="button-map-picker-cancel"
+              >
+                <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+              </button>
+              <span className="font-heading font-extrabold text-[16px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>
+                {showMapPicker === 'start' ? 'Pick Start' : 'Pick Destination'}
+              </span>
+            </div>
+            <div className="px-[14px] pb-[6px] flex-shrink-0">
+              <div className="text-[11px]" style={{ color: 'var(--wc-t3)' }}>Tap the map to place your pin</div>
+            </div>
+            <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
+              <div ref={mapPickerRef} className="w-full h-full" style={{ minHeight: '300px' }} data-testid="map-picker-map" />
+            </div>
+            <div className="px-[14px] pt-[10px] pb-[8px] flex-shrink-0">
+              <button
+                className="w-full rounded-[14px] py-[14px] font-heading font-black text-[16px] tracking-[.06em] uppercase flex items-center justify-center gap-[8px] cursor-pointer transition-all"
+                style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
+                onClick={handleMapPickerConfirm}
+                data-testid="button-map-picker-confirm"
+              >
+                <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                Confirm Location
+              </button>
+            </div>
+          </div>
+        )}
+  
       </div>
     );
   }
 
   if (phase === 'driving' || phase === 'paused') {
     const isPaused = phase === 'paused';
+    const liveDeduction = getEstimatedDeduction(tripKm);
     return (
       <div className="flex flex-col h-full" data-testid="live-driving-screen">
         <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
           <div className="w-[8px] h-[8px] rounded-full" style={{ background: isPaused ? 'var(--wc-am)' : 'var(--wc-gr)', animation: isPaused ? 'none' : 'pulse 2s infinite' }} />
-          <span className="font-heading font-extrabold text-[16px] uppercase tracking-[.04em]" style={{ color: isPaused ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
-            {isPaused ? 'Paused' : 'Trip In Progress'}
+          <span className="font-heading font-extrabold text-[14px] uppercase tracking-[.04em]" style={{ color: isPaused ? 'var(--wc-am)' : 'var(--wc-gr)' }}>
+            {isPaused ? 'Paused' : 'Recording'}
           </span>
-          <span className="ml-auto font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>{fmtElapsed(elapsed)}</span>
+          {destAddress ? (
+            <span className="ml-auto text-[10px] truncate" style={{ color: 'var(--wc-t3)', maxWidth: '55%' }}>→ {destAddress.length > 30 ? destAddress.slice(0, 28) + '…' : destAddress}</span>
+          ) : (
+            <span className="ml-auto text-[10px] truncate" style={{ color: 'var(--wc-t3)', maxWidth: '55%' }}>{startAddress.length > 35 ? startAddress.slice(0, 33) + '…' : startAddress}</span>
+          )}
         </div>
 
-        <div className="px-[14px] pb-[6px] flex-shrink-0">
-          <div className="rounded-[10px] p-[8px_12px] flex items-center justify-between" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
-            <div className="flex items-center gap-[8px]">
-              <MapPin className="w-[12px] h-[12px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
-              <span className="text-[11px] truncate" style={{ color: 'var(--wc-t2)' }}>{startAddress.length > 30 ? startAddress.slice(0, 28) + '…' : startAddress}</span>
+        <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden relative" style={{ border: '1px solid var(--wc-border)', background: 'var(--wc-card)', minHeight: '200px', perspective: '800px' }}>
+          <div ref={mapRef} className="w-full h-full" style={{ minHeight: '200px', transform: 'rotateX(25deg) scale(1.15)', transformOrigin: 'center 60%' }} data-testid="live-map" />
+          {!mapLoaded && !mapError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: 'var(--wc-card)' }}>
+              <Navigation className="w-[28px] h-[28px] animate-pulse" style={{ color: 'var(--wc-y)' }} />
+              <span className="font-heading text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Loading map...</span>
             </div>
-            <div className="flex items-center gap-[4px] ml-[8px] flex-shrink-0">
-              <span className="font-data text-[14px] font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)}</span>
-              <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 mx-[14px] rounded-[14px] overflow-hidden relative" style={{ border: '1px solid var(--wc-border)', background: 'var(--wc-card)', minHeight: '200px' }}>
-          <div ref={mapRef} className="w-full h-full" data-testid="live-map" />
+          )}
           {mapError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-[8px]" style={{ background: 'var(--wc-card)' }}>
               <Navigation className="w-[28px] h-[28px]" style={{ color: 'var(--wc-t3)' }} />
@@ -486,7 +1039,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             </div>
           )}
           {isPaused && (
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,.5)' }}>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,.45)' }}>
               <div className="rounded-[12px] p-[16px_24px] text-center" style={{ background: 'rgba(153,153,153,.1)', border: '1.5px solid rgba(153,153,153,.3)' }}>
                 <Pause className="w-[24px] h-[24px] mx-auto mb-[6px]" style={{ color: 'var(--wc-am)' }} />
                 <div className="font-heading font-bold text-[14px] uppercase" style={{ color: 'var(--wc-am)' }}>Paused</div>
@@ -495,23 +1048,84 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           )}
         </div>
 
-        <div className="px-[14px] pt-[10px] pb-[6px] flex flex-col gap-[8px] flex-shrink-0">
-          <div className="flex gap-[8px]">
+        <div className="px-[14px] pt-[8px] flex-shrink-0">
+          {navInfo && (
+            <div className="rounded-[10px] p-[8px_12px] mb-[8px] flex items-center gap-[10px]" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }} data-testid="nav-directions-bar">
+              <Navigation2 className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'var(--wc-y)' }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold truncate leading-tight" style={{ color: 'var(--wc-text)' }} data-testid="text-nav-step">{navInfo.nextStep}</div>
+                <div className="flex items-center gap-[8px] mt-[2px]">
+                  <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>{navInfo.remainingKm} km left</span>
+                  <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>·</span>
+                  <span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>{navInfo.etaMins} min</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-[6px] mb-[8px]">
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
+              <div className="font-display text-[20px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-live-km">{tripKm.toFixed(1)}</div>
+              <div className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</div>
+            </div>
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Time</div>
+              <div className="font-display text-[20px] leading-none" style={{ color: 'var(--wc-text)' }} data-testid="text-live-time">{fmtElapsed(elapsed)}</div>
+              <div className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>elapsed</div>
+            </div>
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Est. Claim</div>
+              <div className="font-display text-[20px] leading-none" style={{ color: tripType === 'business' ? 'var(--wc-gr)' : 'var(--wc-t2)' }} data-testid="text-live-deduction">${liveDeduction.toFixed(2)}</div>
+              <div className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>{tripType === 'business' ? 'claimable' : 'if business'}</div>
+            </div>
+          </div>
+
+          <div className="flex gap-[6px] mb-[8px]">
             <button
-              className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
+              className="flex-1 rounded-[10px] py-[9px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-[5px] cursor-pointer transition-all"
               style={{
-                background: isPaused ? 'rgba(34,197,94,.12)' : 'rgba(153,153,153,.1)',
-                border: isPaused ? '2px solid rgba(34,197,94,.3)' : '2px solid rgba(153,153,153,.3)',
+                background: tripType === 'business' ? 'rgba(34,197,94,.1)' : 'rgb(var(--wc-ink) / .04)',
+                border: tripType === 'business' ? '1.5px solid rgba(34,197,94,.4)' : '1.5px solid var(--wc-border)',
+                color: tripType === 'business' ? 'var(--wc-gr)' : 'var(--wc-t2)',
+              }}
+              onClick={() => setTripType(tripType === 'business' ? null : 'business')}
+              data-testid="button-trip-business"
+            >
+              <Briefcase className="w-[13px] h-[13px]" />
+              Business
+            </button>
+            <button
+              className="flex-1 rounded-[10px] py-[9px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-[5px] cursor-pointer transition-all"
+              style={{
+                background: tripType === 'personal' ? 'rgb(var(--wc-ink) / .1)' : 'rgb(var(--wc-ink) / .04)',
+                border: tripType === 'personal' ? '1.5px solid rgb(var(--wc-ink) / .4)' : '1.5px solid var(--wc-border)',
+                color: tripType === 'personal' ? 'var(--wc-text)' : 'var(--wc-t2)',
+              }}
+              onClick={() => setTripType(tripType === 'personal' ? null : 'personal')}
+              data-testid="button-trip-personal"
+            >
+              <Car className="w-[13px] h-[13px]" />
+              Personal
+            </button>
+          </div>
+
+          <div className="flex gap-[8px] pb-[6px]">
+            <button
+              className="flex-1 rounded-[12px] py-[12px] font-heading font-black text-[14px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
+              style={{
+                background: isPaused ? 'rgba(34,197,94,.12)' : 'rgba(153,153,153,.08)',
+                border: isPaused ? '2px solid rgba(34,197,94,.3)' : '2px solid rgba(153,153,153,.25)',
                 color: isPaused ? 'var(--wc-gr)' : 'var(--wc-am)',
               }}
               onClick={isPaused ? handleResume : handlePause}
               data-testid={isPaused ? 'button-resume' : 'button-pause'}
             >
-              {isPaused ? <Play className="w-[16px] h-[16px]" strokeWidth={2.5} /> : <Pause className="w-[16px] h-[16px]" strokeWidth={2.5} />}
+              {isPaused ? <Play className="w-[15px] h-[15px]" strokeWidth={2.5} /> : <Pause className="w-[15px] h-[15px]" strokeWidth={2.5} />}
               {isPaused ? 'Resume' : 'Pause'}
             </button>
             <button
-              className="flex-1 rounded-[14px] py-[14px] font-heading font-black text-[15px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
+              className="flex-1 rounded-[12px] py-[12px] font-heading font-black text-[14px] tracking-[.05em] uppercase flex items-center justify-center gap-[6px] transition-all cursor-pointer"
               style={{
                 background: 'var(--wc-re)',
                 color: '#fff',
@@ -520,7 +1134,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
               onClick={handleEndTrip}
               data-testid="button-end-trip"
             >
-              <Square className="w-[14px] h-[14px]" fill="currentColor" strokeWidth={0} />
+              <Square className="w-[13px] h-[13px]" fill="currentColor" strokeWidth={0} />
               End Trip
             </button>
           </div>
@@ -535,7 +1149,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Trip Complete</span>
       </div>
 
-      <div className="flex-1 px-[18px] pt-[6px] overflow-y-auto scrollbar-thin">
+      <div className="flex-1 px-[18px] pt-[6px] overflow-y-auto scrollbar-thin pb-[10px]">
         <div className="rounded-[14px] p-[16px] mb-[12px]" style={{ background: 'rgba(34,197,94,.05)', border: '1.5px solid rgba(34,197,94,.2)' }}>
           <div className="flex items-center gap-[8px] mb-[10px]">
             <Check className="w-[16px] h-[16px]" style={{ color: 'var(--wc-gr)' }} />
@@ -546,6 +1160,29 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             {endAddress && <div><strong style={{ color: 'var(--wc-text)' }}>To:</strong> {endAddress}</div>}
             <div><strong style={{ color: 'var(--wc-text)' }}>Duration:</strong> {tripDuration}</div>
             <div><strong style={{ color: 'var(--wc-text)' }}>Distance:</strong> <span className="font-data font-bold" style={{ color: 'var(--wc-y)' }}>{tripKm.toFixed(1)} km</span></div>
+          </div>
+        </div>
+
+        <div className="flex gap-[8px] mb-[12px]">
+          <div className="flex-1 rounded-[12px] p-[12px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+            <div className="flex items-center gap-[6px] mb-[4px]">
+              <DollarSign className="w-[12px] h-[12px]" style={{ color: 'var(--wc-y)' }} />
+              <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Est. Deduction</span>
+            </div>
+            <div className="font-display text-[22px] leading-none" style={{ color: 'var(--wc-y)' }} data-testid="text-est-deduction">
+              ${getEstimatedDeduction(tripKm).toFixed(2)}
+            </div>
+            <div className="font-data text-[8px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>if business trip</div>
+          </div>
+          <div className="flex-1 rounded-[12px] p-[12px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+            <div className="flex items-center gap-[6px] mb-[4px]">
+              <Fuel className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t2)' }} />
+              <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Est. Fuel Cost</span>
+            </div>
+            <div className="font-display text-[22px] leading-none" style={{ color: 'var(--wc-text)' }} data-testid="text-est-fuel">
+              ${getEstimatedFuelCost(tripKm).toFixed(2)}
+            </div>
+            <div className="font-data text-[8px] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>this trip</div>
           </div>
         </div>
 
@@ -563,12 +1200,12 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
-        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: tripKm < 1 ? 'rgba(153,153,153,.06)' : 'rgb(var(--wc-ink) / .03)', border: tripKm < 1 ? '1px solid rgba(153,153,153,.2)' : '1px solid var(--wc-border)' }}>
-          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: tripKm < 1 ? 'var(--wc-am)' : 'var(--wc-t3)' }}>{tripKm < 1 ? 'Enter distance (min 1 km)' : 'Distance (km)'}</label>
+        <div className="rounded-[10px] p-[10px_14px] mb-[10px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)' }}>
+          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Distance (km)</label>
           <input
             type="number"
             step="0.1"
-            min="1"
+            min="0.1"
             className="w-full rounded-lg p-[8px_11px] text-[13px] outline-none font-data"
             style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={tripKm || ''}
@@ -576,9 +1213,44 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
             placeholder="Min 1"
             data-testid="live-manual-km"
           />
-          {tripKm > 0 && tripKm < 1 && (
-            <div className="font-data text-[7px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>Min 1 km</div>
-          )}
+        </div>
+
+        {tripStops.map((s, i) => (
+          <div key={i} className="flex items-center gap-[5px] mb-[6px]">
+            <AddressInput
+              className="w-full rounded-[8px] p-[7px_10px] text-[12px] outline-none"
+              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)', flex: 1 }}
+              placeholder={`Stop ${i + 1}`}
+              value={s}
+              onChange={v => { const n = [...tripStops]; n[i] = v; setTripStops(n); }}
+            />
+            <button className="rounded-[6px] p-[5px_7px] text-[11px] cursor-pointer" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }} onClick={() => { const n = [...tripStops]; n.splice(i, 1); setTripStops(n); }}>X</button>
+          </div>
+        ))}
+
+        <button
+          className="w-full rounded-[8px] p-[7px_10px] mb-[10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center justify-center gap-[5px]"
+          style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }}
+          onClick={() => setTripStops([...tripStops, ''])}
+          data-testid="live-add-stop"
+        >
+          <Route className="w-[11px] h-[11px]" />
+          + Add Stop
+        </button>
+
+        <div className="mb-[10px]">
+          <div className="flex items-center gap-[6px] mb-[4px]">
+            <StickyNote className="w-[11px] h-[11px]" style={{ color: 'var(--wc-t3)' }} />
+            <label className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Notes</label>
+          </div>
+          <textarea
+            className="w-full rounded-[10px] p-[9px_12px] text-[12px] outline-none resize-none h-[50px]"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+            value={tripNotes}
+            onChange={e => setTripNotes(e.target.value)}
+            placeholder="Add notes about this trip (optional)"
+            data-testid="live-notes"
+          />
         </div>
 
         {saved ? (
@@ -610,7 +1282,7 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
         )}
       </div>
 
-      <BottomNav />
+
     </div>
   );
 }
@@ -961,7 +1633,7 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           </button>
         )}
       </div>
-      <BottomNav />
+
     </div>
   );
 }
