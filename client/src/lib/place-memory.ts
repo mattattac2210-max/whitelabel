@@ -1,5 +1,16 @@
 const PLACES_KEY = 'wc_places_v1';
 const ROUTES_KEY = 'wc_routes_v1';
+const SHORTCUTS_KEY = 'wc_shortcuts_v1';
+
+export type ShortcutSymbol = 'Home' | 'Briefcase' | 'Building2' | 'MapPin' | 'Store' | 'Landmark' | 'Heart' | 'Car' | 'FileText' | 'GraduationCap';
+
+export interface SavedShortcut {
+  id: string;
+  address: string;
+  label: string;
+  symbol: ShortcutSymbol;
+  order: number;
+}
 
 export interface SavedPlace {
   address: string;
@@ -90,4 +101,47 @@ export function getTopPlaces(exclude?: string, limit = 3): SavedPlace[] {
     .filter(p => !ex || norm(p.address) !== ex)
     .sort((a, b) => rankScore(b.count, b.lastUsed) - rankScore(a.count, a.lastUsed))
     .slice(0, limit);
+}
+
+// ── Shortcuts ─────────────────────────────────────────────────
+
+export function getShortcuts(): SavedShortcut[] {
+  return load<SavedShortcut>(SHORTCUTS_KEY).sort((a, b) => a.order - b.order);
+}
+
+export function addShortcut(shortcut: Omit<SavedShortcut, 'id' | 'order'>): SavedShortcut {
+  const shortcuts = load<SavedShortcut>(SHORTCUTS_KEY);
+  const maxOrder = shortcuts.length ? Math.max(...shortcuts.map(s => s.order)) : 0;
+  const newShortcut: SavedShortcut = {
+    ...shortcut,
+    id: `sc_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    order: maxOrder + 1,
+  };
+  shortcuts.push(newShortcut);
+  persist(SHORTCUTS_KEY, shortcuts);
+  return newShortcut;
+}
+
+export function updateShortcut(id: string, updates: Partial<Omit<SavedShortcut, 'id'>>): void {
+  const shortcuts = load<SavedShortcut>(SHORTCUTS_KEY);
+  const idx = shortcuts.findIndex(s => s.id === id);
+  if (idx >= 0) {
+    shortcuts[idx] = { ...shortcuts[idx], ...updates };
+    persist(SHORTCUTS_KEY, shortcuts);
+  }
+}
+
+export function deleteShortcut(id: string): void {
+  const shortcuts = load<SavedShortcut>(SHORTCUTS_KEY).filter(s => s.id !== id);
+  persist(SHORTCUTS_KEY, shortcuts);
+}
+
+export function reorderShortcuts(ids: string[]): void {
+  const shortcuts = load<SavedShortcut>(SHORTCUTS_KEY);
+  const byId = new Map(shortcuts.map(s => [s.id, s]));
+  const reordered = ids.map((id, i) => {
+    const s = byId.get(id);
+    return s ? { ...s, order: i } : null;
+  }).filter(Boolean) as SavedShortcut[];
+  persist(SHORTCUTS_KEY, reordered);
 }

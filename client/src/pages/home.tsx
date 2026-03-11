@@ -38,25 +38,47 @@ function StatusBar() {
   );
 }
 
+const screens: Record<string, JSX.Element> = {
+  dashboard: <DashboardScreen />,
+  sort: <SortScreen />,
+  classify: <ClassifyScreen />,
+  review: <ReviewScreen />,
+  notes: <NotesScreen />,
+  odometer: <OdometerScreen />,
+  reports: <ReportsScreen />,
+  documents: <DocumentsScreen />,
+  export: <ExportScreen />,
+  input: <InputScreen />,
+  expenses: <ExpensesScreen />,
+  stats: <StatsScreen />,
+  'find-keys': <FindKeysScreen />,
+  account: <AccountScreen />,
+};
+
+function ScreenContent() {
+  const { state } = useApp();
+  return (
+    <div className="flex-1 min-h-0 overflow-auto pt-2">
+      {screens[state.currentScreen]}
+    </div>
+  );
+}
+
 function ScreenContainer() {
   const { state } = useApp();
 
-  const screens: Record<string, JSX.Element> = {
-    dashboard: <DashboardScreen />,
-    sort: <SortScreen />,
-    classify: <ClassifyScreen />,
-    review: <ReviewScreen />,
-    notes: <NotesScreen />,
-    odometer: <OdometerScreen />,
-    reports: <ReportsScreen />,
-    documents: <DocumentsScreen />,
-    export: <ExportScreen />,
-    input: <InputScreen />,
-    expenses: <ExpensesScreen />,
-    stats: <StatsScreen />,
-    'find-keys': <FindKeysScreen />,
-    account: <AccountScreen />,
+  const navActiveOverride: Record<string, Screen> = {
+    notes: 'dashboard',
+    odometer: 'dashboard',
+    classify: 'sort',
+    review: 'sort',
+    export: 'documents',
+    expenses: 'documents',
+    reports: 'documents',
+    stats: 'documents',
+    'find-keys': 'dashboard',
   };
+  const activeOverride = navActiveOverride[state.currentScreen];
 
   if (state.isLoading && !state.isInitialised) {
     return (
@@ -81,30 +103,17 @@ function ScreenContainer() {
     );
   }
 
-  const navActiveOverride: Record<string, Screen> = {
-    notes: 'dashboard',
-    odometer: 'dashboard',
-    classify: 'sort',
-    review: 'sort',
-    export: 'documents',
-    expenses: 'documents',
-    reports: 'documents',
-    stats: 'documents',
-    'find-keys': 'dashboard',
-  };
-  const activeOverride = navActiveOverride[state.currentScreen];
-
   return (
     <div className="relative flex-1 flex flex-col min-h-0">
-      <div className="flex-1 min-h-0 overflow-auto pt-2">
-        {screens[state.currentScreen]}
-      </div>
       <BottomNav activeOverride={activeOverride} />
     </div>
   );
 }
 
 export default function Home() {
+  const { state } = useApp();
+  const showScreenContent = !state.isLoading && !state.error;
+
   return (
     <div
       className="flex flex-col min-h-[100dvh] w-full"
@@ -114,6 +123,7 @@ export default function Home() {
     >
       <div className="flex-1 flex flex-col min-h-0 max-w-[390px] w-full mx-auto">
         <StatusBar />
+        {showScreenContent && <ScreenContent />}
         <ScreenContainer />
       </div>
       <EditModal />

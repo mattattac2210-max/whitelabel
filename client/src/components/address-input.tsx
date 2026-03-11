@@ -127,6 +127,13 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
     }
   }, [value]);
 
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange(e.target.value);
+    },
+    [onChange]
+  );
+
   const handleBlur = useCallback(() => {
     const v = inputRef.current?.value?.trim() ?? '';
     if (v !== value) onChange(v);
@@ -141,7 +148,8 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
         className={className}
         style={{ ...style, flex: undefined, width: '100%' }}
         placeholder={placeholder}
-        defaultValue={value}
+        value={value}
+        onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
         data-testid={rest['data-testid']}
