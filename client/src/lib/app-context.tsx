@@ -23,6 +23,7 @@ import {
   getReports as fetchReports,
   classifyTrip,
   updateTrip,
+  updateVehicle,
   saveTrip,
   deleteTrip,
   saveReport,
@@ -226,6 +227,7 @@ type Action =
   | { type: 'SAVE_SESSION' }
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
   | { type: 'SET_MANUAL_ODO'; reading: number }
+  | { type: 'SET_BASE_ODO'; reading: number }
   | { type: 'RESET_DEMO' }
   | { type: 'LOAD_BATCH2' }
   | { type: 'DELETE_ALL_TRIPS' }
@@ -754,6 +756,14 @@ function reducer(state: AppState, action: Action): AppState {
         lastOdoVerifiedAt: nowStr(),
         auditLog: [{ time: nowStr(), desc: `Odometer manually set to ${action.reading.toLocaleString('en-AU')} km`, hasPhoto: false }, ...state.auditLog],
       };
+    case 'SET_BASE_ODO':
+      return {
+        ...state,
+        baseOdo: action.reading,
+        lastOdoReading: state.trips.length === 0 ? action.reading : state.lastOdoReading,
+        lastOdoVerifiedAt: state.trips.length === 0 ? nowStr() : state.lastOdoVerifiedAt,
+        vehicle: state.vehicle ? { ...state.vehicle, odometerAtStart: action.reading } : null,
+      };
     case 'ADD_LOG':
       return {
         ...state,
@@ -1114,6 +1124,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         case 'SET_MANUAL_ODO': {
           await logAuditEvent('vehicle', vehicleId, 'manual_odo_set', { reading: action.reading });
+          break;
+        }
+        case 'SET_BASE_ODO': {
+          if (vehicleId) {
+            await updateVehicle(vehicleId, { odometerAtStart: action.reading });
+          }
           break;
         }
         case 'SAVE_SESSION': {

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/lib/app-context';
 import { type Trip, getTripOdoEnd } from '@/lib/trip-data';
 import { AddressInput, preloadGoogleMaps } from './address-input';
+import { getTopRoutes, getTopPlaces, recordPlace, recordRoute, type SavedRoute, type SavedPlace } from '@/lib/place-memory';
 import { MapPin, Check, Calendar, Clock, ArrowLeft, ArrowRight, Gauge, Navigation, Navigation2, Square, Car, History, Crosshair, Pause, Play, DollarSign, Fuel, StickyNote, Route, Briefcase } from 'lucide-react';
 
 const DARK_MAP_STYLES = [
@@ -1289,35 +1290,52 @@ function LiveTripScreen({ onBack }: { onBack: () => void }) {
 
 function ExistingTripScreen({ onBack }: { onBack: () => void }) {
   const { state, dispatch } = useApp();
-  const [from, setFrom] = useState('');
+
+  const lastTripTo = useMemo(() => {
+    if (state.trips.length === 0) return '';
+    const last = state.trips[state.trips.length - 1];
+    return [last.to, last.toSub].filter(Boolean).join(', ');
+  }, [state.trips]);
+
+  const [from, setFrom] = useState(lastTripTo);
+  const [fromEdited, setFromEdited] = useState(false);
   const [to, setTo] = useState('');
   const [km, setKm] = useState('');
   const [duration, setDuration] = useState('');
-  const [date, setDate] = useState(() => {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
-  });
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState(() => {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   });
   const [notes, setNotes] = useState('');
   const [stops, setStops] = useState<string[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [odoStart, setOdoStart] = useState('');
-
-  const [routeKm, setRouteKm] = useState<number | null>(null);
-  const [routeDur, setRouteDur] = useState<string | null>(null);
   const [calcStatus, setCalcStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const routeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const calcRoute = useCallback(() => {
-    if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
-    routeTimerRef.current = setTimeout(() => {
-      if (!window._gmapsLoaded || !from || !to) return;
+  const [frequentRoutes, setFrequentRoutes] = useState<SavedRoute[]>([]);
+  const [suggestedPlaces, setSuggestedPlaces] = useState<SavedPlace[]>([]);
+  const calcTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setFrequentRoutes(getTopRoutes(3));
+    setSuggestedPlaces(getTopPlaces(from, 3));
+  }, []);
+
+  useEffect(() => {
+    setSuggestedPlaces(getTopPlaces(from, 3));
+  }, [from]);
+
+  // Auto-calculate route when both addresses are filled
+  useEffect(() => {
+    if (calcTimerRef.current) clearTimeout(calcTimerRef.current);
+    if (!from || !to || from.length < 5 || to.length < 5) return;
+
+    calcTimerRef.current = setTimeout(() => {
+      if (!window._gmapsLoaded) return;
+      setCalcStatus('loading');
       const validStops = stops.filter(s => s.length > 3);
       const waypoints = validStops.map(s => ({ location: s, stopover: true }));
-      setCalcStatus('loading');
       const ds = new window.google.maps.DirectionsService();
       ds.route({
         origin: from,
@@ -1327,18 +1345,14 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         region: 'au',
       }, (result: any, status: string) => {
         if (status === 'OK' && result?.routes?.[0]) {
-          const route = result.routes[0];
-          let totalM = 0;
-          let totalSec = 0;
-          route.legs.forEach((leg: any) => {
+          let totalM = 0, totalSec = 0;
+          result.routes[0].legs.forEach((leg: any) => {
             totalM += leg.distance?.value || 0;
             totalSec += leg.duration?.value || 0;
           });
           const calcKm = totalM / 1000;
           const mins = Math.round(totalSec / 60);
           const durStr = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`;
-          setRouteKm(calcKm);
-          setRouteDur(durStr);
           setKm(calcKm.toFixed(1));
           setDuration(durStr);
           setCalcStatus('done');
@@ -1346,13 +1360,46 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           setCalcStatus('error');
         }
       });
-    }, 600);
+    }, 800);
+
+    return () => { if (calcTimerRef.current) clearTimeout(calcTimerRef.current); };
   }, [from, to, stops]);
 
+  useEffect(() => {
+    if (calcStatus === 'error') setShowDetails(true);
+  }, [calcStatus]);
+
+  const odoStart = useMemo(() => {
+    if (state.trips.length === 0) return state.baseOdo;
+    return getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo);
+  }, [state.trips, state.baseOdo]);
+
+  const parsedKm = parseFloat(km) || 0;
+  const odoEnd = Math.round(odoStart + parsedKm);
+  const isAutoFilled = !fromEdited && from === lastTripTo && lastTripTo.length > 0;
+
+  const handleFromChange = useCallback((v: string) => {
+    setFrom(v);
+    setFromEdited(true);
+  }, []);
+
+  const handleQuickAdd = useCallback((route: SavedRoute) => {
+    setFrom(route.fromAddress);
+    setTo(route.toAddress);
+    setFromEdited(true);
+    if (route.km > 0) {
+      setKm(route.km.toFixed(1));
+      setDuration(route.duration || '');
+    }
+  }, []);
+
   const handleSave = () => {
-    if (!from || !to) return;
-    const parsedKm = parseFloat(km) || 0;
-    if (parsedKm < 1) return;
+    if (!from || !to || parsedKm < 1) return;
+
+    recordPlace(from);
+    recordPlace(to);
+    recordRoute(from, to, parsedKm, duration);
+
     const d = new Date(date + 'T00:00:00');
     const fromParts = from.split(',');
     const toParts = to.split(',');
@@ -1382,8 +1429,8 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
       type: null,
       verified: false,
       photo: false,
-      odoReading: odoStart ? Math.round(parseFloat(odoStart) + parsedKm) : null,
-      odoStartReading: odoStart ? Math.round(parseFloat(odoStart)) : null,
+      odoReading: odoEnd,
+      odoStartReading: Math.round(odoStart),
       purposeLabel: null,
       purposeIndex: null,
       stops: stops.filter(s => s.length > 3),
@@ -1391,14 +1438,22 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
     };
 
     dispatch({ type: 'ADD_TRIP', trip });
-    dispatch({ type: 'ADD_LOG', desc: `Existing trip added: ${trip.from} → ${trip.to} (${parsedKm} km) — sent to sort`, hasPhoto: false });
+    dispatch({ type: 'ADD_LOG', desc: `Trip added: ${trip.from} → ${trip.to} (${parsedKm} km) — sent to sort`, hasPhoto: false });
     setSaved(true);
     setTimeout(() => {
       dispatch({ type: 'GO_SCREEN', screen: 'sort' });
     }, 1200);
   };
 
-  const canSave = from.length > 2 && to.length > 2 && (parseFloat(km) || 0) >= 1;
+  const canSave = from.length > 2 && to.length > 2 && parsedKm >= 1;
+
+  const dateObj = new Date(date + 'T00:00:00');
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const displayDate = `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+  const [hh, mm] = time.split(':');
+  const hr = parseInt(hh);
+  const displayTime = `${hr === 0 ? 12 : hr > 12 ? hr - 12 : hr}:${mm} ${hr >= 12 ? 'PM' : 'AM'}`;
 
   return (
     <div className="flex flex-col h-full" data-testid="existing-trip-screen">
@@ -1411,198 +1466,229 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Existing</span>
-        <span className="ml-auto font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>Sends to sort</span>
+        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Trip</span>
+        <span className="ml-auto font-data text-[9px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-t3)' }}>sends to sort</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-[18px] pt-[4px] pb-[10px]">
-        <div className="mb-[8px]">
-          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>From</label>
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-[18px] pt-[6px] pb-[10px]">
+
+        {frequentRoutes.length > 0 && (
+          <div className="mb-[14px]">
+            <div className="font-data text-[8px] uppercase tracking-[.12em] mb-[6px] flex items-center gap-[5px]" style={{ color: 'var(--wc-t3)' }}>
+              <Route className="w-[10px] h-[10px]" />
+              Your trips
+            </div>
+            <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-thin">
+              {frequentRoutes.map((route, i) => (
+                <button
+                  key={i}
+                  className="flex-shrink-0 rounded-[12px] p-[10px_14px] cursor-pointer transition-all text-left"
+                  style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1.5px solid var(--wc-border)', minWidth: '120px' }}
+                  onClick={() => handleQuickAdd(route)}
+                >
+                  <div className="font-heading font-bold text-[11px] truncate leading-tight" style={{ color: 'var(--wc-text)', maxWidth: '130px' }}>
+                    {route.fromLabel}
+                  </div>
+                  <div className="font-heading font-bold text-[11px] truncate leading-tight mt-[2px]" style={{ color: 'var(--wc-y)', maxWidth: '130px' }}>
+                    → {route.toLabel}
+                  </div>
+                  <div className="font-data text-[9px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
+                    {route.km.toFixed(1)} km{route.duration ? ` · ${route.duration}` : ''}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mb-[10px]">
+          <div className="flex items-center gap-[6px] mb-[4px]">
+            <label className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>From</label>
+            {isAutoFilled && (
+              <span className="font-data text-[7px] tracking-[.05em]" style={{ color: 'var(--wc-y)' }}>· from last trip</span>
+            )}
+          </div>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
-            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+            className="w-full rounded-lg p-[10px_12px] text-[13px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: isAutoFilled ? '1.5px solid rgb(var(--wc-ink) / .25)' : '1.5px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={from}
-            onChange={setFrom}
+            onChange={handleFromChange}
             placeholder="Start address"
             data-testid="input-from"
           />
         </div>
 
-        {stops.map((s, i) => (
-          <div key={i} className="flex items-center gap-[5px] mb-1">
-            <AddressInput
-              className="w-full rounded-[7px] p-[6px_9px] text-[12px] outline-none"
-              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', flex: 1 }}
-              placeholder={`Stop ${i + 1}`}
-              value={s}
-              onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
-            />
-            <button className="rounded-[6px] p-[5px_7px] text-[11px] cursor-pointer" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }} onClick={() => { const n = [...stops]; n.splice(i, 1); setStops(n); }}>X</button>
-          </div>
-        ))}
-
-        <div className="flex gap-[5px] mb-[8px]">
-          <button
-            className="flex-1 rounded-[7px] p-[5px_8px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all"
-            style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }}
-            onClick={() => setStops([...stops, ''])}
-            data-testid="input-add-stop"
-          >
-            + Stop
-          </button>
-          {from.length > 3 && to.length > 3 && (
-            <button
-              className="rounded-[7px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
-              onClick={calcRoute}
-              data-testid="input-calc-route"
-            >
-              <MapPin className="w-[10px] h-[10px]" />
-              {calcStatus === 'loading' ? 'Calc...' : 'Calc Route'}
-            </button>
-          )}
-        </div>
-
-        <div className="mb-[8px]">
-          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>To</label>
+        <div className="mb-[10px]">
+          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Where to?</label>
           <AddressInput
-            className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none transition-all"
-            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+            className="w-full rounded-lg p-[10px_12px] text-[13px] outline-none transition-all"
+            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1.5px solid var(--wc-border)', color: 'var(--wc-text)' }}
             value={to}
             onChange={setTo}
-            placeholder="Destination address"
+            placeholder="Destination"
             data-testid="input-to"
           />
-        </div>
 
-        <div className="flex gap-[6px] mb-[8px]">
-          <div className="flex-1">
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Date</label>
-            <div className="relative">
-              <Calendar className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
-              <input
-                type="date"
-                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
-                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                data-testid="input-date"
-              />
+          {suggestedPlaces.length > 0 && to.length < 3 && (
+            <div className="flex gap-[6px] mt-[6px] flex-wrap">
+              {suggestedPlaces.map((place, i) => (
+                <button
+                  key={i}
+                  className="rounded-[8px] p-[5px_10px] cursor-pointer transition-all flex items-center gap-[4px]"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+                  onClick={() => setTo(place.address)}
+                >
+                  <MapPin className="w-[10px] h-[10px]" style={{ color: 'var(--wc-y)' }} />
+                  <span className="font-heading font-semibold text-[10px]">{place.label}</span>
+                </button>
+              ))}
             </div>
-          </div>
-          <div className="flex-1">
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Time</label>
-            <div className="relative">
-              <Clock className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
-              <input
-                type="time"
-                className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
-                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-                value={time}
-                onChange={e => setTime(e.target.value)}
-                data-testid="input-time"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-[6px] mb-[8px]">
-          <div className="flex-1">
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Distance (km)</label>
-            <input
-              type="number"
-              step="0.1"
-              className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none"
-              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-              value={km}
-              onChange={e => setKm(e.target.value)}
-              placeholder="Min 1"
-              min="1"
-              data-testid="input-km"
-            />
-            {km && (parseFloat(km) || 0) < 1 && (parseFloat(km) || 0) > 0 && (
-              <div className="font-data text-[7px] mt-[2px]" style={{ color: 'var(--wc-am)' }}>Min 1 km</div>
-            )}
-          </div>
-          <div className="flex-1">
-            <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Duration</label>
-            <input
-              className="w-full rounded-lg p-[8px_11px] text-[12px] outline-none"
-              style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-              value={duration}
-              onChange={e => setDuration(e.target.value)}
-              placeholder="e.g. 25 min"
-              data-testid="input-duration"
-            />
-          </div>
-        </div>
-
-        <div className="rounded-[10px] p-[9px_12px] mb-[8px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)' }}>
-          <div className="flex items-center gap-[6px] mb-[6px]">
-            <Gauge className="w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
-            <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Odometer (optional)</span>
-          </div>
-          <div className="flex gap-[6px] items-end">
-            <div className="flex-1">
-              <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Start Reading</label>
-              <input
-                type="number"
-                className="w-full rounded-lg p-[7px_10px] text-[12px] outline-none font-data"
-                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-                value={odoStart}
-                onChange={e => setOdoStart(e.target.value)}
-                placeholder="e.g. 84280"
-                data-testid="input-odo-start"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="font-data text-[7px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>End Reading</label>
-              <div
-                className="w-full rounded-lg p-[7px_10px] text-[12px] font-data"
-                style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: odoStart && parseFloat(km) > 0 ? 'var(--wc-y)' : 'var(--wc-t3)' }}
-                data-testid="input-odo-end"
-              >
-                {odoStart && parseFloat(km) > 0 ? Math.round(parseFloat(odoStart) + parseFloat(km)).toLocaleString() : '\u2014'}
-              </div>
-            </div>
-          </div>
-          {state.trips.length > 0 && (
-            <button
-              className="mt-[6px] rounded-[6px] p-[5px_10px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center gap-[4px]"
-              style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
-              onClick={() => {
-                const lastOdo = getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo);
-                setOdoStart(Math.round(lastOdo).toString());
-              }}
-              data-testid="input-use-last-odo"
-            >
-              <Gauge className="w-[10px] h-[10px]" />
-              Use last reading ({Math.round(getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo)).toLocaleString()} km)
-            </button>
           )}
         </div>
 
-        <div className="mb-[10px]">
-          <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Notes</label>
-          <textarea
-            className="w-full rounded-lg p-[8px_11px] text-[11px] outline-none resize-none h-[40px]"
-            style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Optional notes about this trip"
-            data-testid="input-notes"
-          />
-        </div>
-
-        {calcStatus === 'done' && routeKm !== null && (
-          <div className="rounded-[8px] p-[7px_10px] mb-[8px] flex items-center gap-[5px]" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-            <Check className="w-[10px] h-[10px]" style={{ color: 'var(--wc-gr)' }} />
-            <span className="text-[10px]" style={{ color: 'var(--wc-gr)' }}>Route: {routeKm.toFixed(1)} km{routeDur ? `, ${routeDur}` : ''}</span>
+        {calcStatus === 'loading' && (
+          <div className="rounded-[10px] p-[8px_12px] mb-[10px] flex items-center gap-[8px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+            <Route className="w-[12px] h-[12px] animate-pulse" style={{ color: 'var(--wc-y)' }} />
+            <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>Calculating route...</span>
           </div>
         )}
+
         {calcStatus === 'error' && (
-          <div className="rounded-[8px] p-[7px_10px] mb-[8px] text-[10px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }}>
-            Could not calculate route. Check addresses.
+          <div className="rounded-[10px] p-[8px_12px] mb-[10px] flex items-center gap-[6px]" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.15)' }}>
+            <span className="text-[10px]" style={{ color: 'var(--wc-re)' }}>Could not calculate route. Enter distance below.</span>
+          </div>
+        )}
+
+        {parsedKm > 0 && (
+          <div className="flex gap-[6px] mb-[10px]">
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Distance</div>
+              <div className="font-display text-[20px] leading-none" style={{ color: 'var(--wc-y)' }}>{km}</div>
+              <div className="font-data text-[7px] uppercase" style={{ color: 'var(--wc-t3)' }}>km</div>
+            </div>
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Date</div>
+              <div className="font-data text-[13px] font-bold leading-none" style={{ color: 'var(--wc-text)' }}>{displayDate}</div>
+              <div className="font-data text-[7px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>{displayTime}</div>
+            </div>
+            <div className="flex-1 rounded-[10px] p-[8px_10px] text-center" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid var(--wc-border)' }}>
+              <div className="font-data text-[7px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Odometer</div>
+              <div className="font-data text-[11px] font-bold leading-tight" style={{ color: 'var(--wc-text)' }}>{Math.round(odoStart).toLocaleString()}</div>
+              <div className="font-data text-[9px]" style={{ color: 'var(--wc-y)' }}>→ {odoEnd.toLocaleString()}</div>
+            </div>
+          </div>
+        )}
+
+        <button
+          className="w-full rounded-[8px] p-[8px] mb-[8px] font-heading font-semibold text-[11px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center justify-center gap-[5px]"
+          style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)', color: 'var(--wc-t2)' }}
+          onClick={() => setShowDetails(!showDetails)}
+        >
+          <span style={{ fontSize: '8px' }}>{showDetails ? '▲' : '▼'}</span>
+          {showDetails ? 'Less' : 'More'} details
+        </button>
+
+        {showDetails && (
+          <div className="rounded-[12px] p-[14px] mb-[10px]" style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px solid var(--wc-border)' }}>
+            <div className="flex gap-[6px] mb-[8px]">
+              <div className="flex-1">
+                <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
+                  <input
+                    type="date"
+                    className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
+                    style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    data-testid="input-date"
+                  />
+                </div>
+              </div>
+              <div className="flex-1">
+                <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Time</label>
+                <div className="relative">
+                  <Clock className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]" style={{ color: 'var(--wc-t3)' }} />
+                  <input
+                    type="time"
+                    className="w-full rounded-lg p-[7px_8px_7px_24px] text-[11px] outline-none"
+                    style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                    value={time}
+                    onChange={e => setTime(e.target.value)}
+                    data-testid="input-time"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-[6px] mb-[8px]">
+              <div className="flex-1">
+                <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Distance (km)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  className="w-full rounded-lg p-[7px_10px] text-[12px] outline-none font-data"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                  value={km}
+                  onChange={e => setKm(e.target.value)}
+                  placeholder="Min 1"
+                  data-testid="input-km"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Duration</label>
+                <input
+                  className="w-full rounded-lg p-[7px_10px] text-[12px] outline-none"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                  value={duration}
+                  onChange={e => setDuration(e.target.value)}
+                  placeholder="e.g. 25 min"
+                  data-testid="input-duration"
+                />
+              </div>
+            </div>
+
+            {stops.map((s, i) => (
+              <div key={i} className="flex items-center gap-[5px] mb-[6px]">
+                <AddressInput
+                  className="w-full rounded-[7px] p-[6px_9px] text-[12px] outline-none"
+                  style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)', flex: 1 }}
+                  placeholder={`Stop ${i + 1}`}
+                  value={s}
+                  onChange={v => { const n = [...stops]; n[i] = v; setStops(n); }}
+                />
+                <button className="rounded-[6px] p-[5px_7px] text-[11px] cursor-pointer" style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', color: 'var(--wc-re)' }} onClick={() => { const n = [...stops]; n.splice(i, 1); setStops(n); }}>✕</button>
+              </div>
+            ))}
+            <button
+              className="w-full rounded-[7px] p-[5px_8px] mb-[8px] font-heading font-semibold text-[10px] uppercase tracking-[.04em] cursor-pointer transition-all flex items-center justify-center gap-[4px]"
+              style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)', color: 'var(--wc-t2)' }}
+              onClick={() => setStops([...stops, ''])}
+              data-testid="input-add-stop"
+            >
+              <Route className="w-[10px] h-[10px]" />
+              + Add Stop
+            </button>
+
+            <div className="mb-[6px]">
+              <label className="font-data text-[8px] uppercase tracking-[.1em] block mb-[3px]" style={{ color: 'var(--wc-t3)' }}>Notes</label>
+              <textarea
+                className="w-full rounded-lg p-[7px_10px] text-[11px] outline-none resize-none h-[40px]"
+                style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-notes"
+              />
+            </div>
+
+            <div className="flex items-center gap-[6px]">
+              <Gauge className="w-[11px] h-[11px]" style={{ color: 'var(--wc-t3)' }} />
+              <span className="font-data text-[8px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>
+                Odo: {Math.round(odoStart).toLocaleString()} → {parsedKm > 0 ? odoEnd.toLocaleString() : '—'} km (auto)
+              </span>
+            </div>
           </div>
         )}
 
@@ -1633,7 +1719,6 @@ function ExistingTripScreen({ onBack }: { onBack: () => void }) {
           </button>
         )}
       </div>
-
     </div>
   );
 }

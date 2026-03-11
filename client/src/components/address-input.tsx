@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useId } from 'react';
+import { useEffect, useRef, useCallback, useId, useState } from 'react';
 
 declare global {
   interface Window {
@@ -11,7 +11,17 @@ declare global {
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-export function loadGoogleMaps(): Promise<void> {
+/** Reset Maps state so we can retry after auth failure */
+export function resetGoogleMaps(): void {
+  (window as any)._gmapsAuthFailed = false;
+  (window as any)._gmapsLoaded = false;
+  (window as any)._gmapsPromise = null;
+  document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach(s => s.remove());
+  delete (window as any).google;
+}
+
+export function loadGoogleMaps(options?: { cacheBust?: boolean }): Promise<void> {
+  if ((window as any)._gmapsAuthFailed) return Promise.reject(new Error('Maps auth failed'));
   if (window._gmapsLoaded) return Promise.resolve();
   if (window._gmapsPromise) return window._gmapsPromise;
   window._gmapsPromise = new Promise<void>((resolve, reject) => {
@@ -23,7 +33,8 @@ export function loadGoogleMaps(): Promise<void> {
       resolve();
     };
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places,geometry&callback=${callbackName}`;
+    const cacheBust = options?.cacheBust ? `&_=${Date.now()}` : '';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places,geometry&callback=${callbackName}${cacheBust}`;
     script.async = true;
     script.onerror = () => {
       delete (window as any)[callbackName];
@@ -51,6 +62,13 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const instanceId = useId().replace(/:/g, '-');
+  const [mapsFailed, setMapsFailed] = useState(() => !!(typeof window !== 'undefined' && (window as any)._gmapsAuthFailed));
+
+  useEffect(() => {
+    const onFail = () => setMapsFailed(true);
+    window.addEventListener('gmaps-auth-failed', onFail);
+    return () => window.removeEventListener('gmaps-auth-failed', onFail);
+  }, []);
 
   const initAutocomplete = useCallback(() => {
     if (!inputRef.current || !window.google?.maps?.places?.Autocomplete) return;
@@ -58,7 +76,7 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
     try {
       autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: 'au' },
-        types: ['address', 'establishment', 'geocode'],
+        types: ['geocode'],
       });
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
@@ -69,6 +87,15 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
       console.error('Failed to init Places Autocomplete:', e);
     }
   }, [onChange]);
+
+  const handleRetryMaps = useCallback(() => {
+    autocompleteRef.current = null;
+    resetGoogleMaps();
+    setMapsFailed(false);
+    loadGoogleMaps({ cacheBust: true })
+      .then(() => initAutocomplete())
+      .catch(() => setMapsFailed(true));
+  }, [initAutocomplete]);
 
   useEffect(() => {
     if (!API_KEY) {
@@ -81,7 +108,10 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
         if ((window as any)._gmapsAuthFailed) return;
         initAutocomplete();
       })
-      .catch((err) => console.warn('AddressInput: Google Maps failed to load:', err));
+      .catch((err) => {
+        console.warn('AddressInput: Google Maps failed to load:', err);
+        setMapsFailed(true);
+      });
   }, [initAutocomplete]);
 
   const handleFocus = useCallback(() => {
@@ -117,6 +147,21 @@ export function AddressInput({ value, onChange, placeholder, className, style, .
         data-testid={rest['data-testid']}
         autoComplete="off"
       />
+      {mapsFailed && (
+        <div className="mt-1 flex items-center gap-2 flex-wrap">
+          <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Address lookup unavailable.</span>
+          <button
+            type="button"
+            className="text-[10px] font-semibold underline cursor-pointer"
+            style={{ color: 'var(--wc-y)' }}
+            onClick={handleRetryMaps}
+            data-testid="retry-maps"
+          >
+            Retry
+          </button>
+          <span className="text-[10px]" style={{ color: 'var(--wc-t3)' }}>Or type address manually.</span>
+        </div>
+      )}
     </div>
   );
 }

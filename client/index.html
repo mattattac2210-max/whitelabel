@@ -16,6 +16,7 @@
     <script>
       window.gm_authFailure = function() {
         window._gmapsAuthFailed = true;
+        window.dispatchEvent(new CustomEvent('gmaps-auth-failed'));
       };
     </script>
     <div id="root"></div>
