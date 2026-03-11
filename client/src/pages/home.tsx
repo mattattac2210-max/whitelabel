@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useApp } from '@/lib/app-context';
 import { SortScreen } from '@/components/sort-screen';
 import { ClassifyScreen } from '@/components/classify-screen';
@@ -76,7 +77,7 @@ function ScreenContainer() {
     expenses: 'documents',
     reports: 'documents',
     stats: 'documents',
-    'find-keys': 'dashboard',
+    'find-keys': 'account',
   };
   const activeOverride = navActiveOverride[state.currentScreen];
 
@@ -110,6 +111,17 @@ function ScreenContainer() {
   );
 }
 
+function GpsSyncRedirect() {
+  const { state, dispatch } = useApp();
+  useEffect(() => {
+    if (!state.isInitialised || state.isLoading) return;
+    if (localStorage.getItem('wc_wants_gps_sync') === '1') {
+      dispatch({ type: 'GO_SCREEN', screen: 'input' });
+    }
+  }, [state.isInitialised, state.isLoading, dispatch]);
+  return null;
+}
+
 export default function Home() {
   const { state } = useApp();
   const showScreenContent = !state.isLoading && !state.error;
@@ -123,6 +135,7 @@ export default function Home() {
     >
       <div className="flex-1 flex flex-col min-h-0 max-w-[390px] w-full mx-auto">
         <StatusBar />
+        {showScreenContent && <GpsSyncRedirect />}
         {showScreenContent && <ScreenContent />}
         <ScreenContainer />
       </div>

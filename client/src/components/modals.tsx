@@ -149,7 +149,7 @@ export function EditModal() {
         <div className="rounded-[9px] p-[9px_11px] mb-3 flex items-start gap-[7px]" style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.28)' }}>
           <AlertTriangle className="w-[13px] h-[13px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-re)' }} />
           <div className="text-[10px] leading-[1.45]" style={{ color: 'rgba(239,68,68,.9)' }}>
-            <strong style={{ color: 'var(--wc-re)' }}>All edits are timestamped and logged.</strong> Evidence is strongly recommended. Attach an odometer photo to strengthen your claim.
+            <strong style={{ color: 'var(--wc-re)' }}>All edits are timestamped and logged.</strong> Evidence is strongly recommended.
           </div>
         </div>
 
@@ -207,7 +207,6 @@ export function EditModal() {
 
         <div className="flex gap-[5px] mb-3">
           {[
-            { icon: Clock, label: 'Odo Photo' },
             { icon: Camera, label: 'Receipt' },
             { icon: MapPin, label: 'Notes' },
           ].map(ev => (
@@ -321,6 +320,22 @@ export function EditModal() {
         >
           Save Changes
         </button>
+
+        <button
+          className="w-full mt-[10px] rounded-[10px] py-[10px] font-heading font-semibold text-[13px] tracking-[.04em] uppercase cursor-pointer transition-all flex items-center justify-center gap-[6px]"
+          style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: 'var(--wc-re)' }}
+          onClick={() => {
+            if (window.confirm('Delete this trip? Use this if it didn\'t happen or is a duplicate.')) {
+              dispatch({ type: 'DELETE_TRIP', tripIndex: state.editTripIndex });
+              setEditFrom('');
+              setEditTo('');
+              dispatch({ type: 'CLOSE_EDIT' });
+            }
+          }}
+          data-testid="button-delete-trip"
+        >
+          Delete trip (didn't happen / duplicate)
+        </button>
       </div>
     </ModalOverlay>
   );
@@ -379,8 +394,14 @@ export function SummaryModal() {
     setOdoSaved(false);
   };
   const [odoSaved, setOdoSaved] = useState(false);
+  const [odoPhotoUrl, setOdoPhotoUrl] = useState<string | null>(null);
+  const odoPhotoRef = useRef<HTMLInputElement>(null);
+  const [showOdoChangeConfirm, setShowOdoChangeConfirm] = useState(false);
   const [rollDone, setRollDone] = useState(false);
+  const [rollKey, setRollKey] = useState(0);
   const lastReading = state.lastOdoReading;
+  const sourceReading = lastReading ?? lastSavedOdo ?? 0;
+  const odoChanged = digitsToNum(odoDigits) !== sourceReading;
   useEffect(() => {
     if (lastReading) setOdoDigits(toDigits(lastReading));
   }, [lastReading]);
@@ -389,19 +410,20 @@ export function SummaryModal() {
   useEffect(() => {
     if (state.summaryModalOpen) {
       setRollDone(false);
+      setRollKey(k => k + 1);
       setBarFill(0);
-      const t1 = setTimeout(() => setRollDone(true), 1800);
+      setOdoPhotoUrl(state.lastOdoPhotoUrl ?? null);
+      const t1 = setTimeout(() => setRollDone(true), 2600);
       const t2 = setTimeout(() => setBarFill(100), 50);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
-  }, [state.summaryModalOpen]);
+  }, [state.summaryModalOpen, state.lastOdoPhotoUrl]);
 
   if (!state.summaryModalOpen) return null;
 
   const biz = state.trips.filter(t => t.type === 'business');
   const sessionKm = biz.reduce((s, t) => s + t.km, 0);
   const sessionDed = Math.round(state.dedTotal);
-  const photoCount = state.trips.filter(t => t.photo).length;
   const score = stats.auditScore;
   const scoreCol = score > 85 ? 'var(--wc-gr)' : score > 70 ? 'var(--wc-am)' : 'var(--wc-re)';
 
@@ -553,10 +575,6 @@ export function SummaryModal() {
             <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Deduction</div>
             <div className="font-data text-[18px] leading-tight" style={{ color: 'var(--wc-gr)' }}>${sessionDed.toLocaleString('en-AU')}</div>
           </div>
-          <div className="flex-1 rounded-[11px] p-[10px_10px] text-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
-            <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[2px]" style={{ color: 'var(--wc-t3)' }}>Photos</div>
-            <div className="font-data text-[18px] leading-tight" style={{ color: photoCount > 0 ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>{photoCount}</div>
-          </div>
         </div>
 
         <div className="mx-[18px] mb-3 rounded-[13px] p-[12px_14px]" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}>
@@ -574,8 +592,8 @@ export function SummaryModal() {
             <div className="flex justify-center gap-[3px]" data-testid="input-manual-odo">
               {odoDigits.map((digit, i) => {
                 const rollNumbers = Array.from({ length: 10 }, (_, n) => n);
-                const delay = (NUM_DIGITS - 1 - i) * 0.15;
-                const duration = 0.8 + (NUM_DIGITS - 1 - i) * 0.15;
+                const delay = (NUM_DIGITS - 1 - i) * 0.12;
+                const duration = 0.9 + (NUM_DIGITS - 1 - i) * 0.12;
                 return (
                   <div key={i} className="flex flex-col items-center" style={{ width: '46px' }}>
                     <button
@@ -599,9 +617,10 @@ export function SummaryModal() {
                     >
                       {!rollDone ? (
                         <div
+                          key={rollKey}
                           className="flex flex-col items-center"
                           style={{
-                            animation: `odoRollSm${digit} ${duration}s cubic-bezier(.2,.8,.3,1) ${delay}s both`,
+                            animation: `odoRollSm${digit} ${duration}s cubic-bezier(0.34, 1.2, 0.64, 1) ${delay}s both`,
                           }}
                         >
                           {rollNumbers.concat(rollNumbers).concat(rollNumbers.slice(0, digit + 1)).map((n, j) => (
@@ -650,6 +669,69 @@ export function SummaryModal() {
             </div>
           </div>
 
+          {!odoSaved && (
+            <div className="mb-[8px]">
+              <div className="font-data text-[8px] uppercase tracking-[.1em] mb-[4px]" style={{ color: 'var(--wc-t3)' }}>Odometer photo (optional)</div>
+              <input type="file" accept="image/*" capture="environment" ref={odoPhotoRef} className="hidden" onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => setOdoPhotoUrl(reader.result as string);
+                  reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+              }} data-testid="odo-photo-input" />
+              {odoPhotoUrl ? (
+                <div className="relative rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
+                  <img src={odoPhotoUrl} alt="Odometer" className="w-full h-[80px] object-cover" />
+                  <button
+                    className="absolute top-[6px] right-[6px] w-[24px] h-[24px] rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,.7)' }}
+                    onClick={() => setOdoPhotoUrl(null)}
+                    data-testid="odo-photo-remove"
+                  >
+                    <X className="w-[12px] h-[12px] text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-[6px]">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-[8px] py-[10px] flex items-center justify-center gap-[6px] cursor-pointer"
+                    style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px dashed rgb(var(--wc-ink) / .25)' }}
+                    onClick={() => odoPhotoRef.current?.click()}
+                    data-testid="odo-photo-take"
+                  >
+                    <Camera className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                    <span className="font-heading font-bold text-[11px] uppercase" style={{ color: 'var(--wc-y)' }}>Take photo</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 rounded-[8px] py-[10px] flex items-center justify-center gap-[6px] cursor-pointer"
+                    style={{ background: 'rgb(var(--wc-ink) / .03)', border: '1px dashed var(--wc-border)' }}
+                    onClick={() => { odoPhotoRef.current?.removeAttribute('capture'); odoPhotoRef.current?.click(); odoPhotoRef.current?.setAttribute('capture', 'environment'); }}
+                    data-testid="odo-photo-gallery"
+                  >
+                    <span className="font-heading font-bold text-[11px] uppercase" style={{ color: 'var(--wc-t2)' }}>Gallery</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {odoChanged && (
+            <div
+              className="rounded-[8px] px-[10px] py-[8px] mb-[8px] flex items-start gap-[8px]"
+              style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)' }}
+              data-testid="odo-changed-warning"
+            >
+              <AlertTriangle className="w-[14px] h-[14px] flex-shrink-0 mt-[1px]" style={{ color: 'var(--wc-am)' }} />
+              <div className="text-[11px] leading-[1.45]" style={{ color: 'var(--wc-t2)' }}>
+                You&apos;ve changed this reading. Go to <strong style={{ color: 'var(--wc-text)' }}>Odometer</strong> to update your trip readings so they match.
+              </div>
+            </div>
+          )}
+
           {odoSaved ? (
             <div
               className="w-full rounded-[8px] py-[7px] font-heading font-bold text-[11px] tracking-[.05em] uppercase flex items-center justify-center gap-2 transition-all"
@@ -671,8 +753,12 @@ export function SummaryModal() {
               onClick={() => {
                 const val = digitsToNum(odoDigits);
                 if (val > 0) {
-                  dispatch({ type: 'SET_MANUAL_ODO', reading: val });
-                  setOdoSaved(true);
+                  if (odoChanged) {
+                    setShowOdoChangeConfirm(true);
+                  } else {
+                    dispatch({ type: 'SET_MANUAL_ODO', reading: val, photoUrl: odoPhotoUrl ?? null });
+                    setOdoSaved(true);
+                  }
                 }
               }}
               data-testid="button-save-odo"
@@ -771,14 +857,12 @@ export function SummaryModal() {
 
             <div className="flex flex-col gap-[8px]">
               {(() => {
-                const photoPoints = state.trips.filter(t => t.photo).length * 2;
-                const verifiedPoints = state.trips.filter(t => t.verified && !t.photo).length;
+                const verifiedPoints = state.trips.filter(t => t.verified).length;
                 const odoPoints = Math.min(state.verifiedSet.size, 20);
                 const basePoints = 50;
                 const items = [
                   { label: 'Base Score', points: basePoints, max: 50, desc: 'Starting score for all logbooks', icon: Target },
-                  { label: 'Photo Evidence', points: photoPoints, max: null, desc: `${state.trips.filter(t => t.photo).length} photos (+2 pts each)`, icon: Camera },
-                  { label: 'Verified Trips', points: verifiedPoints, max: null, desc: `${state.trips.filter(t => t.verified && !t.photo).length} verified (+1 pt each)`, icon: Check },
+                  { label: 'Verified Trips', points: verifiedPoints, max: null, desc: `${state.trips.filter(t => t.verified).length} verified (+1 pt each)`, icon: Check },
                   { label: 'Odometer Checks', points: odoPoints, max: 20, desc: `${state.verifiedSet.size} readings (max 20 pts)`, icon: Gauge },
                 ];
                 return items.map((item, i) => {
@@ -801,7 +885,7 @@ export function SummaryModal() {
 
             <div className="rounded-[10px] p-[10px_14px] flex items-center justify-between" style={{ background: score > 85 ? 'rgba(34,197,94,.08)' : score > 70 ? 'rgba(153,153,153,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${score > 85 ? 'rgba(34,197,94,.2)' : score > 70 ? 'rgba(153,153,153,.2)' : 'rgba(239,68,68,.2)'}` }}>
               <span className="font-data text-[10px] uppercase tracking-[.08em]" style={{ color: 'var(--wc-text)' }}>
-                {score > 85 ? 'Strong — ready for ATO review' : score > 70 ? 'Good — add more evidence to strengthen' : 'Needs work — add photos & verify odometers'}
+                {score > 85 ? 'Strong — ready for ATO review' : score > 70 ? 'Good — add more evidence to strengthen' : 'Needs work — verify odometers'}
               </span>
             </div>
 
@@ -813,6 +897,71 @@ export function SummaryModal() {
             >
               Got It
             </button>
+          </div>
+        </div>
+      )}
+
+      {showOdoChangeConfirm && (
+        <div
+          className="absolute inset-0 z-[200] flex items-center justify-center px-[18px]"
+          style={{ background: 'rgba(0,0,0,.85)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowOdoChangeConfirm(false)}
+          data-testid="odo-change-confirm-overlay"
+        >
+          <div
+            className="w-full max-w-[340px] rounded-[18px] p-[20px] flex flex-col gap-[16px]"
+            style={{ background: 'var(--wc-card)', border: '1.5px solid rgba(245,158,11,.3)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-[10px]">
+              <div className="w-[44px] h-[44px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,.15)' }}>
+                <AlertTriangle className="w-[22px] h-[22px]" style={{ color: 'var(--wc-am)' }} />
+              </div>
+              <div>
+                <div className="font-heading font-extrabold text-[16px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Odometer Changed</div>
+                <div className="text-[12px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>Update trip readings to match</div>
+              </div>
+            </div>
+            <p className="text-[13px] leading-[1.55]" style={{ color: 'var(--wc-t2)' }}>
+              You&apos;ve changed the odometer reading. Go to <strong style={{ color: 'var(--wc-text)' }}>Odometer</strong> to update your trip readings so they match.
+            </p>
+            <div className="flex flex-col gap-[8px]">
+              <button
+                className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'var(--wc-am)', color: 'var(--wc-bg)' }}
+                onClick={() => {
+                  setShowOdoChangeConfirm(false);
+                  dispatch({ type: 'CLOSE_SUMMARY' });
+                  dispatch({ type: 'GO_SCREEN', screen: 'odometer' });
+                }}
+                data-testid="button-goto-odometer"
+              >
+                Go to Odometer &amp; Modify
+              </button>
+              <button
+                className="w-full rounded-[12px] py-[12px] font-heading font-bold text-[14px] tracking-[.05em] uppercase cursor-pointer transition-all active:scale-[.97]"
+                style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)', color: 'var(--wc-text)' }}
+                onClick={() => {
+                  const val = digitsToNum(odoDigits);
+                  if (val > 0) {
+                    dispatch({ type: 'SET_MANUAL_ODO', reading: val, photoUrl: odoPhotoUrl ?? null });
+                    setOdoSaved(true);
+                    setShowOdoChangeConfirm(false);
+                  }
+                }}
+                data-testid="button-save-odo-anyway"
+              >
+                Save Anyway
+              </button>
+              <button
+                className="w-full py-[10px] font-heading font-bold text-[12px] tracking-[.05em] uppercase cursor-pointer transition-all"
+                style={{ color: 'var(--wc-t3)' }}
+                onClick={() => setShowOdoChangeConfirm(false)}
+                data-testid="button-cancel-odo-confirm"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

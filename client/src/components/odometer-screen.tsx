@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useApp, useComputedStats, calcAuditScore, INDUSTRY_BIZ_AVG } from '@/lib/app-context';
 import { getTripOdoStart, getTripOdoEnd } from '@/lib/trip-data';
-import { ArrowLeft, ChevronRight, Camera, Check, Shield, Image, Clock, AlertTriangle, ChevronDown, ChevronUp, Home } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Check, Shield, Clock, AlertTriangle, ChevronDown, ChevronUp, Home } from 'lucide-react';
 
 export function OdometerScreen() {
   const { state, dispatch } = useApp();
@@ -9,8 +9,6 @@ export function OdometerScreen() {
   const [heroCollapsed, setHeroCollapsed] = useState(true);
   const [showOdoWarning, setShowOdoWarning] = useState(true);
   const [odoInputs, setOdoInputs] = useState<Record<string, string>>({});
-  const [photoThumbs, setPhotoThumbs] = useState<Record<number, string>>({});
-  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [expandedTrips, setExpandedTrips] = useState<Set<number>>(new Set());
   const [showUnconfirmedWarning, setShowUnconfirmedWarning] = useState(false);
   const [showOdoInfoPopup, setShowOdoInfoPopup] = useState(false);
@@ -75,20 +73,16 @@ export function OdometerScreen() {
             <div className="h-[4px] rounded-[3px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .07)' }}>
               <div className="h-full rounded-[3px] transition-all duration-700" style={{ width: `${score}%`, background: scoreFill }} />
             </div>
-            <div className="text-[9px] mt-[4px] mb-[6px]" style={{ color: 'var(--wc-t3)' }}>Tip: Photos score higher than timestamps alone.</div>
-
             {(() => {
               const sortedTripsArr = state.trips.filter(t => t.type !== null);
               const totalTrips = sortedTripsArr.length;
               const verifiedCount = state.verifiedSet.size;
-              const photoCount = state.trips.filter(t => t.photo).length;
               const bizTripsArr = state.trips.filter(t => t.type === 'business');
               const notesCount = bizTripsArr.filter(t => t.notes && t.notes.length > 0).length;
               const result = calcAuditScore({
                 totalTrips: state.trips.length,
                 sortedTrips: totalTrips,
                 verifiedCount,
-                photoCount,
                 bizPct: stats.bizPct,
                 notesCount,
                 bizCount: bizTripsArr.length,
@@ -104,14 +98,13 @@ export function OdometerScreen() {
                   </div>
                   <div className="px-[10px] py-[6px] flex flex-col gap-[4px]">
                     <div className="text-[9px] leading-[1.5] mb-[2px]" style={{ color: 'var(--wc-t2)' }}>
-                      Your audit score is a weighted percentage based on five categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong style={{ color: 'var(--wc-text)' }}>99%</strong>.
+                      Your audit score is a weighted percentage based on four categories. It scales with however many trips you have and factors in how your business use compares to industry norms. The maximum achievable score is <strong style={{ color: 'var(--wc-text)' }}>99%</strong>.
                     </div>
                     <div className="flex flex-col gap-[3px]">
                       {[
                         { label: 'Classification', weight: '30%', desc: `${totalTrips} of ${state.trips.length} trips sorted`, pct: result.classifiedPct, contrib: result.classifiedContrib, color: 'var(--wc-t2)' },
-                        { label: 'Odometer verified', weight: '25%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
+                        { label: 'Odometer verified', weight: '35%', desc: `${verifiedCount} of ${totalTrips} trips confirmed`, pct: result.verifiedPct, contrib: result.verifiedContrib, color: 'var(--wc-gr)' },
                         { label: 'Trip notes', weight: '10%', desc: `${notesCount} of ${bizTripsArr.length} business trips with notes`, pct: result.notesPct, contrib: result.notesContrib, color: 'var(--wc-am)' },
-                        { label: 'Photo evidence', weight: '10%', desc: `${photoCount} of ${totalTrips} trips with photos (bonus)`, pct: result.photoPct, contrib: result.photoContrib, color: 'var(--wc-y)' },
                         { label: 'Business use ratio', weight: '24%', desc: `Your ${Math.round(stats.bizPct)}% vs ${INDUSTRY_BIZ_AVG}% industry avg`, pct: result.ratioPct, contrib: result.ratioContrib, color: deviationColor },
                       ].map((row, ri) => (
                         <div key={ri} className="rounded-[6px] px-[7px] py-[4px]" style={{ background: 'rgb(var(--wc-ink) / .02)' }}>
@@ -225,16 +218,6 @@ export function OdometerScreen() {
             </div>
 
             <div className="overflow-y-auto p-[16px] flex flex-col gap-[14px]">
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
-                <div className="flex items-center gap-[6px] mb-[8px]">
-                  <Camera className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
-                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>About Photo Evidence</span>
-                </div>
-                <p className="text-[12px] leading-[1.6]" style={{ color: 'var(--wc-text)' }}>
-                  Photo evidence for all trips may not be achievable in practice. That's okay. What matters most is keeping <strong style={{ color: 'var(--wc-y)' }}>accurate and consistent odometer readings</strong> across all your trips, regardless of whether they are personal or business.
-                </p>
-              </div>
-
               <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(34,197,94,.04)', border: '1px solid rgba(34,197,94,.15)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Check className="w-[14px] h-[14px]" style={{ color: 'var(--wc-gr)' }} />
@@ -326,7 +309,6 @@ export function OdometerScreen() {
                   </div>
                   <div className="text-[10px] leading-tight" style={{ color: 'var(--wc-t3)' }}>
                     {t.km} km &middot; {curStart.toLocaleString('en-AU')}→{curEnd.toLocaleString('en-AU')}
-                    {t.photo && <span style={{ color: 'var(--wc-gr)' }}> &middot; 📷</span>}
                   </div>
                 </div>
 
@@ -336,7 +318,7 @@ export function OdometerScreen() {
                     style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 1px 6px rgb(var(--wc-ink) / .15)' }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
+                      dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: false });
                     }}
                     data-testid={`confirm-odo-${i}`}
                   >
@@ -438,58 +420,13 @@ export function OdometerScreen() {
                       </button>
                     </div>
                   )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-[6px]">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        ref={el => { fileInputRefs.current[i] = el; }}
-                        onChange={e => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = ev => {
-                              setPhotoThumbs(prev => ({ ...prev, [i]: ev.target?.result as string }));
-                              dispatch({ type: 'ADD_PHOTO', tripIndex: i });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                          e.target.value = '';
-                        }}
-                        data-testid={`photo-file-${i}`}
-                      />
-                      <button
-                        className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center cursor-pointer transition-all active:scale-90 relative overflow-hidden"
-                        style={{
-                          background: photoThumbs[i] ? 'transparent' : 'rgb(var(--wc-ink) / .07)',
-                          border: photoThumbs[i] ? '1.5px solid var(--wc-gr)' : '1.5px solid rgb(var(--wc-ink) / .25)',
-                          color: 'var(--wc-y)',
-                        }}
-                        onClick={() => fileInputRefs.current[i]?.click()}
-                        data-testid={`photo-btn-${i}`}
-                      >
-                        {photoThumbs[i] ? (
-                          <img src={photoThumbs[i]} alt="Odo photo" className="absolute inset-0 w-full h-full object-cover rounded-[6px]" />
-                        ) : (
-                          <Camera className="w-[12px] h-[12px]" />
-                        )}
-                      </button>
-                      <div className="text-[9px]" style={{ color: t.photo ? 'var(--wc-gr)' : 'var(--wc-t3)' }}>
-                        {t.photo ? (
-                          <><Check className="w-[10px] h-[10px] inline mr-1" />Photo +2 pts</>
-                        ) : (
-                          'Add photo +2 pts'
-                        )}
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-end">
                     {!verified && (
                       <button
                         className="rounded-[8px] px-[10px] py-[5px] font-heading font-extrabold text-[10px] tracking-[.06em] uppercase cursor-pointer flex items-center gap-[3px] transition-all active:scale-95"
                         style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)', boxShadow: '0 2px 10px rgb(var(--wc-ink) / .2)' }}
                         onClick={() => {
-                          dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: t.photo });
+                          dispatch({ type: 'VERIFY_TRIP', tripIndex: i, startReading: curStart, reading: curEnd, photo: false });
                         }}
                         data-testid={`confirm-odo-expanded-${i}`}
                       >

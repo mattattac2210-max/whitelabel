@@ -317,7 +317,7 @@ function exportCombinedCSV(combined: any) {
     'Start Date','End Date','ODO Start (km)','ODO End (km)',
     'Business/Personal','Purpose','Notes','Total Distance (km)',
     'Business km (autofilled)','Business km',
-    'Verified','Photo Evidence'
+    'Verified'
   ];
   const rows = allTrips.map((t: any) => {
     const isBiz = t.type === 'business';
@@ -331,7 +331,6 @@ function exportCombinedCSV(combined: any) {
       isBiz ? t.km.toFixed(1) : '0',
       isBiz ? t.km.toFixed(1) : '0',
       t.verified ? 'Yes' : 'No',
-      t.photo ? 'Yes' : 'No',
     ];
   });
   const csv = [headers, ...rows]

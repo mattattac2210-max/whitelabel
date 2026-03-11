@@ -116,7 +116,102 @@ export function getTripOdoEnd(
   return getTripOdoStart(trips, idx, baseOdo) + trips[idx].km;
 }
 
-// ── Connector trip generation ────────────────────────────────
+/** Parse time string to minutes since midnight. Handles "9:00 AM", "12:30 PM", "09:00", "14:30". */
+export function parseTimeToMinutes(time: string): number {
+  if (!time || !time.trim()) return 0;
+  const ampm = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (ampm) {
+    let h = parseInt(ampm[1], 10);
+    const m = parseInt(ampm[2] || '0', 10);
+    if (ampm[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (ampm[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  }
+  const hhmm = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (hhmm) {
+    const h = parseInt(hhmm[1], 10);
+    const m = parseInt(hhmm[2], 10);
+    return h * 60 + m;
+  }
+  return 0;
+}
+
+/** Compare two trips for chronological order. Returns negative if a before b. Uses date, then time (properly), then geographic continuity. */
+export function compareTripsChronologically(a: Trip, b: Trip, prevEnd?: string): number {
+  const da = new Date(a.year, a.month, a.day).getTime();
+  const db = new Date(b.year, b.month, b.day).getTime();
+  if (da !== db) return da - db;
+  const ta = parseTimeToMinutes(a.time || '');
+  const tb = parseTimeToMinutes(b.time || '');
+  if (ta !== tb) return ta - tb;
+  // Same date and time: prefer geographic continuity (trip that starts where prev ended comes first)
+  if (prevEnd) {
+    const aFrom = (a.from + (a.fromSub ? ', ' + a.fromSub : '')).toLowerCase();
+    const bFrom = (b.from + (b.fromSub ? ', ' + b.fromSub : '')).toLowerCase();
+    const prevNorm = prevEnd.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (prevNorm.length >= 4) {
+      const aMatch = aFrom.replace(/[^a-z0-9]/g, '').includes(prevNorm) || prevNorm.includes(aFrom.replace(/[^a-z0-9]/g, ''));
+      const bMatch = bFrom.replace(/[^a-z0-9]/g, '').includes(prevNorm) || prevNorm.includes(bFrom.replace(/[^a-z0-9]/g, ''));
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+    }
+  }
+  return 0;
+}
+
+/** Sort trips chronologically (date, then time). */
+export function sortTripsChronologically(trips: Trip[]): Trip[] {
+  const out = [...trips];
+  out.sort((a, b) => compareTripsChronologically(a, b));
+  return out;
+}
+
+/** Compute insertion index for a new trip given date (YYYY-MM-DD) and time (HH:mm or "9:00 AM"). Matches ADD_TRIP logic. */
+export function getInsertIndexForNewTrip(
+  trips: Trip[],
+  dateStr: string,
+  timeStr: string
+): number {
+  const d = new Date(dateStr + 'T00:00:00');
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const day = d.getDate();
+  const newMinutes = parseTimeToMinutes(timeStr);
+
+  const tripTime = new Date(year, month, day).getTime();
+  let insertIdx = trips.length;
+  for (let i = 0; i < trips.length; i++) {
+    const t = trips[i];
+    const tTime = new Date(t.year, t.month, t.day).getTime();
+    if (tTime > tripTime) {
+      insertIdx = i;
+      break;
+    }
+    if (tTime === tripTime) {
+      const tMinutes = parseTimeToMinutes(t.time || '');
+      if (newMinutes < tMinutes) {
+        insertIdx = i;
+        break;
+      }
+    }
+  }
+  return insertIdx;
+}
+
+// ── Gap detection ────────────────────────────────────────────
+
+/** Returns gap info when prevTrip.to does not match nextTrip.from. Used when adding a trip that creates a geographic gap. */
+export function getGapBetweenTrips(
+  prevTrip: { to: string; toSub?: string },
+  nextTrip: { from: string; fromSub?: string }
+): { from: string; fromSub: string; to: string; toSub: string } | null {
+  if (locsMatch(prevTrip.to, nextTrip.from)) return null;
+  const from = prevTrip.to;
+  const fromSub = prevTrip.toSub ?? '';
+  const to = nextTrip.from;
+  const toSub = nextTrip.fromSub ?? '';
+  return { from, fromSub, to, toSub };
+}
 
 function normLoc(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^(the|at)/, '');
@@ -126,7 +221,8 @@ function locsMatch(a: string, b: string): boolean {
   const na = normLoc(a);
   const nb = normLoc(b);
   if (na === nb) return true;
-  if (na.includes(nb) || nb.includes(na)) return true;
+  // Only use includes for substantial matches (avoid "syd" matching "sydney")
+  if (na.length >= 4 && nb.length >= 4 && (na.includes(nb) || nb.includes(na))) return true;
   return false;
 }
 
@@ -134,12 +230,7 @@ let connectorIdCounter = 9000;
 
 export function generateConnectorTrips(trips: Trip[]): Trip[] {
   const sorted = [...trips].filter(t => t.type !== null);
-  sorted.sort((a, b) => {
-    const da = new Date(a.year, a.month, a.day).getTime();
-    const db = new Date(b.year, b.month, b.day).getTime();
-    if (da !== db) return da - db;
-    return (a.time || '').localeCompare(b.time || '');
-  });
+  sorted.sort((a, b) => compareTripsChronologically(a, b));
 
   const connectors: Trip[] = [];
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -177,4 +268,43 @@ export function generateConnectorTrips(trips: Trip[]): Trip[] {
     }
   }
   return connectors;
+}
+
+/** Result item for the merged trip list with connectors. */
+export interface TripWithConnectorMeta {
+  trip: Trip;
+  isConnector: boolean;
+  origIndex: number | null;
+}
+
+/**
+ * Returns classified trips merged with connector (gap) trips.
+ * Connectors fill geographic gaps where prevTrip.to !== nextTrip.from,
+ * so the timeline shows continuous location flow and avoids "doubling up" logic errors.
+ */
+export function getTripsWithConnectors(trips: Trip[]): TripWithConnectorMeta[] {
+  const classified = trips.filter(t => t.type !== null && !t.autoGenerated);
+  const sorted = sortTripsChronologically(classified);
+  const connectors = generateConnectorTrips(sorted);
+
+  const result: TripWithConnectorMeta[] = [];
+  let connectorIdx = 0;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const t = sorted[i];
+    const origIndex = trips.indexOf(t);
+
+    result.push({ trip: t, isConnector: false, origIndex });
+
+    if (connectorIdx < connectors.length) {
+      const curr = sorted[i];
+      const next = sorted[i + 1];
+      if (next && !locsMatch(curr.to, next.from)) {
+        result.push({ trip: connectors[connectorIdx], isConnector: true, origIndex: null });
+        connectorIdx++;
+      }
+    }
+  }
+
+  return result;
 }

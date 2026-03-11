@@ -320,16 +320,28 @@
   100% { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes odoRoll0 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-20 * 56px)); } }
-@keyframes odoRoll1 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-21 * 56px)); } }
-@keyframes odoRoll2 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-22 * 56px)); } }
-@keyframes odoRoll3 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-23 * 56px)); } }
-@keyframes odoRoll4 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-24 * 56px)); } }
-@keyframes odoRoll5 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-25 * 56px)); } }
-@keyframes odoRoll6 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-26 * 56px)); } }
-@keyframes odoRoll7 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-27 * 56px)); } }
-@keyframes odoRoll8 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-28 * 56px)); } }
-@keyframes odoRoll9 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-29 * 56px)); } }
+@keyframes odoRoll0 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-20 * 48px)); } }
+@keyframes odoRoll1 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-21 * 48px)); } }
+@keyframes odoRoll2 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-22 * 48px)); } }
+@keyframes odoRoll3 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-23 * 48px)); } }
+@keyframes odoRoll4 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-24 * 48px)); } }
+@keyframes odoRoll5 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-25 * 48px)); } }
+@keyframes odoRoll6 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-26 * 48px)); } }
+@keyframes odoRoll7 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-27 * 48px)); } }
+@keyframes odoRoll8 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-28 * 48px)); } }
+@keyframes odoRoll9 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-29 * 48px)); } }
+
+/* Odometer roll animation (modal uses 48px row height, odoRollSm prefix) */
+@keyframes odoRollSm0 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-20 * 48px)); } }
+@keyframes odoRollSm1 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-21 * 48px)); } }
+@keyframes odoRollSm2 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-22 * 48px)); } }
+@keyframes odoRollSm3 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-23 * 48px)); } }
+@keyframes odoRollSm4 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-24 * 48px)); } }
+@keyframes odoRollSm5 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-25 * 48px)); } }
+@keyframes odoRollSm6 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-26 * 48px)); } }
+@keyframes odoRollSm7 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-27 * 48px)); } }
+@keyframes odoRollSm8 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-28 * 48px)); } }
+@keyframes odoRollSm9 { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-29 * 48px)); } }
 
 @keyframes odoSavedPop {
   0% { transform: scale(.92); opacity: 0; }

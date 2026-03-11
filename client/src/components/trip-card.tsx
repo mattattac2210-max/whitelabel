@@ -325,11 +325,12 @@ interface TripCardProps {
   position: number;
   onClassify: (type: 'business' | 'personal') => void;
   onEdit: () => void;
+  onDelete?: () => void;
   tutorialPhase?: 'idle' | 'left' | 'right' | 'done';
   tripValue?: number;
 }
 
-export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, tutorialPhase = 'done', tripValue }: TripCardProps) {
+export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit, onDelete, tutorialPhase = 'done', tripValue }: TripCardProps) {
   const { state, dispatch } = useApp();
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragX, setDragX] = useState(0);
@@ -560,6 +561,17 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
           >
             Details
           </button>
+          {onDelete && (
+            <button
+              className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
+              style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
+              onPointerDown={e => e.stopPropagation()}
+              onClick={() => { if (window.confirm('Delete this trip? Use if it didn\'t happen or is a duplicate.')) onDelete(); }}
+              data-testid="button-delete-trip"
+            >
+              Delete
+            </button>
+          )}
           <button
             className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em] transition-all"
             style={{ background: 'var(--wc-am)', border: '1px solid var(--wc-am)', color: 'var(--wc-bg)' }}
@@ -767,6 +779,16 @@ export function TripCard({ trip, tripIndex, isTop, position, onClassify, onEdit,
                 <span className="font-heading font-bold text-[14px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>{trip.date}</span>
                 <span className="w-[4px] h-[4px] rounded-full" style={{ background: 'var(--wc-t3)' }} />
                 <span className="font-data text-[12px]" style={{ color: 'var(--wc-t3)' }}>{trip.duration}</span>
+                {onDelete && (
+                  <button
+                    className="rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em]"
+                    style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)', color: 'var(--wc-re)' }}
+                    onClick={() => { setShowDetail(false); if (window.confirm('Delete this trip? Use if it didn\'t happen or is a duplicate.')) onDelete(); }}
+                    data-testid="button-detail-delete"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button
                   className="ml-auto rounded-[6px] px-2 py-[3px] font-heading font-semibold text-[11px] uppercase tracking-[.05em]"
                   style={{ background: 'var(--wc-am)', border: '1px solid var(--wc-am)', color: 'var(--wc-bg)' }}

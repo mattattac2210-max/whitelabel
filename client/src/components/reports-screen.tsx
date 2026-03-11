@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
-import { useApp } from '@/lib/app-context';
-import { calcLogbookDeduction } from '@/lib/trip-data';
+import { useApp, getEstimatorParamsFromState } from '@/lib/app-context';
+import { calcLogbookDeduction, getVehicleCosts } from '@/lib/trip-data';
 import {
   ArrowLeft, ChevronDown, ChevronUp, AlertTriangle, Check,
   Archive, ShieldAlert, ArrowUpCircle, Link2, Trash2, Plus, Pause,
@@ -75,7 +75,23 @@ function TableRow({ label, val, highlight, tip }: { label: string; val: string; 
   );
 }
 
-async function generatePDF(report: any, vehicle: VehicleDetails) {
+function parseTripDate(d: string): number {
+  if (typeof d !== 'string') return 0;
+  if (d.includes('/')) {
+    const p = d.split('/');
+    return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime();
+  }
+  const t = Date.parse(d.replace(/^[A-Za-z]+,\s*/, '') + ' 2026');
+  return isNaN(t) ? 0 : t;
+}
+
+function sanitizeAuditText(s: string): string {
+  if (typeof s !== 'string') return '';
+  let out = s.replace(/&/g, '').replace(/\u2014/g, '-').replace(/\s+/g, ' ').trim();
+  return out || s;
+}
+
+async function generatePDF(report: any, vehicle: VehicleDetails, vehicleCosts: number = 0) {
   const JsPDF = await loadJsPDF();
   if (!JsPDF) { alert('Failed to load PDF library. Check your connection.'); return; }
 
@@ -91,12 +107,12 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const BK: [number, number, number] = [17, 17, 17];
   const GG: [number, number, number] = [120, 120, 120];
 
-  const allTrips = report.trips || [];
+  const allTrips = [...(report.trips || [])].sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date));
   const bizTrips = allTrips.filter((t: any) => t.type === 'business');
   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-  const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
+  const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
   const generatedAt = new Date().toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   function addPage() {
@@ -173,7 +189,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   const grid = [
     ['Car make and model', vehicle.model || vehicle.make || '_______________', 'Car registration number', vehicle.registration || '_______________'],
     ['Engine capacity', vehicle.engineCapacity || '_______________', 'Year of manufacture', vehicle.year || '_______________'],
-    ['Logbook start date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end date', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
+    ['Logbook start date', allTrips.length > 0 ? allTrips[0].date : '\u2014', 'Logbook end date', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014'],
     ['Odometer start (km)', report.odoRangeStart != null ? report.odoRangeStart.toLocaleString('en-AU') : '\u2014', 'Odometer end (km)', report.odoRangeEnd != null ? report.odoRangeEnd.toLocaleString('en-AU') : '\u2014'],
     ['Total kilometres', `${totalKm.toFixed(1)} km`, 'Percentage business km', `${bizPct}%`],
   ];
@@ -258,6 +274,8 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
     doc.setDrawColor(235, 235, 235);
     doc.rect(ML, y, CW, rowH, 'S');
 
+    const tripBizDollars = isBiz && totalKm > 0 && vehicleCosts > 0 ? (t.km / totalKm) * vehicleCosts : 0;
+    const bizDollarStr = isBiz ? (vehicleCosts > 0 ? tripBizDollars.toFixed(2) : '0.00') : '0';
     const cells = [
       t.date,
       t.odoStart?.toLocaleString('en-AU') ?? '\u2014',
@@ -266,7 +284,7 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
       null,
       null,
       t.km.toFixed(1),
-      isBiz ? t.km.toFixed(1) : '0',
+      bizDollarStr,
     ];
 
     let cx2 = ML;
@@ -326,21 +344,22 @@ async function generatePDF(report: any, vehicle: VehicleDetails) {
   doc.text('Pre-Audit Score', ML + scoreW + 3, y + 6);
 
   y += 10;
-  (report.areasToCheck || ['All clear \u2014 looking good for ATO compliance']).forEach((a: string) => {
+  (report.areasToCheck || ['All clear - looking good for ATO compliance']).forEach((a: string) => {
     checkY(5);
+    const text = sanitizeAuditText(a);
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-    if (a.startsWith('All clear')) {
+    if (text.startsWith('All clear')) {
       doc.setTextColor(...GR);
     } else {
       doc.setTextColor(160, 88, 0);
     }
-    doc.text(`${a.startsWith('All clear') ? '\u2713' : '\u2022'}  ${a}`, ML + 2, y);
+    doc.text(`${text.startsWith('All clear') ? '\u2713' : '\u2022'}  ${text}`, ML + 2, y);
     y += 5;
   });
 
   y += 3;
   doc.setFontSize(7.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(...GG);
-  const whyNot = 'This is an independent review of the information you have provided. It does not replace financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification completeness (35%), odometer verification (30%), business use ratio vs industry benchmarks (24%), and photo evidence (10%). It aligns with the integrity of what the ATO requires for compliance documentation. 100% is intentionally unachievable \u2014 please seek certified financial advice if you require further assistance.';
+  const whyNot = 'This is an independent review of the information you have provided. It does not replace financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification completeness (30%), odometer verification (35%), business use ratio vs industry benchmarks (24%), and trip notes (10%). It aligns with the integrity of what the ATO requires for compliance documentation. 100% is intentionally unachievable \u2014 please seek certified financial advice if you require further assistance.';
   const lines = doc.splitTextToSize(whyNot, CW - 4);
   checkY(lines.length * 4 + 2);
   doc.text(lines, ML + 2, y);
@@ -392,7 +411,7 @@ function exportCSV(report: any) {
     'Start Date','End Date','ODO Start (km)','ODO End (km)',
     'Business/Personal','Purpose','Notes','Total Distance (km)',
     'Business km (autofilled)','Reimbursement (autofilled)',
-    'Verified','Photo Evidence'
+    'Verified'
   ];
   const rows = allTrips.map((t: any) => {
     const isBiz = t.type === 'business';
@@ -406,7 +425,6 @@ function exportCSV(report: any) {
       isBiz ? t.km.toFixed(1) : '0',
       isBiz ? t.km.toFixed(1) : '0',
       t.verified ? 'Yes' : 'No',
-      t.photo ? 'Yes' : 'No',
     ];
   });
   const csv = [headers, ...rows]
@@ -821,7 +839,6 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
   const verified = bizTrips.filter((t: any) => t.verified).length;
   const withPurpose = bizTrips.filter((t: any) => t.purposeLabel).length;
   const withNotes = bizTrips.filter((t: any) => t.notes && t.notes.length > 0).length;
-  const withPhoto = bizTrips.filter((t: any) => t.photo).length;
   const hasOdo = !!report.lastOdoReading;
 
   const checks = [
@@ -831,7 +848,6 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
     { label: 'Odometer reading recorded', desc: hasOdo ? `${report.lastOdoReading?.toLocaleString('en-AU')} km verified` : 'No odometer reading saved', pass: hasOdo, required: true },
     { label: 'Logbook covers a continuous period', desc: 'Trips are recorded as they occur in real-time', pass: true, required: true },
     { label: 'Odometer verified on business trips', desc: `${verified} of ${bizTrips.length} trips odometer-verified`, pass: verified === bizTrips.length && bizTrips.length > 0, required: false },
-    { label: 'Photo evidence attached to trips', desc: `${withPhoto} of ${bizTrips.length} trips have photos`, pass: withPhoto > 0, required: false },
     { label: 'Vehicle details on file', desc: (() => {
       try {
         const v = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
@@ -896,7 +912,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
                 </div>
                 <div className="flex items-center gap-[6px]">
                   <span className="text-[9px]" style={{ color: 'var(--wc-t3)' }}>{c.desc}</span>
-                  {(c.label === 'Photo evidence attached to trips' || c.label === 'Odometer verified on business trips') && (
+                  {c.label === 'Odometer verified on business trips' && (
                     <button
                       className="font-heading font-bold text-[8px] uppercase tracking-[.05em] px-[6px] py-[2px] rounded-[4px] flex-shrink-0 cursor-pointer transition-all active:scale-95"
                       style={{ background: 'rgb(var(--wc-ink) / .1)', border: '1px solid rgb(var(--wc-ink) / .25)', color: 'var(--wc-y)' }}
@@ -917,7 +933,7 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
               <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>Why isn't the Audit Score 100%?</span>
             </div>
             <p className="text-[9.5px] leading-[1.55]" style={{ color: 'var(--wc-t3)' }}>
-              This is an independent review of the information you have provided. It <strong className="" style={{ color: 'var(--wc-text)' }}>does not replace</strong> financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification (35%), odometer verification (30%), business use ratio vs industry benchmarks (24%), and photo evidence (10%). It aligns with the integrity of what the ATO requires for compliance documentation. Please seek certified financial advice if you require further assistance.
+              This is an independent review of the information you have provided. It <strong className="" style={{ color: 'var(--wc-text)' }}>does not replace</strong> financial or institutional recommendations and does not guarantee compliance. The score is a weighted assessment of classification (30%), odometer verification (35%), business use ratio vs industry benchmarks (24%), and trip notes (10%). It aligns with the integrity of what the ATO requires for compliance documentation. Please seek certified financial advice if you require further assistance.
             </p>
           </div>
 
@@ -960,16 +976,6 @@ function PreAuditChecklist({ report, onClose }: { report: any; onClose: () => vo
             </div>
 
             <div className="overflow-y-auto p-[16px] flex flex-col gap-[14px]">
-              <div className="rounded-[12px] p-[14px]" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .2)' }}>
-                <div className="flex items-center gap-[6px] mb-[8px]">
-                  <Camera className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
-                  <span className="font-heading font-bold text-[13px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>About Photo Evidence</span>
-                </div>
-                <p className="text-[12px] leading-[1.6]" style={{ color: 'var(--wc-text)' }}>
-                  Photo evidence for all trips may not be achievable in practice. That's okay. What matters most is keeping <strong style={{ color: 'var(--wc-y)' }}>accurate and consistent odometer readings</strong> across all your trips, regardless of whether they are personal or business.
-                </p>
-              </div>
-
               <div className="rounded-[12px] p-[14px]" style={{ background: 'rgba(34,197,94,.04)', border: '1px solid rgba(34,197,94,.15)' }}>
                 <div className="flex items-center gap-[6px] mb-[8px]">
                   <Check className="w-[14px] h-[14px]" style={{ color: 'var(--wc-gr)' }} />
@@ -1193,12 +1199,18 @@ export function ReportsScreen() {
     } catch { return { make: '', model: '', registration: '', engineCapacity: '', year: '' }; }
   });
 
-  const locked = !state.freshSession && state.savedReports.length > 0;
+  const vehicleCosts = getVehicleCosts(getEstimatorParamsFromState(state, state.trips.some(t => t.type === 'business')));
+  const readOnly = state.reportsReadOnly ?? false;
+  const locked = !readOnly && !state.freshSession && state.savedReports.length > 0;
+  const effectiveView = readOnly && view === 'archive' ? 'list' : view;
   const sessionIds = Array.from(new Set(state.savedReports.map(r => r.sessionId)));
   const sessionGroups = sessionIds.map(sid => ({
     sessionId: sid,
-    reports: state.savedReports.map((r, i) => ({ ...r, globalIdx: i })).filter(r => r.sessionId === sid),
-  }));
+    reports: state.savedReports
+      .map((r, i) => ({ ...r, globalIdx: i }))
+      .filter(r => r.sessionId === sid)
+      .filter(r => readOnly ? !r.supersedes : true),
+  })).filter(g => g.reports.length > 0);
 
   function handleExportPDF(report: any) {
     setVehicleModal({ report });
@@ -1216,6 +1228,7 @@ export function ReportsScreen() {
     });
     const odoStarts = activeReports.map(r => r.odoRangeStart).filter((v: any) => v != null);
     const odoEnds = activeReports.map(r => r.odoRangeEnd).filter((v: any) => v != null);
+    const allAreas = activeReports.flatMap((r: any) => r.areasToCheck || []);
     const combined = {
       trips: allTrips,
       bizCount: allTrips.filter((t: any) => t.type === 'business').length,
@@ -1227,6 +1240,7 @@ export function ReportsScreen() {
       est: activeReports.map(r => r.est).join(' + '),
       totalKm: allTrips.reduce((s: number, t: any) => s + t.km, 0).toFixed(1),
       timestamp: activeReports[0]?.timestamp || '',
+      areasToCheck: Array.from(new Set(allAreas)),
     };
     setVehicleModal({ report: combined });
   }
@@ -1235,9 +1249,11 @@ export function ReportsScreen() {
     setVehicleDetails(v);
     setVehicleModal(null);
     const r = vehicleModal.report;
+    const params = getEstimatorParamsFromState(state, (r.trips || []).some((t: any) => t.type === 'business'));
+    const vehicleCosts = getVehicleCosts({ vehicleSpecs: params.vehicleSpecs, vehiclePurchase: params.vehiclePurchase, expenses: params.expenses, settings: params.settings });
     const today = new Date();
     const dateStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-    generatePDF(r, v);
+    generatePDF(r, v, vehicleCosts);
     setExportLog(l => [{ ts: today.toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), type: 'PDF', rev: r.revision, dateStr }, ...l]);
   }
   function handleExportCSV(report: any) {
@@ -1266,7 +1282,7 @@ export function ReportsScreen() {
             <Info className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
             <span className="font-heading font-bold text-[12px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>Tax Info</span>
           </button>
-          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{state.savedReports.length} report{state.savedReports.length !== 1 ? 's' : ''}</span>
+          <span className="text-[11px]" style={{ color: 'var(--wc-t2)' }}>{(readOnly ? state.savedReports.filter(r => !r.supersedes) : state.savedReports).length} report{(readOnly ? state.savedReports.filter(r => !r.supersedes) : state.savedReports).length !== 1 ? 's' : ''}</span>
         </div>
       </div>
       <div className="flex gap-[4px] px-[14px] pb-[6px] flex-shrink-0">
@@ -1274,14 +1290,14 @@ export function ReportsScreen() {
           { id: 'list', label: 'List', Icon: List },
           { id: 'calendar', label: 'Calendar', Icon: Calendar },
           { id: 'timeline', label: '12-Week', Icon: BarChart2 },
-          { id: 'archive', label: 'Archive', Icon: Archive },
-        ] as const).map(({ id, label, Icon }) => (
+          ...(readOnly ? [] : [{ id: 'archive' as const, label: 'Archive', Icon: Archive }]),
+        ] as { id: 'list' | 'calendar' | 'timeline' | 'archive'; label: string; Icon: typeof Archive }[]).map(({ id, label, Icon }) => (
           <button key={id}
             className="flex items-center gap-[3px] flex-1 justify-center rounded-[8px] py-[5px] font-heading font-bold uppercase tracking-[.04em] transition-all text-[14px]"
             style={{
-              background: view === id ? 'rgb(var(--wc-ink) / .12)' : 'rgb(var(--wc-ink) / .03)',
-              border: `1px solid ${view === id ? 'rgb(var(--wc-ink) / .35)' : 'var(--wc-border)'}`,
-              color: view === id ? 'var(--wc-y)' : 'var(--wc-t3)',
+              background: effectiveView === id ? 'rgb(var(--wc-ink) / .12)' : 'rgb(var(--wc-ink) / .03)',
+              border: `1px solid ${effectiveView === id ? 'rgb(var(--wc-ink) / .35)' : 'var(--wc-border)'}`,
+              color: effectiveView === id ? 'var(--wc-y)' : 'var(--wc-t3)',
             }}
             onClick={() => setView(id)}
             data-testid={`view-${id}`}>
@@ -1292,16 +1308,16 @@ export function ReportsScreen() {
       </div>
       <div className="flex-1 px-[14px] flex flex-col gap-[10px] overflow-y-auto scrollbar-thin pb-2">
 
-        {view === 'timeline' && (
+        {effectiveView === 'timeline' && (
           <>
-            <TwelveWeekTimeline savedReports={state.savedReports} />
-            <ExportLogPanel log={exportLog} />
+            <TwelveWeekTimeline savedReports={readOnly ? state.savedReports.filter(r => !r.supersedes) : state.savedReports} />
+            {!readOnly && <ExportLogPanel log={exportLog} />}
           </>
         )}
 
-        {view === 'calendar' && <CalendarView savedReports={state.savedReports} exportLog={exportLog} />}
+        {effectiveView === 'calendar' && <CalendarView savedReports={readOnly ? state.savedReports.filter(r => !r.supersedes) : state.savedReports} exportLog={exportLog} />}
 
-        {view === 'archive' && (
+        {effectiveView === 'archive' && (
           (() => {
             const archivedReports = state.savedReports
               .map((r, i) => ({ ...r, globalIdx: i }))
@@ -1359,7 +1375,7 @@ export function ReportsScreen() {
                   const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
                   const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
                   const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-                  const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
+                  const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
                   const sessionLabel = SESSION_LABELS[r.sessionId] || r.sessionId;
 
                   return (
@@ -1428,7 +1444,7 @@ export function ReportsScreen() {
                             <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
                               <tbody>
                                 {[
-                                  ['Logbook start', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
+                                  ['Logbook start', allTrips.length > 0 ? (() => { const s = [...allTrips].sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date)); return s[0].date; })() : '\u2014', 'Logbook end', allTrips.length > 0 ? (() => { const s = [...allTrips].sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date)); return s[s.length - 1].date; })() : '\u2014'],
                                   ['Odo start', r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') + ' km' : '\u2014', 'Odo end', r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') + ' km' : '\u2014'],
                                   ['Total km', totalKm.toFixed(1), 'Business %', bizPct + '%'],
                                 ].map(([l1,v1,l2,v2], ri) => (
@@ -1460,15 +1476,23 @@ export function ReportsScreen() {
                               <tbody>
                                 {allTrips.map((t: any, ti: number) => {
                                   const isBiz = t.type === 'business';
+                                  const tripEst = isBiz && totalKm > 0 && vehicleCosts > 0 ? (t.km / totalKm) * vehicleCosts : 0;
                                   return (
                                     <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none', background: isBiz ? 'rgb(var(--wc-ink) / .025)' : 'transparent' }}>
                                       <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.date}</td>
                                       <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoStart?.toLocaleString('en-AU') ?? '\u2014'}</td>
                                       <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoEnd?.toLocaleString('en-AU') ?? '\u2014'}</td>
-                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-text)' }}>{isBiz ? 'Biz' : 'Per'}</td>
+                                      <td
+                                        className="p-[3px_6px] cursor-pointer"
+                                        style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-text)' }}
+                                        onClick={() => dispatch({ type: 'FIX_REPORT_TRIP_TYPE', reportIndex: i, tripIndex: ti, newType: isBiz ? 'personal' : 'business' })}
+                                        title="Tap to fix: switch to Personal/Business"
+                                      >
+                                        {isBiz ? 'Biz' : 'Per'}
+                                      </td>
                                       <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.km.toFixed(1)}</td>
                                       <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : 'var(--wc-text)' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
-                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-text)' }}>{isBiz ? `${t.km.toFixed(1)}` : '\u2014'}</td>
+                                      <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : 'var(--wc-text)' }}>{isBiz ? (vehicleCosts > 0 ? `$${tripEst.toFixed(2)}` : '$0.00') : '\u2014'}</td>
                                     </tr>
                                   );
                                 })}
@@ -1488,14 +1512,17 @@ export function ReportsScreen() {
                                 <AlertTriangle className="w-[11px] h-[11px]" style={{ color: 'var(--wc-am)' }} />
                                 <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Compliance Notes</span>
                               </div>
-                              {r.areasToCheck.map((a: string, ai: number) => (
-                                <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
-                                  <span style={{ color: a.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
-                                    {a.startsWith('All clear') ? '\u2713' : '\u00B7'}
-                                  </span>
-                                  <span className="text-[10px]" style={{ color: 'var(--wc-text)' }}>{a}</span>
-                                </div>
-                              ))}
+                              {r.areasToCheck.map((a: string, ai: number) => {
+                                const text = sanitizeAuditText(a);
+                                return (
+                                  <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
+                                    <span style={{ color: text.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                                      {text.startsWith('All clear') ? '\u2713' : '\u00B7'}
+                                    </span>
+                                    <span className="text-[10px]" style={{ color: 'var(--wc-text)' }}>{text}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -1508,7 +1535,7 @@ export function ReportsScreen() {
           })()
         )}
 
-        {view === 'list' && (
+        {effectiveView === 'list' && (
           state.savedReports.length === 0 ? (
             <div className="py-[30px] text-center text-[13px]" style={{ color: 'var(--wc-t2)' }}>
               No sessions saved yet.<br />Complete your first sort session to see reports here.
@@ -1525,7 +1552,7 @@ export function ReportsScreen() {
                   style={isLinked ? { border: '2px solid rgb(var(--wc-ink) / .4)', background: 'rgb(var(--wc-ink) / .03)' } : {}}
                   data-testid={`session-group-${group.sessionId}`}>
 
-                  {isLinked && (
+                  {isLinked && !readOnly && (
                     <div className="flex flex-col gap-[5px] px-[6px] pt-[2px] pb-[2px]">
                       <div className="flex items-center gap-[6px]">
                         <Link2 className="w-[11px] h-[11px]" style={{ color: 'var(--wc-y)' }} />
@@ -1553,7 +1580,7 @@ export function ReportsScreen() {
                     const totalKm = allTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizKm = bizTrips.reduce((s: number, t: any) => s + t.km, 0);
                     const bizPct = totalKm > 0 ? ((bizKm / totalKm) * 100).toFixed(2) : '0.00';
-                    const totalEst = calcLogbookDeduction(bizKm, totalKm, 0);
+                    const totalEst = calcLogbookDeduction(bizKm, totalKm, vehicleCosts);
 
                     return (
                       <div key={i} className="rounded-[13px] overflow-hidden"
@@ -1577,7 +1604,7 @@ export function ReportsScreen() {
                                   <Check className="w-[11px] h-[11px]" />Active \u00B7 Rev {r.revision}
                                 </span>
                               )}
-                              {r.supersedes && isLinked && (
+                              {r.supersedes && isLinked && !readOnly && (
                                 <span className="inline-flex items-center gap-[4px] font-heading font-bold text-[10px] uppercase tracking-[.05em] px-[8px] py-[3px] rounded-[6px] cursor-pointer"
                                   style={{ background: 'rgb(var(--wc-ink) / .15)', border: '1.5px solid rgb(var(--wc-ink) / .4)', color: 'var(--wc-y)' }}
                                   onClick={e => { e.stopPropagation(); dispatch({ type: 'PROMOTE_REPORT', reportIndex: i }); }}
@@ -1622,7 +1649,7 @@ export function ReportsScreen() {
                         {isOpen && (
                           <div className="px-[14px] pb-[14px]" style={{ borderTop: '1px solid var(--wc-border)' }}>
 
-                            {!r.supersedes && (
+                            {!r.supersedes && !readOnly && (
                               <div className="flex gap-[5px] mt-[10px] mb-[8px]">
                                 <button className="flex-1 flex items-center justify-center gap-[5px] rounded-[9px] py-[9px] font-heading font-bold text-[11px] uppercase tracking-[.04em] cursor-pointer"
                                   style={{ background: 'rgb(var(--wc-ink) / .1)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
@@ -1646,10 +1673,10 @@ export function ReportsScreen() {
                             )}
 
                             <div className="flex items-center gap-[5px] mb-[8px] rounded-[7px] p-[6px_10px]"
-                              style={{ background: state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)', border: '1px solid rgb(var(--wc-ink) / .08)' }}>
-                              <Archive className="w-[11px] h-[11px] flex-shrink-0" style={{ color: state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-bg)' : 'var(--wc-t3)' }} />
-                              <span className="text-[9px] font-bold" style={{ color: state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-bg)' : 'var(--wc-t3)' }}>
-                                {state.sessionId === r.sessionId && state.trips.length > 0 ? 'Read-only snapshot. Go back to create a new report.' : 'Read-only. Sort cards deleted — data cannot be modified.'}
+                              style={{ background: readOnly ? 'rgb(var(--wc-ink) / .04)' : (state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .06)'), border: '1px solid rgb(var(--wc-ink) / .08)' }}>
+                              <Archive className="w-[11px] h-[11px] flex-shrink-0" style={{ color: readOnly ? 'var(--wc-t3)' : (state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-bg)' : 'var(--wc-t3)') }} />
+                              <span className="text-[9px] font-bold" style={{ color: readOnly ? 'var(--wc-t3)' : (state.sessionId === r.sessionId && state.trips.length > 0 ? 'var(--wc-bg)' : 'var(--wc-t3)') }}>
+                                {readOnly ? 'View only. For PDF & CSV export, go to Export.' : (state.sessionId === r.sessionId && state.trips.length > 0 ? 'Read-only snapshot. Go back to create a new report.' : 'Read-only. Sort cards deleted — data cannot be modified.')}
                               </span>
                             </div>
 
@@ -1657,7 +1684,7 @@ export function ReportsScreen() {
                               <table className="w-full font-data text-[9px]" style={{ borderCollapse: 'collapse' }}>
                                 <tbody>
                                   {[
-                                    ['Logbook start', allTrips.length > 0 ? allTrips[allTrips.length - 1].date : '\u2014', 'Logbook end', allTrips.length > 0 ? allTrips[0].date : '\u2014'],
+                                    ['Logbook start', allTrips.length > 0 ? (() => { const s = [...allTrips].sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date)); return s[0].date; })() : '\u2014', 'Logbook end', allTrips.length > 0 ? (() => { const s = [...allTrips].sort((a: any, b: any) => parseTripDate(a.date) - parseTripDate(b.date)); return s[s.length - 1].date; })() : '\u2014'],
                                     ['Odo start', r.odoRangeStart != null ? r.odoRangeStart.toLocaleString('en-AU') + ' km' : '\u2014', 'Odo end', r.odoRangeEnd != null ? r.odoRangeEnd.toLocaleString('en-AU') + ' km' : '\u2014'],
                                     ['Total km', totalKm.toFixed(1), 'Business %', bizPct + '%'],
                                   ].map(([l1,v1,l2,v2], ri) => (
@@ -1689,15 +1716,22 @@ export function ReportsScreen() {
                                 <tbody>
                                   {allTrips.map((t: any, ti: number) => {
                                     const isBiz = t.type === 'business';
+                                    const tripEst = isBiz && totalKm > 0 && vehicleCosts > 0 ? (t.km / totalKm) * vehicleCosts : 0;
                                     return (
                                       <tr key={ti} style={{ borderBottom: ti < allTrips.length - 1 ? '1px solid rgb(var(--wc-ink) / .04)' : 'none', background: isBiz ? 'rgb(var(--wc-ink) / .025)' : 'transparent' }}>
                                         <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.date}</td>
                                         <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoStart?.toLocaleString('en-AU') ?? '\u2014'}</td>
                                         <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.odoEnd?.toLocaleString('en-AU') ?? '\u2014'}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? 'Biz' : 'Per'}</td>
+                                        <td
+                                          className={`p-[3px_6px] ${readOnly ? '' : 'cursor-pointer'}`}
+                                          style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}
+                                          {...(readOnly ? {} : { onClick: () => dispatch({ type: 'FIX_REPORT_TRIP_TYPE', reportIndex: i, tripIndex: ti, newType: isBiz ? 'personal' : 'business' }), title: 'Tap to fix: switch to Personal/Business' })}
+                                        >
+                                          {isBiz ? 'Biz' : 'Per'}
+                                        </td>
                                         <td className="p-[3px_6px]" style={{ color: 'var(--wc-text)' }}>{t.km.toFixed(1)}</td>
                                         <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-y)' : '#fff' }}>{isBiz ? t.km.toFixed(1) : ''}</td>
-                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{isBiz ? `${t.km.toFixed(1)}` : '\u2014'}</td>
+                                        <td className="p-[3px_6px]" style={{ color: isBiz ? 'var(--wc-gr)' : '#fff' }}>{isBiz ? (vehicleCosts > 0 ? `$${tripEst.toFixed(2)}` : '$0.00') : '\u2014'}</td>
                                       </tr>
                                     );
                                   })}
@@ -1717,14 +1751,17 @@ export function ReportsScreen() {
                                   <AlertTriangle className="w-[11px] h-[11px]" style={{ color: 'var(--wc-am)' }} />
                                   <span className="font-heading font-bold text-[10px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-am)' }}>Compliance Notes</span>
                                 </div>
-                                {r.areasToCheck.map((a: string, ai: number) => (
-                                  <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
-                                    <span style={{ color: a.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
-                                      {a.startsWith('All clear') ? '\u2713' : '\u00B7'}
-                                    </span>
-                                    <span className="text-[10px]" style={{ color: 'var(--wc-text)' }}>{a}</span>
-                                  </div>
-                                ))}
+                                {r.areasToCheck.map((a: string, ai: number) => {
+                                  const text = sanitizeAuditText(a);
+                                  return (
+                                    <div key={ai} className="flex items-start gap-[5px] mb-[2px]">
+                                      <span style={{ color: text.startsWith('All clear') ? 'var(--wc-gr)' : 'var(--wc-am)' }}>
+                                        {text.startsWith('All clear') ? '\u2713' : '\u00B7'}
+                                      </span>
+                                      <span className="text-[10px]" style={{ color: 'var(--wc-text)' }}>{text}</span>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -1744,7 +1781,7 @@ export function ReportsScreen() {
                               </div>
                             )}
 
-                            {isLinked && r.supersedes && (
+                            {isLinked && r.supersedes && !readOnly && (
                               <button className="w-full rounded-[8px] py-[7px] mb-[8px] font-heading font-bold text-[11px] tracking-[.05em] uppercase cursor-pointer flex items-center justify-center gap-[5px]"
                                 style={{ background: 'rgb(var(--wc-ink) / .07)', border: '1.5px solid rgb(var(--wc-ink) / .28)', color: 'var(--wc-y)' }}
                                 onClick={() => dispatch({ type: 'PROMOTE_REPORT', reportIndex: i })}

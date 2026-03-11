@@ -60,7 +60,7 @@ All application logic runs client-side using React state (via useReducer + Conte
 5. **Odometer** -- Verify odometer readings, add photo evidence, audit score tracking
 6. **Reports** -- Saved session summaries with List/Calendar/12-Week views, Tax Info modal, Pre-Audit Checklist, PDF/CSV export per report
 7. **Export** -- Dedicated export section to select, combine, and export multiple reports as a single combined PDF or CSV
-8. **Input** -- Add Trip screen with a choice gate: "Start New Trip" (live tracking with map, start/end trip flow) or "Add Existing Trip" (manual form for past trips). Both paths create trips with `type: null` (unsorted) and send them to the sort queue. The existing form includes from/to addresses, date/time, distance, duration, odometer, stops, and notes. The live trip flow includes starting address entry, driving phase with map + timer, destination entry, and end trip with distance calculation.
+8. **Input** -- Add Trip screen with a choice gate: "Start New Trip" (live tracking with map, start/end trip flow) or "Add Existing Trip" (manual form for past trips). Both paths create trips with `type: null` (unsorted) and send them to the sort queue. The existing form includes from/to addresses, date/time, distance, duration, odometer, stops, and notes. The live trip flow includes starting address entry, driving phase with map + timer, destination entry, and end trip with distance calculation. **Recurring Trips** (Basic Book only): Define route templates (from/to/km/time) and apply them to a date range to bulk-add trips. Past + today only; skips dates that already have a matching trip. Data in `localStorage.wc_recurring_trips_v1`.
 9. **Expenses** -- Unified expense section with two tabs (Entries / Report). Entries tab shows saved expense items with category, amount, date, vendor, receipt thumbnail, edit/delete. Report tab shows ATO-ordered category totals (Fuel/Electricity, Oil, Repairs & Maintenance, Registration, Insurance, Lease Payments, Loan Interest, Depreciation), business use %, deductible estimate, CSV export. Fuel auto-estimated from biz km × consumption × avg price; Depreciation auto-calculated via diminishing value method. Add Expense flow includes category picker, amount, date, vendor, receipt photo upload with AI extraction placeholder, verify before save. Data in `localStorage.wc_expenses`.
 10. **Stats** -- Trip analytics: business vs personal split, trips by day bar chart, top destinations, averages (km/trip, cost/km), fuel cost integration.
 11. **Find My Keys** -- GPS location save ("Mark Location"), vibrate ring, Google Maps navigation, location history.
@@ -80,11 +80,11 @@ All application logic runs client-side using React state (via useReducer + Conte
 ### Audit Score
 
 Weighted percentage calculation via `calcAuditScore()` in `app-context.tsx`:
-- Classification: 35% -- % of trips sorted
-- Odometer verified: 30% -- % of trips with confirmed readings
+- Classification: 30% -- % of trips sorted
+- Odometer verified: 35% -- % of trips with confirmed readings
+- Trip notes: 10% -- % of business trips with notes
 - Business use ratio: 24% -- deviation from 65% industry average
-- Photo evidence: 10% -- % of trips with photos (bonus)
-- Capped at 99%. Independent review disclaimer included.
+- Capped at 99%. Photos are not part of audit score (only used for start odometer and expense receipts).
 
 ### State Consistency
 
@@ -104,6 +104,7 @@ All reducer actions (`UPDATE_TRIP`, `RECLASSIFY`, `UNDO_LAST`) recalculate `dedT
 | `client/src/pages/home.tsx` | Main page with phone frame, onboarding/app routing |
 | `client/src/lib/app-context.tsx` | All state management (context + reducer) |
 | `client/src/lib/trip-data.ts` | Trip data constants, categories, helper functions |
+| `client/src/lib/recurring-trips.ts` | Recurring trip templates: CRUD, generateTripsFromTemplate, hasExistingTripForDateAndRoute |
 | `client/src/lib/deduction-estimator.ts` | Deduction estimator: readiness checks, state logic, vehicle cost breakdown |
 | `client/src/components/deduction-card.tsx` | DeductionCard (locked/partial/active), LockedModal, ReadinessCard |
 | `client/src/components/dashboard-screen.tsx` | Dashboard main hub |

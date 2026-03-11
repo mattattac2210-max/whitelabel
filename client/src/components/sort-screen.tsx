@@ -273,6 +273,7 @@ export function SortScreen() {
                 position={offset}
                 onClassify={handleClassify}
                 onEdit={() => dispatch({ type: 'OPEN_EDIT', tripIndex: state.currentIndex + offset })}
+                onDelete={() => dispatch({ type: 'DELETE_TRIP', tripIndex: state.currentIndex + offset })}
                 tutorialPhase={offset === 0 ? tutorialPhase : 'done'}
                 tripValue={deductionState !== 'locked' ? tripDeductionValue(trip.km) : undefined}
               />

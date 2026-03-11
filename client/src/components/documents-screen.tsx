@@ -1,9 +1,10 @@
 import { useApp } from '@/lib/app-context';
-import { ArrowLeft, Car, Receipt, Download, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Car, Receipt, Download, ChevronRight, BarChart3 } from 'lucide-react';
 import type { Screen } from '@/lib/app-context';
 
-const docItems: { screen: Screen; label: string; sub: string; icon: typeof Car }[] = [
-  { screen: 'reports', label: 'Driving Reports', sub: 'Trip summaries & export', icon: Car },
+const docItems: { screen: Screen; label: string; sub: string; icon: typeof Car; reportsReadOnly?: boolean }[] = [
+  { screen: 'reports', label: 'Trip Summaries', sub: 'View trip summaries', icon: Car, reportsReadOnly: true },
+  { screen: 'stats', label: 'My Stats', sub: 'Trips, km & trends', icon: BarChart3 },
   { screen: 'expenses', label: 'Expenses', sub: 'Track & report costs', icon: Receipt },
   { screen: 'export', label: 'Export', sub: 'PDF & CSV download', icon: Download },
 ];
@@ -36,7 +37,7 @@ export function DocumentsScreen() {
                 background: 'var(--wc-card)',
                 border: '1px solid var(--wc-border)',
               }}
-              onClick={() => dispatch({ type: 'GO_SCREEN', screen: item.screen })}
+              onClick={() => dispatch({ type: 'GO_SCREEN', screen: item.screen, reportsReadOnly: item.reportsReadOnly })}
               data-testid={`doc-item-${item.screen}`}
             >
               <div

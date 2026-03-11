@@ -13,6 +13,7 @@ import {
   getTripOdoStart,
   getTripOdoEnd,
   generateConnectorTrips,
+  getInsertIndexForNewTrip,
 } from './trip-data';
 import {
   getVehicles,
@@ -74,16 +75,13 @@ export function calcAuditScore(params: {
   totalTrips: number;
   sortedTrips: number;
   verifiedCount: number;
-  photoCount: number;
   bizPct: number;
   notesCount?: number;
   bizCount?: number;
 }) {
   const {
-    totalTrips,
     sortedTrips,
     verifiedCount,
-    photoCount,
     bizPct,
     notesCount = 0,
     bizCount = 0,
@@ -91,32 +89,30 @@ export function calcAuditScore(params: {
 
   if (sortedTrips === 0) {
     return {
-      classifiedPct: 0, verifiedPct: 0, photoPct: 0, ratioPct: 0, notesPct: 0,
-      classifiedContrib: 0, verifiedContrib: 0, photoContrib: 0, ratioContrib: 0,
+      classifiedPct: 0, verifiedPct: 0, ratioPct: 0, notesPct: 0,
+      classifiedContrib: 0, verifiedContrib: 0, ratioContrib: 0,
       notesContrib: 0, total: 0,
     };
   }
 
-  const classifiedPct = sortedTrips > 0 ? 100 : 0;
+  const classifiedPct = 100;
   const verifiedPct = (verifiedCount / sortedTrips) * 100;
-  const photoPct = (photoCount / sortedTrips) * 100;
   const notesPct = bizCount > 0 ? (notesCount / bizCount) * 100 : 0;
   const deviation = Math.abs(bizPct - INDUSTRY_BIZ_AVG);
   const ratioPct = Math.max(0, 100 - (deviation / INDUSTRY_BIZ_AVG) * 100);
 
   const classifiedContrib = Math.round(classifiedPct * 0.30);
-  const verifiedContrib = Math.round(verifiedPct * 0.25);
-  const photoContrib = Math.round(photoPct * 0.10);
+  const verifiedContrib = Math.round(verifiedPct * 0.35);
   const notesContrib = Math.round(notesPct * 0.10);
   const ratioContrib = Math.round(ratioPct * 0.24);
   const total = Math.min(
     99,
-    classifiedContrib + verifiedContrib + photoContrib + notesContrib + ratioContrib
+    classifiedContrib + verifiedContrib + notesContrib + ratioContrib
   );
 
   return {
-    classifiedPct, verifiedPct, photoPct, ratioPct, notesPct,
-    classifiedContrib, verifiedContrib, photoContrib, ratioContrib, notesContrib, total,
+    classifiedPct, verifiedPct, ratioPct, notesPct,
+    classifiedContrib, verifiedContrib, ratioContrib, notesContrib, total,
   };
 }
 
@@ -152,6 +148,7 @@ interface SavedReport {
   auditScore: number;
   lastOdoReading: number | null;
   lastOdoVerifiedAt: string | null;
+  lastOdoPhotoUrl?: string | null;
   odoRangeStart: number;
   odoRangeEnd: number;
   trips: SavedTripSummary[];
@@ -177,6 +174,7 @@ interface AppState {
   savedReports: SavedReport[];
   lastOdoReading: number | null;
   lastOdoVerifiedAt: string | null;
+  lastOdoPhotoUrl: string | null;
   classifyStep: number;
   classifyBizTrips: number[];
   sessionStartTime: number;
@@ -202,6 +200,9 @@ interface AppState {
   isLoading: boolean;
   isInitialised: boolean;
   error: string | null;
+
+  // Reports screen mode (read-only when from Documents)
+  reportsReadOnly: boolean;
 }
 
 // ── Actions ──────────────────────────────────────────────────
@@ -210,7 +211,7 @@ type Action =
   // All original actions — unchanged
   | { type: 'CLASSIFY_TRIP'; tripType: 'business' | 'personal' }
   | { type: 'UNDO_LAST' }
-  | { type: 'GO_SCREEN'; screen: Screen }
+  | { type: 'GO_SCREEN'; screen: Screen; reportsReadOnly?: boolean }
   | { type: 'SET_PURPOSE'; tripIndex: number; purposeLabel: string; purposeIndex: number | null }
   | { type: 'CLASSIFY_NEXT' }
   | { type: 'INIT_CLASSIFY' }
@@ -219,6 +220,8 @@ type Action =
   | { type: 'ADD_PHOTO'; tripIndex: number }
   | { type: 'UPDATE_TRIP'; tripIndex: number; updates: Partial<Trip> }
   | { type: 'OPEN_EDIT'; tripIndex: number }
+  | { type: 'ADD_GAP_TRIP_AND_EDIT'; connector: Trip }
+  | { type: 'DELETE_TRIP'; tripIndex: number }
   | { type: 'CLOSE_EDIT' }
   | { type: 'OPEN_ATO' }
   | { type: 'CLOSE_ATO' }
@@ -226,16 +229,18 @@ type Action =
   | { type: 'CLOSE_SUMMARY' }
   | { type: 'SAVE_SESSION' }
   | { type: 'ADD_LOG'; desc: string; hasPhoto: boolean }
-  | { type: 'SET_MANUAL_ODO'; reading: number }
+  | { type: 'SET_MANUAL_ODO'; reading: number; photoUrl?: string | null }
   | { type: 'SET_BASE_ODO'; reading: number }
   | { type: 'RESET_DEMO' }
   | { type: 'LOAD_BATCH2' }
   | { type: 'DELETE_ALL_TRIPS' }
   | { type: 'DELETE_SESSION'; sessionId: string }
   | { type: 'PROMOTE_REPORT'; reportIndex: number }
+  | { type: 'FIX_REPORT_TRIP_TYPE'; reportIndex: number; tripIndex: number; newType: 'business' | 'personal' }
   | { type: 'COME_BACK_LATER' }
   | { type: 'RESUME_SORTING' }
   | { type: 'ADD_TRIP'; trip: Trip }
+  | { type: 'ADD_TRIPS_BATCH'; trips: Trip[] }
   | { type: 'CONFIRM_GAP'; tripIndex: number; km: number }
   | { type: 'DELETE_GAP'; tripIndex: number }
   // New actions for Supabase integration
@@ -312,6 +317,7 @@ const initialState: AppState = {
   savedReports: [],
   lastOdoReading: null,
   lastOdoVerifiedAt: null,
+  lastOdoPhotoUrl: null,
   classifyStep: 0,
   classifyBizTrips: [],
   sessionStartTime: Date.now(),
@@ -333,6 +339,7 @@ const initialState: AppState = {
   isLoading: true,
   isInitialised: false,
   error: null,
+  reportsReadOnly: false,
 };
 
 // ── Deduction computation (uses Supabase-loaded data) ────────
@@ -527,7 +534,11 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
     case 'GO_SCREEN':
-      return { ...state, currentScreen: action.screen };
+      return {
+        ...state,
+        currentScreen: action.screen,
+        reportsReadOnly: action.screen === 'reports' ? (action.reportsReadOnly ?? false) : false,
+      };
     case 'SET_PURPOSE': {
       const newTrips = [...state.trips];
       newTrips[action.tripIndex] = {
@@ -652,6 +663,50 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'OPEN_EDIT':
       return { ...state, editModalOpen: true, editTripIndex: action.tripIndex };
+    case 'ADD_GAP_TRIP_AND_EDIT': {
+      const trip: Trip = {
+        ...action.connector,
+        id: action.connector.id,
+        km: action.connector.km > 0 ? action.connector.km : 1,
+        time: action.connector.time || '12:00 PM',
+        duration: action.connector.duration || '0 min',
+        type: null,
+        verified: false,
+        odoReading: null,
+        odoStartReading: null,
+        autoGenerated: false,
+        gapConfirmed: false,
+      };
+      const newTrips = [...state.trips];
+      const dateStr = `${trip.year}-${String(trip.month + 1).padStart(2, '0')}-${String(trip.day).padStart(2, '0')}`;
+      const insertIdx = getInsertIndexForNewTrip(newTrips, dateStr, trip.time || '');
+      newTrips.splice(insertIdx, 0, trip);
+      const newCurrentIndex = newTrips.findIndex((t) => t.type === null);
+      const idxToUse = newCurrentIndex >= 0 ? newCurrentIndex : newTrips.length;
+      const sortedSlice = newTrips.slice(0, idxToUse);
+      const newBiz = sortedSlice.filter((t) => t.type === 'business').length;
+      const newPer = sortedSlice.filter((t) => t.type === 'personal').length;
+      const newDed = computeDedTotal(state, newTrips, idxToUse);
+      const newVerified = new Set<number>();
+      for (let i = 0; i < newTrips.length; i++) {
+        const t = newTrips[i];
+        if (t.odoReading != null || t.odoStartReading != null) {
+          newTrips[i] = { ...t, odoReading: null, odoStartReading: null, verified: false };
+        }
+      }
+      return {
+        ...state,
+        trips: newTrips,
+        currentIndex: idxToUse,
+        bizCount: newBiz,
+        perCount: newPer,
+        dedTotal: newDed,
+        verifiedSet: newVerified,
+        editModalOpen: true,
+        editTripIndex: insertIdx,
+        auditLog: [{ time: nowStr(), desc: `Gap trip added for editing: ${trip.from} → ${trip.to}`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     case 'CLOSE_EDIT':
       return { ...state, editModalOpen: false };
     case 'OPEN_ATO':
@@ -688,8 +743,6 @@ function reducer(state: AppState, action: Action): AppState {
       if (noPurpose.length > 0) areas.push(`${noPurpose.length} business trip${noPurpose.length > 1 ? 's' : ''} missing purpose category`);
       const noNotes = biz.filter(t => !t.notes || t.notes.length === 0);
       if (noNotes.length > 0) areas.push(`${noNotes.length} business trip${noNotes.length > 1 ? 's' : ''} without trip notes`);
-      const noPhoto = biz.filter(t => !t.photo);
-      if (noPhoto.length > 0) areas.push(`${noPhoto.length} business trip${noPhoto.length > 1 ? 's' : ''} without photo evidence`);
       if (!state.lastOdoReading) areas.push('No odometer reading recorded for this session');
       const unsorted = state.trips.filter(t => t.type === null);
       if (unsorted.length > 0) areas.push(`${unsorted.length} trip${unsorted.length > 1 ? 's' : ''} not sorted yet`);
@@ -721,7 +774,6 @@ function reducer(state: AppState, action: Action): AppState {
             totalTrips: state.trips.length,
             sortedTrips: tot,
             verifiedCount: state.verifiedSet.size,
-            photoCount: state.trips.filter(t => t.photo).length,
             bizPct: bizPctLocal,
             notesCount: biz.filter(t => t.notes && t.notes.length > 0).length,
             bizCount: biz.length,
@@ -729,6 +781,7 @@ function reducer(state: AppState, action: Action): AppState {
         })(),
         lastOdoReading: state.lastOdoReading,
         lastOdoVerifiedAt: state.lastOdoVerifiedAt,
+        lastOdoPhotoUrl: state.lastOdoPhotoUrl,
         odoRangeStart: getTripOdoStart(state.trips, 0, state.baseOdo),
         odoRangeEnd: getTripOdoEnd(state.trips, state.trips.length - 1, state.baseOdo),
         trips: tripSummaries,
@@ -747,6 +800,7 @@ function reducer(state: AppState, action: Action): AppState {
         conflictResolved: false,
         freshSession: false,
         currentScreen: 'reports',
+        reportsReadOnly: false,
       };
     }
     case 'SET_MANUAL_ODO':
@@ -754,7 +808,8 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         lastOdoReading: action.reading,
         lastOdoVerifiedAt: nowStr(),
-        auditLog: [{ time: nowStr(), desc: `Odometer manually set to ${action.reading.toLocaleString('en-AU')} km`, hasPhoto: false }, ...state.auditLog],
+        lastOdoPhotoUrl: 'photoUrl' in action ? (action.photoUrl ?? null) : state.lastOdoPhotoUrl,
+        auditLog: [{ time: nowStr(), desc: `Odometer manually set to ${action.reading.toLocaleString('en-AU')} km`, hasPhoto: !!action.photoUrl }, ...state.auditLog],
       };
     case 'SET_BASE_ODO':
       return {
@@ -890,19 +945,8 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case 'ADD_TRIP': {
       const newTrips = [...state.trips];
-      const tripTime = new Date(action.trip.year, action.trip.month, action.trip.day).getTime();
-      let insertIdx = newTrips.length;
-      for (let i = 0; i < newTrips.length; i++) {
-        const tTime = new Date(newTrips[i].year, newTrips[i].month, newTrips[i].day).getTime();
-        if (tTime > tripTime) {
-          insertIdx = i;
-          break;
-        }
-        if (tTime === tripTime && (action.trip.time || '') < (newTrips[i].time || '')) {
-          insertIdx = i;
-          break;
-        }
-      }
+      const dateStr = `${action.trip.year}-${String(action.trip.month + 1).padStart(2, '0')}-${String(action.trip.day).padStart(2, '0')}`;
+      const insertIdx = getInsertIndexForNewTrip(newTrips, dateStr, action.trip.time || '');
       newTrips.splice(insertIdx, 0, action.trip);
       // If the new trip is unclassified (type === null), don't increment currentIndex so it appears in sort cards.
       // If insertIdx < currentIndex, the trip we were sorting shifted right, so increment to keep pointing at it.
@@ -932,6 +976,38 @@ function reducer(state: AppState, action: Action): AppState {
         auditLog: [{ time: nowStr(), desc: `Trip added: ${action.trip.from} → ${action.trip.to} (${action.trip.km} km, ${action.trip.type})`, hasPhoto: false }, ...state.auditLog],
       };
     }
+    case 'ADD_TRIPS_BATCH': {
+      let newTrips = [...state.trips];
+      for (const trip of action.trips) {
+        const dateStr = `${trip.year}-${String(trip.month + 1).padStart(2, '0')}-${String(trip.day).padStart(2, '0')}`;
+        const insertIdx = getInsertIndexForNewTrip(newTrips, dateStr, trip.time || '');
+        newTrips.splice(insertIdx, 0, trip);
+      }
+      const newCurrentIndex = newTrips.findIndex((t) => t.type === null);
+      const idxToUse = newCurrentIndex >= 0 ? newCurrentIndex : newTrips.length;
+      const sortedSlice = newTrips.slice(0, idxToUse);
+      const newBiz = sortedSlice.filter((t) => t.type === 'business').length;
+      const newPer = sortedSlice.filter((t) => t.type === 'personal').length;
+      const newDed = computeDedTotal(state, newTrips, idxToUse);
+      for (let i = 0; i < newTrips.length; i++) {
+        const t = newTrips[i];
+        if (t.odoReading != null || t.odoStartReading != null) {
+          newTrips[i] = { ...t, odoReading: null, odoStartReading: null, verified: false };
+        }
+      }
+      const newVerified = new Set<number>();
+      const count = action.trips.length;
+      return {
+        ...state,
+        trips: newTrips,
+        currentIndex: idxToUse,
+        bizCount: newBiz,
+        perCount: newPer,
+        dedTotal: newDed,
+        verifiedSet: newVerified,
+        auditLog: [{ time: nowStr(), desc: `Recurring batch: ${count} trip${count === 1 ? '' : 's'} added`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     case 'CONFIRM_GAP': {
       const newTrips = state.trips.map((t, i) =>
         i === action.tripIndex ? { ...t, gapConfirmed: true, km: action.km } : t
@@ -950,6 +1026,34 @@ function reducer(state: AppState, action: Action): AppState {
         auditLog: [{ time: nowStr(), desc: `Gap deleted: ${state.trips[action.tripIndex].from} → ${state.trips[action.tripIndex].to}`, hasPhoto: false }, ...state.auditLog],
       };
     }
+    case 'DELETE_TRIP': {
+      const idx = action.tripIndex;
+      const deleted = state.trips[idx];
+      if (!deleted) return state;
+      const newTrips = state.trips.filter((_, i) => i !== idx);
+      let newCurrentIndex = idx < state.currentIndex ? state.currentIndex - 1 : state.currentIndex;
+      newCurrentIndex = Math.min(newCurrentIndex, newTrips.length);
+      const sortedSlice = newTrips.slice(0, newCurrentIndex);
+      const newBiz = sortedSlice.filter((t) => t.type === 'business').length;
+      const newPer = sortedSlice.filter((t) => t.type === 'personal').length;
+      const newDed = computeDedTotal(state, newTrips, newCurrentIndex);
+      const newVerified = new Set<number>();
+      state.verifiedSet.forEach((j) => {
+        if (j < idx) newVerified.add(j);
+        else if (j > idx) newVerified.add(j - 1);
+      });
+      return {
+        ...state,
+        trips: newTrips,
+        currentIndex: newTrips.length === 0 ? 0 : newCurrentIndex,
+        bizCount: newBiz,
+        perCount: newPer,
+        dedTotal: newDed,
+        verifiedSet: newVerified,
+        editModalOpen: false,
+        auditLog: [{ time: nowStr(), desc: `Trip deleted: ${deleted.from} → ${deleted.to} (didn't happen or duplicate)`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
     case 'PROMOTE_REPORT': {
       const idx = action.reportIndex;
       const targetSessionId = state.savedReports[idx].sessionId;
@@ -962,6 +1066,27 @@ function reducer(state: AppState, action: Action): AppState {
         savedReports: updated,
         conflictResolved: true,
         auditLog: [{ time: nowStr(), desc: `Report Rev ${state.savedReports[idx].revision} promoted to active`, hasPhoto: false }, ...state.auditLog],
+      };
+    }
+    case 'FIX_REPORT_TRIP_TYPE': {
+      const { reportIndex, tripIndex, newType } = action;
+      const report = state.savedReports[reportIndex];
+      if (!report?.trips?.[tripIndex]) return state;
+      const trips = [...report.trips];
+      const t = trips[tripIndex];
+      const oldType = t.type;
+      trips[tripIndex] = { ...t, type: newType };
+      const newBizCount = trips.filter((x: any) => x.type === 'business').length;
+      const newPerCount = trips.filter((x: any) => x.type === 'personal').length;
+      const updated = state.savedReports.map((r, i) =>
+        i === reportIndex
+          ? { ...r, trips, bizCount: newBizCount, perCount: newPerCount }
+          : r
+      );
+      return {
+        ...state,
+        savedReports: updated,
+        auditLog: [{ time: nowStr(), desc: `Fixed trip "${t.from} → ${t.to}" from ${oldType || 'unsorted'} to ${newType}`, hasPhoto: false }, ...state.auditLog],
       };
     }
     default:
@@ -1108,7 +1233,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
           break;
         }
+        case 'ADD_TRIPS_BATCH': {
+          let vid = vehicleId;
+          if (!vid) {
+            const vehicles = await getVehicles();
+            vid = vehicles[0]?.id ?? null;
+          }
+          if (vid) {
+            for (const trip of action.trips) {
+              const saved = await saveTrip(vid, trip as unknown as Partial<AppTrip> & { startTime?: string; endTime?: string });
+              if (saved?.id) {
+                const idx = stateRef.current.trips.findIndex(
+                  t => t.from === trip.from && t.to === trip.to && t.time === trip.time && t.day === trip.day && t.month === trip.month && t.year === trip.year
+                );
+                if (idx >= 0) {
+                  dispatch({ type: 'UPDATE_TRIP', tripIndex: idx, updates: { dbId: saved.id } });
+                }
+              }
+            }
+          }
+          break;
+        }
         case 'DELETE_GAP': {
+          const trip = s.trips[action.tripIndex];
+          if (trip?.dbId) {
+            await deleteTrip(trip.dbId);
+          }
+          break;
+        }
+        case 'DELETE_TRIP': {
           const trip = s.trips[action.tripIndex];
           if (trip?.dbId) {
             await deleteTrip(trip.dbId);
@@ -1218,7 +1371,6 @@ export function useComputedStats() {
     totalTrips: state.trips.length,
     sortedTrips: sortedTripsArr.length,
     verifiedCount: state.verifiedSet.size,
-    photoCount: state.trips.filter(t => t.photo).length,
     bizPct,
     notesCount: bizTripsArr.filter(t => t.notes && t.notes.length > 0).length,
     bizCount: bizTripsArr.length,

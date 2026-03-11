@@ -897,12 +897,16 @@ function SetupLogbookScreen() {
   const { goTo, user } = useAuth();
   const [startOption, setStartOption] = useState<'today' | 'later'>('today');
   const [trackExpenses, setTrackExpenses] = useState(true);
+  const [syncGpsNow, setSyncGpsNow] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
     if (!user) return;
     setLoading(true);
     try {
+      if (syncGpsNow) {
+        localStorage.setItem('wc_wants_gps_sync', '1');
+      }
       if (startOption === 'today') {
         // We need a vehicleId — this will be populated after setup-vehicle saves
         // For now we skip — app-context will handle starting logbook from dashboard
@@ -988,6 +992,34 @@ function SetupLogbookScreen() {
                 }`}
               />
             </button>
+          </div>
+
+          {/* GPS sync option */}
+          <div>
+            <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">
+              GPS device
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSyncGpsNow(true)}
+                className={`flex-1 py-4 rounded-xl font-bold text-sm border-2 transition-colors ${
+                  syncGpsNow ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500'
+                }`}
+              >
+                Sync now
+              </button>
+              <button
+                onClick={() => setSyncGpsNow(false)}
+                className={`flex-1 py-4 rounded-xl font-bold text-sm border-2 transition-colors ${
+                  !syncGpsNow ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500'
+                }`}
+              >
+                I&apos;ll sync later
+              </button>
+            </div>
+            <p className="text-gray-500 text-xs mt-2 leading-relaxed">
+              {syncGpsNow ? 'You&apos;ll sync your Key Tag or tracker after setup.' : 'Sync from Add Trip anytime.'}
+            </p>
           </div>
         </div>
 
