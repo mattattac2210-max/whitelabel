@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Car, Search, AlertTriangle, Info, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Car, Search, AlertTriangle, Info, ChevronDown, ChevronUp, CheckCircle2, DollarSign, Route, RotateCcw, Zap } from 'lucide-react';
 import { CollapsiblePanel, FieldInput, ChipSelect } from './collapsible-panel';
+import { useApp } from '@/lib/app-context';
 
 interface VehicleSpecs {
   rego: string;
@@ -17,6 +18,7 @@ interface VehicleSpecs {
   payload: string;
   gvm: string;
   vehicleValue: string;
+  estimatedAnnualKm: string;
 }
 
 interface PurchaseDetails {
@@ -54,7 +56,7 @@ interface PurchaseDetails {
 const SPEC_DEFAULT: VehicleSpecs = {
   rego: '', make: '', model: '', variant: '', year: '', bodyType: '',
   fuelType: '', transmission: '', engineCapacity: '', fuelConsumption: '',
-  vehicleCategory: '', payload: '', gvm: '', vehicleValue: '',
+  vehicleCategory: '', payload: '', gvm: '', vehicleValue: '', estimatedAnnualKm: '',
 };
 
 const PURCHASE_DEFAULT: PurchaseDetails = {
@@ -99,7 +101,7 @@ function loadPurchase(): PurchaseDetails {
 }
 
 const DV_RATE = 0.25;
-const ATO_CAR_LIMIT = 68108;
+const ATO_CAR_LIMIT = 69674; // 2025–26 ATO car cost limit
 
 const MOCK_VEHICLES: Record<string, Partial<VehicleSpecs>> = {
   'ABC123': { make: 'Toyota', model: 'HiLux', variant: 'SR5 4x4', year: '2022', bodyType: 'Utility', fuelType: 'Diesel', transmission: 'Automatic', engineCapacity: '2755cc', fuelConsumption: '8.6', vehicleCategory: 'Ute - 4x4', payload: '985', gvm: '3200', vehicleValue: '58990' },
@@ -122,6 +124,145 @@ function StatCell({ label, value, color = 'var(--wc-text)', estimated = false }:
       <div className="text-[13px] font-heading font-bold mt-[2px]" style={{ color }}>
         {value}{estimated ? '*' : ''}
       </div>
+    </div>
+  );
+}
+
+function FieldBadge({ n, label }: { n: number; label: string }) {
+  return (
+    <div className="flex items-center gap-[5px] mb-[4px]">
+      <div
+        className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ background: 'rgba(245,196,0,.2)', border: '1.5px solid rgba(245,196,0,.6)' }}
+      >
+        <span className="font-heading font-black text-[9px]" style={{ color: 'var(--wc-y)' }}>{n}</span>
+      </div>
+      <span className="font-heading font-bold text-[9px] uppercase tracking-[.07em]" style={{ color: 'var(--wc-y)' }}>{label}</span>
+      <span className="text-[8px]" style={{ color: 'var(--wc-t3)' }}>← fill this in</span>
+    </div>
+  );
+}
+
+function KmSlider({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [mode, setMode] = useState<'year' | 'week'>('year');
+
+  const annualKm = parseInt(value) || 0;
+  const weeklyKm = annualKm > 0 ? Math.round(annualKm / 52) : 0;
+
+  const displayValue = mode === 'year' ? annualKm : weeklyKm;
+  const max = mode === 'year' ? 40000 : 770;
+  const step = mode === 'year' ? 500 : 25;
+
+  const handleSlider = (raw: number) => {
+    const annual = mode === 'year' ? raw : Math.round(raw * 52);
+    onChange(String(annual));
+  };
+
+  const sliderVal = mode === 'year' ? Math.min(annualKm, max) : Math.min(weeklyKm, max);
+  const pct = max > 0 ? Math.min(100, (sliderVal / max) * 100) : 0;
+
+  const bands = [
+    { label: 'Low', max: mode === 'year' ? 12000 : 230, color: '#4ade80' },
+    { label: 'Avg', max: mode === 'year' ? 27000 : 520, color: 'var(--wc-y)' },
+    { label: '>', max: mode === 'year' ? 40000 : 770, color: '#f472b6' },
+  ];
+  const activeBand = bands.find(b => sliderVal <= b.max) ?? bands[bands.length - 1];
+
+  return (
+    <div className="mb-[10px]">
+      <div className="flex items-center justify-between mb-[6px]">
+        <label className="font-data text-[9px] uppercase tracking-[.1em]" style={{ color: 'var(--wc-t3)' }}>Estimated Distance Driven</label>
+        <div className="flex rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--wc-border)' }}>
+          {(['week', 'year'] as const).map(m => (
+            <button
+              key={m}
+              className="px-[8px] py-[3px] font-heading font-bold text-[8px] uppercase tracking-[.05em] transition-all"
+              style={{
+                background: mode === m ? 'rgb(var(--wc-ink) / .15)' : 'transparent',
+                color: mode === m ? 'var(--wc-text)' : 'var(--wc-t3)',
+              }}
+              onClick={() => setMode(m)}
+            >
+              Per {m}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Value display */}
+      <div className="flex items-baseline gap-[4px] mb-[8px]">
+        <span className="font-display text-[28px] leading-none" style={{ color: activeBand.color }}>
+          {displayValue > 0 ? displayValue.toLocaleString() : '—'}
+        </span>
+        <span className="font-heading font-bold text-[11px]" style={{ color: 'var(--wc-t3)' }}>
+          km / {mode}
+        </span>
+        {mode === 'week' && annualKm > 0 && (
+          <span className="ml-auto font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+            ≈ {annualKm.toLocaleString()} km/yr
+          </span>
+        )}
+        {mode === 'year' && weeklyKm > 0 && (
+          <span className="ml-auto font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>
+            ≈ {weeklyKm.toLocaleString()} km/wk
+          </span>
+        )}
+      </div>
+
+      {/* Slider */}
+      <div className="relative mb-[4px]">
+        <div className="h-[6px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .08)' }}>
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${pct}%`, background: activeBand.color }}
+          />
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={max}
+          step={step}
+          value={sliderVal}
+          onChange={e => handleSlider(Number(e.target.value))}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-[6px]"
+          style={{ margin: 0 }}
+        />
+        {/* Thumb dot */}
+        <div
+          className="absolute top-1/2 w-[16px] h-[16px] rounded-full border-2 pointer-events-none transition-all"
+          style={{
+            left: `calc(${pct}% - 8px)`,
+            top: '-5px',
+            background: 'var(--wc-bg)',
+            borderColor: activeBand.color,
+            boxShadow: `0 0 6px ${activeBand.color}60`,
+          }}
+        />
+      </div>
+
+      {/* Range labels */}
+      <div className="flex justify-between mt-[10px]">
+        {bands.map(b => (
+          <div key={b.label} className="flex items-center gap-[3px]">
+            <div className="w-[5px] h-[5px] rounded-full" style={{ background: b.color }} />
+            <span className="font-heading font-bold text-[8px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-t3)' }}>
+              {b.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Reset */}
+      {annualKm > 0 && (
+        <button
+          className="mt-[6px] flex items-center gap-[4px] text-[8px] font-heading font-bold uppercase tracking-[.05em] cursor-pointer transition-all active:scale-[.95]"
+          style={{ color: 'var(--wc-t3)' }}
+          onClick={() => onChange('')}
+        >
+          <RotateCcw className="w-[8px] h-[8px]" />
+          Reset
+        </button>
+      )}
     </div>
   );
 }
@@ -179,12 +320,23 @@ function calcAnnualLeaseTotal(p: PurchaseDetails): number {
 }
 
 export function VehiclePanel() {
+  const { dispatch } = useApp();
   const [specs, setSpecs] = useState<VehicleSpecs>(loadSpecs);
   const [purchase, setPurchase] = useState<PurchaseDetails>(loadPurchase);
   const [regoInput, setRegoInput] = useState('');
   const [lookupStatus, setLookupStatus] = useState<'idle' | 'loading' | 'found' | 'notfound'>('idle');
   const [manualEdit, setManualEdit] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [highlight, setHighlight] = useState(() => localStorage.getItem('wc_fill_highlight') === '1');
+  const [applied, setApplied] = useState(false);
+
+  // Clear highlight once user starts filling fields
+  useEffect(() => {
+    if (highlight && specs.vehicleCategory && purchase.purchasePrice && specs.estimatedAnnualKm) {
+      localStorage.removeItem('wc_fill_highlight');
+      setHighlight(false);
+    }
+  }, [highlight, specs.vehicleCategory, purchase.purchasePrice, specs.estimatedAnnualKm]);
 
   useEffect(() => {
     localStorage.setItem('wc_vehicle_specs', JSON.stringify(specs));
@@ -294,26 +446,56 @@ export function VehiclePanel() {
   const advancedInterest = useMemo(() => calcAdvancedInterest(purchase), [purchase]);
   const annualLeaseTotal = useMemo(() => calcAnnualLeaseTotal(purchase), [purchase]);
 
+  const isEV = specs.vehicleCategory === 'EV' || (specs.fuelType || '').toLowerCase().includes('electric');
+
   const fuelEconomy = parseFloat(specs.fuelConsumption) || 0;
-  const estAnnualRunning = fuelEconomy > 0 ? Math.round(fuelEconomy / 100 * 15000 * 1.95) : 0;
+  // EVs: use kWh/100km × avg electricity rate ($0.30/kWh); ICE: L/100km × fuel price
+  const estAnnualRunning = isEV
+    ? (fuelEconomy > 0 ? Math.round(fuelEconomy / 100 * 15000 * 0.30) : 0)
+    : (fuelEconomy > 0 ? Math.round(fuelEconomy / 100 * 15000 * 1.95) : 0);
 
   const hasVehicleType = !!(specs.vehicleCategory || specs.bodyType);
   const basicComplete = rawPrice > 0 && hasVehicleType;
 
-  const VEHICLE_TYPES = ['Ute - 4x4', 'Ute - 4x2', 'SUV - Medium', 'SUV - Small', 'Sedan / Hatch', 'Van', 'Other'];
+  const VEHICLE_TYPES = ['Ute - 4x4', 'Ute - 4x2', 'SUV - Medium', 'SUV - Small', 'Sedan / Hatch', 'Van', 'EV', 'Other'];
 
   const advancedSpecFields: { label: string; key: keyof VehicleSpecs }[] = [
     { label: 'Make', key: 'make' }, { label: 'Model', key: 'model' },
     { label: 'Variant', key: 'variant' }, { label: 'Year', key: 'year' },
     { label: 'Body Type', key: 'bodyType' }, { label: 'Fuel Type', key: 'fuelType' },
     { label: 'Transmission', key: 'transmission' }, { label: 'Engine', key: 'engineCapacity' },
-    { label: 'Fuel (L/100km)', key: 'fuelConsumption' },
+    { label: isEV ? 'Efficiency (kWh/100km)' : 'Fuel (L/100km)', key: 'fuelConsumption' },
     { label: 'Payload (kg)', key: 'payload' }, { label: 'GVM (kg)', key: 'gvm' },
     { label: 'Value ($)', key: 'vehicleValue' },
   ];
 
   return (
-    <CollapsiblePanel title="Vehicle Details" icon={Car} testId="panel-vehicle">
+    <CollapsiblePanel
+      title="Vehicle Details"
+      icon={Car}
+      testId="panel-vehicle"
+      badge={highlight ? (
+        <div className="flex flex-wrap gap-[4px]">
+          {[
+            { n: 1, icon: Car,        label: 'Vehicle Type',   done: !!specs.vehicleCategory },
+            { n: 2, icon: DollarSign, label: 'Purchase Price', done: !!purchase.purchasePrice },
+            { n: 3, icon: Route,      label: 'Est. km / yr',   done: !!specs.estimatedAnnualKm },
+          ].filter(f => !f.done).map(f => (
+            <div
+              key={f.n}
+              className="flex items-center gap-[4px] pl-[3px] pr-[7px] py-[2px] rounded-full"
+              style={{ background: 'rgba(245,196,0,.15)', border: '1px solid rgba(245,196,0,.45)' }}
+            >
+              <div className="w-[14px] h-[14px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,196,0,.35)' }}>
+                <span className="font-heading font-black text-[7px]" style={{ color: 'var(--wc-y)' }}>{f.n}</span>
+              </div>
+              <f.icon className="w-[8px] h-[8px]" style={{ color: 'var(--wc-y)' }} />
+              <span className="font-heading font-bold text-[8px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-y)' }}>{f.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : undefined}
+    >
       <div className="pt-[12px]">
 
         {/* ═══ BASIC DETAILS (required) ═══ */}
@@ -342,8 +524,14 @@ export function VehiclePanel() {
             </div>
           )}
 
+          {highlight && !specs.vehicleCategory && <FieldBadge n={1} label="Vehicle Type" />}
           <ChipSelect label="Vehicle Type" options={VEHICLE_TYPES} value={specs.vehicleCategory} onChange={updSpec('vehicleCategory')} testId="chip-vehicle-type" />
+
+          {highlight && !purchase.purchasePrice && <FieldBadge n={2} label="Purchase Price" />}
           <FieldInput label="Vehicle Purchase Price ($)" value={purchase.purchasePrice} onChange={updPurch('purchasePrice')} type="number" placeholder="e.g. 55000" testId="input-purchase-price" />
+
+          {highlight && !specs.estimatedAnnualKm && <FieldBadge n={3} label="Est. km / Year" />}
+          <KmSlider value={specs.estimatedAnnualKm} onChange={updSpec('estimatedAnnualKm')} />
 
           {cappedPrice > 0 && (
             <div className="rounded-[8px] p-[8px_10px] mb-[10px] flex items-start gap-[6px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .12)' }}>
@@ -359,12 +547,63 @@ export function VehiclePanel() {
             </div>
           )}
 
-          {basicComplete && (
-            <div className="grid grid-cols-3 gap-[6px] mt-[4px]">
-              <StatCell label="Fuel Economy" value={fuelEconomy > 0 ? `${fuelEconomy}L` : '~10L'} color="var(--wc-y)" />
-              <StatCell label="Est. Running" value={estAnnualRunning > 0 ? `$${estAnnualRunning.toLocaleString()}` : '~$2,925'} color="var(--wc-y)" />
-              <StatCell label="Depreciation" value={depCalc ? `$${depCalc.dep.toLocaleString()}` : '—'} color="var(--wc-gr)" estimated={depCalc?.isEstimated} />
+          {isEV && (
+            <div className="rounded-[8px] p-[8px_10px] mb-[8px] flex items-start gap-[6px]" style={{ background: 'rgba(74,222,128,.06)', border: '1px solid rgba(74,222,128,.25)' }}>
+              <Info className="w-[10px] h-[10px] flex-shrink-0 mt-[2px]" style={{ color: '#4ade80' }} />
+              <div className="text-[9px] leading-[1.4]" style={{ color: '#4ade80' }}>
+                EV selected — running costs use electricity rates (~$0.30/kWh) instead of fuel. Industry average: $6,400/yr. Fuel consumption field = kWh/100km.
+              </div>
             </div>
+          )}
+
+          {basicComplete && (
+            <>
+              <div className="grid grid-cols-3 gap-[6px] mt-[4px] mb-[12px]">
+                <StatCell
+                  label={isEV ? 'Efficiency' : 'Fuel Economy'}
+                  value={fuelEconomy > 0 ? `${fuelEconomy}${isEV ? 'kWh' : 'L'}` : isEV ? '~18kWh' : '~10L'}
+                  color="var(--wc-y)"
+                />
+                <StatCell
+                  label={isEV ? 'Est. Charging' : 'Est. Fuel'}
+                  value={estAnnualRunning > 0 ? `$${estAnnualRunning.toLocaleString()}` : isEV ? '~$810' : '~$2,925'}
+                  color="var(--wc-y)"
+                />
+                <StatCell label="Depreciation" value={depCalc ? `$${depCalc.dep.toLocaleString()}` : '—'} color="var(--wc-gr)" estimated={depCalc?.isEstimated} />
+              </div>
+
+              <button
+                className="w-full rounded-[11px] py-[12px] flex items-center justify-center gap-[7px] font-heading font-extrabold text-[13px] uppercase tracking-[.06em] transition-all active:scale-[.97]"
+                style={{
+                  background: applied ? 'rgba(34,197,94,.15)' : 'var(--wc-y)',
+                  color: applied ? '#4ade80' : 'var(--wc-bg)',
+                  border: applied ? '1.5px solid rgba(34,197,94,.4)' : 'none',
+                }}
+                onClick={() => {
+                  if (applied) {
+                    dispatch({ type: 'GO_SCREEN', screen: 'dashboard' });
+                    return;
+                  }
+                  setApplied(true);
+                  localStorage.removeItem('wc_fill_highlight');
+                  setTimeout(() => {
+                    dispatch({ type: 'GO_SCREEN', screen: 'dashboard' });
+                  }, 1400);
+                }}
+              >
+                {applied ? (
+                  <>
+                    <CheckCircle2 className="w-[16px] h-[16px]" style={{ color: '#4ade80' }} />
+                    Applied — going to dashboard
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-[15px] h-[15px]" />
+                    Apply to Estimates
+                  </>
+                )}
+              </button>
+            </>
           )}
         </div>
 

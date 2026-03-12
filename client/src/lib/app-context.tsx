@@ -65,7 +65,9 @@ export type Screen =
   | 'stats'
   | 'find-keys'
   | 'account'
-  | 'logbook-complete';
+  | 'logbook-complete'
+  | 'onboarding'
+  | 'guide';
 
 export const INDUSTRY_BIZ_AVG = 65;
 

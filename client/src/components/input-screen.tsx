@@ -311,105 +311,105 @@ function ChooseScreen({ onSelect }: { onSelect: (mode: 'existing' | 'live' | 'sh
   useEffect(() => { preloadGoogleMaps(); }, []);
   return (
     <div className="flex flex-col h-full" data-testid="input-choose-screen">
-      <div className="flex items-center gap-[10px] px-4 pt-2 pb-[5px] flex-shrink-0">
+      <div className="flex items-center gap-[8px] px-4 pt-2 pb-[4px] flex-shrink-0">
         <button
-          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          className="w-[28px] h-[28px] rounded-lg flex items-center justify-center"
           style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}
           onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'dashboard' })}
           data-testid="button-back-choose"
         >
-          <ArrowLeft className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t2)' }} />
+          <ArrowLeft className="w-[14px] h-[14px]" style={{ color: 'var(--wc-t2)' }} />
         </button>
-        <span className="font-heading font-extrabold text-[20px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Trip</span>
+        <span className="font-heading font-extrabold text-[18px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>Add Trip</span>
       </div>
 
-      <div className="flex-1 px-[18px] flex flex-col justify-center gap-[14px] pb-[40px]">
+      <div className="flex-1 px-[18px] flex flex-col justify-center gap-[10px] pb-[40px]">
         {showLive && (
           <button
-            className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
+            className="rounded-xl p-[14px_16px] cursor-pointer transition-all text-left"
             style={{ background: 'rgb(var(--wc-ink) / .06)', border: '2px solid rgb(var(--wc-ink) / .25)' }}
             onClick={() => onSelect('live')}
             data-testid="choose-start-new"
           >
-            <div className="flex items-center gap-[18px]">
-              <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .12)', border: '1px solid rgb(var(--wc-ink) / .3)' }}>
-                <Navigation className="w-[30px] h-[30px]" style={{ color: 'var(--wc-y)' }} />
+            <div className="flex items-center gap-[10px]">
+              <div className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .12)', border: '1px solid rgb(var(--wc-ink) / .3)' }}>
+                <Navigation className="w-[20px] h-[20px]" style={{ color: 'var(--wc-y)' }} />
               </div>
               <div>
-                <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
-                <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Use current location or enter start point. Live map, real-time distance and timer.</div>
+                <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] leading-none mb-[4px]" style={{ color: 'var(--wc-y)' }}>Start New Trip</div>
+                <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Use current location or enter start point. Live map, real-time distance and timer.</div>
               </div>
             </div>
           </button>
         )}
 
         <button
-          className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
+          className="rounded-xl p-[14px_16px] cursor-pointer transition-all text-left"
           style={{ background: logbookStream === 'basic' ? 'rgb(var(--wc-ink) / .06)' : 'rgb(var(--wc-ink) / .03)', border: logbookStream === 'basic' ? '2px solid rgb(var(--wc-ink) / .25)' : '2px solid var(--wc-border)' }}
           onClick={() => onSelect('existing')}
           data-testid="choose-add-existing"
         >
-          <div className="flex items-center gap-[18px]">
-            <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
-              <History className="w-[30px] h-[30px]" style={{ color: 'var(--wc-t2)' }} />
+          <div className="flex items-center gap-[10px]">
+            <div className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
+              <History className="w-[20px] h-[20px]" style={{ color: 'var(--wc-t2)' }} />
             </div>
             <div>
-              <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-text)' }}>Add Existing Trip</div>
-              <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
+              <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] leading-none mb-[4px]" style={{ color: 'var(--wc-text)' }}>Add Existing Trip</div>
+              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Log a trip you already made. Fill in the details and send it to sort.</div>
             </div>
           </div>
         </button>
 
-        {logbookStream === 'basic' && (
+        {(logbookStream === 'basic' || logbookStream === 'hybrid') && (
           <button
-            className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
-            style={{ background: 'rgb(var(--wc-ink) / .06)', border: '2px solid rgb(var(--wc-ink) / .25)' }}
+            className="rounded-xl p-[14px_16px] cursor-pointer transition-all text-left"
+            style={{ background: logbookStream === 'basic' ? 'rgb(var(--wc-ink) / .06)' : 'rgb(var(--wc-ink) / .03)', border: logbookStream === 'basic' ? '2px solid rgb(var(--wc-ink) / .25)' : '2px solid var(--wc-border)' }}
             onClick={() => onSelect('recurring')}
             data-testid="choose-add-recurring"
           >
-            <div className="flex items-center gap-[18px]">
-              <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
-                <Repeat className="w-[30px] h-[30px]" style={{ color: 'var(--wc-y)' }} />
+            <div className="flex items-center gap-[10px]">
+              <div className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
+                <Repeat className="w-[20px] h-[20px]" style={{ color: 'var(--wc-y)' }} />
               </div>
               <div>
-                <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-text)' }}>Add Recurring Trips</div>
-                <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Define routes you drive regularly. Add trips for a date range in one go.</div>
+                <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] leading-none mb-[4px]" style={{ color: 'var(--wc-text)' }}>Add Recurring Trips</div>
+                <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Define routes you drive regularly. Add trips for a date range in one go.</div>
               </div>
             </div>
           </button>
         )}
 
         <button
-          className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
+          className="rounded-xl p-[14px_16px] cursor-pointer transition-all text-left"
           style={{ background: 'rgb(var(--wc-ink) / .03)', border: '2px solid var(--wc-border)' }}
           onClick={() => onSelect('shortcuts')}
           data-testid="choose-add-shortcuts"
         >
-          <div className="flex items-center gap-[18px]">
-            <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
-              <MapPin className="w-[30px] h-[30px]" style={{ color: 'var(--wc-t2)' }} />
+          <div className="flex items-center gap-[10px]">
+            <div className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
+              <MapPin className="w-[20px] h-[20px]" style={{ color: 'var(--wc-t2)' }} />
             </div>
             <div>
-              <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-text)' }}>Add Shortcuts</div>
-              <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Save destinations with symbols like Home, Clients, Office. Quick-fill From/To when logging trips.</div>
+              <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] leading-none mb-[4px]" style={{ color: 'var(--wc-text)' }}>Add Shortcuts</div>
+              <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Save destinations with symbols like Home, Clients, Office. Quick-fill From/To when logging trips.</div>
             </div>
           </div>
         </button>
 
         {showGps && (
           <button
-            className="rounded-[20px] p-[28px_24px] cursor-pointer transition-all text-left"
+            className="rounded-xl p-[14px_16px] cursor-pointer transition-all text-left"
             style={{ background: 'rgb(var(--wc-ink) / .03)', border: '2px solid var(--wc-border)' }}
             onClick={() => onSelect('gps')}
             data-testid="choose-gps-device"
           >
-            <div className="flex items-center gap-[18px]">
-              <div className="w-[64px] h-[64px] rounded-[16px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
-                <Bluetooth className="w-[30px] h-[30px]" style={{ color: 'var(--wc-t2)' }} />
+            <div className="flex items-center gap-[10px]">
+              <div className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .06)', border: '1px solid var(--wc-border)' }}>
+                <Bluetooth className="w-[20px] h-[20px]" style={{ color: 'var(--wc-t2)' }} />
               </div>
               <div>
-                <div className="font-heading font-black text-[22px] uppercase tracking-[.04em] leading-none mb-[8px]" style={{ color: 'var(--wc-text)' }}>GPS Device</div>
-                <div className="text-[14px] leading-[1.5]" style={{ color: 'var(--wc-t2)' }}>Connect your Key Tag or tracker. Trips sync automatically.</div>
+                <div className="font-heading font-bold text-[14px] uppercase tracking-[.04em] leading-none mb-[4px]" style={{ color: 'var(--wc-text)' }}>GPS Device</div>
+                <div className="text-[12px] leading-[1.4]" style={{ color: 'var(--wc-t2)' }}>Connect your Key Tag or tracker. Trips sync automatically.</div>
               </div>
             </div>
           </button>

@@ -3,7 +3,8 @@ import { useApp } from '@/lib/app-context';
 import { calcLogbookDeduction } from '@/lib/trip-data';
 import { MapPin, FileText, Download, Plus, ChevronRight, ChevronLeft, Navigation, Receipt, BarChart3, Car, Info, AlertTriangle, Settings, HelpCircle, Play, BookOpen, ArrowRight, X, RotateCcw, Eye, TrendingUp, Fuel, Calendar, Route, DollarSign, Target, Clock, Bluetooth } from 'lucide-react';
 import { getReadinessChecks, getDeductionState, getEstimateDisclaimer, getEstimateMode } from '@/lib/deduction-estimator';
-import { DeductionCard, ReadinessCard } from '@/components/deduction-card';
+import { createPortal } from 'react-dom';
+import { DeductionCard, ReadinessCard, SimplifiedDeductionPrompt } from '@/components/deduction-card';
 import { getAssistantMode, setAssistantMode as saveAssistantMode } from '@/lib/assistant-mode';
 import { getLogbookStatus, isLogbookArchived, getActivePeriod } from '@/lib/logbook-utils';
 
@@ -20,7 +21,10 @@ export function DashboardScreen() {
   const [showAutoTrackWarning, setShowAutoTrackWarning] = useState(false);
   const [logbookStart, setLogbookStart] = useState<string | null>(() => localStorage.getItem('wc_logbook_start'));
   const [showLogbookInfo, setShowLogbookInfo] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [barDraining, setBarDraining] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [showDeductionPrompt, setShowDeductionPrompt] = useState(false);
   const [assistantMode, setAssistantMode] = useState(() => getAssistantMode());
   const [slideIdx, setSlideIdx] = useState(0);
   const slideRef = useRef<HTMLDivElement>(null);
@@ -54,6 +58,24 @@ export function DashboardScreen() {
     resetAutoSlide();
     return () => { if (autoSlideRef.current) clearInterval(autoSlideRef.current); };
   }, [resetAutoSlide]);
+
+  // Show welcome popup once, after the app fade-in settles
+  useEffect(() => {
+    if (!logbookStart && !localStorage.getItem('wc_welcome_seen')) {
+      const t = setTimeout(() => setShowWelcome(true), 900);
+      return () => clearTimeout(t);
+    }
+  }, [logbookStart]);
+
+  // Trigger bar drain animation when the launch sequence completes
+  useEffect(() => {
+    const handler = () => {
+      setBarDraining(true);
+      setTimeout(() => setBarDraining(false), 80);
+    };
+    window.addEventListener('wc:logbook-launched', handler);
+    return () => window.removeEventListener('wc:logbook-launched', handler);
+  }, []);
 
   const unsortedCount = state.trips.length - state.currentIndex;
   const queuedCount = state.queuedTrips.length;
@@ -96,6 +118,14 @@ export function DashboardScreen() {
 
   const hasBizTrips = totalBizCount > 0;
 
+  // Bump this counter whenever we return to dashboard so vehicle data is re-read
+  const [vehicleDataKey, setVehicleDataKey] = useState(0);
+  useEffect(() => {
+    if (state.currentScreen === 'dashboard') {
+      setVehicleDataKey(k => k + 1);
+    }
+  }, [state.currentScreen]);
+
   const showDeductionEstimates = useMemo(() => {
     try {
       const settings = JSON.parse(localStorage.getItem('wc_settings') || '{}');
@@ -103,10 +133,16 @@ export function DashboardScreen() {
     } catch {
       return true;
     }
-  }, []);
+  }, [vehicleDataKey]);
 
-  const estimateMode = useMemo(() => getEstimateMode(), []);
-  const readinessChecks = useMemo(() => getReadinessChecks({ hasBizTrips }), [hasBizTrips]);
+  const estimateMode = useMemo(() => getEstimateMode(), [vehicleDataKey]);
+  const readinessChecks = useMemo(() => {
+    let vehiclePurchase: any;
+    let vehicleSpecs: any;
+    try { vehiclePurchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}'); } catch {}
+    try { vehicleSpecs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}'); } catch {}
+    return getReadinessChecks({ hasBizTrips, vehiclePurchase, vehicleSpecs });
+  }, [hasBizTrips, vehicleDataKey]);
   const deductionState = useMemo(() => getDeductionState(readinessChecks, showDeductionEstimates), [readinessChecks, showDeductionEstimates]);
   const disclaimer = useMemo(() => getEstimateDisclaimer(deductionState), [deductionState]);
 
@@ -186,7 +222,8 @@ export function DashboardScreen() {
 
   const allTiles = [
     { screen: 'sort' as const, label: 'Sort Trips', sub: totalUnsorted > 0 ? `${totalUnsorted} trip${totalUnsorted !== 1 ? 's' : ''} to sort` : 'All sorted', icon: MapPin, primary: true, badge: totalUnsorted, archivedHide: true, fullWidth: true },
-    { screen: 'input' as const, label: 'Add Trip', sub: 'Manual or live entry', icon: Plus, primary: false, archivedHide: true, fullWidth: true },
+    { screen: 'guide' as const, label: 'Guides', sub: 'Rules, methods & how-to', icon: HelpCircle, primary: false, archivedHide: false, fullWidth: false },
+    { screen: 'input' as const, label: 'Add Trip', sub: 'Manual or live entry', icon: Plus, primary: false, archivedHide: false, fullWidth: false },
   ];
 
   const tiles = archived ? allTiles.filter(t => !t.archivedHide) : allTiles;
@@ -251,7 +288,7 @@ export function DashboardScreen() {
         </div>
 
         <button
-          className="w-full flex items-center gap-[6px] rounded-xl p-[6px_8px] cursor-pointer transition-all active:scale-[.98] mb-2"
+          className="w-full flex items-center gap-[8px] rounded-xl py-[8px] px-[10px] cursor-pointer transition-all active:scale-[.98] mb-2"
           style={{
             background: assistantMode ? 'rgb(var(--wc-ink) / .08)' : 'var(--wc-card)',
             border: assistantMode ? '1.5px solid rgb(var(--wc-ink) / .3)' : '1px solid var(--wc-border)',
@@ -263,21 +300,21 @@ export function DashboardScreen() {
           }}
           data-testid="toggle-assistant-mode"
         >
-          <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: assistantMode ? 'rgba(245,196,0,.1)' : 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
+          <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: assistantMode ? 'rgba(245,196,0,.1)' : 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
             <HelpCircle className="w-[18px] h-[18px]" style={{ color: assistantMode ? 'var(--wc-y)' : 'var(--wc-t3)' }} />
           </div>
           <div className="flex-1 min-w-0 text-left">
-            <div className="font-heading font-bold text-[11px]" style={{ color: assistantMode ? 'var(--wc-y)' : 'var(--wc-text)' }}>Assistant Mode</div>
-            <div className="text-[9px] mt-[2px] leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Show helpful prompts and tips on every screen</div>
+            <div className="font-heading font-bold text-[12px]" style={{ color: assistantMode ? 'var(--wc-y)' : 'var(--wc-text)' }}>Assistant Mode</div>
+            <div className="text-[10px] mt-[2px] leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Show helpful prompts and tips on every screen</div>
           </div>
           <div
-            className="w-[36px] h-[20px] rounded-full relative transition-all flex-shrink-0"
+            className="w-[32px] h-[18px] rounded-full relative transition-all flex-shrink-0"
             style={{ background: assistantMode ? 'rgb(var(--wc-ink) / .25)' : 'rgb(var(--wc-ink) / .1)' }}
           >
             <div
-              className="absolute top-[2px] w-[16px] h-[16px] rounded-full transition-all"
+              className="absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all"
               style={{
-                left: assistantMode ? '18px' : '2px',
+                left: assistantMode ? '16px' : '2px',
                 background: assistantMode ? 'var(--wc-y)' : 'var(--wc-t3)',
               }}
             />
@@ -301,7 +338,7 @@ export function DashboardScreen() {
             </div>
 
             <button
-              className="ob-a4 w-full rounded-xl p-[14px] mb-3 flex flex-col items-center gap-2 cursor-pointer active:scale-[.98] transition-transform"
+              className="ob-a4 w-full rounded-xl p-[10px] mb-2 flex flex-col items-center gap-[6px] cursor-pointer active:scale-[.98] transition-transform"
               style={{ background: 'var(--wc-card)', border: '1.5px solid rgb(var(--wc-ink) / .3)' }}
               onClick={() => setShowLogbookInfo(true)}
               data-testid="button-start-logbook"
@@ -375,16 +412,16 @@ export function DashboardScreen() {
               style={{ transform: `translateX(-${slideIdx * 100}%)` }}
             >
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="grid grid-cols-3 gap-2 h-full">
+              <div className="w-full flex-shrink-0 overflow-hidden" style={{ minHeight: 120, height: 120 }}>
+                <div className="grid grid-cols-3 gap-[4px] h-full min-h-0">
                   <div
-                    className="rounded-xl p-2 min-w-0 flex flex-col items-center justify-center"
+                    className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden"
                     style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
                     data-testid="dash-stat-biz-pct"
                   >
                     {(() => {
                       const bizPct = totalKmAll > 0 ? Math.round((bizKm / totalKmAll) * 100) : 0;
-                      const sz = 74; const sw = 8; const r = (sz - sw) / 2; const circ = 2 * Math.PI * r;
+                      const sz = 58; const sw = 6; const r = (sz - sw) / 2; const circ = 2 * Math.PI * r;
                       const bizLen = (bizPct / 100) * circ; const perLen = circ - bizLen;
                       return (
                         <div className="relative">
@@ -394,39 +431,49 @@ export function DashboardScreen() {
                             {bizPct > 0 && bizPct < 100 && <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke="rgb(var(--wc-ink) / .15)" strokeWidth={sw} strokeDasharray={`${perLen} ${bizLen}`} strokeDashoffset={circ / 4 - bizLen} strokeLinecap="round" style={{ transition: 'stroke-dasharray .6s ease' }} />}
                           </svg>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="font-display text-[19px] leading-none" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
+                            <span className="font-display text-[15px] leading-none" style={{ color: 'var(--wc-y)' }}>{bizPct}%</span>
                           </div>
                         </div>
                       );
                     })()}
-                    <div className="text-[11px] mt-[4px] text-center" style={{ color: 'var(--wc-t3)' }}>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>
                       {totalTrips > 0 ? `${totalBizCount}B / ${totalPerCount}P` : 'Business'}
                     </div>
                   </div>
-                  <div className="rounded-xl min-w-0 flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="dash-stat-km">
-                    <div className="p-[8px_10px] flex-1">
-                      <div className="text-[11px] font-bold uppercase tracking-[.07em]" style={{ color: 'var(--wc-t3)' }}>Business KM</div>
-                      <div className="font-display text-[20px] leading-none mt-[3px]">{bizKm.toFixed(1)}</div>
-                      <div className="text-[11px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>{totalKmAll > 0 ? `of ${totalKmAll.toFixed(1)}` : 'km tracked'}</div>
+                  <div className="rounded-xl min-w-0 flex flex-col overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="dash-stat-km">
+                    <div className="p-[7px_8px] flex-1 min-h-0">
+                      <div className="text-[9px] font-bold uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Business KM</div>
+                      <div className="font-display text-[20px] leading-none mt-[2px]">{bizKm.toFixed(1)}</div>
+                      <div className="text-[9px] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>{totalKmAll > 0 ? `of ${totalKmAll.toFixed(1)}` : 'km tracked'}</div>
                     </div>
-                    <div className="mx-[10px]" style={{ height: 1, background: 'var(--wc-border)' }} />
-                    <div className="p-[8px_10px] flex-1" data-testid="dash-stat-trips">
-                      <div className="text-[11px] font-bold uppercase tracking-[.07em]" style={{ color: 'var(--wc-t3)' }}>Trips</div>
-                      <div className="font-display text-[20px] leading-none mt-[3px]">{totalTrips}</div>
-                      <div className="text-[11px] mt-[2px]" style={{ color: 'var(--wc-t2)' }}>{totalBizCount}B / {totalPerCount}P</div>
+                    <div className="mx-[6px]" style={{ height: 1, background: 'var(--wc-border)' }} />
+                    <div className="p-[7px_8px] flex-1 min-h-0" data-testid="dash-stat-trips">
+                      <div className="text-[9px] font-bold uppercase tracking-[.06em]" style={{ color: 'var(--wc-t3)' }}>Trips</div>
+                      <div className="font-display text-[20px] leading-none mt-[2px]">{totalTrips}</div>
+                      <div className="text-[9px] mt-[1px]" style={{ color: 'var(--wc-t2)' }}>{totalBizCount}B / {totalPerCount}P</div>
                     </div>
                   </div>
-                  <DeductionCard value={dedTotal} state={deductionState} label="Total Claimable Deductions" sublabel="logbook method" checks={readinessChecks} />
+                  <DeductionCard value={dedTotal} state={deductionState} label="Total Claimable Deductions" sublabel="logbook method" checks={readinessChecks} compact className="overflow-hidden min-h-0" />
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[10px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-logbook-style">
-                  <div className="flex items-center gap-[6px] mb-[6px]">
-                    <BookOpen className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
-                    <div className="font-heading font-bold text-[13px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>Logbook Style</div>
+              <div className="w-full flex-shrink-0 overflow-hidden" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[8px] h-full flex flex-col min-h-0 overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-logbook-style">
+                  <div className="flex items-center justify-between mb-[6px]">
+                    <div className="flex items-center gap-[5px]">
+                      <BookOpen className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
+                      <div className="font-heading font-bold text-[12px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>Logbook Style</div>
+                    </div>
+                    <button
+                      className="text-[10px] font-heading font-semibold uppercase tracking-[.05em] cursor-pointer transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--wc-t3)' }}
+                      onClick={() => setShowDeductionPrompt(true)}
+                      data-testid="slide-deduction-setup"
+                    >
+                      Deduction setup
+                    </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-[6px]">
+                  <div className="grid grid-cols-3 gap-[4px] flex-1">
                     {[
                       { id: 'gps' as const, label: 'GPS', desc: 'Sync and sort (auto)', Icon: Bluetooth },
                       { id: 'hybrid' as const, label: 'Phone', desc: 'No external device', Icon: Navigation },
@@ -434,7 +481,7 @@ export function DashboardScreen() {
                     ].map(({ id, label, desc, Icon }) => (
                       <button
                         key={id}
-                        className="flex flex-col items-center gap-[2px] rounded-[10px] p-[6px_4px] text-center transition-all min-w-0 overflow-hidden"
+                        className="flex flex-col items-center gap-[2px] rounded-[8px] p-[6px_4px] text-center transition-all min-w-0 overflow-hidden"
                         style={{
                           background: logbookStream === id ? 'rgb(var(--wc-ink) / .08)' : 'rgb(var(--wc-ink) / .03)',
                           border: logbookStream === id ? '1.5px solid var(--wc-y)' : '1px solid var(--wc-border)',
@@ -442,8 +489,8 @@ export function DashboardScreen() {
                         onClick={() => updateLogbookStream(id)}
                         data-testid={`slide-logbook-${id}`}
                       >
-                        <div className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: logbookStream === id ? 'rgba(245,196,0,.15)' : 'rgb(var(--wc-ink) / .06)' }}>
-                          <Icon className="w-[13px] h-[13px]" style={{ color: logbookStream === id ? 'var(--wc-y)' : 'var(--wc-t2)' }} />
+                        <div className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: logbookStream === id ? 'rgba(245,196,0,.15)' : 'rgb(var(--wc-ink) / .06)' }}>
+                          <Icon className="w-[14px] h-[14px]" style={{ color: logbookStream === id ? 'var(--wc-y)' : 'var(--wc-t2)' }} />
                         </div>
                         <div className="font-heading font-bold text-[11px] leading-tight" style={{ color: 'var(--wc-text)' }}>{label}</div>
                         <div className="font-data text-[9px] leading-tight line-clamp-2" style={{ color: 'var(--wc-t3)' }}>{desc}</div>
@@ -454,59 +501,75 @@ export function DashboardScreen() {
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <button
-                  className="w-full h-full rounded-xl p-[14px] flex items-center gap-[12px] text-left cursor-pointer transition-all active:scale-[.98]"
-                  style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
-                  onClick={() => setShowGuide(true)}
-                  data-testid="button-how-it-works"
-                >
-                  <div className="w-[40px] h-[40px] rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
-                    <BookOpen className="w-[20px] h-[20px]" style={{ color: 'var(--wc-y)' }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-heading font-bold text-[14px]" style={{ color: 'var(--wc-text)' }}>How This App Works</div>
-                    <div className="text-[11px] mt-[4px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>Guide & help — tap to open</div>
-                  </div>
-                  <ChevronRight className="w-[10px] h-[10px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
-                </button>
-              </div>
-
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="grid grid-cols-3 gap-2 h-full">
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-biz-trips">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <TrendingUp className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="w-full h-full rounded-xl overflow-hidden flex" style={{ border: '1px solid var(--wc-border)' }}>
+                  <button
+                    className="flex-1 flex items-center gap-[10px] p-[10px_12px] text-left cursor-pointer transition-all active:scale-[.98]"
+                    style={{ background: 'var(--wc-card)' }}
+                    onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'guide' })}
+                    data-testid="button-how-it-works"
+                  >
+                    <div className="w-[32px] h-[32px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .15)' }}>
+                      <BookOpen className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
-                    <div className="font-display text-[20px] leading-none">{totalBizCount}</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Business trips</div>
-                  </div>
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-fuel-price">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <Fuel className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-heading font-bold text-[12px]" style={{ color: 'var(--wc-text)' }}>How This App Works</div>
+                      <div className="text-[10px] mt-[2px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>Full guide — tap to open</div>
                     </div>
-                    <div className="font-display text-[20px] leading-none">${(() => { try { const s = JSON.parse(localStorage.getItem('wc_settings') || '{}'); const p = parseFloat(s.avgFuelPrice); return p > 0 ? p.toFixed(2) : '1.95'; } catch { return '1.95'; } })()}</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Avg fuel price /L</div>
-                  </div>
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-depreciation">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <Car className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
-                    </div>
-                    <div className="font-display text-[17px] leading-none">${(() => { try { const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}'); const price = Math.min(parseFloat(p.purchasePrice) || 0, 69674); return price > 0 ? Math.round(price * 0.25).toLocaleString('en-AU') : '—'; } catch { return '—'; } })()}</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Est. depreciation</div>
-                  </div>
+                    <ChevronRight className="w-[10px] h-[10px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+                  </button>
+                  <button
+                    className="px-[10px] flex items-center justify-center cursor-pointer transition-all active:scale-[.95]"
+                    style={{ background: 'rgb(var(--wc-ink) / .04)', borderLeft: '1px solid var(--wc-border)' }}
+                    onClick={() => setShowGuide(true)}
+                    title="Quick overview"
+                  >
+                    <Info className="w-[15px] h-[15px]" style={{ color: 'var(--wc-t3)' }} />
+                  </button>
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[14px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-tax-deadline">
-                  <div className="flex items-center gap-[8px] mb-[10px]">
-                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <Calendar className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+              <div className="w-full flex-shrink-0 overflow-hidden" style={{ minHeight: 120, height: 120 }}>
+                <div className="grid grid-cols-3 gap-[4px] h-full min-h-0">
+                  <div className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-biz-trips">
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <TrendingUp className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                    </div>
+                    <div className="font-display text-[22px] leading-none">{totalBizCount}</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>Business trips</div>
+                  </div>
+                  <div className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-fuel-price">
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <Fuel className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                    </div>
+                    <div className="font-display text-[22px] leading-none">${(() => { try { const s = JSON.parse(localStorage.getItem('wc_settings') || '{}'); const p = parseFloat(s.avgFuelPrice); return p > 0 ? p.toFixed(2) : '1.95'; } catch { return '1.95'; } })()}</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>Avg fuel price /L</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center cursor-pointer transition-all active:scale-[.98] text-left overflow-hidden"
+                    style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }}
+                    onClick={() => setShowDeductionPrompt(true)}
+                    data-testid="slide-depreciation"
+                  >
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <Car className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+                    </div>
+                    <div className="font-display text-[20px] leading-none">${(() => { try { const p = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}'); const price = Math.min(parseFloat(p.purchasePrice) || 0, 69674); return price > 0 ? Math.round(price * 0.25).toLocaleString('en-AU') : '—'; } catch { return '—'; } })()}</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>Est. depreciation · tap to edit</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full flex-shrink-0 overflow-hidden" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[10px] h-full flex flex-col min-h-0 overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-tax-deadline">
+                  <div className="flex items-center gap-[6px] mb-[8px]">
+                    <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <Calendar className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
                     <div>
                       <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Tax Deadline</div>
-                      <div className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>End of Financial Year</div>
+                      <div className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>End of Financial Year</div>
                     </div>
                   </div>
                   {(() => {
@@ -520,14 +583,14 @@ export function DashboardScreen() {
                     const fyLabel = `30 June ${eofy.getFullYear()}`;
                     return (
                       <>
-                        <div className="flex items-baseline gap-[4px] mb-[8px]">
+                        <div className="flex items-baseline gap-[4px] mb-[6px]">
                           <span className="font-display text-[34px] leading-none" style={{ color: urgent ? 'var(--wc-am)' : 'var(--wc-y)' }}>{daysLeft}</span>
-                          <span className="font-heading font-bold text-[13px] uppercase" style={{ color: 'var(--wc-t3)' }}>days to EOFY</span>
+                          <span className="font-heading font-bold text-[11px] uppercase" style={{ color: 'var(--wc-t3)' }}>days to EOFY</span>
                         </div>
                         <div className="w-full rounded-full h-[6px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
                           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: urgent ? 'var(--wc-am)' : 'var(--wc-y)' }} />
                         </div>
-                        <div className="font-data text-[10px] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>
+                        <div className="font-data text-[9px] mt-[2px]" style={{ color: 'var(--wc-t3)' }}>
                           {urgent ? 'EOFY approaching — finalise your records' : `${fyLabel} — keep tracking your trips`}
                         </div>
                       </>
@@ -536,11 +599,11 @@ export function DashboardScreen() {
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[14px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-expenses-check">
-                  <div className="flex items-center gap-[8px] mb-[8px]">
-                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <Receipt className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[10px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-expenses-check">
+                  <div className="flex items-center gap-[6px] mb-[6px]">
+                    <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <Receipt className="w-[15px] h-[15px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
                     <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Vehicle Expenses</div>
                   </div>
@@ -561,16 +624,16 @@ export function DashboardScreen() {
                     } catch {}
                     return (
                       <>
-                        <div className="flex items-baseline gap-[6px] mb-[6px]">
+                        <div className="flex items-baseline gap-[4px] mb-[6px]">
                           <span className="font-display text-[26px] leading-none" style={{ color: expenseCount > 0 ? 'var(--wc-text)' : 'var(--wc-t3)' }}>{expenseCount > 0 ? `$${expenseTotal.toFixed(0)}` : '$0'}</span>
-                          <span className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>{expenseCount} receipt{expenseCount !== 1 ? 's' : ''}</span>
+                          <span className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>{expenseCount} receipt{expenseCount !== 1 ? 's' : ''}</span>
                         </div>
-                        <div className="flex gap-[4px] mb-[6px]">
+                        <div className="flex gap-[4px] mb-[4px]">
                           {categories.map((cat, i) => (
                             <div key={cat} className="flex-1 h-[4px] rounded-full" style={{ background: i < trackedCats ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .08)' }} />
                           ))}
                         </div>
-                        <div className="font-data text-[10px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
+                        <div className="font-data text-[9px] leading-[1.4]" style={{ color: 'var(--wc-t3)' }}>
                           {trackedCats === 0 ? 'Track fuel, rego, insurance, servicing & tyres' : `${trackedCats}/5 expense categories tracked`}
                         </div>
                       </>
@@ -579,20 +642,20 @@ export function DashboardScreen() {
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[12px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-day-chart">
-                  <div className="flex items-center justify-between mb-[8px]">
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[10px] h-full flex flex-col" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-day-chart">
+                  <div className="flex items-center justify-between mb-[6px]">
                     <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Trips by Day</div>
                     <div className="flex items-center gap-[8px]">
                       <div className="flex items-center gap-[3px]"><div className="w-[5px] h-[5px] rounded-[2px]" style={{ background: 'var(--wc-y)' }} /><span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>Biz</span></div>
                       <div className="flex items-center gap-[3px]"><div className="w-[5px] h-[5px] rounded-[2px]" style={{ background: 'rgb(var(--wc-ink) / .12)' }} /><span className="font-data text-[9px] uppercase" style={{ color: 'var(--wc-t3)' }}>Per</span></div>
                     </div>
                   </div>
-                  <div className="flex items-end gap-[4px]" style={{ height: '76px' }}>
+                  <div className="flex items-end gap-[3px] flex-1">
                     {dayStats.map(d => {
                       const total = d.biz + d.per;
                       const maxDayTotal = Math.max(1, ...dayStats.map(dd => dd.biz + dd.per));
-                      const barH = total > 0 ? Math.max(8, (total / maxDayTotal) * 60) : 4;
+                      const barH = total > 0 ? Math.max(6, (total / maxDayTotal) * 64) : 3;
                       const bizH = total > 0 ? (d.biz / total) * barH : 0;
                       const perH = barH - bizH;
                       return (
@@ -602,7 +665,7 @@ export function DashboardScreen() {
                             {bizH > 0 && <div style={{ height: `${bizH}px`, background: 'var(--wc-y)' }} />}
                             {total === 0 && <div className="h-full" style={{ background: 'rgb(var(--wc-ink) / .04)' }} />}
                           </div>
-                          <div className="font-data text-[9px] uppercase mt-[3px]" style={{ color: total > 0 ? 'var(--wc-text)' : 'var(--wc-t3)' }}>{d.name}</div>
+                          <div className="font-data text-[8px] uppercase mt-[2px]" style={{ color: total > 0 ? 'var(--wc-text)' : 'var(--wc-t3)' }}>{d.name}</div>
                         </div>
                       );
                     })}
@@ -610,15 +673,15 @@ export function DashboardScreen() {
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[12px] h-full flex flex-col overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-biz-pct-line">
-                  <div className="flex items-center gap-[6px] mb-[8px]">
-                    <TrendingUp className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[10px] h-full flex flex-col overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-biz-pct-line">
+                  <div className="flex items-center gap-[4px] mb-[6px]">
+                    <TrendingUp className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
                     <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Business % Over Time</div>
                   </div>
                   {bizPctOverTime.length > 0 ? (
-                    <div className="flex flex-col gap-0">
-                      <svg viewBox="0 0 200 70" className="w-full" style={{ height: '70px' }}>
+                    <div className="flex flex-col gap-0 flex-1">
+                      <svg viewBox="0 0 200 70" className="w-full" style={{ height: '72px' }}>
                         {[0, 25, 50, 75, 100].map(v => (
                           <line key={v} x1="0" y1={70 - (v / 100) * 60 - 5} x2="200" y2={70 - (v / 100) * 60 - 5} stroke="rgb(var(--wc-ink) / .06)" strokeWidth="0.5" />
                         ))}
@@ -652,49 +715,49 @@ export function DashboardScreen() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center" style={{ minHeight: '80px' }}>
+                    <div className="flex-1 flex items-center justify-center" style={{ minHeight: '50px' }}>
                       <div className="text-center">
-                        <TrendingUp className="w-[20px] h-[20px] mx-auto mb-[6px]" style={{ color: 'var(--wc-t3)' }} />
-                        <div className="font-data text-[11px]" style={{ color: 'var(--wc-t3)' }}>Sort trips to see your trend</div>
+                        <TrendingUp className="w-[16px] h-[16px] mx-auto mb-[4px]" style={{ color: 'var(--wc-t3)' }} />
+                        <div className="font-data text-[10px]" style={{ color: 'var(--wc-t3)' }}>Sort trips to see your trend</div>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="grid grid-cols-2 gap-2 h-full">
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="grid grid-cols-2 gap-[6px] h-full">
                   <div className="rounded-xl p-[12px] flex flex-col justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-avg-km">
-                    <Route className="w-[16px] h-[16px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
-                    <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{avgTripKm.toFixed(1)}<span className="text-[12px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
-                    <div className="font-data text-[10px] uppercase tracking-[.08em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Avg Trip Distance</div>
+                    <Route className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
+                    <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{avgTripKm.toFixed(1)}<span className="text-[11px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
+                    <div className="font-data text-[9px] uppercase tracking-[.08em] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>Avg Trip Distance</div>
                   </div>
                   <div className="rounded-xl p-[12px] flex flex-col justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-total-km">
-                    <Fuel className="w-[16px] h-[16px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
-                    <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{totalKmAll.toFixed(0)}<span className="text-[12px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
-                    <div className="font-data text-[10px] uppercase tracking-[.08em] mt-[3px]" style={{ color: 'var(--wc-t3)' }}>Total Tracked</div>
+                    <Fuel className="w-[18px] h-[18px] mb-[6px]" style={{ color: 'var(--wc-y)' }} />
+                    <div className="font-heading font-black text-[24px] leading-none" style={{ color: 'var(--wc-text)' }}>{totalKmAll.toFixed(0)}<span className="text-[11px] font-bold" style={{ color: 'var(--wc-t3)' }}> km</span></div>
+                    <div className="font-data text-[9px] uppercase tracking-[.08em] mt-[4px]" style={{ color: 'var(--wc-t3)' }}>Total Tracked</div>
                   </div>
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="rounded-xl p-[12px] h-full flex flex-col overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-destinations">
-                  <div className="flex items-center gap-[6px] mb-[10px]">
-                    <Target className="w-[14px] h-[14px]" style={{ color: 'var(--wc-y)' }} />
-                    <div className="font-heading font-bold text-[12px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
+              <div className="w-full flex-shrink-0" style={{ minHeight: 120, height: 120 }}>
+                <div className="rounded-xl p-[10px] h-full flex flex-col overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-destinations">
+                  <div className="flex items-center gap-[4px] mb-[8px]">
+                    <Target className="w-[13px] h-[13px]" style={{ color: 'var(--wc-y)' }} />
+                    <div className="font-heading font-bold text-[11px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>Top Destinations</div>
                   </div>
                   {topDestinations.length > 0 ? topDestinations.map(([dest, count], i) => {
                     const maxCount = Math.max(1, ...topDestinations.map(([, c]) => c));
                     return (
-                      <div key={dest} className="mb-[6px] last:mb-0">
-                        <div className="flex items-center justify-between mb-[2px]">
-                          <div className="flex items-center gap-[6px] flex-1 min-w-0">
-                            <div className="w-[16px] h-[16px] rounded-full flex items-center justify-center font-data text-[9px] font-bold flex-shrink-0" style={{ background: i === 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .08)', color: i === 0 ? 'var(--wc-bg)' : 'var(--wc-t2)' }}>{i + 1}</div>
-                            <div className="text-[11px] truncate font-heading font-bold" style={{ color: 'var(--wc-text)' }}>{dest}</div>
+                      <div key={dest} className="mb-[4px] last:mb-0">
+                        <div className="flex items-center justify-between mb-[1px]">
+                          <div className="flex items-center gap-[4px] flex-1 min-w-0">
+                            <div className="w-[14px] h-[14px] rounded-full flex items-center justify-center font-data text-[8px] font-bold flex-shrink-0" style={{ background: i === 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .08)', color: i === 0 ? 'var(--wc-bg)' : 'var(--wc-t2)' }}>{i + 1}</div>
+                            <div className="text-[10px] truncate font-heading font-bold" style={{ color: 'var(--wc-text)' }}>{dest}</div>
                           </div>
-                          <div className="font-data text-[11px] font-bold ml-2 flex-shrink-0" style={{ color: 'var(--wc-y)' }}>{count}x</div>
+                          <div className="font-data text-[10px] font-bold ml-2 flex-shrink-0" style={{ color: 'var(--wc-y)' }}>{count}x</div>
                         </div>
-                        <div className="ml-[22px] h-[4px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
+                        <div className="ml-[18px] h-[3px] rounded-full overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .04)' }}>
                           <div className="h-full rounded-full" style={{ width: `${(count / maxCount) * 100}%`, background: i === 0 ? 'var(--wc-y)' : 'rgb(var(--wc-ink) / .15)', transition: 'width .5s ease' }} />
                         </div>
                       </div>
@@ -707,28 +770,28 @@ export function DashboardScreen() {
                 </div>
               </div>
 
-              <div className="w-full flex-shrink-0" style={{ minHeight: 130, height: 130 }}>
-                <div className="grid grid-cols-3 gap-2 h-full">
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-reports">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <FileText className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+              <div className="w-full flex-shrink-0 overflow-hidden" style={{ minHeight: 120, height: 120 }}>
+                <div className="grid grid-cols-3 gap-[4px] h-full min-h-0">
+                  <div className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-reports">
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <FileText className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
-                    <div className="font-display text-[20px] leading-none">{activeReports.length}</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Reports saved</div>
+                    <div className="font-display text-[22px] leading-none">{activeReports.length}</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>Reports saved</div>
                   </div>
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-unsorted">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: totalUnsorted > 0 ? 'rgba(245,158,11,.1)' : 'rgb(var(--wc-ink) / .06)' }}>
-                      <Clock className="w-[18px] h-[18px]" style={{ color: totalUnsorted > 0 ? 'var(--wc-am)' : 'var(--wc-y)' }} />
+                  <div className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-unsorted">
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: totalUnsorted > 0 ? 'rgba(245,158,11,.1)' : 'rgb(var(--wc-ink) / .06)' }}>
+                      <Clock className="w-[16px] h-[16px]" style={{ color: totalUnsorted > 0 ? 'var(--wc-am)' : 'var(--wc-y)' }} />
                     </div>
-                    <div className="font-display text-[20px] leading-none" style={{ color: totalUnsorted > 0 ? 'var(--wc-am)' : undefined }}>{totalUnsorted}</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>To sort</div>
+                    <div className="font-display text-[22px] leading-none" style={{ color: totalUnsorted > 0 ? 'var(--wc-am)' : undefined }}>{totalUnsorted}</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>To sort</div>
                   </div>
-                  <div className="rounded-xl p-[10px] min-w-0 flex flex-col items-center justify-center" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-fy">
-                    <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center mb-[6px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
-                      <Calendar className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
+                  <div className="rounded-xl p-[6px] min-w-0 flex flex-col items-center justify-center overflow-hidden" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid="slide-fy">
+                    <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[4px]" style={{ background: 'rgb(var(--wc-ink) / .06)' }}>
+                      <Calendar className="w-[16px] h-[16px]" style={{ color: 'var(--wc-y)' }} />
                     </div>
-                    <div className="font-display text-[17px] leading-none">2025–26</div>
-                    <div className="text-[10px] mt-[4px] text-center leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>Financial year</div>
+                    <div className="font-display text-[18px] leading-none">2025–26</div>
+                    <div className="text-[9px] mt-[3px] text-center leading-tight" style={{ color: 'var(--wc-t3)' }}>Financial year</div>
                   </div>
                 </div>
               </div>
@@ -775,11 +838,36 @@ export function DashboardScreen() {
                   </div>
                 </div>
               </div>
+
+              <div className="flex flex-wrap gap-[5px] mb-[10px]">
+                {[
+                  { n: 1, icon: Car,        label: 'Vehicle type',   section: 'Settings → Vehicle' },
+                  { n: 2, icon: DollarSign, label: 'Purchase price', section: 'Settings → Vehicle' },
+                  { n: 3, icon: Route,      label: 'Est km / yr',    section: 'Settings → Vehicle' },
+                ].map(f => (
+                  <div
+                    key={f.label}
+                    className="flex items-center gap-[5px] pl-[4px] pr-[8px] py-[4px] rounded-full"
+                    style={{ background: 'rgb(var(--wc-ink) / .05)', border: '1px solid rgb(var(--wc-ink) / .14)' }}
+                  >
+                    <div
+                      className="w-[16px] h-[16px] rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'rgba(245,196,0,.18)', border: '1px solid rgba(245,196,0,.4)' }}
+                    >
+                      <span className="font-heading font-black text-[8px]" style={{ color: 'var(--wc-y)' }}>{f.n}</span>
+                    </div>
+                    <f.icon className="w-[9px] h-[9px] flex-shrink-0" style={{ color: 'var(--wc-am)' }} />
+                    <span className="font-heading font-bold text-[8px] uppercase tracking-[.05em]" style={{ color: 'var(--wc-t2)' }}>{f.label}</span>
+                    <span className="text-[7px]" style={{ color: 'var(--wc-t3)' }}>· {f.section}</span>
+                  </div>
+                ))}
+              </div>
+
               <div className="flex gap-[8px]">
                 <button
                   className="flex-1 rounded-[10px] py-[10px] flex items-center justify-center gap-[5px] font-heading font-bold text-[11px] tracking-[.04em] uppercase cursor-pointer transition-all active:scale-[.97]"
                   style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1.5px solid rgb(var(--wc-ink) / .3)', color: 'var(--wc-y)' }}
-                  onClick={() => dispatch({ type: 'GO_SCREEN', screen: 'account' as any })}
+                  onClick={() => { localStorage.setItem('wc_fill_highlight', '1'); dispatch({ type: 'GO_SCREEN', screen: 'account' as any }); }}
                   data-testid="button-fill-basic-details"
                 >
                   <Car className="w-[13px] h-[13px]" />
@@ -797,6 +885,13 @@ export function DashboardScreen() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {estimateMode === 'industry' && readinessChecks.basicDetailsComplete && (
+          <div className="ob-a2b mb-2 flex items-center gap-[5px] px-[2px]">
+            <Info className="w-[10px] h-[10px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
+            <span className="text-[9px] leading-[1.3]" style={{ color: 'var(--wc-t3)' }}>All tax deduction figures shown are estimates only.</span>
           </div>
         )}
 
@@ -881,8 +976,12 @@ export function DashboardScreen() {
               </div>
               <div className="w-full rounded-full h-[6px] overflow-hidden" style={{ background: 'rgb(var(--wc-ink) / .08)' }}>
                 <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%`, background: 'var(--wc-y)' }}
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${barDraining ? 100 : pct}%`,
+                    background: 'var(--wc-y)',
+                    transition: barDraining ? 'none' : 'width 1.4s cubic-bezier(.4,0,.2,1)',
+                  }}
                   data-testid="logbook-progress-bar"
                 />
               </div>
@@ -892,7 +991,7 @@ export function DashboardScreen() {
 
         <div className="ob-a3 flex-1 flex flex-col mb-2">
           <div className="text-[10px] font-bold uppercase tracking-[.07em] mb-2" style={{ color: 'var(--wc-t3)' }}>Quick Actions</div>
-          <div className="grid grid-cols-2 gap-[8px] flex-1" style={{ gridAutoRows: '1fr' }}>
+          <div className="grid grid-cols-2 gap-[6px] flex-1" style={{ gridAutoRows: '1fr' }}>
             {tiles.map(tile => {
               const Icon = tile.icon;
               const badgeCount = (tile as any).badge;
@@ -900,7 +999,7 @@ export function DashboardScreen() {
               return (
                 <button
                   key={tile.screen}
-                  className="relative flex items-center gap-[10px] p-[12px_14px] rounded-xl text-left transition-all active:scale-[.98]"
+                  className="relative flex items-center gap-[10px] p-[14px_16px] rounded-xl text-left transition-all active:scale-[.98]"
                   style={{
                     ...(fullWidth && { gridColumn: '1 / -1' }),
                     background: tile.primary ? 'rgb(var(--wc-ink) / .06)' : 'var(--wc-card)',
@@ -931,23 +1030,23 @@ export function DashboardScreen() {
                     </div>
                   )}
                   <div
-                    className="w-[36px] h-[36px] rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
                       background: tile.primary ? 'rgb(var(--wc-ink) / .1)' : 'rgb(var(--wc-ink) / .04)',
                       border: tile.primary ? '1.5px solid rgb(var(--wc-ink) / .25)' : '1px solid rgb(var(--wc-ink) / .06)',
                     }}
                   >
                     <Icon
-                      className="w-[18px] h-[18px]"
+                      className="w-[20px] h-[20px]"
                       stroke={tile.primary ? 'var(--wc-y)' : 'var(--wc-t2)'}
                       strokeWidth={1.8}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-bold" style={{ color: tile.primary ? 'var(--wc-text)' : 'var(--wc-t2)' }}>
+                    <div className="text-[13px] font-bold" style={{ color: tile.primary ? 'var(--wc-text)' : 'var(--wc-t2)' }}>
                       {tile.label}
                     </div>
-                    <div className="text-[9px] mt-[1px]" style={{ color: badgeCount > 0 && tile.primary ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{tile.sub}</div>
+                    <div className="text-[10px] mt-[2px]" style={{ color: badgeCount > 0 && tile.primary ? 'var(--wc-y)' : 'var(--wc-t3)' }}>{tile.sub}</div>
                   </div>
                 </button>
               );
@@ -1206,6 +1305,122 @@ export function DashboardScreen() {
               </div>
             </div>
           </div>
+        )}
+
+        {showDeductionPrompt && createPortal(
+          <SimplifiedDeductionPrompt
+            value={dedTotal}
+            state={deductionState}
+            checks={readinessChecks}
+            onClose={() => setShowDeductionPrompt(false)}
+            onNavigate={(screen) => {
+              setShowDeductionPrompt(false);
+              dispatch({ type: 'GO_SCREEN', screen: screen as any });
+            }}
+          />,
+          document.body
+        )}
+
+        {/* ── Welcome / Logbook Start Modal ── */}
+        {showWelcome && createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-end justify-center pb-[24px] px-[16px]"
+            style={{
+              background: 'rgba(0,0,0,.7)',
+              backdropFilter: 'blur(8px)',
+              animation: 'fadeIn 400ms ease both',
+            }}
+          >
+            <style>{`
+              @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+              @keyframes slideUp { from { transform:translateY(32px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+            `}</style>
+            <div
+              className="w-full max-w-[390px] rounded-[24px] overflow-hidden"
+              style={{
+                background: 'var(--wc-card)',
+                border: '1.5px solid rgb(var(--wc-ink) / .25)',
+                boxShadow: '0 24px 80px rgba(0,0,0,.7)',
+                animation: 'slideUp 480ms cubic-bezier(.34,1.56,.64,1) both',
+                animationDelay: '80ms',
+              }}
+            >
+              {/* Hero strip */}
+              <div
+                className="w-full px-[22px] pt-[28px] pb-[22px] flex flex-col items-center text-center"
+                style={{ background: 'linear-gradient(160deg, rgba(245,196,0,.08) 0%, transparent 60%)' }}
+              >
+                <div
+                  className="w-[56px] h-[56px] rounded-[18px] flex items-center justify-center mb-[14px]"
+                  style={{ background: 'rgba(245,196,0,.12)', border: '1.5px solid rgba(245,196,0,.3)' }}
+                >
+                  <FileText className="w-[26px] h-[26px]" style={{ color: 'var(--wc-y)' }} />
+                </div>
+                <div className="font-heading font-black text-[22px] uppercase tracking-[.02em] leading-[1.1] mb-[8px]" style={{ color: 'var(--wc-text)' }}>
+                  Ready to start your<br />12-week logbook?
+                </div>
+                <div className="text-[13px] leading-[1.6]" style={{ color: 'var(--wc-t2)' }}>
+                  Track every trip for 12 weeks and unlock <strong style={{ color: 'var(--wc-text)' }}>5 years</strong> of ATO-compliant deductions.
+                </div>
+              </div>
+
+              {/* 12-week progress preview */}
+              <div className="px-[22px] pb-[18px]">
+                <div className="rounded-[12px] p-[12px_14px] mb-[16px]" style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .08)' }}>
+                  <div className="flex justify-between items-center mb-[8px]">
+                    <span className="font-heading font-bold text-[11px] uppercase tracking-[.06em]" style={{ color: 'var(--wc-t2)' }}>12-Week Progress</span>
+                    <span className="font-data text-[11px]" style={{ color: 'var(--wc-y)' }}>84 days</span>
+                  </div>
+                  <div className="flex gap-[3px]">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 h-[6px] rounded-full"
+                        style={{
+                          background: 'rgb(var(--wc-ink) / .08)',
+                          transition: `background 120ms ${i * 40}ms`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-[6px]">
+                    <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>Week 1</span>
+                    <span className="font-data text-[9px]" style={{ color: 'var(--wc-t3)' }}>Week 12</span>
+                  </div>
+                </div>
+
+                <button
+                  className="w-full rounded-[14px] py-[14px] mb-[8px] flex items-center justify-center gap-[8px] font-heading font-extrabold text-[15px] uppercase tracking-[.06em] cursor-pointer transition-all active:scale-[.97]"
+                  style={{ background: 'var(--wc-y)', color: 'var(--wc-bg)' }}
+                  onClick={() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    localStorage.setItem('wc_logbook_start', today);
+                    localStorage.setItem('wc_welcome_seen', '1');
+                    setLogbookStart(today);
+                    setShowWelcome(false);
+                    window.dispatchEvent(new CustomEvent('wc:logbook-launch'));
+                  }}
+                  data-testid="button-welcome-start"
+                >
+                  <FileText className="w-[16px] h-[16px]" />
+                  Start My 12 Weeks
+                </button>
+
+                <button
+                  className="w-full rounded-[14px] py-[12px] font-heading font-bold text-[13px] uppercase tracking-[.05em] cursor-pointer transition-all active:scale-[.97]"
+                  style={{ background: 'rgb(var(--wc-ink) / .04)', border: '1px solid rgb(var(--wc-ink) / .1)', color: 'var(--wc-t2)' }}
+                  onClick={() => {
+                    localStorage.setItem('wc_welcome_seen', '1');
+                    setShowWelcome(false);
+                  }}
+                  data-testid="button-welcome-explore"
+                >
+                  I'll Keep Exploring
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
 
       </div>

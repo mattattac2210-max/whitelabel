@@ -7,22 +7,39 @@ interface Props {
   defaultOpen?: boolean;
   children: React.ReactNode;
   testId: string;
+  badge?: React.ReactNode;
 }
 
-export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, children, testId }: Props) {
+export function CollapsiblePanel({ title, icon: Icon, defaultOpen = false, children, testId, badge }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-[14px] transition-all" style={{ background: 'var(--wc-card)', border: '1px solid var(--wc-border)' }} data-testid={testId}>
+    <div
+      className="rounded-[14px] transition-all"
+      style={{
+        background: 'var(--wc-card)',
+        border: badge ? '1.5px solid rgba(245,196,0,.4)' : '1px solid var(--wc-border)',
+      }}
+      data-testid={testId}
+    >
       <button
         className="w-full flex items-center gap-[10px] p-[14px_16px] cursor-pointer"
         onClick={() => setOpen(!open)}
         data-testid={`${testId}-toggle`}
       >
-        <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--wc-ink) / .08)', border: '1px solid rgb(var(--wc-ink) / .18)' }}>
+        <div
+          className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+          style={{
+            background: badge ? 'rgba(245,196,0,.15)' : 'rgb(var(--wc-ink) / .08)',
+            border: badge ? '1px solid rgba(245,196,0,.4)' : '1px solid rgb(var(--wc-ink) / .18)',
+          }}
+        >
           <Icon className="w-[18px] h-[18px]" style={{ color: 'var(--wc-y)' }} />
         </div>
-        <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em] flex-1 text-left" style={{ color: 'var(--wc-text)' }}>{title}</span>
+        <div className="flex-1 text-left min-w-0">
+          <span className="font-heading font-bold text-[15px] uppercase tracking-[.04em]" style={{ color: 'var(--wc-text)' }}>{title}</span>
+          {badge && <div className="mt-[5px]">{badge}</div>}
+        </div>
         {open
           ? <ChevronUp className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />
           : <ChevronDown className="w-[16px] h-[16px] flex-shrink-0" style={{ color: 'var(--wc-t3)' }} />

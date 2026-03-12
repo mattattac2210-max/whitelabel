@@ -86,7 +86,7 @@ export interface ExpenseRecord {
 
 // ── Constants ────────────────────────────────────────────────
 
-const ATO_CAR_LIMIT = 68108;
+const ATO_CAR_LIMIT = 69674; // 2025–26 ATO car cost limit
 const DV_RATE = 0.25;
 
 const INDUSTRY_RUNNING_COSTS: Record<string, number> = {
@@ -96,6 +96,7 @@ const INDUSTRY_RUNNING_COSTS: Record<string, number> = {
   'suv-small': 5900,
   'sedan': 7200,
   'van': 10500,
+  'ev': 6400,   // EV: lower running costs (no fuel, lower servicing) per ATO/RACQ estimates
   'default': 9200,
 };
 
@@ -111,12 +112,15 @@ export function getEstimateMode(settings?: AppSettings): EstimateMode {
 function getVehicleCategory(specs?: VehicleSpecs): string {
   if (!specs) return 'default';
   const cat = (specs.vehicleCategory || '').toLowerCase();
+  if (cat.includes('ev') || cat.includes('electric')) return 'ev';
   if (cat.includes('4x4') || cat.includes('4wd')) return 'ute-4x4';
   if (cat.includes('4x2') || cat.includes('2wd')) return 'ute-4x2';
   if (cat.includes('suv') && cat.includes('small')) return 'suv-small';
   if (cat.includes('suv')) return 'suv-medium';
   if (cat.includes('van')) return 'van';
   if (cat.includes('sedan')) return 'sedan';
+  const fuel = (specs.fuelType || '').toLowerCase();
+  if (fuel.includes('electric') || fuel === 'ev') return 'ev';
   const body = (specs.bodyType || '').toLowerCase();
   if (body.includes('util') || body.includes('ute')) return 'ute-4x4';
   if (body.includes('van')) return 'van';

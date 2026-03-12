@@ -22,56 +22,79 @@ interface DeductionCardProps {
   animate?: boolean;
   className?: string;
   checks?: ReadinessCheck;
+  compact?: boolean;
 }
 
-export function DeductionCard({ value, state, label = 'Deduction', sublabel, animate, className = '', checks }: DeductionCardProps) {
+export function DeductionCard({ value, state, label = 'Deduction', sublabel, animate, className = '', checks, compact }: DeductionCardProps) {
   const { dispatch } = useApp();
   const [showModal, setShowModal] = useState(false);
   const mode = getEstimateMode();
 
   const handleTap = () => {
-    setShowModal(true);
+    if (state === 'locked') {
+      localStorage.setItem('wc_fill_highlight', '1');
+      dispatch({ type: 'GO_SCREEN', screen: 'account' });
+    } else {
+      setShowModal(true);
+    }
   };
 
   return (
     <>
+      {state === 'locked' && (
+        <style>{`
+          @keyframes ded-attention {
+            0%, 100% {
+              border-color: rgb(var(--wc-ink) / .1);
+              box-shadow: none;
+              background: rgb(var(--wc-ink) / .02);
+            }
+            50% {
+              border-color: rgba(245,196,0,.7);
+              box-shadow: 0 0 18px rgba(245,196,0,.35), inset 0 0 10px rgba(245,196,0,.08);
+              background: rgba(245,196,0,.06);
+            }
+          }
+        `}</style>
+      )}
       <div
-        className={`rounded-xl relative transition-all min-w-0 flex flex-col ${className}`}
+        className={`rounded-xl relative min-w-0 flex flex-col ${className}`}
         style={{
           background: state === 'locked' ? 'rgb(var(--wc-ink) / .02)' : 'var(--wc-card)',
-          border: state === 'locked' ? '1px solid rgb(var(--wc-ink) / .06)' : '1px solid var(--wc-border)',
+          border: state === 'locked' ? '1.5px solid rgb(var(--wc-ink) / .1)' : '1px solid var(--wc-border)',
+          animation: state === 'locked' ? 'ded-attention 1.8s ease-in-out infinite' : undefined,
         }}
         data-testid="dash-stat-ded"
       >
-        <div className="p-3 cursor-pointer text-center flex-1 flex flex-col justify-center" onClick={handleTap}>
+        <div className={`${compact ? 'p-[4px]' : 'p-3'} cursor-pointer text-center flex-1 flex flex-col justify-center min-h-0 overflow-hidden`} onClick={handleTap}>
           <div className="text-[7px] font-bold uppercase tracking-[.07em] leading-tight" style={{ color: 'var(--wc-t3)' }}>{label}</div>
 
           {state === 'locked' ? (
             <>
-              <div className="flex items-center gap-[6px] mt-1">
-                <Lock className="w-[16px] h-[16px]" style={{ color: 'var(--wc-t3)' }} />
-                <div className="font-display text-[28px] leading-none" style={{ color: 'rgb(var(--wc-ink) / .15)', filter: 'blur(4px)' }}>
+              <div className={`flex items-center gap-[4px] ${compact ? 'mt-0' : 'mt-1'}`}>
+                <Lock className={compact ? 'w-[10px] h-[10px]' : 'w-[16px] h-[16px]'} style={{ color: 'var(--wc-t3)' }} />
+                <div className={`font-display leading-none ${compact ? 'text-[16px]' : 'text-[28px]'}`} style={{ color: 'rgb(var(--wc-ink) / .15)', filter: 'blur(4px)' }}>
                   $—
                 </div>
               </div>
-              <div className="text-[9px] mt-1" style={{ color: 'var(--wc-t3)' }}>Tap to unlock</div>
+              <div className={`text-[9px] ${compact ? 'mt-0' : 'mt-1'}`} style={{ color: 'var(--wc-y)' }}>Tap to set up</div>
             </>
           ) : state === 'partial' ? (
             <>
-              <div className={`font-display text-[28px] leading-none mt-1`} style={{ color: 'var(--wc-am)' }}>
+              <div className={`font-display leading-none ${compact ? 'text-[16px] mt-0' : 'text-[28px] mt-1'}`} style={{ color: 'var(--wc-am)' }}>
                 ${value.toFixed(0)}*
               </div>
-              <div className="text-[9px] mt-1 flex items-center gap-[3px]" style={{ color: 'var(--wc-am)' }}>
+              <div className={`text-[9px] flex items-center gap-[3px] ${compact ? 'mt-0' : 'mt-1'}`} style={{ color: 'var(--wc-am)' }}>
                 <Info className="w-[8px] h-[8px]" />
                 {mode === 'industry' ? 'industry estimate' : 'partial estimate'}
               </div>
             </>
           ) : (
             <>
-              <div className={`font-display text-[28px] leading-none mt-1 ${animate ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-gr)' }}>
+              <div className={`font-display leading-none ${compact ? 'text-[16px] mt-0' : 'text-[28px] mt-1'} ${animate ? 'animate-pop' : ''}`} style={{ color: 'var(--wc-gr)' }}>
                 ${value.toFixed(0)}
               </div>
-              <div className="text-[9px] mt-1" style={{ color: 'var(--wc-t2)' }}>{sublabel || 'logbook method'}</div>
+              <div className={`text-[9px] ${compact ? 'mt-0' : 'mt-1'}`} style={{ color: 'var(--wc-t2)' }}>{sublabel || 'logbook method'}</div>
             </>
           )}
         </div>
@@ -111,7 +134,7 @@ export function DeductionCard({ value, state, label = 'Deduction', sublabel, ani
   );
 }
 
-interface SimplifiedPromptProps {
+export interface SimplifiedDeductionPromptProps {
   value: number;
   state: DeductionState;
   checks?: ReadinessCheck;
@@ -119,7 +142,7 @@ interface SimplifiedPromptProps {
   onNavigate: (screen: string) => void;
 }
 
-function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }: SimplifiedPromptProps) {
+export function SimplifiedDeductionPrompt({ value, state, checks, onClose, onNavigate }: SimplifiedDeductionPromptProps) {
   const mode = getEstimateMode();
   const basicComplete = checks?.basicDetailsComplete ?? false;
   const isLocked = state === 'locked';

@@ -128,7 +128,26 @@ export function SortScreen() {
   const logbookPct = allTripsKm > 0 ? Math.round(sortedBizKm / allTripsKm * 100) : 0;
 
   const hasBizTrips = state.bizCount > 0;
-  const estimatorParams = getEstimatorParamsFromState(state, hasBizTrips);
+
+  // Merge localStorage vehicle data so vehicle-panel saves are reflected immediately
+  const estimatorParams = useMemo(() => {
+    const base = getEstimatorParamsFromState(state, hasBizTrips);
+    try {
+      const lsSpecs = JSON.parse(localStorage.getItem('wc_vehicle_specs') || '{}');
+      const lsPurchase = JSON.parse(localStorage.getItem('wc_vehicle_purchase') || '{}');
+      const merged = { ...base };
+      if (!merged.vehicleSpecs?.vehicleCategory && (lsSpecs.vehicleCategory || lsSpecs.bodyType)) {
+        merged.vehicleSpecs = { ...merged.vehicleSpecs, vehicleCategory: lsSpecs.vehicleCategory, bodyType: lsSpecs.bodyType, fuelConsumption: lsSpecs.fuelConsumption };
+      }
+      if (!merged.vehiclePurchase?.purchasePrice && lsPurchase.purchasePrice) {
+        merged.vehiclePurchase = { ...merged.vehiclePurchase, purchasePrice: lsPurchase.purchasePrice, purchaseDate: lsPurchase.purchaseDate, vehicleHistoryStatus: lsPurchase.vehicleHistoryStatus, approxYearsOwned: lsPurchase.approxYearsOwned };
+      }
+      return merged;
+    } catch {
+      return base;
+    }
+  }, [state, hasBizTrips]);
+
   const vehicleCosts = getVehicleCosts(estimatorParams);
   const ANNUAL_KM = 15000;
   const perKmRate = vehicleCosts / ANNUAL_KM;
