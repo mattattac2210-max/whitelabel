@@ -45,6 +45,7 @@ export interface VehicleCostsDetailed {
 export interface VehicleSpecs {
   vehicleCategory?: string;
   bodyType?: string;
+  fuelType?: string;
   fuelConsumption?: string | number;
 }
 
